@@ -48,3 +48,6 @@ Thumbs.db
 __screenshots__/
 
 vitest.config.*.timestamp*
+
+# Environment files
+apps/api/.env
