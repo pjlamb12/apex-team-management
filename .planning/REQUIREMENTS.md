@@ -117,42 +117,42 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| TEAM-01 | TBD | Pending |
-| TEAM-02 | TBD | Pending |
-| TEAM-03 | TBD | Pending |
-| TEAM-04 | TBD | Pending |
-| TEAM-05 | TBD | Pending |
-| ROST-01 | TBD | Pending |
-| ROST-02 | TBD | Pending |
-| ROST-03 | TBD | Pending |
-| ROST-04 | TBD | Pending |
-| GAME-01 | TBD | Pending |
-| GAME-02 | TBD | Pending |
-| GAME-03 | TBD | Pending |
-| GAME-04 | TBD | Pending |
-| LIVE-01 | TBD | Pending |
-| LIVE-02 | TBD | Pending |
-| LIVE-03 | TBD | Pending |
-| LIVE-04 | TBD | Pending |
-| LIVE-05 | TBD | Pending |
-| LIVE-06 | TBD | Pending |
-| LIVE-07 | TBD | Pending |
-| LIVE-08 | TBD | Pending |
-| INFR-01 | TBD | Pending |
-| INFR-02 | TBD | Pending |
-| INFR-03 | TBD | Pending |
-| INFR-04 | TBD | Pending |
-| INFR-05 | TBD | Pending |
-| INFR-06 | TBD | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Pending |
+| TEAM-01 | Phase 3 | Pending |
+| TEAM-02 | Phase 3 | Pending |
+| TEAM-03 | Phase 1 | Pending |
+| TEAM-04 | Phase 3 | Pending |
+| TEAM-05 | Phase 3 | Pending |
+| ROST-01 | Phase 4 | Pending |
+| ROST-02 | Phase 4 | Pending |
+| ROST-03 | Phase 4 | Pending |
+| ROST-04 | Phase 4 | Pending |
+| GAME-01 | Phase 5 | Pending |
+| GAME-02 | Phase 5 | Pending |
+| GAME-03 | Phase 5 | Pending |
+| GAME-04 | Phase 5 | Pending |
+| LIVE-01 | Phase 5 | Pending |
+| LIVE-02 | Phase 5 | Pending |
+| LIVE-03 | Phase 6 | Pending |
+| LIVE-04 | Phase 6 | Pending |
+| LIVE-05 | Phase 6 | Pending |
+| LIVE-06 | Phase 6 | Pending |
+| LIVE-07 | Phase 6 | Pending |
+| LIVE-08 | Phase 6 | Pending |
+| INFR-01 | Phase 1 | Pending |
+| INFR-02 | Phase 1 | Pending |
+| INFR-03 | Phase 6 | Pending |
+| INFR-04 | Phase 7 | Pending |
+| INFR-05 | Phase 7 | Pending |
+| INFR-06 | Phase 7 | Pending |
 
 **Coverage:**
 - v1 requirements: 31 total
-- Mapped to phases: 0
-- Unmapped: 31 ⚠️
+- Mapped to phases: 31
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-14*
