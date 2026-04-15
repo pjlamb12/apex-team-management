@@ -1,1 +1,19 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+// Tailwind v4: override dark variant to use .dark class on <html> (D-09)
+// This enables dark: utility classes when <html class="dark"> is set
+@custom-variant dark (&:where(.dark, .dark *));
+
+// Tailwind v4: explicit source paths for Nx libs (Pitfall 3 in RESEARCH.md)
+// Prevents Tailwind from purging classes used in lib component templates
+@source "../../../libs/client/ui/theme/src";
+
+// Ionic core CSS — must be imported after Tailwind to allow Ionic's reset to coexist
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+
+// Ionic dark palette — class-based, activated when <html class="ion-palette-dark"> is set
+// ThemeService (Plan 05) applies BOTH .dark AND .ion-palette-dark simultaneously
+@import "@ionic/angular/css/palettes/dark.class.css";
