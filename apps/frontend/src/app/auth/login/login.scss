@@ -1,0 +1,5 @@
+// Login page styles — dark theme applied globally via ThemeService
+// ion-card inherits dark mode variables from Ionic theming
+ion-card {
+  --background: var(--ion-color-step-50, #1a1a1a);
+}

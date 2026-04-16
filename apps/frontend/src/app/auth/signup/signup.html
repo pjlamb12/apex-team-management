@@ -1,0 +1,70 @@
+<ion-content class="ion-padding">
+  <div class="min-h-screen flex items-center justify-center">
+    <ion-card class="w-full max-w-sm">
+      <ion-card-header class="text-center">
+        <ion-card-title class="text-2xl font-bold tracking-tight">Apex Team</ion-card-title>
+        <p class="text-sm text-gray-400 mt-1">Create your coach account</p>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <ngx-control-errors-display>
+            <ion-item>
+              <ion-input
+                label="Display Name"
+                labelPlacement="floating"
+                type="text"
+                formControlName="displayName"
+                autocomplete="name"
+              />
+            </ion-item>
+          </ngx-control-errors-display>
+
+          <ngx-control-errors-display class="block mt-3">
+            <ion-item>
+              <ion-input
+                label="Email"
+                labelPlacement="floating"
+                type="email"
+                formControlName="email"
+                autocomplete="email"
+              />
+            </ion-item>
+          </ngx-control-errors-display>
+
+          <ngx-control-errors-display class="block mt-3">
+            <ion-item>
+              <ion-input
+                label="Password"
+                labelPlacement="floating"
+                type="password"
+                formControlName="password"
+                autocomplete="new-password"
+              />
+            </ion-item>
+          </ngx-control-errors-display>
+
+          @if (errorMessage()) {
+            <ion-text color="danger">
+              <p class="text-sm mt-2">{{ errorMessage() }}</p>
+            </ion-text>
+          }
+
+          <ion-button
+            type="submit"
+            expand="block"
+            class="mt-4"
+            [disabled]="isLoading()"
+          >
+            {{ isLoading() ? 'Creating account...' : 'Create Account' }}
+          </ion-button>
+        </form>
+
+        <p class="text-center text-sm text-gray-400 mt-4">
+          Already have an account?
+          <a routerLink="/login" class="text-primary font-medium">Sign in</a>
+        </p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
