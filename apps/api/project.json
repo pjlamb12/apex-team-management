@@ -45,21 +45,21 @@
     "migration:generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx typeorm-ts-node-commonjs migration:generate apps/api/src/migrations/{args.name} -d apps/api/src/data-source.ts",
+        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npx typeorm-ts-node-commonjs migration:generate apps/api/src/migrations/{args.name} -d apps/api/src/data-source.ts",
         "cwd": "{workspaceRoot}"
       }
     },
     "migration:run": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx typeorm-ts-node-commonjs migration:run -d apps/api/src/data-source.ts",
+        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npx typeorm-ts-node-commonjs migration:run -d apps/api/src/data-source.ts",
         "cwd": "{workspaceRoot}"
       }
     },
     "migration:revert": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx typeorm-ts-node-commonjs migration:revert -d apps/api/src/data-source.ts",
+        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npx typeorm-ts-node-commonjs migration:revert -d apps/api/src/data-source.ts",
         "cwd": "{workspaceRoot}"
       }
     },
