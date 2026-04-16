@@ -29,6 +29,16 @@
 
 **Depends on:** Nothing (starting phase)
 
+**Plans:** 6 plans
+
+Plans:
+- [x] 01-01-PLAN.md — Nx library scaffold and module boundary rules
+- [x] 01-02-PLAN.md — NestJS API app, packages, entities, and data-source
+- [x] 01-03-PLAN.md — Initial schema migration and Soccer seed
+- [x] 01-04-PLAN.md — Ionic Angular and Tailwind CSS v4 frontend integration
+- [x] 01-05-PLAN.md — Shared TypeScript models and ThemeService (TDD)
+- [x] 01-06-PLAN.md — End-to-end phase verification (human checkpoint)
+
 **Success criteria:**
 1. Nx workspace has `libs/shared`, `libs/client`, `libs/api` structure with tag-based boundary rules enforced
 2. NestJS API app created at `apps/api/` with PostgreSQL + TypeORM connected and migrations running
@@ -47,6 +57,16 @@
 **Requirements:** AUTH-01, AUTH-02, AUTH-03, AUTH-04
 
 **Depends on:** Phase 1
+
+**Plans:** 6 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Install auth packages, configure NestJS bootstrap, proxy, and JWT env
+- [ ] 02-02-PLAN.md — Extend UserEntity with auth columns and run migration
+- [ ] 02-03-PLAN.md — NestJS auth module (DTOs, AuthService, JwtStrategy, AuthController)
+- [ ] 02-04-PLAN.md — Angular AuthService, route guard, interceptor, and route config
+- [ ] 02-05-PLAN.md — Auth UI pages (Login, Signup, Reset-Password, Home placeholder)
+- [ ] 02-06-PLAN.md — End-to-end verification checkpoint
 
 **Success criteria:**
 1. Coach can sign up with email/password and account is created in PostgreSQL
@@ -148,4 +168,4 @@
 
 ---
 *Roadmap created: 2026-04-14*
-*Last updated: 2026-04-14 after initial creation*
+*Last updated: 2026-04-16 — Phase 2 planning complete (6 plans)*
