@@ -20,7 +20,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
 **Current focus:** Phase 2 — Authentication
-**Current Position:** Plan 3 of 6
+**Current Position:** Plan 4 of 6
 
 ## Current Milestone
 
