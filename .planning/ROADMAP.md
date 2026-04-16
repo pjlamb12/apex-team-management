@@ -61,7 +61,7 @@ Plans:
 **Plans:** 6 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Install auth packages, configure NestJS bootstrap, proxy, and JWT env
+- [x] 02-01-PLAN.md — Install auth packages, configure NestJS bootstrap, proxy, and JWT env
 - [ ] 02-02-PLAN.md — Extend UserEntity with auth columns and run migration
 - [ ] 02-03-PLAN.md — NestJS auth module (DTOs, AuthService, JwtStrategy, AuthController)
 - [ ] 02-04-PLAN.md — Angular AuthService, route guard, interceptor, and route config
