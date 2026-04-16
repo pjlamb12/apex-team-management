@@ -1,7 +1,9 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, RouteReuseStrategy } from '@angular/router';
 import { provideIonicAngular, IonicRouteStrategy } from '@ionic/angular/standalone';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { appRoutes } from './app.routes';
+import { authInterceptor } from './auth/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -9,5 +11,6 @@ export const appConfig: ApplicationConfig = {
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular({}),
     provideRouter(appRoutes),
+    provideHttpClient(withInterceptors([authInterceptor])),
   ],
 };
