@@ -8,19 +8,18 @@ export class UserEntity {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ name: 'display_name' })
   displayName: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @Column()
+  @Column({ name: 'password_hash' })
   passwordHash: string;
 
-  @Column({ nullable: true, type: 'varchar' })
+  @Column({ name: 'password_reset_token', nullable: true, type: 'varchar' })
   passwordResetToken: string | null;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'password_reset_expiry', type: 'timestamp', nullable: true })
   passwordResetExpiry: Date | null;
-
 }
