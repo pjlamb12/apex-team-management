@@ -13,4 +13,14 @@ export class UserEntity {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column()
+  passwordHash: string;
+
+  @Column({ nullable: true, type: 'varchar' })
+  passwordResetToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  passwordResetExpiry: Date | null;
+
 }
