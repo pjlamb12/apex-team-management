@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { SportEntity } from './sport.entity';
 import { SeasonEntity } from './season.entity';
+import { UserEntity } from './user.entity';
 
 @Entity('teams')
 export class TeamEntity {
@@ -17,14 +18,12 @@ export class TeamEntity {
   @Column({ name: 'sport_id' })
   sportId: string;
 
-  @Column({ name: 'players_on_field', default: 11 })
-  playersOnField: number;
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'coach_id' })
+  coach: UserEntity;
 
-  @Column({ name: 'period_count', default: 2 })
-  periodCount: number;
-
-  @Column({ name: 'period_length_minutes', default: 45 })
-  periodLengthMinutes: number;
+  @Column({ name: 'coach_id', nullable: true })
+  coachId: string;
 
   @OneToMany(() => SeasonEntity, (season) => season.team)
   seasons: SeasonEntity[];
