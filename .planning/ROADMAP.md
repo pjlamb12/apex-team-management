@@ -66,7 +66,7 @@ Plans:
 - [x] 02-03-PLAN.md — NestJS auth module (DTOs, AuthService, JwtStrategy, AuthController)
 - [x] 02-04-PLAN.md — Angular AuthService, route guard, interceptor, and route config
 - [x] 02-05-PLAN.md — Auth UI pages (Login, Signup, Reset-Password, Home placeholder)
-- [ ] 02-06-PLAN.md — End-to-end verification checkpoint
+- [x] 02-06-PLAN.md — End-to-end verification checkpoint
 
 **Success criteria:**
 1. Coach can sign up with email/password and account is created in PostgreSQL
