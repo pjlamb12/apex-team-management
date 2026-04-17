@@ -24,4 +24,13 @@ export class SeasonEntity {
 
   @Column({ default: false })
   isActive: boolean;
+
+  @Column({ name: 'players_on_field', nullable: true, type: 'integer' })
+  playersOnField: number | null;
+
+  @Column({ name: 'period_count', nullable: true, type: 'integer' })
+  periodCount: number | null;
+
+  @Column({ name: 'period_length_minutes', nullable: true, type: 'integer' })
+  periodLengthMinutes: number | null;
 }
