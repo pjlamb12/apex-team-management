@@ -31,7 +31,7 @@ export class AuthService {
     );
     this.storeToken(response.accessToken);
     this.currentUser.set(this.decodeUser(response.accessToken));
-    await this.router.navigate(['/home']);
+    await this.router.navigate(['/teams']);
   }
 
   async signup(email: string, password: string, displayName: string): Promise<void> {
@@ -40,7 +40,7 @@ export class AuthService {
     );
     this.storeToken(response.accessToken);
     this.currentUser.set(this.decodeUser(response.accessToken));
-    await this.router.navigate(['/home']);
+    await this.router.navigate(['/teams']);
   }
 
   logout(): void {

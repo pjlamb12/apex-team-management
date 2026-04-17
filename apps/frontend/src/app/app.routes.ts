@@ -2,7 +2,7 @@ import { Route } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 
 export const appRoutes: Route[] = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  // Unauthenticated routes (outside the shell — per D-15)
   {
     path: 'login',
     loadComponent: () => import('./auth/login/login').then((m) => m.Login),
@@ -16,10 +16,32 @@ export const appRoutes: Route[] = [
     loadComponent: () =>
       import('./auth/reset-password/reset-password').then((m) => m.ResetPassword),
   },
+  // Authenticated shell — wraps all post-login routes (per D-13, D-15)
   {
-    path: 'home',
-    loadComponent: () => import('./home/home').then((m) => m.Home),
+    path: '',
+    loadComponent: () => import('./shell/shell').then((m) => m.Shell),
     canActivate: [authGuard],
+    children: [
+      {
+        path: 'teams',
+        loadComponent: () =>
+          import('./teams/teams-list/teams-list').then((m) => m.TeamsList),
+      },
+      {
+        path: 'teams/new',
+        loadComponent: () =>
+          import('./teams/create-team/create-team').then((m) => m.CreateTeam),
+      },
+      {
+        path: 'teams/:id',
+        loadComponent: () =>
+          import('./teams/edit-team/edit-team').then((m) => m.EditTeam),
+      },
+      { path: '', redirectTo: 'teams', pathMatch: 'full' },
+    ],
   },
+  // Legacy redirect: /home → /teams (per D-01 — home can redirect to teams)
+  { path: 'home', redirectTo: '/teams', pathMatch: 'full' },
+  // Catch-all: unauthenticated default goes to login
+  { path: '**', redirectTo: '/login', pathMatch: 'full' },
 ];
-
