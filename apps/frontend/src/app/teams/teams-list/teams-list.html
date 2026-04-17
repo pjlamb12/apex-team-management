@@ -1,0 +1,63 @@
+<ion-content class="ion-padding">
+  @if (isLoading()) {
+    <div class="flex items-center justify-center min-h-[200px]">
+      <ion-spinner name="crescent" />
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <ion-text color="danger">
+      <p class="text-sm text-center mt-4">{{ errorMessage() }}</p>
+    </ion-text>
+  }
+
+  @if (!isLoading() && teams().length === 0 && !errorMessage()) {
+    <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-8">
+      <ion-icon name="people-outline" class="text-6xl text-gray-500 mb-4" />
+      <h2 class="text-xl font-semibold text-gray-300 mb-2">No teams yet</h2>
+      <p class="text-sm text-gray-500 mb-6">Create your first team to get started</p>
+      <ion-button routerLink="/teams/new" expand="block" class="w-full max-w-xs">
+        <ion-icon name="add-outline" slot="start" />
+        Create Team
+      </ion-button>
+    </div>
+  }
+
+  @if (!isLoading() && teams().length > 0) {
+    <ion-list lines="none" class="flex flex-col gap-3">
+      @for (team of teams(); track team.id) {
+        <ion-card class="m-0">
+          <ion-card-header class="flex flex-row items-center justify-between pb-1">
+            <ion-card-title class="text-lg font-semibold">{{ team.name }}</ion-card-title>
+            <ion-badge color="primary" class="text-xs">{{ team.sport?.name }}</ion-badge>
+          </ion-card-header>
+          <ion-card-content class="flex flex-row gap-2 pt-2">
+            <ion-button
+              size="small"
+              fill="outline"
+              [routerLink]="['/teams', team.id]"
+            >
+              <ion-icon name="create-outline" slot="start" />
+              Edit
+            </ion-button>
+            <ion-button
+              size="small"
+              fill="outline"
+              color="danger"
+              (click)="confirmDelete(team)"
+            >
+              <ion-icon name="trash-outline" slot="start" />
+              Delete
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      }
+    </ion-list>
+  }
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button routerLink="/teams/new">
+      <ion-icon name="add-outline" />
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

@@ -1,0 +1,16 @@
+// Teams list page styles
+ion-card {
+  --background: var(--ion-color-step-50, #1a1a1a);
+  border-radius: 12px;
+}
+
+ion-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+ion-fab-button {
+  --background: var(--ion-color-primary);
+}
