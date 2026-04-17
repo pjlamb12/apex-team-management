@@ -63,6 +63,12 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "config": "apps/api/vitest.config.mts"
+      }
+    },
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",
