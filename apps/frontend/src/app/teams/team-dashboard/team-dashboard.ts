@@ -20,11 +20,15 @@ import {
   IonItemOption,
   IonText,
   IonSpinner,
+  IonFab,
+  IonFabButton,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { settingsOutline, trashOutline } from 'ionicons/icons';
+import { settingsOutline, trashOutline, addOutline, pencilOutline } from 'ionicons/icons';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { PlayersService, PlayerEntity } from '../players.service';
+import { PlayersService, PlayerEntity, CreatePlayerDto, UpdatePlayerDto } from '../players.service';
+import { PlayerModal } from '../player-modal/player-modal';
 
 interface Sport {
   id: string;
@@ -59,6 +63,8 @@ interface Team {
     IonItemOption,
     IonText,
     IonSpinner,
+    IonFab,
+    IonFabButton,
   ],
   templateUrl: './team-dashboard.html',
   styleUrl: './team-dashboard.scss',
@@ -79,8 +85,10 @@ export class TeamDashboard implements OnInit {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
+  private readonly modalCtrl = inject(ModalController);
+
   constructor() {
-    addIcons({ settingsOutline, trashOutline });
+    addIcons({ settingsOutline, trashOutline, addOutline, pencilOutline });
   }
 
   ngOnInit(): void {
@@ -115,6 +123,37 @@ export class TeamDashboard implements OnInit {
       this.players.update((list) => list.filter((p) => p.id !== playerId));
     } catch {
       this.errorMessage.set('Failed to remove player. Please try again.');
+    }
+  }
+
+  protected async openPlayerModal(player?: PlayerEntity): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: PlayerModal,
+      componentProps: player ? { player } : {},
+    });
+    await modal.present();
+    const { data, role } = await modal.onWillDismiss<CreatePlayerDto>();
+    if (role !== 'confirm' || !data) return;
+
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    try {
+      if (player?.id) {
+        const updated = await firstValueFrom(
+          this.playersService.updatePlayer(teamId, player.id, data as UpdatePlayerDto)
+        );
+        this.players.update((list) =>
+          list.map((p) => (p.id === player.id ? updated : p))
+        );
+      } else {
+        const created = await firstValueFrom(
+          this.playersService.addPlayer(teamId, data as CreatePlayerDto)
+        );
+        this.players.update((list) => [...list, created]);
+      }
+    } catch {
+      this.errorMessage.set('Failed to save player. Please try again.');
     }
   }
 
