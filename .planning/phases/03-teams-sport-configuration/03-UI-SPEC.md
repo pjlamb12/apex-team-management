@@ -56,7 +56,7 @@ Exceptions:
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 (regular) | 1.5 |
-| Label | 14px | 600 (semibold) | 1.4 |
+| Label | 14px | 400 (regular) | 1.4 |
 | Heading | 20px | 700 (bold) | 1.2 |
 | Display | 24px | 700 (bold) | 1.2 |
 
@@ -64,12 +64,12 @@ Exceptions:
 - Display (24px/bold): `text-2xl font-bold` on `IonCardTitle` in login.html and signup.html — carry forward
 - Heading (20px/bold): section titles within pages
 - Body (14px/regular): `text-sm text-gray-400` pattern already used for subtitles and helper text
-- Label (14px/semibold): sport badge, card metadata labels
+- Label (14px/regular): sport badge, card metadata labels — differentiated from body by context (color, badge background), not weight
 
 Tailwind classes to use:
 - Display: `text-2xl font-bold tracking-tight`
 - Heading: `text-xl font-bold`
-- Label: `text-sm font-semibold`
+- Label: `text-sm`
 - Body: `text-sm` (weight 400 default)
 
 ---
@@ -81,7 +81,7 @@ Tailwind classes to use:
 | Dominant (60%) | Ionic `--ion-background-color` dark (`#121212` approx) | Page background, `IonContent` surface |
 | Secondary (30%) | Ionic `--ion-card-background` dark (`#1e1e1e` approx) | `IonCard` backgrounds, `IonItem` backgrounds, tab bar |
 | Accent (10%) | Ionic `--ion-color-primary` (default Ionic blue `#3880ff`) | Primary CTAs, active tab indicator, sport badge background, anchor/link text |
-| Destructive | Ionic `--ion-color-danger` (default `#eb445a`) | Delete button in team card, AlertController "Delete" button |
+| Destructive | Ionic `--ion-color-danger` (default `#eb445a`) | Delete button in team card, AlertController "Delete Team" button |
 
 Accent reserved for:
 - [+ Create Team] FAB button or header button
@@ -148,8 +148,8 @@ The following Ionic standalone components are used in this phase. All are import
 
 **Team card anatomy:**
 - Card title: team name (20px bold)
-- Sport badge: `IonBadge` "Soccer" in accent color, 14px semibold
-- Action row: [Edit] `IonButton` (fill="clear") + [Delete] `IonButton` (fill="clear", `color="danger"`)
+- Sport badge: `IonBadge` "Soccer" in accent color, 14px regular
+- Action row: [Edit] `IonButton` (fill="clear") + [Delete Team] `IonButton` (fill="clear", `color="danger"`)
 
 **Empty state (no teams):**
 - Centered column layout: icon + heading + body + button
@@ -199,12 +199,12 @@ The following Ionic standalone components are used in this phase. All are import
 6. On API error: show `IonText color="danger"` inline — "Failed to save. Please try again."
 
 ### Delete Team flow (D-12)
-1. Coach taps [Delete] on team card OR [Delete Team] on edit page
+1. Coach taps [Delete Team] on team card OR [Delete Team] on edit page
 2. `AlertController` fires immediately — no navigation
 3. Alert dialog:
    - Header: "Delete Team"
    - Message: "Are you sure you want to delete [team name]? This cannot be undone."
-   - Buttons: [Cancel] (role: "cancel") + [Delete] (role: "destructive", `color="danger"`)
+   - Buttons: [Cancel] (role: "cancel") + [Delete Team] (role: "destructive", `color="danger"`)
 4. On Cancel: dismiss alert, no action
 5. On Delete confirm: call API, dismiss alert on success, remove card from list
 6. On API error: dismiss alert, show toast/inline error — "Failed to delete team. Please try again."
@@ -233,10 +233,11 @@ The following Ionic standalone components are used in this phase. All are import
 | Empty state heading | "No teams yet" |
 | Empty state body | "Create your first team to get started." |
 | Empty state CTA | "Create Team" |
-| Delete button label | "Delete" |
+| Delete button label (card) | "Delete Team" |
+| Delete button label (edit page) | "Delete Team" |
 | Delete alert header | "Delete Team" |
 | Delete alert message | "Are you sure you want to delete [team name]? This cannot be undone." |
-| Delete alert confirm | "Delete" |
+| Delete alert confirm | "Delete Team" |
 | Delete alert cancel | "Cancel" |
 | Create error | "Failed to create team. Please try again." |
 | Save error | "Failed to save. Please try again." |
@@ -269,6 +270,7 @@ No third-party component registries. Ionic components are the component library.
 - Tab bar `IonTabButton` includes both icon and text label (not icon-only)
 - Color is never the sole differentiator for state — destructive actions also use "danger" text label
 - Touch targets: all interactive elements meet 44px minimum via Ionic's default sizing
+- `IonFabButton` must include `aria-label="Create Team"` — FAB contains only an icon with no visible text label
 
 ---
 
