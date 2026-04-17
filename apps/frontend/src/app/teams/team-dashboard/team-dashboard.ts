@@ -23,6 +23,7 @@ import {
   IonFab,
   IonFabButton,
   ModalController,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { settingsOutline, trashOutline, addOutline, pencilOutline } from 'ionicons/icons';
@@ -86,6 +87,7 @@ export class TeamDashboard implements OnInit {
   }
 
   private readonly modalCtrl = inject(ModalController);
+  private readonly alertCtrl = inject(AlertController);
 
   constructor() {
     addIcons({ settingsOutline, trashOutline, addOutline, pencilOutline });
@@ -118,12 +120,28 @@ export class TeamDashboard implements OnInit {
   protected async deletePlayer(playerId: string): Promise<void> {
     const teamId = this.route.snapshot.paramMap.get('id');
     if (!teamId) return;
-    try {
-      await firstValueFrom(this.playersService.deletePlayer(teamId, playerId));
-      this.players.update((list) => list.filter((p) => p.id !== playerId));
-    } catch {
-      this.errorMessage.set('Failed to remove player. Please try again.');
-    }
+
+    const alert = await this.alertCtrl.create({
+      header: 'Remove Player?',
+      message: 'Are you sure you want to remove this player from the roster?',
+      buttons: [
+        'Cancel',
+        {
+          text: 'Remove',
+          role: 'confirm',
+          handler: async () => {
+            try {
+              await firstValueFrom(this.playersService.deletePlayer(teamId, playerId));
+              this.players.update((list) => list.filter((p) => p.id !== playerId));
+            } catch {
+              this.errorMessage.set('Failed to remove player. Please try again.');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 
   protected async openPlayerModal(player?: PlayerEntity): Promise<void> {
