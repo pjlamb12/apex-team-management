@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { TeamsModule } from '../teams/teams.module';
 import { SportsModule } from '../sports/sports.module';
+import { PlayersModule } from '../players/players.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -27,6 +28,7 @@ import { AppController } from './app.controller';
     AuthModule,
     TeamsModule,
     SportsModule,
+    PlayersModule,
   ],
   controllers: [AppController],
 })
