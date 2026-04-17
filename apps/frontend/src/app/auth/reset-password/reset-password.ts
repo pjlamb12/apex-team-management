@@ -3,6 +3,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import {
   IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
   IonItem, IonInput, IonButton, IonText,
@@ -26,6 +27,7 @@ export class ResetPassword implements OnInit {
   protected readonly route = inject(ActivatedRoute);
   protected readonly router = inject(Router);
   protected readonly http = inject(HttpClient);
+  protected readonly config = inject(RuntimeConfigLoaderService);
 
   // Which flow is active — determined from ?token query param
   protected resetToken = signal<string | null>(null);
@@ -42,6 +44,10 @@ export class ResetPassword implements OnInit {
   protected errorMessage = signal<string | null>(null);
   protected isLoading = signal(false);
 
+  get apiUrl(): string {
+    return this.config.getConfigObjectKey('apiBaseUrl');
+  }
+
   ngOnInit(): void {
     const token = this.route.snapshot.queryParamMap.get('token');
     this.resetToken.set(token);
@@ -57,7 +63,7 @@ export class ResetPassword implements OnInit {
     try {
       const { email } = this.forgotForm.getRawValue();
       await firstValueFrom(
-        this.http.post('/api/auth/forgot-password', { email })
+        this.http.post(`${this.apiUrl}/auth/forgot-password`, { email })
       );
       this.successMessage.set(
         'If that email exists, a reset link has been sent. Check the server console in development.'
@@ -79,7 +85,7 @@ export class ResetPassword implements OnInit {
     try {
       const { newPassword } = this.resetForm.getRawValue();
       await firstValueFrom(
-        this.http.post('/api/auth/reset-password', {
+        this.http.post(`${this.apiUrl}/auth/reset-password`, {
           token: this.resetToken(),
           newPassword,
         })

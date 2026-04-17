@@ -2,6 +2,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 
 export interface AuthUser {
   id: string;
@@ -15,13 +16,18 @@ const TOKEN_KEY = 'auth_token';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly config = inject(RuntimeConfigLoaderService);
 
   protected readonly currentUser = signal<AuthUser | null>(this.loadUserFromStorage());
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
 
+  get apiUrl(): string {
+    return this.config.getConfigObjectKey('apiBaseUrl');
+  }
+
   async login(email: string, password: string): Promise<void> {
     const response = await firstValueFrom(
-      this.http.post<{ accessToken: string }>('/api/auth/login', { email, password })
+      this.http.post<{ accessToken: string }>(`${this.apiUrl}/auth/login`, { email, password })
     );
     this.storeToken(response.accessToken);
     this.currentUser.set(this.decodeUser(response.accessToken));
@@ -30,7 +36,7 @@ export class AuthService {
 
   async signup(email: string, password: string, displayName: string): Promise<void> {
     const response = await firstValueFrom(
-      this.http.post<{ accessToken: string }>('/api/auth/signup', { email, password, displayName })
+      this.http.post<{ accessToken: string }>(`${this.apiUrl}/auth/signup`, { email, password, displayName })
     );
     this.storeToken(response.accessToken);
     this.currentUser.set(this.decodeUser(response.accessToken));
@@ -48,7 +54,7 @@ export class AuthService {
     // Use native fetch() to avoid triggering the interceptor again (RESEARCH.md pitfall)
     const token = this.getToken();
     if (!token) return;
-    const response = await fetch('/api/auth/refresh', {
+    const response = await fetch(`${this.apiUrl}/auth/refresh`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
