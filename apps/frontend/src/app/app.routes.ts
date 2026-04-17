@@ -35,6 +35,11 @@ export const appRoutes: Route[] = [
       {
         path: 'teams/:id',
         loadComponent: () =>
+          import('./teams/team-dashboard/team-dashboard').then((m) => m.TeamDashboard),
+      },
+      {
+        path: 'teams/:id/settings',
+        loadComponent: () =>
           import('./teams/edit-team/edit-team').then((m) => m.EditTeam),
       },
       { path: '', redirectTo: 'teams', pathMatch: 'full' },

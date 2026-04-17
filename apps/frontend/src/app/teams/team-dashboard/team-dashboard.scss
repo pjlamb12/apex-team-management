@@ -1,0 +1,13 @@
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 2rem;
+}
+
+ion-badge[slot="start"] {
+  margin-inline-end: 1rem;
+  min-width: 2rem;
+  text-align: center;
+}
