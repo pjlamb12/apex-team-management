@@ -1,0 +1,70 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/teams" />
+    </ion-buttons>
+    <ion-title>Create Team</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="flex items-start justify-center min-h-full pt-4">
+    <ion-card class="w-full max-w-md">
+      <ion-card-header>
+        <ion-card-title class="text-xl font-bold">New Team</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        @if (isLoading()) {
+          <div class="flex items-center justify-center py-8">
+            <ion-spinner name="crescent" />
+          </div>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <ngx-control-errors-display>
+              <ion-item>
+                <ion-input
+                  label="Team Name"
+                  labelPlacement="floating"
+                  type="text"
+                  formControlName="name"
+                  autocomplete="off"
+                  placeholder="e.g. Thunder FC"
+                />
+              </ion-item>
+            </ngx-control-errors-display>
+
+            <ngx-control-errors-display class="block mt-3">
+              <ion-item>
+                <ion-select
+                  label="Sport"
+                  labelPlacement="floating"
+                  formControlName="sportId"
+                >
+                  @for (sport of sports(); track sport.id) {
+                    <ion-select-option [value]="sport.id">{{ sport.name }}</ion-select-option>
+                  }
+                </ion-select>
+              </ion-item>
+            </ngx-control-errors-display>
+
+            @if (errorMessage()) {
+              <ion-text color="danger">
+                <p class="text-sm mt-2">{{ errorMessage() }}</p>
+              </ion-text>
+            }
+
+            <ion-button
+              type="submit"
+              expand="block"
+              class="mt-4"
+              [disabled]="isSaving()"
+            >
+              {{ isSaving() ? 'Creating...' : 'Create Team' }}
+            </ion-button>
+          </form>
+        }
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
