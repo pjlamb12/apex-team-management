@@ -158,6 +158,11 @@ The following Ionic standalone components are used in this phase. All are import
 - Body: "Create your first team to get started." (14px regular, muted)
 - CTA: `IonButton` expand="block" (max-w-xs centered) — "Create Team"
 
+**Populated state (teams present) — Focal Points:**
+- Primary anchor: team name (`IonCardTitle`, 20px bold) — first thing the eye lands on in each card
+- Secondary: sport badge chip (`IonBadge`, accent color) — color draws attention to sport classification
+- Tertiary: action row (Edit / Delete Team buttons, fill="clear") — low visual weight until needed
+
 ### Screen 3: Create Team Form (`/teams/new`)
 
 **Layout:** `IonHeader` (back button + title "New Team") + `IonContent`
@@ -204,8 +209,8 @@ The following Ionic standalone components are used in this phase. All are import
 3. Alert dialog:
    - Header: "Delete Team"
    - Message: "Are you sure you want to delete [team name]? This cannot be undone."
-   - Buttons: [Cancel] (role: "cancel") + [Delete Team] (role: "destructive", `color="danger"`)
-4. On Cancel: dismiss alert, no action
+   - Buttons: [Keep Team] (role: "cancel") + [Delete Team] (role: "destructive", `color="danger"`)
+4. On "Keep Team": dismiss alert, no action
 5. On Delete confirm: call API, dismiss alert on success, remove card from list
 6. On API error: dismiss alert, show toast/inline error — "Failed to delete team. Please try again."
 
@@ -238,7 +243,7 @@ The following Ionic standalone components are used in this phase. All are import
 | Delete alert header | "Delete Team" |
 | Delete alert message | "Are you sure you want to delete [team name]? This cannot be undone." |
 | Delete alert confirm | "Delete Team" |
-| Delete alert cancel | "Cancel" |
+| Delete alert cancel | "Keep Team" |
 | Create error | "Failed to create team. Please try again." |
 | Save error | "Failed to save. Please try again." |
 | Delete error | "Failed to delete team. Please try again." |
@@ -248,7 +253,7 @@ The following Ionic standalone components are used in this phase. All are import
 | Sport field (read-only edit page) | "Sport" label + "Soccer" value |
 | Tab label | "Teams" |
 
-**Source:** CONTEXT.md D-03 (empty state), D-12 (delete confirmation wording), D-06 (sport badge). Verb-noun CTAs follow auth page patterns ("Sign In", "Create Account").
+**Source:** CONTEXT.md D-03 (empty state), D-12 (delete confirmation wording), D-06 (sport badge). Verb-noun CTAs follow auth page patterns ("Sign In", "Create Account"). Delete alert cancel uses specific object label ("Keep Team") per copywriting contract — generic "Cancel" is prohibited.
 
 ---
 
