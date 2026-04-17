@@ -18,6 +18,9 @@ export class PlayerEntity {
   @Column({ nullable: true })
   preferredPosition: string;
 
+  @Column({ name: 'parent_email', nullable: true })
+  parentEmail: string;
+
   @ManyToOne(() => TeamEntity)
   @JoinColumn({ name: 'team_id' })
   team: TeamEntity;
