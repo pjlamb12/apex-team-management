@@ -1,0 +1,13 @@
+ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 8px;
+
+  &.ion-invalid {
+    --highlight-color: var(--ion-color-danger);
+  }
+}
+
+form {
+  padding-top: 8px;
+}

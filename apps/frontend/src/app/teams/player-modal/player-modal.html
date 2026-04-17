@@ -1,0 +1,47 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="dismiss()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>{{ title }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="save()" [strong]="true">Save</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ion-item [class.ion-invalid]="form.get('firstName')?.invalid && form.get('firstName')?.touched">
+      <ion-label position="stacked">First Name <span aria-hidden="true">*</span></ion-label>
+      <ion-input formControlName="firstName" type="text" placeholder="Enter first name"></ion-input>
+      @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {
+        <ion-note slot="error">First name is required.</ion-note>
+      }
+    </ion-item>
+
+    <ion-item [class.ion-invalid]="form.get('lastName')?.invalid && form.get('lastName')?.touched">
+      <ion-label position="stacked">Last Name <span aria-hidden="true">*</span></ion-label>
+      <ion-input formControlName="lastName" type="text" placeholder="Enter last name"></ion-input>
+      @if (form.get('lastName')?.invalid && form.get('lastName')?.touched) {
+        <ion-note slot="error">Last name is required.</ion-note>
+      }
+    </ion-item>
+
+    <ion-item [class.ion-invalid]="form.get('jerseyNumber')?.invalid && form.get('jerseyNumber')?.touched">
+      <ion-label position="stacked">Jersey Number <span aria-hidden="true">*</span></ion-label>
+      <ion-input formControlName="jerseyNumber" type="number" placeholder="Enter jersey number" min="0" max="999"></ion-input>
+      @if (form.get('jerseyNumber')?.invalid && form.get('jerseyNumber')?.touched) {
+        <ion-note slot="error">A valid jersey number (0-999) is required.</ion-note>
+      }
+    </ion-item>
+
+    <ion-item [class.ion-invalid]="form.get('parentEmail')?.invalid && form.get('parentEmail')?.touched">
+      <ion-label position="stacked">Parent / Guardian Email <span aria-hidden="true">*</span></ion-label>
+      <ion-input formControlName="parentEmail" type="email" placeholder="Enter contact email"></ion-input>
+      @if (form.get('parentEmail')?.invalid && form.get('parentEmail')?.touched) {
+        <ion-note slot="error">A valid email address is required.</ion-note>
+      }
+    </ion-item>
+  </form>
+</ion-content>
