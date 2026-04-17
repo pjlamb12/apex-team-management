@@ -1,0 +1,64 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/teams" />
+    </ion-buttons>
+    <ion-title>Edit Team</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="flex items-start justify-center min-h-full pt-4">
+    <ion-card class="w-full max-w-md">
+      <ion-card-header>
+        <ion-card-title class="text-xl font-bold">
+          {{ team()?.name ?? 'Edit Team' }}
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        @if (isLoading()) {
+          <div class="flex items-center justify-center py-8">
+            <ion-spinner name="crescent" />
+          </div>
+        } @else {
+          @if (team()) {
+            <div class="mb-4">
+              <ion-label class="text-xs text-gray-400 uppercase tracking-wide block mb-1">Sport</ion-label>
+              <ion-badge color="primary">{{ team()?.sport?.name }}</ion-badge>
+            </div>
+          }
+
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <ngx-control-errors-display>
+              <ion-item>
+                <ion-input
+                  label="Team Name"
+                  labelPlacement="floating"
+                  type="text"
+                  formControlName="name"
+                  autocomplete="off"
+                />
+              </ion-item>
+            </ngx-control-errors-display>
+
+            @if (errorMessage()) {
+              <ion-text color="danger">
+                <p class="text-sm mt-2">{{ errorMessage() }}</p>
+              </ion-text>
+            }
+
+            <ion-button
+              type="submit"
+              expand="block"
+              class="mt-4"
+              [disabled]="isSaving()"
+            >
+              {{ isSaving() ? 'Saving...' : 'Save Changes' }}
+            </ion-button>
+          </form>
+        }
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
