@@ -39,6 +39,11 @@ export class GamesController {
     return this.gamesService.findAllForTeam(teamId);
   }
 
+  @Get('games/:gameId')
+  findOne(@Param('gameId', ParseUUIDPipe) gameId: string) {
+    return this.gamesService.findOne(gameId);
+  }
+
   @Patch('games/:gameId')
   update(
     @Param('gameId', ParseUUIDPipe) gameId: string,
