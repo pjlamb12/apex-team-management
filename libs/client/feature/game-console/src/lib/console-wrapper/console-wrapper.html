@@ -1,0 +1,50 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + teamId()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      @if (game()) {
+        vs {{ game()!.opponent }}
+      } @else {
+        Live Console
+      }
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (isLoading()) {
+    <div class="flex items-center justify-center h-full">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="flex items-center justify-center h-full p-4">
+      <ion-text color="danger">{{ errorMessage() }}</ion-text>
+    </div>
+  } @else {
+    <!-- Top Bar: Game Clock -->
+    <div class="flex flex-col items-center gap-4 p-4 bg-gray-900 text-white">
+      <app-clock-display></app-clock-display>
+
+      <div class="flex gap-3">
+        @if (!isRunning()) {
+          <ion-button color="success" (click)="onStart()">Start</ion-button>
+        } @else {
+          <ion-button color="warning" (click)="onStop()">Stop</ion-button>
+        }
+        <ion-button color="medium" fill="outline" (click)="onReset()">Reset</ion-button>
+      </div>
+    </div>
+
+    <!-- Center Area: Field View Placeholder -->
+    <div class="flex items-center justify-center h-64 bg-green-800 text-white text-center p-4 mt-2">
+      <p class="text-lg opacity-70">Field View — Coming Soon</p>
+    </div>
+
+    <!-- Bottom: Bench View Placeholder -->
+    <div class="flex items-center justify-center h-32 bg-gray-800 text-white text-center p-4 mt-2">
+      <p class="text-base opacity-70">Bench — Coming Soon</p>
+    </div>
+  }
+</ion-content>
