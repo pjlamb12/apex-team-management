@@ -8,6 +8,7 @@ import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
 import { LineupEntryEntity } from '../entities/lineup-entry.entity';
 import { PlayerEntity } from '../entities/player.entity';
+import { GameEventEntity } from '../entities/game-event.entity';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PlayerEntity } from '../entities/player.entity';
       TeamEntity,
       LineupEntryEntity,
       PlayerEntity,
+      GameEventEntity,
     ]),
   ],
   controllers: [GamesController],

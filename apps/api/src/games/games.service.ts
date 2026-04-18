@@ -1,14 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import { GameEntity } from '../entities/game.entity';
 import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
+import { GameEventEntity } from '../entities/game-event.entity';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
+import { CreateEventDto } from './dto/create-event.dto';
 
 @Injectable()
 export class GamesService {
+  private readonly ajv: Ajv;
+
   constructor(
     @InjectRepository(GameEntity)
     private readonly gameRepo: Repository<GameEntity>,
@@ -16,7 +22,12 @@ export class GamesService {
     private readonly seasonRepo: Repository<SeasonEntity>,
     @InjectRepository(TeamEntity)
     private readonly teamRepo: Repository<TeamEntity>,
-  ) {}
+    @InjectRepository(GameEventEntity)
+    private readonly eventRepo: Repository<GameEventEntity>,
+  ) {
+    this.ajv = new Ajv();
+    addFormats(this.ajv);
+  }
 
   async create(teamId: string, dto: CreateGameDto, userId?: string): Promise<GameEntity> {
     // Optional ownership check if userId is provided
@@ -90,5 +101,56 @@ export class GamesService {
   async remove(gameId: string): Promise<void> {
     const game = await this.findOne(gameId);
     await this.gameRepo.remove(game);
+  }
+
+  async logEvent(
+    gameId: string,
+    dto: CreateEventDto,
+    userId: string,
+  ): Promise<GameEventEntity> {
+    const game = await this.gameRepo.findOne({
+      where: { id: gameId },
+      relations: ['season', 'season.team', 'season.team.sport'],
+    });
+
+    if (!game) {
+      throw new NotFoundException(`Game ${gameId} not found`);
+    }
+
+    if (!game.season?.team) {
+      throw new BadRequestException('Game data incomplete (missing season or team)');
+    }
+
+    if (game.season.team.coachId !== userId) {
+      throw new ForbiddenException('Not authorized to log events for this game');
+    }
+
+    const eventDefinitions = game.season.team.sport?.eventDefinitions || [];
+    const definition = eventDefinitions.find((d: any) => d.type === dto.eventType);
+
+    if (!definition) {
+      throw new BadRequestException(
+        `Event type ${dto.eventType} not supported for this sport`,
+      );
+    }
+
+    if (definition.payloadSchema && dto.payload) {
+      const validate = this.ajv.compile(definition.payloadSchema);
+      const valid = validate(dto.payload);
+      if (!valid) {
+        throw new BadRequestException(
+          `Invalid payload for event type ${dto.eventType}: ${this.ajv.errorsText(
+            validate.errors,
+          )}`,
+        );
+      }
+    }
+
+    const event = this.eventRepo.create({
+      ...dto,
+      gameId,
+    });
+
+    return this.eventRepo.save(event);
   }
 }
