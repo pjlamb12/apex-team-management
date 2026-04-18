@@ -42,6 +42,21 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./teams/edit-team/edit-team').then((m) => m.EditTeam),
       },
+      {
+        path: 'teams/:id/games/new',
+        loadComponent: () =>
+          import('./teams/games/create-game/create-game').then((m) => m.CreateGame),
+      },
+      {
+        path: 'teams/:id/games/:gameId/edit',
+        loadComponent: () =>
+          import('./teams/games/edit-game/edit-game').then((m) => m.EditGame),
+      },
+      {
+        path: 'teams/:id/games/:gameId/lineup',
+        loadComponent: () =>
+          import('./teams/games/lineup-editor/lineup-editor').then((m) => m.LineupEditor),
+      },
       { path: '', redirectTo: 'teams', pathMatch: 'full' },
     ],
   },
