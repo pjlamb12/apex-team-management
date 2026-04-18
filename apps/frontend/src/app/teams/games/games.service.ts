@@ -3,11 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 
-export interface Game {
+export interface GameEntity {
   id: string;
   seasonId: string;
   opponent: string;
-  scheduledAt: string; // ISO Date string
+  scheduledAt: string;
   location: string | null;
   uniformColor: string | null;
   status: 'scheduled' | 'in_progress' | 'completed';
@@ -56,20 +56,20 @@ export class GamesService {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
-  getGames(teamId: string): Observable<Game[]> {
-    return this.http.get<Game[]>(`${this.apiUrl}/teams/${teamId}/games`);
+  getGames(teamId: string): Observable<GameEntity[]> {
+    return this.http.get<GameEntity[]>(`${this.apiUrl}/teams/${teamId}/games`);
   }
 
-  createGame(teamId: string, data: CreateGameDto): Observable<Game> {
-    return this.http.post<Game>(`${this.apiUrl}/teams/${teamId}/games`, data);
+  createGame(teamId: string, data: CreateGameDto): Observable<GameEntity> {
+    return this.http.post<GameEntity>(`${this.apiUrl}/teams/${teamId}/games`, data);
   }
 
-  getGame(gameId: string): Observable<Game> {
-    return this.http.get<Game>(`${this.apiUrl}/games/${gameId}`);
+  getGame(gameId: string): Observable<GameEntity> {
+    return this.http.get<GameEntity>(`${this.apiUrl}/games/${gameId}`);
   }
 
-  updateGame(gameId: string, data: UpdateGameDto): Observable<Game> {
-    return this.http.patch<Game>(`${this.apiUrl}/games/${gameId}`, data);
+  updateGame(gameId: string, data: UpdateGameDto): Observable<GameEntity> {
+    return this.http.patch<GameEntity>(`${this.apiUrl}/games/${gameId}`, data);
   }
 
   deleteGame(gameId: string): Observable<void> {

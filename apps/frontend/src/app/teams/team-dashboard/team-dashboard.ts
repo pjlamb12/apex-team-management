@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
@@ -22,14 +22,28 @@ import {
   IonSpinner,
   IonFab,
   IonFabButton,
+  IonSegment,
+  IonSegmentButton,
+  IonListHeader,
+  IonNote,
   ModalController,
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { settingsOutline, trashOutline, addOutline, pencilOutline } from 'ionicons/icons';
+import {
+  settingsOutline,
+  trashOutline,
+  addOutline,
+  pencilOutline,
+  calendarOutline,
+  locationOutline,
+  shirtOutline,
+} from 'ionicons/icons';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { PlayersService, PlayerEntity, CreatePlayerDto, UpdatePlayerDto } from '../players.service';
+import { GamesService, GameEntity } from '../games/games.service';
 import { PlayerModal } from '../player-modal/player-modal';
+import { CommonModule } from '@angular/common';
 
 interface Sport {
   id: string;
@@ -46,6 +60,7 @@ interface Team {
   selector: 'app-team-dashboard',
   standalone: true,
   imports: [
+    CommonModule,
     RouterLink,
     IonContent,
     IonHeader,
@@ -66,6 +81,10 @@ interface Team {
     IonSpinner,
     IonFab,
     IonFabButton,
+    IonSegment,
+    IonSegmentButton,
+    IonListHeader,
+    IonNote,
   ],
   templateUrl: './team-dashboard.html',
   styleUrl: './team-dashboard.scss',
@@ -76,11 +95,29 @@ export class TeamDashboard implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly playersService = inject(PlayersService);
+  private readonly gamesService = inject(GamesService);
 
   protected team = signal<Team | null>(null);
   protected players = signal<PlayerEntity[]>([]);
+  protected games = signal<GameEntity[]>([]);
+  protected selectedSegment = signal<'roster' | 'games'>('roster');
   protected isLoading = signal(false);
+  protected gamesLoading = signal(false);
   protected errorMessage = signal<string | null>(null);
+
+  protected upcomingGames = computed(() => {
+    const now = new Date();
+    return this.games()
+      .filter((g) => new Date(g.scheduledAt) >= now)
+      .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+  });
+
+  protected pastGames = computed(() => {
+    const now = new Date();
+    return this.games()
+      .filter((g) => new Date(g.scheduledAt) < now)
+      .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+  });
 
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
@@ -90,7 +127,15 @@ export class TeamDashboard implements OnInit {
   private readonly alertCtrl = inject(AlertController);
 
   constructor() {
-    addIcons({ settingsOutline, trashOutline, addOutline, pencilOutline });
+    addIcons({
+      settingsOutline,
+      trashOutline,
+      addOutline,
+      pencilOutline,
+      calendarOutline,
+      locationOutline,
+      shirtOutline,
+    });
   }
 
   ngOnInit(): void {
@@ -117,8 +162,28 @@ export class TeamDashboard implements OnInit {
     }
   }
 
+  protected async onSegmentChange(event: any): Promise<void> {
+    const value = event.detail.value as 'roster' | 'games';
+    this.selectedSegment.set(value);
+    if (value === 'games' && this.games().length === 0) {
+      await this.loadGames();
+    }
+  }
+
+  protected async loadGames(): Promise<void> {
+    this.gamesLoading.set(true);
+    try {
+      const games = await firstValueFrom(this.gamesService.getGames(this.teamId));
+      this.games.set(games);
+    } catch {
+      this.errorMessage.set('Failed to load games. Please try again.');
+    } finally {
+      this.gamesLoading.set(false);
+    }
+  }
+
   protected async deletePlayer(playerId: string): Promise<void> {
-    const teamId = this.route.snapshot.paramMap.get('id');
+    const teamId = this.teamId;
     if (!teamId) return;
 
     const alert = await this.alertCtrl.create({
@@ -135,6 +200,30 @@ export class TeamDashboard implements OnInit {
               this.players.update((list) => list.filter((p) => p.id !== playerId));
             } catch {
               this.errorMessage.set('Failed to remove player. Please try again.');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  protected async deleteGame(game: GameEntity): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Game?',
+      message: `Are you sure you want to delete the game against ${game.opponent}?`,
+      buttons: [
+        'Cancel',
+        {
+          text: 'Delete',
+          role: 'confirm',
+          handler: async () => {
+            try {
+              await firstValueFrom(this.gamesService.deleteGame(game.id));
+              this.games.update((list) => list.filter((g) => g.id !== game.id));
+            } catch {
+              this.errorMessage.set('Failed to delete game. Please try again.');
             }
           },
         },
