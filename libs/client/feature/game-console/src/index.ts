@@ -1,1 +1,3 @@
-export * from './lib/client-feature-game-console/client-feature-game-console';
+export * from './lib/live-clock.service';
+export * from './lib/live-game-state.service';
+export * from './lib/console-wrapper/console-wrapper';

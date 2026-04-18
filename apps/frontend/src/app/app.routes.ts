@@ -53,6 +53,11 @@ export const appRoutes: Route[] = [
           import('./teams/games/lineup-editor/lineup-editor').then((m) => m.LineupEditor),
       },
       {
+        path: 'teams/:id/games/:gameId/console',
+        loadComponent: () =>
+          import('@apex-team/client/feature/game-console').then((m) => m.ConsoleWrapper),
+      },
+      {
         path: 'teams/:id',
         loadComponent: () =>
           import('./teams/team-dashboard/team-dashboard').then((m) => m.TeamDashboard),
