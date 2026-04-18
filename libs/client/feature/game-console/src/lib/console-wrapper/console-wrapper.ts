@@ -13,6 +13,7 @@ import {
   IonIcon,
   IonContent,
   IonPopover,
+  IonBackButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { chevronBackOutline, playOutline, pauseOutline } from 'ionicons/icons';
@@ -45,6 +46,7 @@ import { Player } from '@apex-team/shared/util/models';
     SoccerPitchViewComponent,
     PlayerActionMenuComponent,
     EventLogViewComponent,
+    IonBackButton,
   ],
   templateUrl: './console-wrapper.html',
   styleUrls: ['./console-wrapper.scss'],
