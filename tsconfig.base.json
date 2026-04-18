@@ -16,7 +16,10 @@
     "baseUrl": ".",
     "paths": {
       "@apex-team/shared/util/models": ["libs/shared/util/models/src/index.ts"],
-      "@apex-team/client/ui/theme": ["libs/client/ui/theme/src/index.ts"]
+      "@apex-team/client/ui/theme": ["libs/client/ui/theme/src/index.ts"],
+      "@apex-team/client/feature/game-console": [
+        "libs/client/feature/game-console/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

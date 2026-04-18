@@ -1,0 +1,13 @@
+{
+  "name": "client-feature-game-console",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/client/feature/game-console/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["domain:client", "type:feature"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

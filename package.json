@@ -38,6 +38,8 @@
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
+    "@analogjs/vite-plugin-angular": "~2.1.2",
+    "@analogjs/vitest-angular": "~2.1.2",
     "@angular-devkit/core": "~21.2.0",
     "@angular-devkit/schematics": "~21.2.0",
     "@angular/build": "~21.2.0",
@@ -72,6 +74,7 @@
     "@types/pg": "^8.20.0",
     "@typescript-eslint/utils": "^8.40.0",
     "@vitest/coverage-v8": "~4.1.0",
+    "@vitest/ui": "~4.1.0",
     "angular-eslint": "^21.2.0",
     "autoprefixer": "^10.4.0",
     "eslint": "^9.8.0",
