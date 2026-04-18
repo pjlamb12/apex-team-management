@@ -4,9 +4,11 @@ import { intervalToDuration } from 'date-fns';
 
 @Component({
   selector: 'app-clock-display',
+  standalone: true,
+  imports: [],
   templateUrl: './clock-display.html',
 })
-export class ClockDisplay {
+export class ClockDisplayComponent {
   private readonly clockService = inject(LiveClockService);
 
   protected readonly formattedTime = computed(() => {

@@ -14,37 +14,47 @@
 </ion-header>
 
 <ion-content>
-  @if (isLoading()) {
-    <div class="flex items-center justify-center h-full">
-      <ion-spinner name="crescent"></ion-spinner>
-    </div>
-  } @else if (errorMessage()) {
-    <div class="flex items-center justify-center h-full p-4">
-      <ion-text color="danger">{{ errorMessage() }}</ion-text>
-    </div>
-  } @else {
-    <!-- Top Bar: Game Clock -->
-    <div class="flex flex-col items-center gap-4 p-4 bg-gray-900 text-white">
-      <app-clock-display></app-clock-display>
+  <!-- Top Bar: Game Clock -->
+  <div class="flex flex-col items-center gap-4 p-4 bg-gray-900 text-white">
+    <app-clock-display></app-clock-display>
 
-      <div class="flex gap-3">
-        @if (!isRunning()) {
-          <ion-button color="success" (click)="onStart()">Start</ion-button>
-        } @else {
-          <ion-button color="warning" (click)="onStop()">Stop</ion-button>
-        }
-        <ion-button color="medium" fill="outline" (click)="onReset()">Reset</ion-button>
-      </div>
+    <div class="flex gap-3">
+      @if (!isRunning()) {
+        <ion-button color="success" (click)="startClock()">Start</ion-button>
+      } @else {
+        <ion-button color="warning" (click)="stopClock()">Stop</ion-button>
+      }
     </div>
+  </div>
 
-    <!-- Center Area: Field View Placeholder -->
-    <div class="flex items-center justify-center h-64 bg-green-800 text-white text-center p-4 mt-2">
-      <p class="text-lg opacity-70">Field View — Coming Soon</p>
-    </div>
+  <!-- Center Area: Soccer Pitch View -->
+  <app-soccer-pitch-view
+    [players]="stateService.activePlayers()"
+    [selectedPlayerId]="selectedPlayerId()"
+    (playerSelected)="handlePlayerSelection($event)"
+  ></app-soccer-pitch-view>
 
-    <!-- Bottom: Bench View Placeholder -->
-    <div class="flex items-center justify-center h-32 bg-gray-800 text-white text-center p-4 mt-2">
-      <p class="text-base opacity-70">Bench — Coming Soon</p>
-    </div>
-  }
+  <!-- Bottom: Bench View -->
+  <app-bench-view
+    [players]="stateService.benchPlayers()"
+    [selectedPlayerId]="selectedPlayerId()"
+    (playerSelected)="handlePlayerSelection($event)"
+  ></app-bench-view>
+
+  <!-- Event Log -->
+  <app-event-log></app-event-log>
+
+  <!-- Player Action Popover -->
+  <ion-popover
+    [isOpen]="actionPlayer() !== null"
+    [event]="popoverEvent()"
+    (didDismiss)="actionPlayer.set(null); selectedPlayerId.set(null)"
+  >
+    @if (actionPlayer()) {
+      <app-player-action-menu
+        [player]="actionPlayer()!"
+        (actionSelected)="handleAction($event)"
+      ></app-player-action-menu>
+    }
+  </ion-popover>
 </ion-content>

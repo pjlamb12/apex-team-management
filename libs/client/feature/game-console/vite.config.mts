@@ -25,7 +25,7 @@ export default defineConfig(() => ({
     reporters: ['default'],
     server: {
       deps: {
-        inline: [/@ionic\/core/, /ionicons/]
+        inline: [/@ionic\/core/, /@ionic\/angular/, /ionicons/]
       }
     },
     coverage: {

@@ -36,6 +36,8 @@ describe('ConsoleWrapper', () => {
     localStorage.clear();
     clockServiceMock = {
       isRunning: signal(false),
+      elapsedMs: signal(0),
+      currentMinute: vi.fn().mockReturnValue(0),
       start: vi.fn(),
       stop: vi.fn(),
     };
@@ -96,24 +98,26 @@ describe('ConsoleWrapper', () => {
 
   it('should handle player selection', () => {
     const player1 = mockLineup[0].player as any;
-    component['handlePlayerSelection'](player1);
+    const mockEvent = new MouseEvent('click');
+    component['handlePlayerSelection']({ player: player1, event: mockEvent });
     expect(component['selectedPlayerId']()).toBe('p1');
 
     // Deselect if tapping again
-    component['handlePlayerSelection'](player1);
+    component['handlePlayerSelection']({ player: player1, event: mockEvent });
     expect(component['selectedPlayerId']()).toBe(null);
   });
 
   it('should trigger SUB event when swapping bench and active player', () => {
     const activePlayer = mockLineup[0].player as any;
     const benchPlayer = mockLineup[1].player as any;
+    const mockEvent = new MouseEvent('click');
 
     // Select bench player
-    component['handlePlayerSelection'](benchPlayer);
+    component['handlePlayerSelection']({ player: benchPlayer, event: mockEvent });
     expect(component['selectedPlayerId']()).toBe('p2');
 
     // Tap active player
-    component['handlePlayerSelection'](activePlayer);
+    component['handlePlayerSelection']({ player: activePlayer, event: mockEvent });
 
     // Selection should be cleared
     expect(component['selectedPlayerId']()).toBe(null);
