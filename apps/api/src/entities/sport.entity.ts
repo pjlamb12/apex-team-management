@@ -8,9 +8,12 @@ export class SportEntity {
   @Column({ unique: true })
   name: string;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ name: 'position_types', type: 'jsonb', default: [] })
   positionTypes: string[];
 
-  @Column({ default: true })
+  @Column({ name: 'event_definitions', type: 'jsonb', default: [] })
+  eventDefinitions: any[];
+
+  @Column({ name: 'is_enabled', default: true })
   isEnabled: boolean;
 }
