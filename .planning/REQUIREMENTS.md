@@ -31,15 +31,15 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Games
 
-- [ ] **GAME-01**: Coach can create a new game with opponent, location, date/time, and uniform color
-- [ ] **GAME-02**: Coach can view list of past and upcoming games
-- [ ] **GAME-03**: Coach can edit game details before kickoff
-- [ ] **GAME-04**: Coach can delete a game
+- [/] **GAME-01**: Coach can create a new game with opponent, location, date/time, and uniform color
+- [/] **GAME-02**: Coach can view list of past and upcoming games
+- [/] **GAME-03**: Coach can edit game details before kickoff
+- [/] **GAME-04**: Coach can delete a game
 
 ### Live Console
 
-- [ ] **LIVE-01**: Coach can set a starting lineup by assigning players to positions
-- [ ] **LIVE-02**: Coach can see who's on the field and who's on the bench at a glance
+- [/] **LIVE-01**: Coach can set a starting lineup by assigning players to positions
+- [/] **LIVE-02**: Coach can see who's on the field and who's on the bench at a glance
 - [ ] **LIVE-03**: Coach can swap players in/out during a live game
 - [ ] **LIVE-04**: Coach can view substitution history for the current game
 - [ ] **LIVE-05**: Coach can undo the last substitution
@@ -130,12 +130,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ROST-02 | Phase 4 | Pending |
 | ROST-03 | Phase 4 | Pending |
 | ROST-04 | Phase 4 | Pending |
-| GAME-01 | Phase 5 | Pending |
-| GAME-02 | Phase 5 | Pending |
-| GAME-03 | Phase 5 | Pending |
-| GAME-04 | Phase 5 | Pending |
-| LIVE-01 | Phase 5 | Pending |
-| LIVE-02 | Phase 5 | Pending |
+| GAME-01 | Phase 5 | In Progress |
+| GAME-02 | Phase 5 | In Progress |
+| GAME-03 | Phase 5 | In Progress |
+| GAME-04 | Phase 5 | In Progress |
+| LIVE-01 | Phase 5 | In Progress |
+| LIVE-02 | Phase 5 | In Progress |
 | LIVE-03 | Phase 6 | Pending |
 | LIVE-04 | Phase 6 | Pending |
 | LIVE-05 | Phase 6 | Pending |
