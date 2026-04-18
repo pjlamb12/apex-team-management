@@ -16,6 +16,7 @@ import { LineupEntriesService } from './lineup-entries.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { SaveLineupDto } from './dto/save-lineup.dto';
+import { CreateEventDto } from './dto/create-event.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller()
@@ -68,5 +69,14 @@ export class GamesController {
     @Body() dto: SaveLineupDto,
   ) {
     return this.lineupService.saveLineup(gameId, dto);
+  }
+
+  @Post('games/:gameId/events')
+  logEvent(
+    @Param('gameId', ParseUUIDPipe) gameId: string,
+    @Body() dto: CreateEventDto,
+    @Request() req: { user: { sub: string } },
+  ) {
+    return this.gamesService.logEvent(gameId, dto, req.user.sub);
   }
 }
