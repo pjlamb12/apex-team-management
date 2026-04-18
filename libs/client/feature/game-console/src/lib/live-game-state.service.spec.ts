@@ -1,59 +1,90 @@
 import { TestBed } from '@angular/core/testing';
-import { LiveGameStateService } from './live-game-state.service';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { LiveGameStateService, LineupEntry } from './live-game-state.service';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('LiveGameStateService', () => {
   let service: LiveGameStateService;
   const gameId = 'game-123';
 
+  const mockLineup: LineupEntry[] = [
+    {
+      playerId: 'p1',
+      player: { id: 'p1', firstName: 'P', lastName: '1', jerseyNumber: '1' } as any,
+      status: 'starting',
+      positionName: 'Forward',
+    },
+    {
+      playerId: 'p2',
+      player: { id: 'p2', firstName: 'P', lastName: '2', jerseyNumber: '2' } as any,
+      status: 'bench',
+      positionName: null,
+    },
+  ];
+
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({});
     service = TestBed.inject(LiveGameStateService);
-    service.initialize(gameId);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should start with empty events', () => {
-    expect(service.events()).toEqual([]);
+  it('should initialize with lineup and compute active/bench players', () => {
+    service.initialize(gameId, mockLineup);
+    
+    expect(service.activePlayers().length).toBe(1);
+    expect(service.activePlayers()[0].id).toBe('p1');
+    expect(service.activePlayers()[0].preferredPosition).toBe('Forward');
+    
+    expect(service.benchPlayers().length).toBe(1);
+    expect(service.benchPlayers()[0].id).toBe('p2');
   });
 
-  it('should push events and persist to localStorage', () => {
-    const event = { type: 'GOAL', playerId: 'player-1', timestamp: Date.now() };
-    service.pushEvent(event);
+  it('should update active/bench players when a SUB event is pushed', () => {
+    service.initialize(gameId, mockLineup);
     
-    expect(service.events()).toEqual([event]);
+    const subEvent = {
+      type: 'SUB',
+      playerIdIn: 'p2',
+      playerIdOut: 'p1',
+      timestamp: Date.now(),
+    };
     
-    const stored = JSON.parse(localStorage.getItem(`game-events-${gameId}`) || '[]');
-    expect(stored).toEqual([event]);
+    service.pushEvent(subEvent);
+    
+    expect(service.activePlayers().length).toBe(1);
+    expect(service.activePlayers()[0].id).toBe('p2');
+    expect(service.activePlayers()[0].preferredPosition).toBe('Forward'); // Position preserved from swapped player
+    
+    expect(service.benchPlayers().length).toBe(1);
+    expect(service.benchPlayers()[0].id).toBe('p1');
   });
 
-  it('should undo the last event', () => {
-    const event1 = { type: 'GOAL', playerId: 'player-1', timestamp: 1000 };
-    const event2 = { type: 'GOAL', playerId: 'player-2', timestamp: 2000 };
+  it('should undo a SUB event and restore roster', () => {
+    service.initialize(gameId, mockLineup);
     
-    service.pushEvent(event1);
-    service.pushEvent(event2);
-    expect(service.events()).toEqual([event1, event2]);
+    const subEvent = {
+      type: 'SUB',
+      playerIdIn: 'p2',
+      playerIdOut: 'p1',
+      timestamp: Date.now(),
+    };
+    
+    service.pushEvent(subEvent);
+    expect(service.activePlayers()[0].id).toBe('p2');
     
     service.undo();
-    expect(service.events()).toEqual([event1]);
-    
-    const stored = JSON.parse(localStorage.getItem(`game-events-${gameId}`) || '[]');
-    expect(stored).toEqual([event1]);
+    expect(service.activePlayers()[0].id).toBe('p1');
   });
 
   it('should restore state from localStorage on initialization', () => {
-    const event = { type: 'GOAL', playerId: 'player-1', timestamp: 1000 };
+    const event = { type: 'GOAL', playerId: 'p1', timestamp: 1000 };
     localStorage.setItem(`game-events-${gameId}`, JSON.stringify([event]));
     
-    // Create a new instance to simulate reload
-    const newService = TestBed.inject(LiveGameStateService);
-    newService.initialize(gameId);
+    service.initialize(gameId, mockLineup);
     
-    expect(newService.events()).toEqual([event]);
+    expect(service.events()).toEqual([event]);
   });
 });

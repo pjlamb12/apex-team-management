@@ -14,6 +14,14 @@ export class LiveClockService {
   public readonly elapsedMs = signal<number>(0);
 
   /**
+   * Current 1-indexed minute of the game.
+   */
+  public readonly currentMinute = computed(() => {
+    const elapsedMs = this.elapsedMs();
+    return Math.floor(elapsedMs / 60000) + 1;
+  });
+
+  /**
    * Whether the clock is currently running.
    */
   public readonly isRunning = computed(() => this.startTime() !== null);

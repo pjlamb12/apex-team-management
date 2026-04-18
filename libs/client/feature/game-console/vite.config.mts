@@ -8,6 +8,9 @@ export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../../../node_modules/.vite/libs/client/feature/game-console',
   plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  ssr: {
+    noExternal: ['@ionic/core', 'ionicons', 'ionicons/icons']
+  },
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
@@ -20,6 +23,11 @@ export default defineConfig(() => ({
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     setupFiles: ['src/test-setup.ts'],
     reporters: ['default'],
+    server: {
+      deps: {
+        inline: [/@ionic\/core/, /ionicons/]
+      }
+    },
     coverage: {
       reportsDirectory: '../../../../coverage/libs/client/feature/game-console',
       provider: 'v8' as const,

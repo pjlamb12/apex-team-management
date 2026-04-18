@@ -153,4 +153,21 @@ export class GamesService {
 
     return this.eventRepo.save(event);
   }
+
+  async removeEvent(gameId: string, eventId: string, userId: string): Promise<void> {
+    const event = await this.eventRepo.findOne({
+      where: { id: eventId, gameId },
+      relations: ['game', 'game.season', 'game.season.team'],
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Event ${eventId} not found for game ${gameId}`);
+    }
+
+    if (event.game?.season?.team?.coachId !== userId) {
+      throw new ForbiddenException('Not authorized to remove events for this game');
+    }
+
+    await this.eventRepo.remove(event);
+  }
 }

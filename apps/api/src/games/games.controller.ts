@@ -79,4 +79,13 @@ export class GamesController {
   ) {
     return this.gamesService.logEvent(gameId, dto, req.user.sub);
   }
+
+  @Delete('games/:gameId/events/:eventId')
+  removeEvent(
+    @Param('gameId', ParseUUIDPipe) gameId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Request() req: { user: { sub: string } },
+  ) {
+    return this.gamesService.removeEvent(gameId, eventId, req.user.sub);
+  }
 }

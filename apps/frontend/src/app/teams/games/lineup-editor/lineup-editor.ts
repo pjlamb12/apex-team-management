@@ -19,6 +19,7 @@ import {
   IonText,
   IonListHeader,
   IonNote,
+  IonBadge,
 } from '@ionic/angular/standalone';
 import { GamesService, GameEntity, LineupEntry, SaveLineupDto } from '../games.service';
 import { PlayersService, PlayerEntity } from '../../players.service';
@@ -49,6 +50,7 @@ interface LineupSlot {
     IonText,
     IonListHeader,
     IonNote,
+    IonBadge,
   ],
   templateUrl: './lineup-editor.html',
   styleUrl: './lineup-editor.scss',
