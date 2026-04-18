@@ -1,0 +1,16 @@
+<div class="bench-container p-4">
+  <h2 class="text-xl font-bold mb-4">Bench</h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <ion-card 
+      *ngFor="let player of players()" 
+      (click)="selectPlayer(player, $event)"
+      [class.selected]="selectedPlayerId() === player.id"
+      class="m-0 cursor-pointer transition-all duration-200"
+    >
+      <ion-card-header>
+        <ion-card-title class="text-lg">#{{ player.jerseyNumber }}</ion-card-title>
+        <ion-card-subtitle>{{ player.firstName }} {{ player.lastName }}</ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
+  </div>
+</div>

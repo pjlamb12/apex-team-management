@@ -1,0 +1,47 @@
+<div class="pitch-container relative w-full aspect-[2/3] bg-green-700 overflow-hidden border-4 border-white rounded-lg shadow-inner">
+  <!-- Pitch Markings -->
+  <div class="absolute inset-0 pointer-events-none opacity-40">
+    <!-- Half-way line -->
+    <div class="absolute top-1/2 left-0 right-0 h-1 bg-white"></div>
+    <!-- Center circle -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 aspect-square border-4 border-white rounded-full"></div>
+    <!-- Center spot -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full"></div>
+    
+    <!-- Top Penalty area -->
+    <div class="absolute top-0 left-[20%] right-[20%] h-[15%] border-x-4 border-b-4 border-white"></div>
+    <!-- Top Goal area -->
+    <div class="absolute top-0 left-[35%] right-[35%] h-[5%] border-x-4 border-b-4 border-white"></div>
+    
+    <!-- Bottom Penalty area -->
+    <div class="absolute bottom-0 left-[20%] right-[20%] h-[15%] border-x-4 border-t-4 border-white"></div>
+    <!-- Bottom Goal area -->
+    <div class="absolute bottom-0 left-[35%] right-[35%] h-[5%] border-x-4 border-t-4 border-white"></div>
+  </div>
+
+  <!-- Players -->
+  <div *ngFor="let player of positionedPlayers()" 
+       class="player-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 z-10"
+       [class.selected]="selectedPlayerId() === player.id"
+       [style.left.%]="player.x"
+       [style.top.%]="player.y"
+       (click)="selectPlayer(player, $event)">
+    
+    <div class="flex flex-col items-center">
+      <div 
+        class="flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-lg transition-colors duration-200"
+        [class.bg-blue-600]="selectedPlayerId() !== player.id"
+        [class.bg-yellow-400]="selectedPlayerId() === player.id"
+        [class.border-white]="selectedPlayerId() !== player.id"
+        [class.border-black]="selectedPlayerId() === player.id"
+      >
+        <span class="text-white font-bold text-sm" [class.text-black]="selectedPlayerId() === player.id">
+          {{ player.jerseyNumber || '?' }}
+        </span>
+      </div>
+      <span class="player-name text-[10px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded shadow mt-1 whitespace-nowrap">
+        {{ player.lastName }}
+      </span>
+    </div>
+  </div>
+</div>

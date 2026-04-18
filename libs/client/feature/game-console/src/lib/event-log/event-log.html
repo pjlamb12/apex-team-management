@@ -1,0 +1,33 @@
+<ion-list lines="full">
+  <ion-list-header>
+    <ion-label>Event Log</ion-label>
+    <ion-button fill="clear" (click)="undo()" [disabled]="events().length === 0">
+      <ion-icon slot="start" name="arrow-undo-outline"></ion-icon>
+      Undo Last
+    </ion-button>
+  </ion-list-header>
+
+  <ion-item *ngFor="let event of events()">
+    <ion-badge slot="start" color="light">{{ event.minuteOccurred }}'</ion-badge>
+    
+    <ion-icon 
+      slot="start" 
+      [name]="getEventIcon(event.type)" 
+      [color]="getEventColor(event.type)"
+    ></ion-icon>
+
+    <ion-label>
+      <h3 class="font-bold">{{ event.type.replace('_', ' ') }}</h3>
+      <p *ngIf="event.type === 'SUB'">
+        {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
+      </p>
+      <p *ngIf="event.type !== 'SUB'">
+        {{ getPlayerName(event.playerId) }}
+      </p>
+    </ion-label>
+  </ion-item>
+
+  <div *ngIf="events().length === 0" class="empty-state">
+    <ion-note>No events logged yet.</ion-note>
+  </div>
+</ion-list>

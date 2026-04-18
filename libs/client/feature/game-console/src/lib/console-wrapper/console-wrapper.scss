@@ -1,0 +1,82 @@
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  width: 100%;
+}
+
+.game-info {
+  flex: 1;
+  .opponent {
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+}
+
+.clock-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  app-clock-display {
+    font-family: monospace;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+}
+
+.console-container {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  padding: 0;
+  gap: 0;
+}
+
+.main-console {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+  height: 100%;
+}
+
+.event-log-panel {
+  flex: 1;
+  max-width: 350px;
+  height: 100%;
+}
+
+.field-view {
+  flex: 2;
+  display: flex;
+}
+
+.bench-view {
+  flex: 1;
+  display: flex;
+}
+
+
+.placeholder-card {
+  width: 100%;
+  border: 2px dashed var(--ion-color-medium);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--ion-color-light);
+  color: var(--ion-color-medium-shade);
+
+  h3 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  p {
+    margin: 4px 0 0;
+  }
+}
