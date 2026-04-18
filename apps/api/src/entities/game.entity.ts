@@ -18,4 +18,13 @@ export class GameEntity {
 
   @Column({ type: 'timestamp', nullable: true })
   scheduledAt: Date;
+
+  @Column({ nullable: true })
+  location: string | null;
+
+  @Column({ name: 'uniform_color', nullable: true })
+  uniformColor: string | null;
+
+  @Column({ default: 'scheduled' })
+  status: 'scheduled' | 'in_progress' | 'completed';
 }
