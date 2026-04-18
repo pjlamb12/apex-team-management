@@ -1,18 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { GamesService } from './games.service';
 import { GameEntity } from '../entities/game.entity';
 import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
+import { GameEventEntity } from '../entities/game-event.entity';
 import { CreateGameDto } from './dto/create-game.dto';
+import { CreateEventDto } from './dto/create-event.dto';
 
 describe('GamesService', () => {
   let service: GamesService;
   let gameRepo: Repository<GameEntity>;
   let seasonRepo: Repository<SeasonEntity>;
   let teamRepo: Repository<TeamEntity>;
+  let eventRepo: Repository<GameEventEntity>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -42,6 +45,13 @@ describe('GamesService', () => {
             findOne: vi.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(GameEventEntity),
+          useValue: {
+            create: vi.fn().mockImplementation((dto) => dto),
+            save: vi.fn().mockImplementation((event) => Promise.resolve({ id: 'event-1', ...event })),
+          },
+        },
       ],
     }).compile();
 
@@ -49,6 +59,7 @@ describe('GamesService', () => {
     gameRepo = module.get<Repository<GameEntity>>(getRepositoryToken(GameEntity));
     seasonRepo = module.get<Repository<SeasonEntity>>(getRepositoryToken(SeasonEntity));
     teamRepo = module.get<Repository<TeamEntity>>(getRepositoryToken(TeamEntity));
+    eventRepo = module.get<Repository<GameEventEntity>>(getRepositoryToken(GameEventEntity));
   });
 
   describe('create', () => {
@@ -150,6 +161,108 @@ describe('GamesService', () => {
       await service.remove('game-1');
 
       expect(gameRepo.remove).toHaveBeenCalledWith(game);
+    });
+  });
+
+  describe('logEvent', () => {
+    const gameId = 'game-1';
+    const userId = 'user-1';
+    const dto: CreateEventDto = {
+      eventType: 'GOAL',
+      minuteOccurred: 10,
+      payload: { scorerId: 'player-1' },
+    };
+
+    it('should create a game event if game exists and belongs to coach and payload is valid', async () => {
+      const mockGame = {
+        id: gameId,
+        season: {
+          team: {
+            coachId: userId,
+            sport: {
+              eventDefinitions: [
+                {
+                  type: 'GOAL',
+                  payloadSchema: {
+                    type: 'object',
+                    properties: { scorerId: { type: 'string' } },
+                    required: ['scorerId'],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+      vi.spyOn(gameRepo, 'findOne').mockResolvedValue(mockGame as any);
+
+      const result = await service.logEvent(gameId, dto, userId);
+
+      expect(result).toBeDefined();
+      expect(result.eventType).toBe('GOAL');
+      expect(eventRepo.save).toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenException if game team does not belong to coach', async () => {
+      const mockGame = {
+        id: gameId,
+        season: {
+          team: {
+            coachId: 'other-user',
+          },
+        },
+      };
+      vi.spyOn(gameRepo, 'findOne').mockResolvedValue(mockGame as any);
+
+      await expect(service.logEvent(gameId, dto, userId)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException if event type is not valid for the sport', async () => {
+      const mockGame = {
+        id: gameId,
+        season: {
+          team: {
+            coachId: userId,
+            sport: {
+              eventDefinitions: [{ type: 'ASSIST' }],
+            },
+          },
+        },
+      };
+      vi.spyOn(gameRepo, 'findOne').mockResolvedValue(mockGame as any);
+
+      await expect(service.logEvent(gameId, dto, userId)).rejects.toThrow('Event type GOAL not supported for this sport');
+    });
+
+    it('should throw BadRequestException if payload does not match schema', async () => {
+      const mockGame = {
+        id: gameId,
+        season: {
+          team: {
+            coachId: userId,
+            sport: {
+              eventDefinitions: [
+                {
+                  type: 'GOAL',
+                  payloadSchema: {
+                    type: 'object',
+                    properties: { scorerId: { type: 'string' } },
+                    required: ['scorerId'],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+      vi.spyOn(gameRepo, 'findOne').mockResolvedValue(mockGame as any);
+
+      const invalidDto: CreateEventDto = {
+        eventType: 'GOAL',
+        payload: { invalidField: 'value' },
+      };
+
+      await expect(service.logEvent(gameId, invalidDto, userId)).rejects.toThrow(BadRequestException);
     });
   });
 });
