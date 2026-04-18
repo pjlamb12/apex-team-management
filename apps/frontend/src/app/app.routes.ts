@@ -33,11 +33,6 @@ export const appRoutes: Route[] = [
           import('./teams/create-team/create-team').then((m) => m.CreateTeam),
       },
       {
-        path: 'teams/:id',
-        loadComponent: () =>
-          import('./teams/team-dashboard/team-dashboard').then((m) => m.TeamDashboard),
-      },
-      {
         path: 'teams/:id/settings',
         loadComponent: () =>
           import('./teams/edit-team/edit-team').then((m) => m.EditTeam),
@@ -56,6 +51,11 @@ export const appRoutes: Route[] = [
         path: 'teams/:id/games/:gameId/lineup',
         loadComponent: () =>
           import('./teams/games/lineup-editor/lineup-editor').then((m) => m.LineupEditor),
+      },
+      {
+        path: 'teams/:id',
+        loadComponent: () =>
+          import('./teams/team-dashboard/team-dashboard').then((m) => m.TeamDashboard),
       },
       { path: '', redirectTo: 'teams', pathMatch: 'full' },
     ],
