@@ -1,10 +1,11 @@
 ---
 phase: 8
 slug: ui-rework
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-19
+reviewed_at: 2026-04-19
 ---
 
 # Phase 8 — UI Design Contract
@@ -209,7 +210,7 @@ All values are multiples of 4px. This matches the existing usage found across te
 | Body | 14px | 400 | 1.5 | `ion-label p`, metadata rows, form hints |
 | Label | 16px | 400 | 1.5 | `ion-label h2`, list item primary text, input labels |
 | Heading | 20px | 700 | 1.2 | Page section headings (`h2`), card titles |
-| Display | 28px | 900 | 1.1 | Score values, app name ("Apex Team"), game opponent name |
+| Display | 28px | 700 | 1.1 | Score values, app name ("Apex Team"), game opponent name |
 
 **Font stack:** `Inter, system-ui, -apple-system, sans-serif`
 Inter is already referenced in `console-wrapper.scss`. Apply via global Ionic variable:
@@ -323,6 +324,8 @@ Inter is already referenced in `console-wrapper.scss`. Apply via global Ionic va
 | Top bar area | `bg-gray-900` Tailwind class | Replace with `bg-ap-surface-raised` or `bg-[#263044]` |
 | Main content area | `bg-gray-950` Tailwind class | Replace with `bg-ap-bg` or `bg-[#0f172a]` |
 | Sideline panel | `bg-gray-900` Tailwind class | Replace with `bg-ap-surface-raised` |
+
+**Focal point:** scoreboard (Display/28px score values) — primary visual anchor; bench and pitch are secondary.
 
 **Action:** This file has the most hardcoded black — remove all three hardcodes and replace with AP tokens.
 
