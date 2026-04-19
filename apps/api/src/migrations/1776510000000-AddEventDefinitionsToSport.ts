@@ -54,6 +54,28 @@ export class AddEventDefinitionsToSport1776510000000 implements MigrationInterfa
           required: ['playerId', 'color'],
           additionalProperties: false
         }
+      },
+      {
+        type: 'YELLOW_CARD',
+        payloadSchema: {
+          type: 'object',
+          properties: {
+            playerId: { type: 'string', format: 'uuid' }
+          },
+          required: ['playerId'],
+          additionalProperties: false
+        }
+      },
+      {
+        type: 'RED_CARD',
+        payloadSchema: {
+          type: 'object',
+          properties: {
+            playerId: { type: 'string', format: 'uuid' }
+          },
+          required: ['playerId'],
+          additionalProperties: false
+        }
       }
     ];
 

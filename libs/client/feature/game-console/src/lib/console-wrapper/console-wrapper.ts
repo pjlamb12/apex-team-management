@@ -153,10 +153,15 @@ export class ConsoleWrapper implements OnInit {
       const inPlayerId = isSelectedOnBench ? currentSelectionId : player.id;
       const outPlayerId = isSelectedActive ? currentSelectionId : player.id;
 
+      // Determine the position the outgoing player held so we can pass it to the backend
+      const outgoingActive = activePlayers.find(p => p.id === outPlayerId);
+      const positionName = outgoingActive?.preferredPosition ?? 'Unknown';
+
       this.stateService.pushEvent({
         type: 'SUB',
         playerIdIn: inPlayerId,
         playerIdOut: outPlayerId,
+        positionName,
         timestamp: Date.now(),
         minuteOccurred: this.clockService.currentMinute(),
       });
@@ -177,12 +182,23 @@ export class ConsoleWrapper implements OnInit {
   }
 
   protected handleAction(action: { type: string; playerId: string }): void {
-    this.stateService.pushEvent({
+    const baseEvent = {
       type: action.type,
-      playerId: action.playerId,
       timestamp: Date.now(),
       minuteOccurred: this.clockService.currentMinute(),
-    });
+    };
+
+    let eventPayload: Record<string, any>;
+    if (action.type === 'GOAL') {
+      eventPayload = { scorerId: action.playerId };
+    } else if (action.type === 'ASSIST') {
+      eventPayload = { assistorId: action.playerId };
+    } else {
+      // YELLOW_CARD, RED_CARD, and any other player-centric events
+      eventPayload = { playerId: action.playerId };
+    }
+
+    this.stateService.pushEvent({ ...baseEvent, ...eventPayload });
     this.selectedPlayerId.set(null);
     this.actionPlayer.set(null);
   }

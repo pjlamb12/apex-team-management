@@ -134,9 +134,10 @@ export class GamesService {
       );
     }
 
-    if (definition.payloadSchema && dto.payload) {
+    if (definition.payloadSchema) {
+      const payloadToValidate = dto.payload ?? {};
       const validate = this.ajv.compile(definition.payloadSchema);
-      const valid = validate(dto.payload);
+      const valid = validate(payloadToValidate);
       if (!valid) {
         throw new BadRequestException(
           `Invalid payload for event type ${dto.eventType}: ${this.ajv.errorsText(
