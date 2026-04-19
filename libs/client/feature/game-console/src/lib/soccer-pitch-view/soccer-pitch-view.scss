@@ -5,7 +5,14 @@
 .player-slot {
   &.selected {
     z-index: 20;
-    transform: translate(-50%, -50%) scale(1.15);
+    // Removed translate(-50%, -50%) to prevent double-translation with Tailwind classes
+    transform: scale(1.1);
+  }
+
+  // Add color change on hover for the circle
+  &:hover .player-circle:not(.selected-circle) {
+    background-color: var(--ion-color-blue-500, #3b82f6);
+    border-color: #facc15; // Yellow-400 border on hover
   }
 }
 

@@ -29,7 +29,8 @@
     
     <div class="flex flex-col items-center">
       <div 
-        class="flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-lg transition-colors duration-200"
+        class="player-circle flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-lg transition-all duration-200"
+        [class.selected-circle]="selectedPlayerId() === player.id"
         [class.bg-blue-600]="selectedPlayerId() !== player.id"
         [class.bg-yellow-400]="selectedPlayerId() === player.id"
         [class.border-white]="selectedPlayerId() !== player.id"
