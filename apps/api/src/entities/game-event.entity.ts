@@ -13,10 +13,10 @@ export class GameEventEntity {
   @Column({ name: 'game_id' })
   gameId: string;
 
-  @Column()
+  @Column({ name: 'event_type' })
   eventType: string;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ name: 'minute_occurred', type: 'int', nullable: true })
   minuteOccurred: number;
 
   @Column({ type: 'jsonb', default: {} })

@@ -16,7 +16,7 @@ export class GameEntity {
   @Column({ nullable: true })
   opponent: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'scheduled_at', type: 'timestamp', nullable: true })
   scheduledAt: Date;
 
   @Column({ nullable: true })

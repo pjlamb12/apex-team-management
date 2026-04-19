@@ -16,13 +16,13 @@ export class SeasonEntity {
   @Column()
   name: string;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ name: 'start_date', type: 'date', nullable: true })
   startDate: string;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ name: 'end_date', type: 'date', nullable: true })
   endDate: string;
 
-  @Column({ default: false })
+  @Column({ name: 'is_active', default: false })
   isActive: boolean;
 
   @Column({ name: 'players_on_field', nullable: true, type: 'integer' })
