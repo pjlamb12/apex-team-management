@@ -33,10 +33,10 @@ export class SoccerPitchViewComponent {
     // Mapping based on categories for a soccer pitch (top-down view)
     // Forwards at the top, GK at the bottom
     const yMap: Record<string, number> = {
-      Goalkeeper: 90,
-      Defender: 70,
-      Midfielder: 45,
-      Forward: 20,
+      GK: 90,
+      DEF: 70,
+      MID: 45,
+      FWD: 20,
     };
 
     Object.entries(grouped).forEach(([pos, playersInPos]) => {
