@@ -20,7 +20,7 @@ import {
 } from '@ionic/angular/standalone';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { addIcons } from 'ionicons';
-import { peopleOutline, addOutline, trashOutline, createOutline } from 'ionicons/icons';
+import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline } from 'ionicons/icons';
 
 interface Sport {
   id: string;
@@ -55,7 +55,7 @@ interface Team {
   templateUrl: './teams-list.html',
   styleUrl: './teams-list.scss',
 })
-export class TeamsList implements OnInit {
+export class TeamsList {
   private readonly http = inject(HttpClient);
   private readonly config = inject(RuntimeConfigLoaderService);
   protected readonly alertCtrl = inject(AlertController);
@@ -69,10 +69,10 @@ export class TeamsList implements OnInit {
   }
 
   constructor() {
-    addIcons({ peopleOutline, addOutline, trashOutline, createOutline });
+    addIcons({ peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline });
   }
 
-  ngOnInit(): void {
+  ionViewWillEnter(): void {
     void this.loadTeams();
   }
 

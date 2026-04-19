@@ -1,16 +1,22 @@
 // Teams list page styles
 ion-card {
-  --background: var(--ion-color-step-50, #1a1a1a);
-  border-radius: 12px;
+  --background: #121212; // Slightly lighter than pure black for depth
+  --color: white;
+  border-radius: 16px; // More pronounced rounded corners
+  border: 1px solid rgba(255, 255, 255, 0.08); // Subtle border for definition
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  margin-bottom: 16px;
 }
 
-ion-card-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
+ion-card-title {
+  color: white;
 }
 
 ion-fab-button {
   --background: var(--ion-color-primary);
+}
+
+.max-w-2xl {
+  padding-left: 16px;
+  padding-right: 16px;
 }
