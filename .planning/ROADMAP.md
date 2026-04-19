@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-14
 **Milestone:** v1 — Game Day Console
-**Phases:** 7
+**Phases:** 8
 **Requirements:** 31
 
 ## Phase Overview
@@ -16,6 +16,7 @@
 | 5 | Games & Lineup | Coach can create games and assign players to starting positions | GAME-01, GAME-02, GAME-03, GAME-04, LIVE-01, LIVE-02 | 5 |
 | 6 | Live Game Console | ● Complete | LIVE-03, LIVE-04, LIVE-05, LIVE-06, LIVE-07, LIVE-08, INFR-03 | 5 |
 | 7 | PWA & Native Builds | ● Complete | INFR-04, INFR-05, INFR-06 | 4 |
+| 8 | UI Rework | Resolve dark-theme inconsistencies — black backgrounds, dark-gray-on-black contrast issues, and visual polish across all screens | — | — |
 
 ## Phase Details
 
@@ -185,5 +186,26 @@ Plans:
 4. Capacitor iOS build produces a working archive for TestFlight/App Store
 
 ---
+
+### Phase 8: UI Rework
+
+**Goal:** Resolve dark-theme inconsistencies across all screens — eliminate opaque black backgrounds, dark-gray-on-black contrast issues, and other visual polish problems so the app feels cohesive and readable.
+
+**Depends on:** Phase 7
+
+**Plans:** 4 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Global token system: fill theme.css AP overrides + update styles.scss @theme block and import order
+- [ ] 08-02-PLAN.md — Game console hardcode removal: console-wrapper, event-log, soccer-pitch-view
+- [ ] 08-03-PLAN.md — Per-page SCSS cleanup: redundant ion-card overrides, teams-list border, lineup-editor border
+- [ ] 08-04-PLAN.md — Visual verification checkpoint across all 13 screens
+
+**Success criteria:**
+1. No screen has an unintended solid black background that breaks the design system
+2. All text/icon elements meet sufficient contrast against their backgrounds
+3. Dark-theme colors are consistent across all pages and components
+
+---
 *Roadmap created: 2026-04-14*
-*Last updated: 2026-04-19 after Project Completion*
+*Last updated: 2026-04-19 — Phase 8 planned: 4 plans in 3 waves*
