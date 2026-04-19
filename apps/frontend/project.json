@@ -18,9 +18,11 @@
 					{
 						"glob": "**/*",
 						"input": "apps/frontend/public"
-					}
+					},
+					"apps/frontend/src/manifest.webmanifest"
 				],
-				"styles": ["apps/frontend/src/styles.scss"]
+				"styles": ["apps/frontend/src/styles.scss"],
+				"serviceWorker": "apps/frontend/src/ngsw-config.json"
 			},
 			"configurations": {
 				"production": {
@@ -66,6 +68,14 @@
 		},
 		"test": {
 			"executor": "@angular/build:unit-test",
+			"options": {}
+		},
+		"cap": {
+			"command": "npx cap sync",
+			"options": {}
+		},
+		"cap-copy": {
+			"command": "npx cap copy",
 			"options": {}
 		},
 		"serve-static": {

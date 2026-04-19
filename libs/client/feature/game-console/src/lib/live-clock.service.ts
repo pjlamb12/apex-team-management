@@ -1,4 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 @Injectable({
   providedIn: 'root',
@@ -54,9 +55,15 @@ export class LiveClockService {
   /**
    * Starts the clock from its current elapsed time.
    */
-  public start(): void {
+  public async start(): Promise<void> {
     if (this.isRunning()) {
       return;
+    }
+
+    try {
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+      // Ignore haptic errors on web
     }
 
     const now = Date.now();
@@ -70,9 +77,15 @@ export class LiveClockService {
   /**
    * Stops the clock and accumulates elapsed time.
    */
-  public stop(): void {
+  public async stop(): Promise<void> {
     if (!this.isRunning()) {
       return;
+    }
+
+    try {
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+      // Ignore haptic errors on web
     }
 
     this.accumulatedMs.update((total) => total + (Date.now() - this.startTime()!));
@@ -90,7 +103,13 @@ export class LiveClockService {
   /**
    * Resets the clock to zero and stops it.
    */
-  public reset(): void {
+  public async reset(): Promise<void> {
+    try {
+      await Haptics.vibrate();
+    } catch (e) {
+      // Ignore haptic errors on web
+    }
+
     this.stop();
     this.accumulatedMs.set(0);
     this.elapsedMs.set(0);

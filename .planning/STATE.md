@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 5 Plan 02 Complete
-last_updated: "2026-04-18T05:25:47Z"
+status: Complete
+last_updated: "2026-04-19T06:00:00Z"
 progress:
   total_phases: 7
-  completed_phases: 4
-  total_plans: 30
-  completed_plans: 25
-  percent: 83
+  completed_phases: 7
+  total_plans: 42
+  completed_plans: 42
+  percent: 100
 ---
 
 # State: Apex Team
@@ -19,8 +19,8 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
-**Current focus:** Phase 05 — games-lineup
-**Current Position:** Phase 5 Plan 03 (Next)
+**Current focus:** Project Complete
+**Current Position:** Milestone v1.0 Delivered
 
 ## Current Milestone
 
@@ -32,11 +32,11 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 | 2 | Authentication | ● Complete | AUTH-01, AUTH-02, AUTH-03, AUTH-04 |
 | 3 | Teams & Sport Configuration | ● Complete | TEAM-01, TEAM-02, TEAM-04, TEAM-05 |
 | 4 | Roster Management | ● Complete | ROST-01, ROST-02, ROST-03, ROST-04 |
-| 5 | Games & Lineup | ◐ Executing | GAME-01..04, LIVE-01, LIVE-02 |
-| 6 | Live Game Console | ○ Pending | LIVE-03..08, INFR-03 |
-| 7 | PWA & Native Builds | ○ Pending | INFR-04, INFR-05, INFR-06 |
+| 5 | Games & Lineup | ● Complete | GAME-01..04, LIVE-01, LIVE-02 |
+| 6 | Live Game Console | ● Complete | LIVE-03..08, INFR-03 |
+| 7 | PWA & Native Builds | ● Complete | INFR-04, INFR-05, INFR-06 |
 
-Progress: ▓▓▓▓▓▓▓▓░░ 83%
+Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
 
 ## Decision Log
 
@@ -49,14 +49,25 @@ Progress: ▓▓▓▓▓▓▓▓░░ 83%
 | 2026-04-14 | Game entity has full scheduling fields from v1 | Avoid migration when adding scheduling UI in v2 |
 | 2026-04-16 | Added missing frontend proxy configuration during auth test | Added proxy.conf.json handling routing for /api/* without CORS complexity. |
 | 2026-04-17 | Phase 5 planned: Games & Lineup | Deliver game creation flow and starting lineup editor. Games scoped to active season. |
+| 2026-04-18 | Included team ownership verification in GamesService.create | Mitigate T-5-04-02 by checking coach_id on team |
+| 2026-04-18 | Implemented bulk replace for lineup entries | Simplifies client-side lineup editing and Phase 6 swap implementation |
+| 2026-04-18 | Use AJV for runtime validation of sport-specific JSON payloads to ensure schema adherence. | Support sport-agnostic event logging with dynamic validation. |
+| 2026-04-18 | Store event definitions on the Sport entity to allow for sport-agnostic event logging. | Dynamic events (GOAL, ASSIST, SUB, CARD) defined as data, not hardcoded. |
+| 2026-04-18 | YELLOW_CARD and RED_CARD registered as first-class event types in Soccer sport | Resolves sync mismatches where cards were logged locally but rejected by API. |
+| 2026-04-18 | Use localStorage for clock persistence keyed by gameId | Ensures game timer survives accidental page refresh (Requirement INFR-03). |
 
 ## Active Context
 
-- Phase 4 Roster Management complete and verified.
-- Phase 5 planned across 7 execution plans.
-- NestJS backend uses bulk-replace for lineups to simplify Phase 6 swap implementation.
-- Phase 5 Plan 01 (Database Schema) complete.
-- Phase 5 Plan 02 (DTOs and Test Scaffolds) complete.
+- Phase 6 Live Game Console complete and verified.
+- Touch-optimized substitution engine (2 taps) implemented and reactive.
+- Event-sourced game state with Undo support implemented.
+- Optimized backend sync with AJV validation and correct payload mapping.
+- Game clock persists across page reloads.
+
+## Session Continuity
+
+Last session: 2026-04-18
+Stopped at: Session resumed — Phase 6 verified and complete, ready for Phase 7
 
 ---
-*Last updated: 2026-04-18 after Phase 5 Plan 02*
+*Last updated: 2026-04-18 after Phase 6 completion*

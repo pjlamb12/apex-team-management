@@ -14,8 +14,8 @@
 | 3 | Teams & Sport Configuration | Coach can create and manage teams with sport-driven position config | TEAM-01, TEAM-02, TEAM-04, TEAM-05 | 4 |
 | 4 | Roster Management | Coach can build and manage a player roster for each team | ROST-01, ROST-02, ROST-03, ROST-04 | 4 |
 | 5 | Games & Lineup | Coach can create games and assign players to starting positions | GAME-01, GAME-02, GAME-03, GAME-04, LIVE-01, LIVE-02 | 5 |
-| 6 | Live Game Console | Coach can run a live game with substitutions and event logging | LIVE-03, LIVE-04, LIVE-05, LIVE-06, LIVE-07, LIVE-08, INFR-03 | 5 |
-| 7 | PWA & Native Builds | App is installable as PWA and builds for Android/iOS via Capacitor | INFR-04, INFR-05, INFR-06 | 4 |
+| 6 | Live Game Console | ● Complete | LIVE-03, LIVE-04, LIVE-05, LIVE-06, LIVE-07, LIVE-08, INFR-03 | 5 |
+| 7 | PWA & Native Builds | ● Complete | INFR-04, INFR-05, INFR-06 | 4 |
 
 ## Phase Details
 
@@ -141,8 +141,20 @@ Plans:
 
 **Depends on:** Phase 5
 
+**Plans:** 8 plans
+
+Plans:
+- [x] 06-01-PLAN.md — Foundation & Backend Updates
+- [x] 06-02-PLAN.md — Core Game State & Clock Services
+- [x] 06-03-PLAN.md — Console UI Shell & Routing
+- [x] 06-04-PLAN.md — Sport-Specific Visualization & Substitutions
+- [x] 06-05-PLAN.md — Event Logging & Sync
+- [x] 06-06-PLAN.md — Final Verification & Polishing
+- [x] 06-07-PLAN.md — Backend Sync Mismatch Fixes
+- [x] 06-08-PLAN.md — Clock Persistence and Signal Immutability Fixes
+
 **Success criteria:**
-1. Coach can swap a bench player with an on-field player in 3 taps or fewer
+1. Coach can swap a bench player with an on-field player in 2 taps
 2. Coach can view full substitution history with timestamps for the current game
 3. Coach can undo the last substitution
 4. Coach can tap a player to log a goal or assist with automatic timestamp
@@ -160,6 +172,12 @@ Plans:
 
 **Depends on:** Phase 6
 
+**Plans:** 4 plans
+- [x] 07-01-PLAN.md — PWA and Capacitor Initialization
+- [x] 07-02-PLAN.md — Native Platform Configuration
+- [x] 07-03-PLAN.md — Haptics and Native Branding
+- [x] 07-04-PLAN.md — Phase Verification & Build Artifacts
+
 **Success criteria:**
 1. App has a valid web manifest and service worker for PWA installation
 2. App is installable on mobile home screen via browser "Add to Home Screen"
@@ -168,4 +186,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-04-14*
-*Last updated: 2026-04-16 — Phase 2 planning complete (6 plans)*
+*Last updated: 2026-04-19 after Project Completion*
