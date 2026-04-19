@@ -24,41 +24,43 @@
   }
 
   @if (!isLoading() && teams().length > 0) {
-    <div class="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto py-4">
+    <div class="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto py-4">
       @for (team of teams(); track team.id) {
         <ion-card class="m-0 w-full cursor-pointer hover:brightness-110 transition-all" [routerLink]="['/teams', team.id]">
-          <ion-card-header class="flex flex-row items-center justify-between pb-2">
-            <div>
-              <ion-card-title class="text-xl font-bold text-white">{{ team.name }}</ion-card-title>
-              <ion-badge color="primary" class="mt-2 text-xs opacity-80">{{ team.sport?.name }}</ion-badge>
-            </div>
-            <div class="flex flex-row gap-1">
-              <ion-button
-                size="small"
-                fill="clear"
-                color="light"
-                class="m-0"
-                [routerLink]="['/teams', team.id, 'settings']"
-                (click)="$event.stopPropagation()"
-                aria-label="Edit Team"
-              >
-                <ion-icon name="create-outline" slot="icon-only" />
-              </ion-button>
-              <ion-button
-                size="small"
-                fill="clear"
-                color="danger"
-                class="m-0"
-                (click)="confirmDelete(team); $event.stopPropagation()"
-                aria-label="Delete Team"
-              >
-                <ion-icon name="trash-outline" slot="icon-only" />
-              </ion-button>
+          <ion-card-header>
+            <div class="flex flex-row items-start justify-between">
+              <div>
+                <ion-card-title>{{ team.name }}</ion-card-title>
+                <div class="mt-2">
+                  <ion-badge color="primary">{{ team.sport?.name }}</ion-badge>
+                </div>
+              </div>
+              <div class="flex flex-row gap-1">
+                <ion-button
+                  size="small"
+                  fill="clear"
+                  color="light"
+                  [routerLink]="['/teams', team.id, 'settings']"
+                  (click)="$event.stopPropagation()"
+                  aria-label="Edit Team"
+                >
+                  <ion-icon name="create-outline" slot="icon-only" />
+                </ion-button>
+                <ion-button
+                  size="small"
+                  fill="clear"
+                  color="danger"
+                  (click)="confirmDelete(team); $event.stopPropagation()"
+                  aria-label="Delete Team"
+                >
+                  <ion-icon name="trash-outline" slot="icon-only" />
+                </ion-button>
+              </div>
             </div>
           </ion-card-header>
-          <ion-card-content class="pt-0">
+          <ion-card-content>
             <div class="flex items-center gap-2 text-sm text-gray-400">
-              <span>View Roster & Games</span>
+              <span class="font-medium">Manage Roster & Games</span>
               <ion-icon name="chevron-forward-outline" class="text-xs" />
             </div>
           </ion-card-content>

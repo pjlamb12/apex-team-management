@@ -87,7 +87,7 @@
             </ion-list-header>
             @for (game of upcomingGames(); track game.id) {
               <ion-item-sliding>
-                <ion-item [routerLink]="['/teams', teamId, 'games', game.id]">
+                <ion-item [routerLink]="['/teams', teamId, 'games', game.id, 'lineup']">
                   <ion-label>
                     <h2>vs {{ game.opponent }}</h2>
                     <p>
@@ -123,7 +123,7 @@
             </ion-list-header>
             @for (game of pastGames(); track game.id) {
               <ion-item-sliding>
-                <ion-item [routerLink]="['/teams', teamId, 'games', game.id]">
+                <ion-item [routerLink]="['/teams', teamId, 'games', game.id, 'lineup']">
                   <ion-label>
                     <h2 class="opacity-70">vs {{ game.opponent }}</h2>
                     <p>
