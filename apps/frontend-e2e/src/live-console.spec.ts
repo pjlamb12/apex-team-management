@@ -94,8 +94,10 @@ test.describe('Live Game Console', () => {
 
     // 11. Persistence Check
     await page.reload();
-    await expect(page.locator('app-clock-display')).not.toHaveText('00:00');
+    // Wait for event log to confirm state rehydrated from localStorage
     await expect(page.locator('app-event-log')).toContainText('GOAL');
+    // Clock must NOT show 00:00 after reload — accumulatedMs was persisted
+    await expect(page.locator('app-clock-display')).not.toHaveText('00:00');
 
     // 12. Undo
     await page.locator('ion-button:has-text("Undo Last")').click();

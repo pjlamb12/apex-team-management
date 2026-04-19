@@ -73,10 +73,8 @@ export class EventSyncService {
       )
       .subscribe(response => {
         if (response) {
-          event.id = response.id;
-          event.synced = true;
+          this.stateService.markEventSynced(event.timestamp, response.id);
           this.syncingIds.delete(tempId);
-          this.stateService.save();
         }
       });
   }
@@ -96,9 +94,8 @@ export class EventSyncService {
       )
       .subscribe({
         next: () => {
-          event.synced = true; // Mark deletion as synced
+          this.stateService.markDeletionSynced(event.timestamp);
           this.syncingIds.delete(tempId);
-          this.stateService.save();
         },
         error: () => {
           this.syncingIds.delete(tempId);

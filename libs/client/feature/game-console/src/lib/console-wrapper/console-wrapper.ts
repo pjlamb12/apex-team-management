@@ -88,6 +88,7 @@ export class ConsoleWrapper implements OnInit {
         const gameId = this.gameId();
         if (gameId) {
           this.stateService.initialize(gameId, lineup);
+          this.clockService.initialize(gameId);
         }
       })
     )

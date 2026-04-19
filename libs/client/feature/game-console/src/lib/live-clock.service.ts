@@ -7,6 +7,7 @@ export class LiveClockService {
   private startTime = signal<number | null>(null);
   private accumulatedMs = signal<number>(0);
   private intervalId: any = null;
+  private gameId: string | null = null;
 
   /**
    * Current elapsed time in milliseconds.
@@ -25,6 +26,30 @@ export class LiveClockService {
    * Whether the clock is currently running.
    */
   public readonly isRunning = computed(() => this.startTime() !== null);
+
+  /**
+   * Initializes the clock for a specific game, restoring persisted elapsed time from localStorage.
+   */
+  public initialize(gameId: string): void {
+    this.gameId = gameId;
+    const stored = localStorage.getItem(`apex_clock_${gameId}`);
+    if (stored !== null) {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        this.accumulatedMs.set(parsed);
+        this.updateElapsed();
+      }
+    }
+  }
+
+  /**
+   * Persists the current accumulatedMs to localStorage under the game-scoped key.
+   */
+  private persistClock(): void {
+    if (this.gameId) {
+      localStorage.setItem(`apex_clock_${this.gameId}`, String(this.accumulatedMs()));
+    }
+  }
 
   /**
    * Starts the clock from its current elapsed time.
@@ -51,6 +76,7 @@ export class LiveClockService {
     }
 
     this.accumulatedMs.update((total) => total + (Date.now() - this.startTime()!));
+    this.persistClock();
     this.startTime.set(null);
 
     if (this.intervalId) {
@@ -68,6 +94,7 @@ export class LiveClockService {
     this.stop();
     this.accumulatedMs.set(0);
     this.elapsedMs.set(0);
+    this.persistClock();
   }
 
   private updateElapsed(): void {
