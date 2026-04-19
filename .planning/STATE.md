@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Complete
-last_updated: "2026-04-19T06:00:00Z"
+status: In Progress
+last_updated: "2026-04-19T12:00:00Z"
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 7
-  total_plans: 42
+  total_plans: 46
   completed_plans: 42
-  percent: 100
+  percent: 87
 ---
 
 # State: Apex Team
@@ -35,8 +35,9 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 | 5 | Games & Lineup | ● Complete | GAME-01..04, LIVE-01, LIVE-02 |
 | 6 | Live Game Console | ● Complete | LIVE-03..08, INFR-03 |
 | 7 | PWA & Native Builds | ● Complete | INFR-04, INFR-05, INFR-06 |
+| 8 | UI Rework | ◆ Ready to execute | — |
 
-Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
+Progress: ▓▓▓▓▓▓▓▓▓▓ 7/8 phases complete
 
 ## Decision Log
 
@@ -69,5 +70,10 @@ Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
 Last session: 2026-04-18
 Stopped at: Session resumed — Phase 6 verified and complete, ready for Phase 7
 
+## Accumulated Context
+
+### Roadmap Evolution
+- Phase 8 added: UI Rework — resolve dark-theme inconsistencies (black backgrounds, dark-gray-on-black contrast)
+
 ---
-*Last updated: 2026-04-18 after Phase 6 completion*
+*Last updated: 2026-04-19 — Phase 8 added*
