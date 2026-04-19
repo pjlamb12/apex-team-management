@@ -3,10 +3,6 @@
 }
 
 .player-slot {
-  &:hover {
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-
   &.selected {
     z-index: 20;
     transform: translate(-50%, -50%) scale(1.15);
