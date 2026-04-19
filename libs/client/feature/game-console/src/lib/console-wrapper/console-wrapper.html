@@ -4,57 +4,83 @@
       <ion-back-button [defaultHref]="'/teams/' + teamId()"></ion-back-button>
     </ion-buttons>
     <ion-title>
-      @if (game()) {
-        vs {{ game()!.opponent }}
-      } @else {
-        Live Console
-      }
+      <div class="flex items-center justify-center gap-4">
+        <span class="text-lg font-bold">{{ game()?.opponent ?? 'Live Console' }}</span>
+        <div class="bg-black/20 px-4 py-1 rounded-full flex items-center gap-3 border border-white/10">
+          <span class="text-2xl font-black tabular-nums">{{ stateService.score().team }}</span>
+          <span class="text-xs opacity-50 font-bold">VS</span>
+          <span class="text-2xl font-black tabular-nums">{{ stateService.score().opponent }}</span>
+        </div>
+      </div>
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <!-- Top Bar: Game Clock -->
-  <div class="flex flex-col items-center gap-4 p-4 bg-gray-900 text-white">
-    <app-clock-display></app-clock-display>
+<ion-content class="ion-no-padding overflow-hidden">
+  <div class="flex flex-col h-screen max-h-[100vh] bg-gray-950 overflow-hidden">
+    <!-- Top Bar: Clock and Quick Actions -->
+    <div class="flex items-center justify-between gap-4 p-4 bg-gray-900 border-b border-white/5 shrink-0">
+      <app-clock-display></app-clock-display>
+      
+      <div class="flex gap-2">
+        @if (isRunning()) {
+          <ion-button color="warning" (click)="stopClock()">
+            <ion-icon name="pause-outline" slot="start"></ion-icon>
+            Pause
+          </ion-button>
+        } @else {
+          <ion-button color="success" (click)="startClock()">
+            <ion-icon name="play-outline" slot="start"></ion-icon>
+            Start
+          </ion-button>
+        }
+        
+        <ion-button color="danger" fill="outline" (click)="addOpponentGoal()">
+          + Opponent Goal
+        </ion-button>
+      </div>
+    </div>
 
-    <div class="flex gap-3">
-      @if (!isRunning()) {
-        <ion-button color="success" (click)="startClock()">Start</ion-button>
-      } @else {
-        <ion-button color="warning" (click)="stopClock()">Stop</ion-button>
-      }
+    <!-- Main Game Area -->
+    <div class="flex flex-1 min-h-0 overflow-hidden">
+      <!-- Pitch View: Should take up most of the space -->
+      <div class="flex-[2] flex min-h-0">
+        <app-soccer-pitch-view 
+          class="w-full"
+          [players]="stateService.activePlayers()" 
+          [selectedPlayerId]="selectedPlayerId()"
+          (playerSelected)="handlePlayerSelection($event)">
+        </app-soccer-pitch-view>
+      </div>
+
+      <!-- Sideline: Bench and Event Log -->
+      <div class="flex-1 flex flex-col border-l border-white/10 bg-gray-900 overflow-hidden">
+        <div class="flex-1 overflow-y-auto">
+          <app-bench-view 
+            [players]="stateService.benchPlayers()"
+            [selectedPlayerId]="selectedPlayerId()"
+            (playerSelected)="handlePlayerSelection($event)">
+          </app-bench-view>
+        </div>
+        
+        <div class="h-1/3 border-t border-white/10 overflow-hidden">
+          <app-event-log></app-event-log>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Center Area: Soccer Pitch View -->
-  <app-soccer-pitch-view
-    [players]="stateService.activePlayers()"
-    [selectedPlayerId]="selectedPlayerId()"
-    (playerSelected)="handlePlayerSelection($event)"
-  ></app-soccer-pitch-view>
-
-  <!-- Bottom: Bench View -->
-  <app-bench-view
-    [players]="stateService.benchPlayers()"
-    [selectedPlayerId]="selectedPlayerId()"
-    (playerSelected)="handlePlayerSelection($event)"
-  ></app-bench-view>
-
-  <!-- Event Log -->
-  <app-event-log></app-event-log>
-
-  <!-- Player Action Popover -->
-  <ion-popover
-    [isOpen]="actionPlayer() !== null"
+  <ion-popover 
+    [isOpen]="actionPlayer() !== null" 
     [event]="popoverEvent()"
-    (didDismiss)="actionPlayer.set(null); selectedPlayerId.set(null)"
-  >
-    @if (actionPlayer()) {
-      <app-player-action-menu
-        [player]="actionPlayer()!"
-        (actionSelected)="handleAction($event)"
-      ></app-player-action-menu>
-    }
+    (didDismiss)="actionPlayer.set(null); selectedPlayerId.set(null)">
+    <ng-template>
+      @if (actionPlayer()) {
+        <app-player-action-menu 
+          [player]="actionPlayer()!"
+          (actionSelected)="handleAction($event)">
+        </app-player-action-menu>
+      }
+    </ng-template>
   </ion-popover>
 </ion-content>

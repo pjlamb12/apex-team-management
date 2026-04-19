@@ -116,6 +116,10 @@ export class ConsoleWrapper implements OnInit {
     this.clockService.stop();
   }
 
+  protected addOpponentGoal(): void {
+    this.stateService.addOpponentGoal(this.clockService.currentMinute());
+  }
+
   protected handlePlayerSelection(data: { player: Player; event: Event }): void {
     const { player, event } = data;
     const currentSelectionId = this.selectedPlayerId();

@@ -81,6 +81,13 @@ export class LiveGameStateService {
       .map(e => e.player);
   });
 
+  public readonly score = computed(() => {
+    const events = this._events().filter(e => e.status !== 'deleted');
+    const team = events.filter(e => e.type === 'GOAL').length;
+    const opponent = events.filter(e => e.type === 'OPPONENT_GOAL').length;
+    return { team, opponent };
+  });
+
   public initialize(gameId: string, lineup: LineupEntry[] = []): void {
     this._gameId.set(gameId);
     this._initialLineup.set(lineup);
@@ -102,6 +109,14 @@ export class LiveGameStateService {
   public pushEvent(event: GameEvent): void {
     this._events.update((prev) => [...prev, { ...event, status: 'active' }]);
     this.save();
+  }
+
+  public addOpponentGoal(minuteOccurred: number): void {
+    this.pushEvent({
+      type: 'OPPONENT_GOAL',
+      timestamp: Date.now(),
+      minuteOccurred
+    });
   }
 
   public undo(): void {

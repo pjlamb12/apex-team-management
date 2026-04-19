@@ -21,7 +21,7 @@
       <p *ngIf="event.type === 'SUB'">
         {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
       </p>
-      <p *ngIf="event.type !== 'SUB'">
+      <p *ngIf="event.type !== 'SUB' && event.type !== 'OPPONENT_GOAL'">
         {{ getPlayerName(event.playerId) }}
       </p>
     </ion-label>
