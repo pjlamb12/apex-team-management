@@ -71,6 +71,14 @@ export class ConsoleWrapper implements OnInit {
     this.route.paramMap.pipe(map((params) => params.get('id')))
   );
 
+  protected team = toSignal(
+    this.route.paramMap.pipe(
+      map((params) => params.get('id')),
+      filter((id): id is string => !!id),
+      switchMap((id) => this.http.get<any>(`${this.apiUrl}/teams/${id}`))
+    )
+  );
+
   protected game = toSignal(
     this.route.paramMap.pipe(
       map((params) => params.get('gameId')),

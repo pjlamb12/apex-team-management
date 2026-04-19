@@ -4,13 +4,19 @@
       <ion-back-button [defaultHref]="'/teams/' + teamId()"></ion-back-button>
     </ion-buttons>
     <ion-title>
-      <div class="flex items-center justify-center gap-4">
-        <span class="text-lg font-bold">{{ game()?.opponent ?? 'Live Console' }}</span>
-        <div class="bg-black/20 px-4 py-1 rounded-full flex items-center gap-3 border border-white/10">
-          <span class="text-2xl font-black tabular-nums">{{ stateService.score().team }}</span>
-          <span class="text-xs opacity-50 font-bold">VS</span>
-          <span class="text-2xl font-black tabular-nums">{{ stateService.score().opponent }}</span>
+      <div class="flex items-center justify-center gap-6">
+        <span class="text-lg font-bold text-white">{{ team()?.name ?? 'My Team' }}</span>
+        
+        <div class="bg-black/40 px-6 py-2 rounded-xl flex items-center gap-4 border border-white/20 shadow-lg">
+          <span class="text-3xl font-black tabular-nums text-white">{{ stateService.score().team }}</span>
+          <div class="flex flex-col items-center">
+            <span class="text-[10px] text-white/40 font-black tracking-widest uppercase">Score</span>
+            <span class="h-px w-4 bg-white/20 my-1"></span>
+          </div>
+          <span class="text-3xl font-black tabular-nums text-white">{{ stateService.score().opponent }}</span>
         </div>
+
+        <span class="text-lg font-bold text-white opacity-80">{{ game()?.opponent ?? 'Opponent' }}</span>
       </div>
     </ion-title>
   </ion-toolbar>
