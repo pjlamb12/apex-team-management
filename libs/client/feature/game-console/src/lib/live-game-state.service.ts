@@ -121,6 +121,35 @@ export class LiveGameStateService {
     localStorage.setItem(this.getStorageKey(), JSON.stringify(this._events()));
   }
 
+  /**
+   * Immutably marks an event as synced and records its backend ID.
+   * Required by EventSyncService — do NOT mutate signal-owned objects directly.
+   */
+  public markEventSynced(localTimestamp: number, backendId: string): void {
+    this._events.update((prev) =>
+      prev.map((e) =>
+        e.timestamp === localTimestamp
+          ? { ...e, id: backendId, synced: true }
+          : e
+      )
+    );
+    this.save();
+  }
+
+  /**
+   * Immutably marks a deleted event's sync flag after backend DELETE succeeds.
+   */
+  public markDeletionSynced(localTimestamp: number): void {
+    this._events.update((prev) =>
+      prev.map((e) =>
+        e.timestamp === localTimestamp
+          ? { ...e, synced: true }
+          : e
+      )
+    );
+    this.save();
+  }
+
   private getStorageKey(): string {
     return `game-events-${this._gameId()}`;
   }
