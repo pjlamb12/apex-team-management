@@ -16,7 +16,6 @@ export class SaveLineupEntryDto {
 
 export class SaveLineupDto {
   @IsArray()
-  @ArrayMaxSize(11)
   @ValidateNested({ each: true })
   @Type(() => SaveLineupEntryDto)
   entries: SaveLineupEntryDto[];
