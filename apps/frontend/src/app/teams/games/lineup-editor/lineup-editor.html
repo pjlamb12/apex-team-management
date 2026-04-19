@@ -5,12 +5,15 @@
     </ion-buttons>
     <ion-title>Lineup Editor</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="onSave()" [disabled]="isLoading() || isSaving()">
+      <ion-button (click)="onSave(false)" [disabled]="isLoading() || isSaving()">
         @if (isSaving()) {
           <ion-spinner name="crescent"></ion-spinner>
         } @else {
-          Save
+          Save & Return
         }
+      </ion-button>
+      <ion-button (click)="onSave(true)" color="success" [strong]="true" [disabled]="isLoading() || isSaving()">
+        Go Live
       </ion-button>
     </ion-buttons>
   </ion-toolbar>

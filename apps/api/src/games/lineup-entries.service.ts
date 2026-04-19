@@ -18,8 +18,10 @@ export class LineupEntriesService {
     // 2. Map dto.entries to LineupEntryEntity objects with gameId.
     const entries = dto.entries.map((entry) =>
       this.lineupRepo.create({
-        ...entry,
         gameId,
+        playerId: entry.playerId,
+        positionName: entry.positionName,
+        status: entry.status,
       }),
     );
 

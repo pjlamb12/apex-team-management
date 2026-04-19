@@ -155,7 +155,7 @@ export class LineupEditor implements OnInit {
     });
   }
 
-  protected async onSave(): Promise<void> {
+  protected async onSave(goLive = false): Promise<void> {
     const gameId = this.game()?.id;
     if (!gameId) return;
 
@@ -180,7 +180,12 @@ export class LineupEditor implements OnInit {
       };
 
       await firstValueFrom(this.gamesService.saveLineup(gameId, dto));
-      void this.router.navigate(['/teams', this.teamId]);
+      
+      if (goLive) {
+        void this.router.navigate(['/teams', this.teamId, 'games', gameId, 'console']);
+      } else {
+        void this.router.navigate(['/teams', this.teamId]);
+      }
     } catch (err) {
       console.error('Failed to save lineup', err);
       this.errorMessage.set('Failed to save lineup. Please try again.');
