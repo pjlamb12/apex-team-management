@@ -1,13 +1,19 @@
 ion-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  margin-bottom: 8px;
-
+  --background: transparent;
+  margin-bottom: 12px;
+  --border-radius: 8px;
+  
   &.ion-invalid {
     --highlight-color: var(--ion-color-danger);
   }
 }
 
 form {
-  padding-top: 8px;
+  padding-top: 16px;
+}
+
+// Ensure inputs have a bit of breathing room and modern look
+ion-input {
+  --padding-top: 10px;
+  --padding-bottom: 10px;
 }
