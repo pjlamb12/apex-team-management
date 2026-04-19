@@ -5,18 +5,24 @@
     </ion-buttons>
     <ion-title>
       <div class="flex items-center justify-center gap-6">
-        <span class="text-lg font-bold text-white">{{ team()?.name ?? 'My Team' }}</span>
+        <!-- Home Team -->
+        <div class="text-right flex-1 min-w-0">
+          <div class="team-label">Home</div>
+          <div class="team-name">{{ team()?.name ?? '...' }}</div>
+        </div>
         
-        <div class="bg-black/40 px-6 py-2 rounded-xl flex items-center gap-4 border border-white/20 shadow-lg">
-          <span class="text-3xl font-black tabular-nums text-white">{{ stateService.score().team }}</span>
-          <div class="flex flex-col items-center">
-            <span class="text-[10px] text-white/40 font-black tracking-widest uppercase">Score</span>
-            <span class="h-px w-4 bg-white/20 my-1"></span>
-          </div>
-          <span class="text-3xl font-black tabular-nums text-white">{{ stateService.score().opponent }}</span>
+        <!-- Score -->
+        <div class="scoreboard-container flex items-center gap-4">
+          <span class="score-value tabular-nums">{{ stateService.score().team }}</span>
+          <span class="text-xl text-white/10 font-black">-</span>
+          <span class="score-value tabular-nums">{{ stateService.score().opponent }}</span>
         </div>
 
-        <span class="text-lg font-bold text-white opacity-80">{{ game()?.opponent ?? 'Opponent' }}</span>
+        <!-- Away Team -->
+        <div class="text-left flex-1 min-w-0">
+          <div class="team-label">Away</div>
+          <div class="team-name">{{ game()?.opponent ?? '...' }}</div>
+        </div>
       </div>
     </ion-title>
   </ion-toolbar>

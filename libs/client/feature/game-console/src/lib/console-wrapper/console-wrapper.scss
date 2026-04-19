@@ -6,77 +6,47 @@
   width: 100%;
 }
 
-.game-info {
-  flex: 1;
-  .opponent {
-    font-weight: bold;
-    font-size: 1.1rem;
-  }
+ion-toolbar {
+  --background: #000000;
+  --color: white;
+  --border-width: 0 0 1px;
+  --border-color: rgba(255, 255, 255, 0.1);
+  height: 80px;
 }
 
-.clock-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  app-clock-display {
-    font-family: monospace;
-    font-size: 1.5rem;
-    font-weight: bold;
-  }
+ion-title {
+  padding-inline: 0;
 }
 
-.console-container {
-  display: flex;
-  flex-direction: row;
-  height: 100%;
-  padding: 0;
-  gap: 0;
+.scoreboard-container {
+  background: #111111;
+  padding: 8px 24px;
+  border-radius: 12px;
+  border: 2px solid var(--ion-color-primary);
+  box-shadow: 0 0 15px rgba(var(--ion-color-primary-rgb), 0.2);
 }
 
-.main-console {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  gap: 16px;
-  height: 100%;
+.score-value {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 2.25rem;
+  color: white;
 }
 
-.event-log-panel {
-  flex: 1;
-  max-width: 350px;
-  height: 100%;
+.team-label {
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
 }
 
-.field-view {
-  flex: 2;
-  display: flex;
-}
-
-.bench-view {
-  flex: 1;
-  display: flex;
-}
-
-
-.placeholder-card {
-  width: 100%;
-  border: 2px dashed var(--ion-color-medium);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--ion-color-light);
-  color: var(--ion-color-medium-shade);
-
-  h3 {
-    margin: 0;
-    font-size: 1.2rem;
-  }
-
-  p {
-    margin: 4px 0 0;
-  }
+.team-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: white;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

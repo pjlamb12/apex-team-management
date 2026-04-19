@@ -75,7 +75,11 @@ export class ConsoleWrapper implements OnInit {
     this.route.paramMap.pipe(
       map((params) => params.get('id')),
       filter((id): id is string => !!id),
-      switchMap((id) => this.http.get<any>(`${this.apiUrl}/teams/${id}`))
+      switchMap((id) => {
+        const url = this.apiUrl;
+        if (!url) return [];
+        return this.http.get<any>(`${url}/teams/${id}`);
+      })
     )
   );
 
@@ -83,7 +87,11 @@ export class ConsoleWrapper implements OnInit {
     this.route.paramMap.pipe(
       map((params) => params.get('gameId')),
       filter((id): id is string => !!id),
-      switchMap((id) => this.http.get<any>(`${this.apiUrl}/games/${id}`))
+      switchMap((id) => {
+        const url = this.apiUrl;
+        if (!url) return [];
+        return this.http.get<any>(`${url}/games/${id}`);
+      })
     )
   );
 
@@ -91,7 +99,11 @@ export class ConsoleWrapper implements OnInit {
     this.route.paramMap.pipe(
       map((params) => params.get('gameId')),
       filter((id): id is string => !!id),
-      switchMap((id) => this.http.get<LineupEntry[]>(`${this.apiUrl}/games/${id}/lineup`)),
+      switchMap((id) => {
+        const url = this.apiUrl;
+        if (!url) return [];
+        return this.http.get<LineupEntry[]>(`${url}/games/${id}/lineup`);
+      }),
       tap((lineup) => {
         const gameId = this.gameId();
         if (gameId) {
