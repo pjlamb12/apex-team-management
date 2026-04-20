@@ -33,4 +33,13 @@ export class SeasonEntity {
 
   @Column({ name: 'period_length_minutes', nullable: true, type: 'integer' })
   periodLengthMinutes: number | null;
+
+  @Column({ name: 'default_home_venue', nullable: true })
+  defaultHomeVenue: string | null;
+
+  @Column({ name: 'default_home_color', nullable: true })
+  defaultHomeColor: string | null;
+
+  @Column({ name: 'default_away_color', nullable: true })
+  defaultAwayColor: string | null;
 }

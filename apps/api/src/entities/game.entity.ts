@@ -25,6 +25,9 @@ export class GameEntity {
   @Column({ name: 'uniform_color', nullable: true })
   uniformColor: string | null;
 
+  @Column({ name: 'is_home_game', default: true })
+  isHomeGame: boolean;
+
   @Column({ default: 'scheduled' })
   status: 'scheduled' | 'in_progress' | 'completed';
 }

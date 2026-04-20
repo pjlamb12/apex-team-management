@@ -24,6 +24,9 @@ export class LineupEntryEntity {
   @Column({ name: 'position_name', nullable: true })
   positionName: string | null;
 
+  @Column({ name: 'slot_index', nullable: true, type: 'integer' })
+  slotIndex: number | null;
+
   @Column({ default: 'bench' })
   status: 'starting' | 'bench';
 }
