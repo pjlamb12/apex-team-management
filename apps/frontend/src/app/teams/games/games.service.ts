@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { Season } from '../../../../../libs/shared/util/models/src/lib/season.model';
+import { Season } from '@apex-team/shared/util/models';
 
 export interface GameEntity {
   id: string;

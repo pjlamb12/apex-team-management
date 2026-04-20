@@ -26,7 +26,7 @@ import {
 } from '@ionic/angular/standalone';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { GamesService } from '../games.service';
-import { Season } from '../../../../../../libs/shared/util/models/src/lib/season.model';
+import { Season } from '@apex-team/shared/util/models';
 
 @Component({
   selector: 'app-create-game',
