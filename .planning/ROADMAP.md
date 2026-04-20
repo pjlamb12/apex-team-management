@@ -22,7 +22,11 @@
   2. Coach can edit season details or delete a season.
   3. Coach can set a "default practice location" for a season.
   4. Coach can toggle which season is "Active" for the team (exactly one active).
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 10-01-PLAN.md — Backend Schema & DTOs
+- [ ] 10-02-PLAN.md — Backend Business Logic
+- [ ] 10-03-PLAN.md — Frontend Scaffolding & Navigation
+- [ ] 10-04-PLAN.md — Frontend Detail View
 **UI hint**: yes
 
 ### Phase 11: Practice Management & Unified Schedule
@@ -51,7 +55,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 10. Season Lifecycle & Defaults | 0/0 | Not started | - |
+| 10. Season Lifecycle & Defaults | 0/4 | Not started | - |
 | 11. Practice Management & Unified Schedule | 0/0 | Not started | - |
 | 12. Season-Integrated Games & Analytics | 0/0 | Not started | - |
 
