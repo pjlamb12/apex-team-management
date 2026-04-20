@@ -1,5 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, inject, signal, effect, Input } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -22,9 +22,16 @@ import {
   IonDatetimeButton,
   IonModal,
   IonLabel,
+  IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { saveOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { EventsService, EventEntity } from '../events.service';
+
+function toLocalISOString(date: Date): string {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().replace('Z', '');
+}
 
 @Component({
   selector: 'app-edit-event',
@@ -50,15 +57,45 @@ import { EventsService, EventEntity } from '../events.service';
     IonDatetimeButton,
     IonModal,
     IonLabel,
+    IonIcon,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './edit-event.html',
 })
-export class EditEvent implements OnInit {
+export class EditEvent {
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+  @Input() set eventId(val: string) {
+    this._eventId.set(val);
+  }
+
+  private _teamId = signal<string | null>(null);
+  private _eventId = signal<string | null>(null);
+
+  public get teamId(): string {
+    return this._teamId() ?? '';
+  }
+  public get eventId(): string {
+    return this._eventId() ?? '';
+  }
+
   private readonly router = inject(Router);
-  protected readonly route = inject(ActivatedRoute);
   private readonly eventsService = inject(EventsService);
   protected readonly fb = inject(FormBuilder);
+
+  constructor() {
+    addIcons({ saveOutline });
+
+    // Load event whenever teamId or eventId changes
+    effect(() => {
+      const tId = this._teamId();
+      const eId = this._eventId();
+      if (tId && eId) {
+        void this.loadEvent(tId, eId);
+      }
+    });
+  }
 
   protected event = signal<EventEntity | null>(null);
   protected isLoading = signal(false);
@@ -74,24 +111,15 @@ export class EditEvent implements OnInit {
     notes: [''],
   });
 
-  ngOnInit(): void {
-    const eventId = this.route.snapshot.paramMap.get('eventId');
-    if (eventId) {
-      void this.loadEvent(eventId);
-    }
-  }
-
-  protected async loadEvent(eventId: string): Promise<void> {
+  protected async loadEvent(teamId: string, eventId: string): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const teamId = this.route.snapshot.paramMap.get('id');
-      if (!teamId) throw new Error('Missing team ID');
       const data = await firstValueFrom(this.eventsService.getEvent(teamId, eventId));
       this.event.set(data);
       this.form.patchValue({
         opponent: data.opponent ?? '',
-        scheduledAt: data.scheduledAt,
+        scheduledAt: toLocalISOString(new Date(data.scheduledAt)),
         location: data.location ?? '',
         uniformColor: data.uniformColor ?? '',
         durationMinutes: data.durationMinutes ?? null,
@@ -100,6 +128,9 @@ export class EditEvent implements OnInit {
       
       if (data.type === 'practice') {
         this.form.get('opponent')?.clearValidators();
+        this.form.get('opponent')?.updateValueAndValidity();
+      } else {
+        this.form.get('opponent')?.setValidators([Validators.required, Validators.minLength(2)]);
         this.form.get('opponent')?.updateValueAndValidity();
       }
     } catch {
@@ -114,8 +145,8 @@ export class EditEvent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const teamId = this.route.snapshot.paramMap.get('id');
-    const eventId = this.route.snapshot.paramMap.get('eventId');
+    const teamId = this.teamId;
+    const eventId = this.eventId;
     if (!teamId || !eventId) return;
 
     this.isSaving.set(true);
@@ -125,15 +156,15 @@ export class EditEvent implements OnInit {
       await firstValueFrom(
         this.eventsService.updateEvent(teamId, eventId, {
           opponent: opponent || undefined,
-          scheduledAt: scheduledAt!,
+          scheduledAt: new Date(scheduledAt!).toISOString(),
           location: location || undefined,
           uniformColor: uniformColor || undefined,
           durationMinutes: durationMinutes || undefined,
           notes: notes || undefined,
         })
       );
-      // Navigate back to team dashboard
-      await this.router.navigate(['/teams', teamId]);
+      // Navigate back to schedule
+      await this.router.navigate(['/teams', teamId, 'schedule']);
     } catch {
       this.errorMessage.set('Failed to update event. Please try again.');
     } finally {

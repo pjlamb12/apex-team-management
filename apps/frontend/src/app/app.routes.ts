@@ -48,21 +48,6 @@ export const appRoutes: Route[] = [
           import('./teams/seasons/season-detail/season-detail').then((m) => m.SeasonDetail),
       },
       {
-        path: 'teams/:id/events/new',
-        loadComponent: () =>
-          import('./teams/events/create-event/create-event').then((m) => m.CreateEvent),
-      },
-      {
-        path: 'teams/:id/events/new-practice',
-        loadComponent: () =>
-          import('./teams/events/create-practice/create-practice').then((m) => m.CreatePractice),
-      },
-      {
-        path: 'teams/:id/events/:eventId/edit',
-        loadComponent: () =>
-          import('./teams/events/edit-event/edit-event').then((m) => m.EditEvent),
-      },
-      {
         path: 'teams/:id/events/:eventId/lineup',
         loadComponent: () =>
           import('./teams/events/lineup-editor/lineup-editor').then((m) => m.LineupEditor),
@@ -76,6 +61,34 @@ export const appRoutes: Route[] = [
         path: 'teams/:id',
         loadComponent: () =>
           import('./teams/team-dashboard/team-dashboard').then((m) => m.TeamDashboard),
+        children: [
+          {
+            path: 'roster',
+            loadComponent: () =>
+              import('./teams/team-dashboard/roster/roster').then((m) => m.Roster),
+          },
+          {
+            path: 'schedule',
+            loadComponent: () =>
+              import('./teams/events/schedule/schedule').then((m) => m.Schedule),
+          },
+          {
+            path: 'schedule/new',
+            loadComponent: () =>
+              import('./teams/events/create-event/create-event').then((m) => m.CreateEvent),
+          },
+          {
+            path: 'schedule/new-practice',
+            loadComponent: () =>
+              import('./teams/events/create-practice/create-practice').then((m) => m.CreatePractice),
+          },
+          {
+            path: 'schedule/:eventId/edit',
+            loadComponent: () =>
+              import('./teams/events/edit-event/edit-event').then((m) => m.EditEvent),
+          },
+          { path: '', redirectTo: 'roster', pathMatch: 'full' },
+        ],
       },
       { path: '', redirectTo: 'teams', pathMatch: 'full' },
     ],

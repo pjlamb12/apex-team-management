@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+
+ion-datetime-button::part(native) {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+}
+
+.date-hint {
+  font-size: 0.7rem;
+  color: var(--ion-color-medium);
+  margin-top: 2px;
+}

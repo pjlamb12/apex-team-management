@@ -1,6 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, effect, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -22,6 +22,10 @@ import {
   IonDatetime,
   IonDatetimeButton,
   IonModal,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { saveOutline, calendarOutline } from 'ionicons/icons';
@@ -53,19 +57,37 @@ import { Season } from '@apex-team/shared/util/models';
     IonDatetime,
     IonDatetimeButton,
     IonModal,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './season-detail.html',
   styleUrl: './season-detail.scss',
 })
-export class SeasonDetail implements OnInit {
+export class SeasonDetail {
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+  @Input() set seasonId(val: string) {
+    this._seasonId.set(val);
+  }
+
+  private _teamId = signal<string | null>(null);
+  private _seasonId = signal<string | null>(null);
+
+  public get teamId(): string {
+    return this._teamId() ?? '';
+  }
+  public get seasonId(): string {
+    return this._seasonId() ?? '';
+  }
+
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly seasonsService = inject(SeasonsService);
   protected readonly fb = inject(FormBuilder);
 
-  protected teamId = signal<string | null>(null);
-  protected seasonId = signal<string | null>(null);
   protected isEdit = signal(false);
   protected isLoading = signal(false);
   protected isSaving = signal(false);
@@ -81,21 +103,24 @@ export class SeasonDetail implements OnInit {
 
   constructor() {
     addIcons({ saveOutline, calendarOutline });
-  }
 
-  ngOnInit(): void {
-    const teamId = this.route.snapshot.paramMap.get('id');
-    const seasonId = this.route.snapshot.paramMap.get('seasonId');
-
-    if (teamId) {
-      this.teamId.set(teamId);
-    }
-
-    if (seasonId && seasonId !== 'new') {
-      this.seasonId.set(seasonId);
-      this.isEdit.set(true);
-      void this.loadSeason(seasonId);
-    }
+    // Load season whenever seasonId changes
+    effect(() => {
+      const sId = this._seasonId();
+      if (sId && sId !== 'new') {
+        this.isEdit.set(true);
+        void this.loadSeason(sId);
+      } else {
+        this.isEdit.set(false);
+        this.form.reset({
+          name: '',
+          startDate: new Date().toISOString(),
+          endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+          isActive: false,
+          defaultPracticeLocation: '',
+        });
+      }
+    });
   }
 
   protected async loadSeason(id: string): Promise<void> {
@@ -123,7 +148,7 @@ export class SeasonDetail implements OnInit {
       return;
     }
 
-    const teamId = this.teamId();
+    const teamId = this.teamId;
     if (!teamId) return;
 
     this.isSaving.set(true);
@@ -131,7 +156,7 @@ export class SeasonDetail implements OnInit {
 
     try {
       const data = this.form.getRawValue();
-      const seasonId = this.seasonId();
+      const seasonId = this.seasonId;
 
       if (this.isEdit() && seasonId) {
         await firstValueFrom(this.seasonsService.update(seasonId, data as Partial<Season>));

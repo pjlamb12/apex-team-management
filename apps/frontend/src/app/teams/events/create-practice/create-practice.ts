@@ -1,5 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, inject, signal, effect, Input } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -24,7 +24,10 @@ import {
 } from '@ionic/angular/standalone';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { EventsService } from '../events.service';
-import { Season } from '@apex-team/shared/util/models';
+
+function toLocalISOString(date: Date): string {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().replace('Z', '');
+}
 
 @Component({
   selector: 'app-create-practice',
@@ -52,11 +55,18 @@ import { Season } from '@apex-team/shared/util/models';
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './create-practice.html',
-  styleUrl: './create-practice.scss',
 })
-export class CreatePractice implements OnInit {
+export class CreatePractice {
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+
+  private _teamId = signal<string | null>(null);
+  public get teamId(): string {
+    return this._teamId() ?? '';
+  }
+
   private readonly router = inject(Router);
-  protected readonly route = inject(ActivatedRoute);
   private readonly eventsService = inject(EventsService);
   protected readonly fb = inject(FormBuilder);
 
@@ -64,17 +74,20 @@ export class CreatePractice implements OnInit {
   protected errorMessage = signal<string | null>(null);
 
   protected form = this.fb.group({
-    scheduledAt: [new Date().toISOString(), [Validators.required]],
+    scheduledAt: [toLocalISOString(new Date()), [Validators.required]],
     location: [''],
     durationMinutes: [60, [Validators.required, Validators.min(1)]],
     notes: [''],
   });
 
-  ngOnInit(): void {
-    const teamId = this.route.snapshot.paramMap.get('id');
-    if (teamId) {
-      void this.loadSeasonDefaults(teamId);
-    }
+  constructor() {
+    // Load season defaults whenever teamId changes
+    effect(() => {
+      const id = this._teamId();
+      if (id) {
+        void this.loadSeasonDefaults(id);
+      }
+    });
   }
 
   private async loadSeasonDefaults(teamId: string): Promise<void> {
@@ -94,7 +107,7 @@ export class CreatePractice implements OnInit {
       return;
     }
 
-    const teamId = this.route.snapshot.paramMap.get('id');
+    const teamId = this.teamId;
     if (!teamId) return;
 
     this.isSaving.set(true);
@@ -104,13 +117,13 @@ export class CreatePractice implements OnInit {
       await firstValueFrom(
         this.eventsService.createEvent(teamId, {
           type: 'practice',
-          scheduledAt: scheduledAt!,
+          scheduledAt: new Date(scheduledAt!).toISOString(),
           location: location || undefined,
           durationMinutes: durationMinutes!,
           notes: notes || undefined,
         })
       );
-      await this.router.navigate(['/teams', teamId]);
+      await this.router.navigate(['/teams', teamId, 'schedule']);
     } catch {
       this.errorMessage.set('Failed to create practice. Please try again.');
     } finally {

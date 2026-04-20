@@ -1,6 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, effect, Input } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -30,6 +30,7 @@ import { calendarOutline, chevronForwardOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { Season } from '@apex-team/shared/util/models';
+import { CommonModule } from '@angular/common';
 
 interface Sport {
   id: string;
@@ -46,6 +47,7 @@ interface Team {
   selector: 'app-edit-team',
   standalone: true,
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     RouterLink,
     IonContent,
@@ -73,11 +75,19 @@ interface Team {
   templateUrl: './edit-team.html',
   styleUrl: './edit-team.scss',
 })
-export class EditTeam implements OnInit {
+export class EditTeam {
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+
+  private _teamId = signal<string | null>(null);
+  protected get teamId(): string {
+    return this._teamId() ?? '';
+  }
+
   private readonly http = inject(HttpClient);
   private readonly config = inject(RuntimeConfigLoaderService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   protected readonly fb = inject(FormBuilder);
 
   protected team = signal<Team | null>(null);
@@ -100,13 +110,14 @@ export class EditTeam implements OnInit {
 
   constructor() {
     addIcons({ calendarOutline, chevronForwardOutline });
-  }
 
-  ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      void this.loadTeam(id);
-    }
+    // Load team whenever id changes
+    effect(() => {
+      const teamId = this._teamId();
+      if (teamId) {
+        void this.loadTeam(teamId);
+      }
+    });
   }
 
   protected async loadTeam(id: string): Promise<void> {
@@ -139,7 +150,7 @@ export class EditTeam implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const teamId = this.route.snapshot.paramMap.get('id');
+    const teamId = this.teamId;
     if (!teamId) return;
 
     this.isSaving.set(true);
@@ -164,7 +175,7 @@ export class EditTeam implements OnInit {
           })
         ),
       ]);
-      await this.router.navigate(['/teams']);
+      await this.router.navigate(['/teams', teamId, 'roster']);
     } catch {
       this.errorMessage.set('Failed to update settings. Please try again.');
     } finally {

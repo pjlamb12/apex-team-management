@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button [defaultHref]="'/teams/' + route.snapshot.paramMap.get('id')" />
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/schedule'" />
     </ion-buttons>
     <ion-title>Schedule Game</ion-title>
   </ion-toolbar>
@@ -11,20 +11,11 @@
   <div class="flex items-start justify-center min-h-full pt-4">
     <ion-card class="w-full max-w-md">
       <ion-card-header>
-        <ion-card-title class="text-xl font-bold">New Game</ion-card-title>
+        <ion-card-title class="text-xl font-bold">New Game Details</ion-card-title>
       </ion-card-header>
 
       <ion-card-content>
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <ion-item class="mb-4" lines="none">
-            <ion-toggle formControlName="isHomeGame">
-              <ion-label>
-                <h2>{{ form.get('isHomeGame')?.value ? 'Home' : 'Away' }} Game</h2>
-                <p>Use season defaults for {{ form.get('isHomeGame')?.value ? 'home' : 'away' }} settings</p>
-              </ion-label>
-            </ion-toggle>
-          </ion-item>
-
           <ngx-control-errors-display>
             <ion-item>
               <ion-input
@@ -75,10 +66,16 @@
                 type="text"
                 formControlName="uniformColor"
                 autocomplete="off"
-                placeholder="e.g. Home (White)"
+                placeholder="e.g. Away (Blue)"
               />
             </ion-item>
           </ngx-control-errors-display>
+
+          <ion-item lines="none" class="mt-2">
+            <ion-toggle formControlName="isHomeGame" justify="space-between">
+              Home Game?
+            </ion-toggle>
+          </ion-item>
 
           @if (errorMessage()) {
             <ion-text color="danger">

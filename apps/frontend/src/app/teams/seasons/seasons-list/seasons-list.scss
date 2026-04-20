@@ -1,3 +1,15 @@
 :host {
   display: block;
 }
+
+ion-badge {
+  --background: transparent;
+  --color: var(--ion-color-success, #22c55e);
+  padding: 3px 8px;
+  border: 1px solid var(--ion-color-success, #22c55e);
+  border-radius: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+}

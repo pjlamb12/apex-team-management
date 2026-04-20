@@ -1,5 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, inject, signal, effect, Input } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -26,6 +26,10 @@ import {
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { EventsService } from '../events.service';
 import { Season } from '@apex-team/shared/util/models';
+
+function toLocalISOString(date: Date): string {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().replace('Z', '');
+}
 
 @Component({
   selector: 'app-create-event',
@@ -54,11 +58,18 @@ import { Season } from '@apex-team/shared/util/models';
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './create-event.html',
-  styleUrl: './create-game.scss',
 })
-export class CreateEvent implements OnInit {
+export class CreateEvent {
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+
+  private _teamId = signal<string | null>(null);
+  public get teamId(): string {
+    return this._teamId() ?? '';
+  }
+
   private readonly router = inject(Router);
-  protected readonly route = inject(ActivatedRoute);
   private readonly eventsService = inject(EventsService);
   protected readonly fb = inject(FormBuilder);
 
@@ -68,17 +79,20 @@ export class CreateEvent implements OnInit {
 
   protected form = this.fb.group({
     opponent: ['', [Validators.required, Validators.minLength(2)]],
-    scheduledAt: [new Date().toISOString(), [Validators.required]],
+    scheduledAt: [toLocalISOString(new Date()), [Validators.required]],
     location: [''],
     uniformColor: [''],
     isHomeGame: [true],
   });
 
-  ngOnInit(): void {
-    const teamId = this.route.snapshot.paramMap.get('id');
-    if (teamId) {
-      void this.loadSeason(teamId);
-    }
+  constructor() {
+    // Load season whenever teamId changes
+    effect(() => {
+      const id = this._teamId();
+      if (id) {
+        void this.loadSeason(id);
+      }
+    });
 
     // Reactively update location and color based on isHomeGame toggle
     this.form.get('isHomeGame')?.valueChanges.subscribe((isHome) => {
@@ -108,7 +122,6 @@ export class CreateEvent implements OnInit {
     } else {
       this.form.patchValue({
         uniformColor: season.defaultAwayColor ?? '',
-        // Away venue is unknown, usually
       });
     }
   }
@@ -119,7 +132,7 @@ export class CreateEvent implements OnInit {
       return;
     }
 
-    const teamId = this.route.snapshot.paramMap.get('id');
+    const teamId = this.teamId;
     if (!teamId) {
       this.errorMessage.set('Missing team ID.');
       return;
@@ -134,14 +147,14 @@ export class CreateEvent implements OnInit {
         this.eventsService.createEvent(teamId, {
           type: 'game',
           opponent: opponent!,
-          scheduledAt: scheduledAt!,
+          scheduledAt: new Date(scheduledAt!).toISOString(),
           location: location || undefined,
           uniformColor: uniformColor || undefined,
           isHomeGame: isHomeGame ?? true,
         })
       );
-      // Navigate to lineup editor for the new event (assuming it's a game)
-      await this.router.navigate(['/teams', teamId, 'events', event.id, 'lineup']);
+      // Navigate back to schedule
+      await this.router.navigate(['/teams', teamId, 'schedule']);
     } catch {
       this.errorMessage.set('Failed to create game. Please try again.');
     } finally {

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, effect, computed, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -57,10 +57,26 @@ interface LineupSlot {
   styleUrl: './lineup-editor.scss',
 })
 export class LineupEditor implements OnInit {
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+  @Input() set eventId(val: string) {
+    this._eventId.set(val);
+  }
+
+  private _teamId = signal<string | null>(null);
+  private _eventId = signal<string | null>(null);
+
+  public get teamId(): string {
+    return this._teamId() ?? '';
+  }
+  public get eventId(): string {
+    return this._eventId() ?? '';
+  }
+
   private readonly eventsService = inject(EventsService);
   private readonly playersService = inject(PlayersService);
   private readonly router = inject(Router);
-  protected readonly route = inject(ActivatedRoute);
 
   protected event = signal<EventEntity | null>(null);
   protected players = signal<PlayerEntity[]>([]);
@@ -90,11 +106,22 @@ export class LineupEditor implements OnInit {
     return this.players().filter((p) => !assigned.has(p.id));
   });
 
+  constructor() {
+    // Load data whenever teamId or eventId changes
+    effect(() => {
+      const tId = this._teamId();
+      const eId = this._eventId();
+      if (tId && eId) {
+        void this.loadData(tId, eId);
+      }
+    });
+  }
+
   ngOnInit(): void {
-    const eventId = this.route.snapshot.paramMap.get('eventId');
-    const teamId = this.route.snapshot.paramMap.get('id');
-    if (eventId && teamId) {
-      void this.loadData(teamId, eventId);
+    const tId = this.teamId;
+    const eId = this.eventId;
+    if (tId && eId) {
+      void this.loadData(tId, eId);
     }
   }
 
@@ -161,7 +188,7 @@ export class LineupEditor implements OnInit {
   }
 
   protected async onSave(goLive = false): Promise<void> {
-    const eventId = this.event()?.id;
+    const eventId = this.eventId;
     const teamId = this.teamId;
     if (!eventId || !teamId) return;
 
@@ -175,7 +202,6 @@ export class LineupEditor implements OnInit {
             .map((s) => ({
               playerId: s.playerId!,
               positionName: s.positionName || undefined,
-              slotIndex: s.slotIndex,
               status: 'starting' as const,
             })),
           // Bench
@@ -191,7 +217,7 @@ export class LineupEditor implements OnInit {
       if (goLive) {
         void this.router.navigate(['/teams', teamId, 'events', eventId, 'console']);
       } else {
-        void this.router.navigate(['/teams', teamId]);
+        void this.router.navigate(['/teams', teamId, 'schedule']);
       }
     } catch (err) {
       console.error('Failed to save lineup', err);
@@ -199,9 +225,5 @@ export class LineupEditor implements OnInit {
     } finally {
       this.isSaving.set(false);
     }
-  }
-
-  protected get teamId(): string {
-    return this.route.snapshot.paramMap.get('id') ?? '';
   }
 }

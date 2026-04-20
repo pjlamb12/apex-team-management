@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button [defaultHref]="'/teams/' + teamId() + '/settings'"></ion-back-button>
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/settings'"></ion-back-button>
     </ion-buttons>
     <ion-title>Manage Seasons</ion-title>
   </ion-toolbar>
@@ -31,7 +31,7 @@
             <ion-badge slot="end" color="success">Active</ion-badge>
           }
           <ion-buttons slot="end">
-            <ion-button [routerLink]="['/teams', teamId(), 'settings', 'seasons', season.id]">
+            <ion-button [routerLink]="['/teams', teamId, 'settings', 'seasons', season.id]">
               <ion-icon slot="icon-only" name="create-outline"></ion-icon>
             </ion-button>
             <ion-button color="danger" (click)="confirmDelete(season)">
@@ -48,7 +48,7 @@
   }
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: 60px;">
-    <ion-fab-button [routerLink]="['/teams', teamId(), 'settings', 'seasons', 'new']">
+    <ion-fab-button [routerLink]="['/teams', teamId, 'settings', 'seasons', 'new']">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>

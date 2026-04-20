@@ -1,6 +1,6 @@
-import { Component, inject, signal, OnInit, computed, Input } from '@angular/core';
+import { Component, inject, signal, effect, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   IonList,
@@ -16,6 +16,9 @@ import {
   IonSegmentButton,
   AlertController,
   IonRouterLink,
+  IonFab,
+  IonFabButton,
+  ActionSheetController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -25,6 +28,7 @@ import {
   trashOutline,
   chevronForwardOutline,
   pencilOutline,
+  addOutline,
 } from 'ionicons/icons';
 import { EventsService, EventEntity } from '../events.service';
 
@@ -46,14 +50,25 @@ import { EventsService, EventEntity } from '../events.service';
     IonSegment,
     IonSegmentButton,
     IonRouterLink,
+    IonFab,
+    IonFabButton,
   ],
   templateUrl: './schedule.html',
 })
-export class Schedule implements OnInit {
-  @Input({ required: true }) teamId!: string;
+export class Schedule {
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+
+  private _teamId = signal<string | null>(null);
+  public get teamId(): string {
+    return this._teamId() ?? '';
+  }
 
   private readonly eventsService = inject(EventsService);
   private readonly alertCtrl = inject(AlertController);
+  private readonly actionSheetCtrl = inject(ActionSheetController);
+  private readonly router = inject(Router);
 
   protected events = signal<EventEntity[]>([]);
   protected isLoading = signal(false);
@@ -67,24 +82,29 @@ export class Schedule implements OnInit {
       trashOutline,
       chevronForwardOutline,
       pencilOutline,
+      addOutline,
+    });
+
+    // Load events whenever teamId or scope changes
+    effect(() => {
+      const id = this._teamId();
+      const s = this.scope();
+      if (id) {
+        void this.loadEvents(id, s);
+      }
     });
   }
 
-  ngOnInit(): void {
-    void this.loadEvents();
-  }
-
-  protected async onScopeChange(event: any): Promise<void> {
+  protected onScopeChange(event: any): void {
     const value = event.detail.value as 'upcoming' | 'past';
     this.scope.set(value);
-    await this.loadEvents();
   }
 
-  protected async loadEvents(): Promise<void> {
+  protected async loadEvents(teamId: string, scope: 'upcoming' | 'past'): Promise<void> {
     this.isLoading.set(true);
     try {
       const data = await firstValueFrom(
-        this.eventsService.getEvents(this.teamId, this.scope())
+        this.eventsService.getEvents(teamId, scope)
       );
       this.events.set(data);
     } catch (err) {
@@ -95,6 +115,9 @@ export class Schedule implements OnInit {
   }
 
   protected async deleteEvent(event: EventEntity): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
     const alert = await this.alertCtrl.create({
       header: 'Delete Event?',
       message: `Are you sure you want to delete this ${event.type}?`,
@@ -105,7 +128,7 @@ export class Schedule implements OnInit {
           role: 'confirm',
           handler: async () => {
             try {
-              await firstValueFrom(this.eventsService.deleteEvent(this.teamId, event.id));
+              await firstValueFrom(this.eventsService.deleteEvent(teamId, event.id));
               this.events.update((list) => list.filter((e) => e.id !== event.id));
             } catch {
               console.error('Failed to delete event');
@@ -125,5 +148,30 @@ export class Schedule implements OnInit {
 
   protected getEventIcon(event: EventEntity): string {
     return event.type === 'game' ? 'calendar-outline' : 'fitness-outline';
+  }
+
+  protected async presentAddEventSheet(): Promise<void> {
+    const sheet = await this.actionSheetCtrl.create({
+      cssClass: 'schedule-action-sheet',
+      header: 'Add to Schedule',
+      buttons: [
+        {
+          text: 'Schedule Game',
+          icon: 'calendar-outline',
+          handler: () => {
+            void this.router.navigate(['/teams', this.teamId, 'schedule', 'new']);
+          },
+        },
+        {
+          text: 'Schedule Practice',
+          icon: 'fitness-outline',
+          handler: () => {
+            void this.router.navigate(['/teams', this.teamId, 'schedule', 'new-practice']);
+          },
+        },
+        { text: 'Cancel', role: 'cancel' },
+      ],
+    });
+    await sheet.present();
   }
 }

@@ -1,7 +1,7 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button [defaultHref]="'/teams/' + teamId() + '/settings/seasons'"></ion-back-button>
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/settings/seasons'"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ isEdit() ? 'Edit Season' : 'New Season' }}</ion-title>
     <ion-buttons slot="end">
@@ -13,90 +13,108 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <div class="p-4 max-w-2xl mx-auto">
-    <div *ngIf="isLoading()" class="flex justify-center p-8">
-      <ion-spinner name="crescent"></ion-spinner>
-    </div>
+<ion-content class="ion-padding">
+  <div class="flex items-start justify-center min-h-full pt-4">
+    <ion-card class="w-full max-w-md">
+      <ion-card-header class="pb-2 pt-6 px-6">
+        <ion-card-title class="text-2xl font-bold">
+          {{ isEdit() ? 'Edit Season' : 'New Season' }}
+        </ion-card-title>
+      </ion-card-header>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" *ngIf="!isLoading()">
-      <ion-list lines="none" class="bg-transparent">
-        <ngx-control-errors-display>
-          <ion-item class="rounded-xl mb-4 shadow-sm border border-border">
-            <ion-label position="stacked">Season Name</ion-label>
-            <ion-input
-              formControlName="name"
-              placeholder="e.g. Fall 2026"
-              type="text"
-            ></ion-input>
-          </ion-item>
-        </ngx-control-errors-display>
+      <ion-card-content class="px-4 pt-4">
+        @if (isLoading()) {
+          <div class="flex items-center justify-center py-8">
+            <ion-spinner name="crescent"></ion-spinner>
+          </div>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <ion-list>
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-input
+                    label="Season Name"
+                    labelPlacement="floating"
+                    formControlName="name"
+                    placeholder="e.g. Fall 2026"
+                    type="text"
+                  ></ion-input>
+                </ion-item>
+              </ngx-control-errors-display>
 
-        <ion-item class="rounded-xl mb-4 shadow-sm border border-border">
-          <ion-label>Start Date</ion-label>
-          <ion-datetime-button datetime="start-date"></ion-datetime-button>
-          <ion-modal [keepContentsMounted]="true">
-            <ng-template>
-              <ion-datetime
-                id="start-date"
-                presentation="date"
-                formControlName="startDate"
-              ></ion-datetime>
-            </ng-template>
-          </ion-modal>
-        </ion-item>
+              <ion-item>
+                <ion-label class="date-label">
+                  <div>Start Date</div>
+                  <div class="date-hint">Tap to change</div>
+                </ion-label>
+                <ion-datetime-button datetime="start-date"></ion-datetime-button>
+                <ion-modal [keepContentsMounted]="true">
+                  <ng-template>
+                    <ion-datetime
+                      id="start-date"
+                      presentation="date"
+                      formControlName="startDate"
+                    ></ion-datetime>
+                  </ng-template>
+                </ion-modal>
+              </ion-item>
 
-        <ion-item class="rounded-xl mb-4 shadow-sm border border-border">
-          <ion-label>End Date</ion-label>
-          <ion-datetime-button datetime="end-date"></ion-datetime-button>
-          <ion-modal [keepContentsMounted]="true">
-            <ng-template>
-              <ion-datetime
-                id="end-date"
-                presentation="date"
-                formControlName="endDate"
-              ></ion-datetime>
-            </ng-template>
-          </ion-modal>
-        </ion-item>
+              <ion-item>
+                <ion-label class="date-label">
+                  <div>End Date</div>
+                  <div class="date-hint">Tap to change</div>
+                </ion-label>
+                <ion-datetime-button datetime="end-date"></ion-datetime-button>
+                <ion-modal [keepContentsMounted]="true">
+                  <ng-template>
+                    <ion-datetime
+                      id="end-date"
+                      presentation="date"
+                      formControlName="endDate"
+                    ></ion-datetime>
+                  </ng-template>
+                </ion-modal>
+              </ion-item>
 
-        <ion-item class="rounded-xl mb-4 shadow-sm border border-border">
-          <ion-label>Default Practice Location</ion-label>
-          <ion-input
-            formControlName="defaultPracticeLocation"
-            placeholder="e.g. Riverside Park Field 3"
-            type="text"
-          ></ion-input>
-        </ion-item>
+              <ion-item>
+                <ion-input
+                  label="Practice Location"
+                  labelPlacement="stacked"
+                  formControlName="defaultPracticeLocation"
+                  placeholder="e.g. Riverside Park Field 3"
+                  type="text"
+                ></ion-input>
+              </ion-item>
 
-        <ion-item class="rounded-xl mb-6 shadow-sm border border-border">
-          <ion-label>Active Season</ion-label>
-          <ion-toggle formControlName="isActive" slot="end"></ion-toggle>
-        </ion-item>
+              <ion-item>
+                <ion-label>Active Season</ion-label>
+                <ion-toggle formControlName="isActive" slot="end"></ion-toggle>
+              </ion-item>
+            </ion-list>
 
-        <div class="px-4 text-sm text-medium mb-8" *ngIf="form.get('isActive')?.value">
-          Note: Activating this season will automatically de-activate other seasons for this team.
-        </div>
+            <div class="note-text px-2 text-sm mt-2 mb-4" *ngIf="form.get('isActive')?.value">
+              Note: Activating this season will automatically de-activate other seasons for this team.
+            </div>
 
-        <div class="px-2" *ngIf="errorMessage()">
-          <ion-text color="danger">
-            <p>{{ errorMessage() }}</p>
-          </ion-text>
-        </div>
+            @if (errorMessage()) {
+              <ion-text color="danger">
+                <p class="text-sm mt-2 px-2">{{ errorMessage() }}</p>
+              </ion-text>
+            }
 
-        <div class="p-2">
-          <ion-button
-            expand="block"
-            type="submit"
-            [disabled]="isSaving() || form.invalid"
-            class="ion-margin-top"
-          >
-            <ion-icon slot="start" name="save-outline" *ngIf="!isSaving()"></ion-icon>
-            <ion-spinner slot="start" *ngIf="isSaving()"></ion-spinner>
-            {{ isEdit() ? 'Update Season' : 'Create Season' }}
-          </ion-button>
-        </div>
-      </ion-list>
-    </form>
+            <ion-button
+              expand="block"
+              type="submit"
+              class="mt-4"
+              [disabled]="isSaving() || form.invalid"
+            >
+              <ion-icon slot="start" name="save-outline" style="margin-inline-end: 8px;" *ngIf="!isSaving()"></ion-icon>
+              <ion-spinner slot="start" *ngIf="isSaving()"></ion-spinner>
+              {{ isEdit() ? 'Update Season' : 'Create Season' }}
+            </ion-button>
+          </form>
+        }
+      </ion-card-content>
+    </ion-card>
   </div>
 </ion-content>

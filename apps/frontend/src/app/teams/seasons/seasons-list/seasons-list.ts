@@ -1,6 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, effect, Input } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AlertController } from '@ionic/angular/standalone';
 import {
@@ -53,36 +53,40 @@ import { Season } from '@apex-team/shared/util/models';
   templateUrl: './seasons-list.html',
   styleUrl: './seasons-list.scss',
 })
-export class SeasonsList implements OnInit {
-  private readonly route = inject(ActivatedRoute);
+export class SeasonsList {
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+
+  private _teamId = signal<string | null>(null);
+  public get teamId(): string {
+    return this._teamId() ?? '';
+  }
+
   private readonly seasonsService = inject(SeasonsService);
   protected readonly alertCtrl = inject(AlertController);
 
-  protected teamId = signal<string | null>(null);
   protected seasons = signal<Season[]>([]);
   protected isLoading = signal(false);
   protected errorMessage = signal<string | null>(null);
 
   constructor() {
     addIcons({ addOutline, trashOutline, createOutline, calendarOutline });
+
+    // Load seasons whenever teamId changes
+    effect(() => {
+      const id = this._teamId();
+      if (id) {
+        void this.loadSeasons(id);
+      }
+    });
   }
 
-  ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.teamId.set(id);
-      void this.loadSeasons();
-    }
-  }
-
-  protected async loadSeasons(): Promise<void> {
-    const id = this.teamId();
-    if (!id) return;
-
+  protected async loadSeasons(teamId: string): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const data = await firstValueFrom(this.seasonsService.findAllForTeam(id));
+      const data = await firstValueFrom(this.seasonsService.findAllForTeam(teamId));
       this.seasons.set(data);
     } catch {
       this.errorMessage.set('Failed to load seasons. Please try again.');
@@ -113,7 +117,10 @@ export class SeasonsList implements OnInit {
   private async deleteSeason(id: string): Promise<void> {
     try {
       await firstValueFrom(this.seasonsService.remove(id));
-      await this.loadSeasons();
+      const teamId = this.teamId;
+      if (teamId) {
+        await this.loadSeasons(teamId);
+      }
     } catch (error: any) {
       const msg = error?.error?.message || 'Failed to delete season. Please try again.';
       this.errorMessage.set(msg);

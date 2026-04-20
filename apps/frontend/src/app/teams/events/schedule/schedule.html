@@ -16,7 +16,7 @@
     @for (event of events(); track event.id) {
       <ion-item-sliding>
         <ion-item 
-          [routerLink]="event.type === 'game' ? ['/teams', teamId, 'events', event.id, 'lineup'] : ['/teams', teamId, 'events', event.id, 'edit']"
+          [routerLink]="event.type === 'game' ? ['/teams', teamId, 'events', event.id, 'lineup'] : ['/teams', teamId, 'schedule', event.id, 'edit']"
           [button]="true"
         >
           <ion-icon
@@ -28,7 +28,7 @@
           <ion-label>
             <h2 [class.opacity-70]="scope() === 'past'">{{ getEventTitle(event) }}</h2>
             <p class="flex items-center gap-1">
-              {{ event.scheduledAt | date: (scope() === 'upcoming' ? 'MMM d, h:mm a' : 'MMM d, yyyy') }}
+              {{ event.scheduledAt | date: 'MMM d, yyyy, h:mm a' }}
               @if (event.durationMinutes) {
                 <ion-note>({{ event.durationMinutes }}m)</ion-note>
               }
@@ -51,7 +51,7 @@
         </ion-item>
 
         <ion-item-options side="end">
-          <ion-item-option color="primary" [routerLink]="['/teams', teamId, 'events', event.id, 'edit']">
+          <ion-item-option color="primary" [routerLink]="['/teams', teamId, 'schedule', event.id, 'edit']">
             <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
           </ion-item-option>
           <ion-item-option color="danger" (click)="deleteEvent(event)">
@@ -67,4 +67,10 @@
       </ion-item>
     }
   </ion-list>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="presentAddEventSheet()" aria-label="Add event">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 }
