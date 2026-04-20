@@ -1,11 +1,11 @@
 ---
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Defining requirements
-last_updated: "2026-04-20T00:35:00Z"
+gsd_state_version: 1.1
+milestone: v1.1
+milestone_name: Season Management & Schedule
+status: Planning Phase 10
+last_updated: "2026-04-20T01:30:00Z"
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,15 +19,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
-**Current focus:** Defining requirements
-**Current Position:** Milestone v1.1 Season Management & Gaps
+**Current focus:** Season management, practice sessions, and unified schedule.
+**Current Position:** Milestone v1.1 — Phase 10: Season Lifecycle & Defaults
 
 ## Current Milestone
 
-**v1.1 — Season Management & Gaps**
+**v1.1 — Season Management & Schedule**
 
-Phase: Not started
-Plan: —
+Phase: Phase 10: Season Lifecycle & Defaults
+Plan: TBD
 
 Progress: ░░░░░░░░░░ 0%
 
@@ -49,24 +49,21 @@ Progress: ░░░░░░░░░░ 0%
 | 2026-04-18 | Store event definitions on the Sport entity to allow for sport-agnostic event logging. | Dynamic events (GOAL, ASSIST, SUB, CARD) defined as data, not hardcoded. |
 | 2026-04-18 | YELLOW_CARD and RED_CARD registered as first-class event types in Soccer sport | Resolves sync mismatches where cards were logged locally but rejected by API. |
 | 2026-04-18 | Use localStorage for clock persistence keyed by gameId | Ensures game timer survives accidental page refresh (Requirement INFR-03). |
+| 2026-04-20 | Start Milestone v1.1 | v1.0 complete with Phase 9 advanced features. v1.1 focuses on Season management and Schedule. |
 
 ## Active Context
 
-- Phase 6 Live Game Console complete and verified.
-- Touch-optimized substitution engine (2 taps) implemented and reactive.
-- Event-sourced game state with Undo support implemented.
-- Optimized backend sync with AJV validation and correct payload mapping.
-- Game clock persists across page reloads.
+- Phase 6-9 features delivered: substitution history, event-sourced lineup logic, and season defaults.
+- App is mobile-first, PWA-ready, and supports dark mode.
+- Core coaching console is functional.
+- Milestone v1.1 roadmap defines the next three phases (10, 11, 12).
 
 ## Session Continuity
 
-Last session: 2026-04-18
-Stopped at: Session resumed — Phase 6 verified and complete, ready for Phase 7
+Last session: 2026-04-20
+Stopped at: Initialized v1.1 Roadmap and State. Ready for Phase 10 planning.
 
 ## Accumulated Context
 
 ### Roadmap Evolution
-- Phase 8 added: UI Rework — resolve dark-theme inconsistencies (black backgrounds, dark-gray-on-black contrast)
-
----
-*Last updated: 2026-04-19 — Phase 8 added*
+- Phase 10-12 defined: Season Lifecycle & Defaults, Practice Management & Unified Schedule, and Season-Integrated Games & Analytics.

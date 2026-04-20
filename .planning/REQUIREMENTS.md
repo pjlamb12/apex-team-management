@@ -66,7 +66,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ## v1.1 Requirements
 
-Season Management & Gaps. These requirements are for the current roadmap.
+Season Management & Schedule. These requirements are for the current roadmap.
 
 ### Seasons
 
@@ -74,6 +74,7 @@ Season Management & Gaps. These requirements are for the current roadmap.
 - [ ] **SEAS-04**: Coach can edit season details (name, start date, end date, status)
 - [ ] **SEAS-05**: Coach can set a specific season as the active season for a team
 - [ ] **SEAS-06**: Coach can delete a season
+- [ ] **SEAS-07**: Season has a default practice location that auto-populates the location for new practices
 
 ### Game & Season Association
 
@@ -81,15 +82,20 @@ Season Management & Gaps. These requirements are for the current roadmap.
 - [ ] **GAME-07**: Games created automatically associate with the currently active season
 - [ ] **GAME-08**: Season dashboard shows aggregate stats (wins, losses, goals) for the season
 
+### Schedule & Practices
+
+- [ ] **PRAC-01**: Coach can create a practice session with date, time, and location
+- [ ] **PRAC-02**: Coach can edit and delete practice sessions
+- [ ] **SCHD-02**: Team Dashboard has a "Schedule" segment replacing "Games" that shows both Games and Practices chronologically
+
 ## v1.2 Requirements
 
 Deferred to next minor release. Not in current roadmap.
 
 ### Practice Planning
 
-- **PRAC-01**: Coach can create a practice session with date, time, and location
-- **PRAC-02**: Coach can add drills to a practice with sequencing and time allocation
-- **PRAC-03**: Coach can use a pacer timer during practice
+- **PRAC-03**: Coach can add drills to a practice with sequencing and time allocation
+- **PRAC-04**: Coach can use a pacer timer during practice
 
 ### Drill Library
 
@@ -183,12 +189,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-04 | Phase 7 | Pending |
 | INFR-05 | Phase 7 | Pending |
 | INFR-06 | Phase 7 | Pending |
+| SEAS-03 | Phase 10 | Pending |
+| SEAS-04 | Phase 10 | Pending |
+| SEAS-05 | Phase 10 | Pending |
+| SEAS-06 | Phase 10 | Pending |
+| SEAS-07 | Phase 10 | Pending |
+| PRAC-01 | Phase 11 | Pending |
+| PRAC-02 | Phase 11 | Pending |
+| SCHD-02 | Phase 11 | Pending |
+| GAME-06 | Phase 12 | Pending |
+| GAME-07 | Phase 12 | Pending |
+| GAME-08 | Phase 12 | Pending |
 
 **Coverage:**
-- v1 requirements: 36 total
-- Mapped to phases: 31
-- Unmapped (TBD phase): 5 — GAME-05, SEAS-01, SEAS-02, LIVE-09, LIVE-10
+- v1 requirements: 36 total (36 mapped) ✓
+- v1.1 requirements: 11 total (11 mapped) ✓
+- Total requirements mapped: 47/47 ✓
 
 ---
 *Requirements defined: 2026-04-14*
-*Last updated: 2026-04-14 after initial definition*
+*Last updated: 2026-04-20 — v1.1 traceability complete*

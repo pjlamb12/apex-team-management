@@ -8,14 +8,16 @@ A game day coaching console for youth sports. Coaches create teams, manage roste
 
 A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened — no paper lineups, no mental math.
 
-## Current Milestone: v1.1 Season Management & Gaps
+## Current Milestone: v1.1 Season Management & Schedule
 
-**Goal:** Provide the ability to explicitly create and manage seasons for a team, bridging any functional gaps in the team, season, and game lifecycle before adding more complex workflows.
+**Goal:** Enhance season lifecycle management with default locations and introduce a unified Schedule (Games + Practices) into the team workflow.
 
 **Target features:**
-- Create and edit seasons for a team.
-- Manage the active season lifecycle.
-- Fill any existing operational gaps around teams, seasons, and games.
+- Create and edit seasons for a team (explicit management).
+- Default practice location for seasons (auto-populates new practices).
+- Create and view practice sessions.
+- Unified "Schedule" tab replacing "Games" (combines games and practices).
+- Reorganize Team dashboard to prioritize "Schedule" and "Roster".
 
 ## Requirements
 
@@ -41,13 +43,16 @@ A coach shows up to a game and can instantly see who's on the field, swap player
 
 - [ ] Create and edit seasons for a team
 - [ ] Set an active season
-- [ ] Associate games and stats clearly with the active season
+- [ ] Create and manage practice sessions (date, time, location)
+- [ ] Default practice location for seasons
+- [ ] Unified "Schedule" view in Team Dashboard (Games + Practices)
+- [ ] Reorganize Team Dashboard segments: "Schedule" and "Roster"
 
 ### Out of Scope
 
 <!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
 
-- Practice planning and drill library — deferred to v1.2
+- Practice drills and sequencing — deferred to v1.2
 - Automated equal-time rotation engine — deferred to v1.3
 - Game scheduling UI (calendar view, recurring events) — deferred to v1.3
 - Parent accounts and "claim token" onboarding — deferred to v2
