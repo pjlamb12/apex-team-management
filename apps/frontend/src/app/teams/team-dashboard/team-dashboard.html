@@ -90,21 +90,20 @@
                 <ion-item [routerLink]="['/teams', teamId, 'games', game.id, 'lineup']">
                   <ion-label>
                     <h2>vs {{ game.opponent }}</h2>
-                    <p>
+                    <p class="game-meta">
                       <ion-icon name="calendar-outline"></ion-icon>
                       {{ game.scheduledAt | date: 'MMM d, h:mm a' }}
                     </p>
                     @if (game.location) {
-                      <p>
+                      <p class="game-meta">
                         <ion-icon name="location-outline"></ion-icon>
                         {{ game.location }}
                       </p>
                     }
                   </ion-label>
                   @if (game.uniformColor) {
-                    <ion-note slot="end">
-                      <ion-icon name="shirt-outline" [style.color]="game.uniformColor"></ion-icon>
-                      {{ game.uniformColor }}
+                    <ion-note slot="end" class="uniform-note">
+                      <span class="color-dot" [style.background]="game.uniformColor"></span>
                     </ion-note>
                   }
                 </ion-item>

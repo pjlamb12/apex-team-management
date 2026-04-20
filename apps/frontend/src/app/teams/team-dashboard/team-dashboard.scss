@@ -1,3 +1,8 @@
+ion-list-header {
+  padding-inline-start: 16px;
+  padding-top: 12px;
+}
+
 .loading-container {
   display: flex;
   justify-content: center;
@@ -10,4 +15,25 @@ ion-badge[slot="start"] {
   margin-inline-end: 1rem;
   min-width: 2rem;
   text-align: center;
+}
+
+.game-meta {
+  color: #94a3b8 !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.uniform-note {
+  display: flex;
+  align-items: center;
+}
+
+.color-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
 }

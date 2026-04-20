@@ -2,6 +2,10 @@
   display: block;
 }
 
+ion-content {
+  --padding-bottom: 72px;
+}
+
 .slot-row {
   align-items: center;
 
@@ -16,7 +20,7 @@ ion-list-header {
   font-weight: 700;
   font-size: 1.1rem;
   --color: var(--ion-color-primary);
-  border-bottom: 2px solid var(--ion-color-light);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 8px;
 }
 

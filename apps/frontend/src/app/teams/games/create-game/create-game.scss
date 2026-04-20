@@ -1,0 +1,22 @@
+ion-card {
+  border-radius: 12px;
+
+  ion-card-header {
+    padding: 20px 20px 12px;
+  }
+
+  ion-card-content {
+    padding: 0 20px 20px;
+  }
+
+  ion-card-title {
+    color: var(--ion-text-color, #f1f5f9);
+  }
+}
+
+ion-datetime-button::part(native) {
+  background: var(--ion-color-step-100, #263044);
+  color: var(--ion-text-color, #f1f5f9);
+  border-radius: 6px;
+  padding: 6px 12px;
+}

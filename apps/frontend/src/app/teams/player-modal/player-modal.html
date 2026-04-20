@@ -12,50 +12,62 @@
 
 <ion-content class="ion-padding">
   <form [formGroup]="form" (ngSubmit)="save()">
-    <ion-item [class.ion-invalid]="form.get('firstName')?.invalid && form.get('firstName')?.touched">
-      <ion-input
-        label="First Name *"
-        labelPlacement="stacked"
-        formControlName="firstName"
-        type="text"
-        placeholder="Enter first name"
-        errorText="First name is required."
-      ></ion-input>
-    </ion-item>
+    <div class="field-group" [class.invalid]="form.get('firstName')?.invalid && form.get('firstName')?.touched">
+      <label class="field-label">First Name *</label>
+      <ion-item>
+        <ion-input
+          formControlName="firstName"
+          type="text"
+          placeholder="Enter first name"
+        ></ion-input>
+      </ion-item>
+      @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {
+        <p class="error-text">First name is required.</p>
+      }
+    </div>
 
-    <ion-item [class.ion-invalid]="form.get('lastName')?.invalid && form.get('lastName')?.touched">
-      <ion-input
-        label="Last Name *"
-        labelPlacement="stacked"
-        formControlName="lastName"
-        type="text"
-        placeholder="Enter last name"
-        errorText="Last name is required."
-      ></ion-input>
-    </ion-item>
+    <div class="field-group" [class.invalid]="form.get('lastName')?.invalid && form.get('lastName')?.touched">
+      <label class="field-label">Last Name *</label>
+      <ion-item>
+        <ion-input
+          formControlName="lastName"
+          type="text"
+          placeholder="Enter last name"
+        ></ion-input>
+      </ion-item>
+      @if (form.get('lastName')?.invalid && form.get('lastName')?.touched) {
+        <p class="error-text">Last name is required.</p>
+      }
+    </div>
 
-    <ion-item [class.ion-invalid]="form.get('jerseyNumber')?.invalid && form.get('jerseyNumber')?.touched">
-      <ion-input
-        label="Jersey Number *"
-        labelPlacement="stacked"
-        formControlName="jerseyNumber"
-        type="number"
-        placeholder="Enter jersey number"
-        min="0"
-        max="999"
-        errorText="A valid jersey number (0-999) is required."
-      ></ion-input>
-    </ion-item>
+    <div class="field-group" [class.invalid]="form.get('jerseyNumber')?.invalid && form.get('jerseyNumber')?.touched">
+      <label class="field-label">Jersey Number *</label>
+      <ion-item>
+        <ion-input
+          formControlName="jerseyNumber"
+          type="number"
+          placeholder="Enter jersey number"
+          min="0"
+          max="999"
+        ></ion-input>
+      </ion-item>
+      @if (form.get('jerseyNumber')?.invalid && form.get('jerseyNumber')?.touched) {
+        <p class="error-text">A valid jersey number (0-999) is required.</p>
+      }
+    </div>
 
-    <ion-item [class.ion-invalid]="form.get('parentEmail')?.invalid && form.get('parentEmail')?.touched">
-      <ion-input
-        label="Parent / Guardian Email *"
-        labelPlacement="stacked"
-        formControlName="parentEmail"
-        type="email"
-        placeholder="Enter contact email"
-        errorText="A valid email address is required."
-      ></ion-input>
-    </ion-item>
+    <div class="field-group" [class.invalid]="form.get('parentEmail')?.invalid && form.get('parentEmail')?.touched">
+      <label class="field-label">Parent / Guardian Email *</label>
+      <ion-item>
+        <ion-input
+          formControlName="parentEmail"
+          type="email"
+          placeholder="Enter contact email"
+        ></ion-input>
+      </ion-item>
+      @if (form.get('parentEmail')?.invalid && form.get('parentEmail')?.touched) {
+        <p class="error-text">A valid email address is required.</p>
+      }
+    </div>
   </form>
 </ion-content>

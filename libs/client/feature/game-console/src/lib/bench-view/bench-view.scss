@@ -1,6 +1,35 @@
+ion-card-header {
+  padding: 10px;
+
+  @media (min-width: 640px) {
+    padding: 16px;
+  }
+}
+
+.jersey-number {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ion-color-primary, #3b82f6);
+  margin-bottom: 6px;
+}
+
+.player-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #f1f5f9;
+}
+
 ion-card.selected {
   --background: var(--ion-color-primary);
   --color: var(--ion-color-primary-contrast);
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  .jersey-number {
+    color: var(--ion-color-primary-contrast, #fff);
+  }
+
+  .player-name {
+    color: var(--ion-color-primary-contrast, #fff);
+  }
 }

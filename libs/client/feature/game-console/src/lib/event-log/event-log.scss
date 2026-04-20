@@ -2,8 +2,8 @@
   display: block;
   height: 100%;
   overflow-y: auto;
-  border-left: 1px solid var(--ion-color-step-150, #e0e0e0);
-  background: var(--ion-background-color, #ffffff);
+  border-left: 1px solid var(--ion-color-step-150, rgba(255, 255, 255, 0.08));
+  background: var(--ion-background-color, transparent);
 }
 
 .empty-state {
@@ -26,6 +26,6 @@ ion-list-header {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--ion-background-color, #ffffff);
-  border-bottom: 1px solid var(--ion-color-step-100, #f0f0f0);
+  background: var(--ion-background-color, var(--color-ap-surface-raised));
+  border-bottom: 1px solid var(--ion-color-step-100, rgba(255, 255, 255, 0.08));
 }

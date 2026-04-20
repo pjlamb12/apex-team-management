@@ -1,0 +1,46 @@
+/**
+ * Athletic Professional — Dark Theme Token Overrides
+ * Applied when ThemeService sets both .dark and .ion-palette-dark on <html>
+ *
+ * Load order: This file must be imported AFTER @ionic/angular/css/palettes/dark.class.css
+ * in apps/frontend/src/styles.scss to ensure specificity wins.
+ */
+
+:root,
+.ion-palette-dark,
+.ion-palette-dark.ios,
+.ion-palette-dark.md {
+  /* === Page & Background === */
+  --ion-background-color: #0f172a;
+  --ion-background-color-rgb: 15, 23, 42;
+
+  /* === Item / Row === */
+  --ion-item-background: #0f172a;
+
+  /* === Cards === */
+  --ion-card-background: #1e293b;
+
+  /* === Toolbars === */
+  --ion-toolbar-background: #0f172a;
+  --ion-toolbar-border-color: rgba(255, 255, 255, 0.08);
+
+  /* === Tab Bar === */
+  --ion-tab-bar-background: #0f172a;
+  --ion-tab-bar-border-color: rgba(255, 255, 255, 0.08);
+
+  /* === Modals & Popovers === */
+  --ion-modal-background: #0f172a;
+
+  /* === Text === */
+  --ion-text-color: #f1f5f9;
+  --ion-text-color-rgb: 241, 245, 249;
+
+  /* === Font === */
+  --ion-font-family: Inter, system-ui, -apple-system, sans-serif;
+
+  /* === Color steps (used by ion-color-step-50 etc. references) === */
+  --ion-color-step-50: #1e293b;
+  --ion-color-step-100: #263044;
+  --ion-color-step-150: rgba(255, 255, 255, 0.08);
+  --ion-color-step-200: rgba(255, 255, 255, 0.12);
+}

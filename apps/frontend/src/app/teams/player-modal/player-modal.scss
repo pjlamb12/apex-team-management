@@ -1,19 +1,47 @@
 ion-item {
   --background: transparent;
-  margin-bottom: 12px;
-  --border-radius: 8px;
-  
-  &.ion-invalid {
-    --highlight-color: var(--ion-color-danger);
-  }
+  --border-width: 0;
+  --inner-border-width: 0;
+  --padding-start: 0;
+  --inner-padding-end: 0;
 }
 
 form {
   padding-top: 16px;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-// Ensure inputs have a bit of breathing room and modern look
+.field-group {
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 4px;
+
+  &.invalid {
+    border-bottom-color: var(--ion-color-danger);
+  }
+}
+
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+}
+
+.error-text {
+  font-size: 0.75rem;
+  color: var(--ion-color-danger);
+  margin: 6px 0 0;
+}
+
 ion-input {
-  --padding-top: 10px;
-  --padding-bottom: 10px;
+  --padding-top: 0;
+  --padding-bottom: 8px;
+  --color: white;
+  --placeholder-color: rgba(255, 255, 255, 0.3);
+  font-size: 1rem;
 }

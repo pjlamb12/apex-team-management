@@ -1,5 +1,29 @@
 // Edit team page styles
 ion-card {
-  --background: var(--ion-color-step-50, #1a1a1a);
+  --background: var(--ion-card-background);
   border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+ion-card-header {
+  padding: 20px;
+}
+
+ion-card-title {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+ion-badge {
+  --background: transparent;
+  --color: var(--ion-color-primary, #3b82f6);
+  padding: 3px 8px;
+  border: 1px solid var(--ion-color-primary, #3b82f6);
+  border-radius: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
 }

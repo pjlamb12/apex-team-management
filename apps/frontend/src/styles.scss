@@ -1,4 +1,16 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --color-ap-bg: #0f172a;
+  --color-ap-surface: #1e293b;
+  --color-ap-surface-raised: #263044;
+  --color-ap-accent: #3b82f6;
+  --color-ap-success: #22c55e;
+  --color-ap-warning: #eab308;
+  --color-ap-danger: #ef4444;
+  --color-ap-text: #f1f5f9;
+  --color-ap-muted: #94a3b8;
+}
 
 // Tailwind v4: override dark variant to use .dark class on <html> (D-09)
 // This enables dark: utility classes when <html class="dark"> is set
@@ -6,14 +18,18 @@
 
 // Tailwind v4: explicit source paths for Nx libs (Pitfall 3 in RESEARCH.md)
 // Prevents Tailwind from purging classes used in lib component templates
-@source "../../../libs/client/ui/theme/src";
+@source '../../../libs/client/ui/theme/src';
+@source '../../../libs/client/feature/game-console/src';
 
 // Ionic core CSS — must be imported after Tailwind to allow Ionic's reset to coexist
-@import "@ionic/angular/css/core.css";
-@import "@ionic/angular/css/normalize.css";
-@import "@ionic/angular/css/structure.css";
-@import "@ionic/angular/css/typography.css";
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
 
 // Ionic dark palette — class-based, activated when <html class="ion-palette-dark"> is set
 // ThemeService (Plan 05) applies BOTH .dark AND .ion-palette-dark simultaneously
-@import "@ionic/angular/css/palettes/dark.class.css";
+@import '@ionic/angular/css/palettes/dark.class.css';
+
+// AP dark theme overrides — MUST be last to win specificity over Ionic defaults
+@import '../../../libs/client/ui/theme/src/lib/theme/theme.css';

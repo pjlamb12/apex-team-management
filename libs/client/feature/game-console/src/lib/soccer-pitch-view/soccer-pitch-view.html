@@ -34,13 +34,13 @@
         [class.bg-blue-600]="selectedPlayerId() !== player.id"
         [class.bg-yellow-400]="selectedPlayerId() === player.id"
         [class.border-white]="selectedPlayerId() !== player.id"
-        [class.border-black]="selectedPlayerId() === player.id"
+        [class.border-ap-bg]="selectedPlayerId() === player.id"
       >
-        <span class="text-white font-bold text-sm" [class.text-black]="selectedPlayerId() === player.id">
+        <span class="text-white font-bold text-sm" [class.text-ap-bg]="selectedPlayerId() === player.id">
           {{ player.jerseyNumber || '?' }}
         </span>
       </div>
-      <span class="player-name text-[10px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded shadow mt-1 whitespace-nowrap">
+      <span class="player-name text-[10px] font-bold text-white bg-ap-bg/60 px-1.5 py-0.5 rounded shadow mt-1 whitespace-nowrap">
         {{ player.lastName }}
       </span>
     </div>
