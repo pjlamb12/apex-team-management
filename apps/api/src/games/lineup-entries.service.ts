@@ -22,6 +22,7 @@ export class LineupEntriesService {
         playerId: entry.playerId,
         positionName: entry.positionName,
         status: entry.status,
+        slotIndex: entry.slotIndex,
       }),
     );
 

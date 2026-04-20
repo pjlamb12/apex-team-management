@@ -30,17 +30,62 @@
           }
 
           <form [formGroup]="form" (ngSubmit)="submit()">
-            <ngx-control-errors-display>
-              <ion-item>
-                <ion-input
-                  label="Team Name"
-                  labelPlacement="floating"
-                  type="text"
-                  formControlName="name"
-                  autocomplete="off"
-                />
-              </ion-item>
-            </ngx-control-errors-display>
+            <ion-list>
+              <ion-list-header>
+                <ion-label>Team Settings</ion-label>
+              </ion-list-header>
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-input
+                    label="Team Name"
+                    labelPlacement="floating"
+                    type="text"
+                    formControlName="name"
+                    autocomplete="off"
+                  />
+                </ion-item>
+              </ngx-control-errors-display>
+
+              <ion-list-header class="mt-4">
+                <ion-label>Season Defaults</ion-label>
+              </ion-list-header>
+
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-input
+                    label="Default Home Venue"
+                    labelPlacement="floating"
+                    type="text"
+                    formControlName="defaultHomeVenue"
+                    placeholder="e.g. Apex Stadium"
+                  />
+                </ion-item>
+              </ngx-control-errors-display>
+
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-input
+                    label="Default Home Jersey Color"
+                    labelPlacement="floating"
+                    type="text"
+                    formControlName="defaultHomeColor"
+                    placeholder="e.g. Blue"
+                  />
+                </ion-item>
+              </ngx-control-errors-display>
+
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-input
+                    label="Default Away Jersey Color"
+                    labelPlacement="floating"
+                    type="text"
+                    formControlName="defaultAwayColor"
+                    placeholder="e.g. White"
+                  />
+                </ion-item>
+              </ngx-control-errors-display>
+            </ion-list>
 
             @if (errorMessage()) {
               <ion-text color="danger">

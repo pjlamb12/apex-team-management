@@ -142,19 +142,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GAME-02 | Phase 5 | In Progress |
 | GAME-03 | Phase 5 | In Progress |
 | GAME-04 | Phase 5 | In Progress |
-| GAME-05 | TBD | Pending |
-| SEAS-01 | TBD | Pending |
-| SEAS-02 | TBD | Pending |
+| GAME-05 | Phase 9 | Pending |
+| SEAS-01 | Phase 9 | Pending |
+| SEAS-02 | Phase 9 | Pending |
 | LIVE-01 | Phase 5 | In Progress |
 | LIVE-02 | Phase 5 | In Progress |
 | LIVE-03 | Phase 6 | Pending |
 | LIVE-04 | Phase 6 | Pending |
-| LIVE-05 | Phase 6 | Pending |
+| LIVE-05 | Phase 9 | Pending |
 | LIVE-06 | Phase 6 | Pending |
 | LIVE-07 | Phase 6 | Pending |
 | LIVE-08 | Phase 6 | Pending |
-| LIVE-09 | TBD | Pending |
-| LIVE-10 | TBD | Pending |
+| LIVE-09 | Phase 9 | Pending |
+| LIVE-10 | Phase 9 | Pending |
 | INFR-01 | Phase 1 | Pending |
 | INFR-02 | Phase 1 | Pending |
 | INFR-03 | Phase 6 | Pending |

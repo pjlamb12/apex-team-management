@@ -1,4 +1,4 @@
-import { IsArray, IsString, IsNotEmpty, IsOptional, IsIn, ValidateNested, ArrayMaxSize } from 'class-validator';
+import { IsArray, IsString, IsNotEmpty, IsOptional, IsIn, ValidateNested, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class SaveLineupEntryDto {
@@ -9,6 +9,11 @@ export class SaveLineupEntryDto {
   @IsString()
   @IsOptional()
   positionName?: string;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  slotIndex?: number;
 
   @IsIn(['starting', 'bench'])
   status: 'starting' | 'bench';

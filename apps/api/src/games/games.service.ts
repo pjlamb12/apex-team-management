@@ -60,6 +60,7 @@ export class GamesService {
       ...dto,
       seasonId: activeSeason.id,
       status: 'scheduled',
+      isHomeGame: dto.isHomeGame ?? true,
     });
 
     // 4. Save the game.

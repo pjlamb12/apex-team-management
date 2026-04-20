@@ -23,12 +23,21 @@ describe('ConsoleWrapper', () => {
       player: { id: 'p1', firstName: 'Player', lastName: 'One', jerseyNumber: '1' },
       status: 'starting',
       positionName: 'Forward',
+      slotIndex: 0,
     },
     {
       playerId: 'p2',
       player: { id: 'p2', firstName: 'Player', lastName: 'Two', jerseyNumber: '2' },
       status: 'bench',
       positionName: null,
+      slotIndex: null,
+    },
+    {
+      playerId: 'p3',
+      player: { id: 'p3', firstName: 'Player', lastName: 'Three', jerseyNumber: '3' },
+      status: 'starting',
+      positionName: 'Midfielder',
+      slotIndex: 1,
     },
   ];
 
@@ -92,7 +101,7 @@ describe('ConsoleWrapper', () => {
     expect(httpMock.get).toHaveBeenCalledWith('http://api.test/games/game-123');
     expect(httpMock.get).toHaveBeenCalledWith('http://api.test/games/game-123/lineup');
     expect(component['game']()?.opponent).toBe('Test Opponent');
-    expect(stateService.activePlayers().length).toBe(1);
+    expect(stateService.activePlayers().length).toBe(2);
     expect(stateService.benchPlayers().length).toBe(1);
   });
 
@@ -128,10 +137,41 @@ describe('ConsoleWrapper', () => {
     expect(events[0].type).toBe('SUB');
     expect(events[0].playerIdIn).toBe('p2');
     expect(events[0].playerIdOut).toBe('p1');
+    expect(events[0].slotIndex).toBe(0);
 
     // State should update
-    expect(stateService.activePlayers()[0].id).toBe('p2');
-    expect(stateService.benchPlayers()[0].id).toBe('p1');
+    expect(stateService.activePlayers().find(p => p.id === 'p2')).toBeTruthy();
+    expect(stateService.benchPlayers().find(p => p.id === 'p1')).toBeTruthy();
+  });
+
+  it('should trigger POSITION_SWAP event when tapping two active players', () => {
+    const player1 = mockLineup[0].player as any;
+    const player3 = mockLineup[2].player as any;
+    const mockEvent = new MouseEvent('click');
+
+    // Select first player
+    component['handlePlayerSelection']({ player: player1, event: mockEvent });
+    expect(component['selectedPlayerId']()).toBe('p1');
+
+    // Tap second active player
+    component['handlePlayerSelection']({ player: player3, event: mockEvent });
+
+    // Selection should be cleared
+    expect(component['selectedPlayerId']()).toBe(null);
+
+    // Event should be logged
+    const events = stateService.events();
+    expect(events.length).toBe(1);
+    expect(events[0].type).toBe('POSITION_SWAP');
+    expect(events[0].slotIndexA).toBe(0);
+    expect(events[0].slotIndexB).toBe(1);
+
+    // Players should have swapped positions in the signal
+    const active = stateService.activePlayers();
+    const p1InActive = active.find(p => p.id === 'p1') as any;
+    const p3InActive = active.find(p => p.id === 'p3') as any;
+    expect(p1InActive.slotIndex).toBe(1);
+    expect(p3InActive.slotIndex).toBe(0);
   });
 
   it('should call clockService.start when startClock is called', () => {

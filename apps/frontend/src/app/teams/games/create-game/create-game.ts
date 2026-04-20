@@ -22,9 +22,11 @@ import {
   IonDatetimeButton,
   IonModal,
   IonLabel,
+  IonToggle,
 } from '@ionic/angular/standalone';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { GamesService } from '../games.service';
+import { Season } from '../../../../../../libs/shared/util/models/src/lib/season.model';
 
 @Component({
   selector: 'app-create-game',
@@ -50,6 +52,7 @@ import { GamesService } from '../games.service';
     IonDatetimeButton,
     IonModal,
     IonLabel,
+    IonToggle,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './create-game.html',
@@ -63,16 +66,53 @@ export class CreateGame implements OnInit {
 
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
+  protected activeSeason = signal<Season | null>(null);
 
   protected form = this.fb.group({
     opponent: ['', [Validators.required, Validators.minLength(2)]],
     scheduledAt: [new Date().toISOString(), [Validators.required]],
     location: [''],
     uniformColor: [''],
+    isHomeGame: [true],
   });
 
   ngOnInit(): void {
-    // Team ID is in the route: /teams/:id/games/new
+    const teamId = this.route.snapshot.paramMap.get('id');
+    if (teamId) {
+      void this.loadSeason(teamId);
+    }
+
+    // Reactively update location and color based on isHomeGame toggle
+    this.form.get('isHomeGame')?.valueChanges.subscribe((isHome) => {
+      this.applySeasonDefaults(isHome ?? true);
+    });
+  }
+
+  protected async loadSeason(teamId: string): Promise<void> {
+    try {
+      const season = await firstValueFrom(this.gamesService.getActiveSeason(teamId));
+      this.activeSeason.set(season);
+      this.applySeasonDefaults(this.form.value.isHomeGame ?? true);
+    } catch {
+      console.warn('Failed to load active season for defaults');
+    }
+  }
+
+  private applySeasonDefaults(isHome: boolean): void {
+    const season = this.activeSeason();
+    if (!season) return;
+
+    if (isHome) {
+      this.form.patchValue({
+        location: season.defaultHomeVenue ?? '',
+        uniformColor: season.defaultHomeColor ?? '',
+      });
+    } else {
+      this.form.patchValue({
+        uniformColor: season.defaultAwayColor ?? '',
+        // Away venue is unknown, usually
+      });
+    }
   }
 
   protected async submit(): Promise<void> {
@@ -90,13 +130,15 @@ export class CreateGame implements OnInit {
     this.isSaving.set(true);
     this.errorMessage.set(null);
     try {
-      const { opponent, scheduledAt, location, uniformColor } = this.form.getRawValue();
+      const { opponent, scheduledAt, location, uniformColor, isHomeGame } =
+        this.form.getRawValue();
       const game = await firstValueFrom(
         this.gamesService.createGame(teamId, {
           opponent: opponent!,
           scheduledAt: scheduledAt!,
           location: location || undefined,
           uniformColor: uniformColor || undefined,
+          isHomeGame: isHomeGame ?? true,
         })
       );
       // Navigate to lineup editor for the new game

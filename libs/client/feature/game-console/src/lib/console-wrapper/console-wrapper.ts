@@ -171,27 +171,46 @@ export class ConsoleWrapper implements OnInit {
     }
 
     const isSelectedOnBench = benchPlayers.some(p => p.id === currentSelectionId);
-    const isSelectedActive = activePlayers.some(p => p.id === currentSelectionId);
+    const isSelectedActive = activePlayers.some(p => (p as any).id === currentSelectionId);
     
-    // Swap only if one is active and one is bench
-    if ((isSelectedOnBench && isTappedActive) || (isSelectedActive && isTappedOnBench)) {
+    // 1. Position Swap: Both are active
+    if (isSelectedActive && isTappedActive) {
+      const playerA = activePlayers.find(p => (p as any).id === currentSelectionId) as any;
+      const playerB = activePlayers.find(p => (p as any).id === player.id) as any;
+
+      if (playerA && playerB && playerA.slotIndex !== undefined && playerB.slotIndex !== undefined) {
+        this.stateService.pushEvent({
+          type: 'POSITION_SWAP',
+          slotIndexA: playerA.slotIndex,
+          slotIndexB: playerB.slotIndex,
+          timestamp: Date.now(),
+          minuteOccurred: this.clockService.currentMinute(),
+        });
+      }
+      this.selectedPlayerId.set(null);
+      this.actionPlayer.set(null);
+    }
+    // 2. Substitution: One active, one bench
+    else if ((isSelectedOnBench && isTappedActive) || (isSelectedActive && isTappedOnBench)) {
       const inPlayerId = isSelectedOnBench ? currentSelectionId : player.id;
       const outPlayerId = isSelectedActive ? currentSelectionId : player.id;
 
-      // Determine the position the outgoing player held so we can pass it to the backend
-      const outgoingActive = activePlayers.find(p => p.id === outPlayerId);
-      const positionName = outgoingActive?.preferredPosition ?? 'Unknown';
-
-      this.stateService.pushEvent({
-        type: 'SUB',
-        playerIdIn: inPlayerId,
-        playerIdOut: outPlayerId,
-        positionName,
-        timestamp: Date.now(),
-        minuteOccurred: this.clockService.currentMinute(),
-      });
+      const outgoingActive = activePlayers.find(p => (p as any).id === outPlayerId) as any;
+      
+      if (outgoingActive && outgoingActive.slotIndex !== undefined) {
+        this.stateService.pushEvent({
+          type: 'SUB',
+          playerIdIn: inPlayerId,
+          playerIdOut: outPlayerId,
+          slotIndex: outgoingActive.slotIndex,
+          positionName: outgoingActive.preferredPosition ?? 'Unknown',
+          timestamp: Date.now(),
+          minuteOccurred: this.clockService.currentMinute(),
+        });
+      }
       
       this.selectedPlayerId.set(null);
+      this.actionPlayer.set(null);
     } else {
       // Just change selection to the new player
       this.selectedPlayerId.set(player.id);

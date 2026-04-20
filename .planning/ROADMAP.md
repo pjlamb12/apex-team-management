@@ -17,6 +17,7 @@
 | 6 | Live Game Console | ● Complete | LIVE-03, LIVE-04, LIVE-05, LIVE-06, LIVE-07, LIVE-08, INFR-03 | 5 |
 | 7 | PWA & Native Builds | ● Complete | INFR-04, INFR-05, INFR-06 | 4 |
 | 8 | UI Rework | Resolve dark-theme inconsistencies — black backgrounds, dark-gray-on-black contrast issues, and visual polish across all screens | — | — |
+| 9 | Season Defaults & Advanced Console | Implement season-level default venues/colors and advanced lineup swap logic | SEAS-01, SEAS-02, GAME-05, LIVE-05, LIVE-09, LIVE-10 | 4 |
 
 ## Phase Details
 
@@ -196,9 +197,9 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Global token system: fill theme.css AP overrides + update styles.scss @theme block and import order
-- [ ] 08-02-PLAN.md — Game console hardcode removal: console-wrapper, event-log, soccer-pitch-view
-- [ ] 08-03-PLAN.md — Per-page SCSS cleanup: redundant ion-card overrides, teams-list border, lineup-editor border
+- [x] 08-01-PLAN.md — Global token system: fill theme.css AP overrides + update styles.scss @theme block and import order
+- [x] 08-02-PLAN.md — Game console hardcode removal: console-wrapper, event-log, soccer-pitch-view
+- [x] 08-03-PLAN.md — Per-page SCSS cleanup: redundant ion-card overrides, teams-list border, lineup-editor border
 - [ ] 08-04-PLAN.md — Visual verification checkpoint across all 13 screens
 
 **Success criteria:**
@@ -206,6 +207,27 @@ Plans:
 2. All text/icon elements meet sufficient contrast against their backgrounds
 3. Dark-theme colors are consistent across all pages and components
 
+### Phase 9: Season Defaults & Advanced Console
+
+**Goal:** Allow seasons to store default venue and jersey colors; fix Undo logic; and implement position-retaining swaps and on-field player position swaps.
+
+**Depends on:** Phase 8
+
+**Plans:** 4 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Backend Extensions & Migration
+- [ ] 09-02-PLAN.md — Season Settings & Smart Game Creation
+- [ ] 09-03-PLAN.md — Live Console Slot Refactor
+- [ ] 09-04-PLAN.md — Advanced Pitch Interactions
+
+**Success criteria:**
+1. Season settings allow setting a default home venue and home/away colors
+2. Game creation pre-populates location and jersey color based on home/away toggle
+3. LIVE-05 fix: Undo substitution correctly restores the outgoing player to their previous position slot
+4. LIVE-09: Bench player swapping in takes the exact position slot of the outgoing player
+5. LIVE-10: Tapping two on-field players swaps their assigned positions
+
 ---
 *Roadmap created: 2026-04-14*
-*Last updated: 2026-04-19 — Phase 8 planned: 4 plans in 3 waves*
+*Last updated: 2026-04-19 — Phase 9 added: Season Defaults & Advanced Console*

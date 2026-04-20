@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsBoolean } from 'class-validator';
 
 export class UpdateGameDto {
   @IsString()
@@ -17,4 +17,8 @@ export class UpdateGameDto {
   @IsString()
   @IsOptional()
   uniformColor?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isHomeGame?: boolean;
 }

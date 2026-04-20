@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
+import { Season } from '../../../../../libs/shared/util/models/src/lib/season.model';
 
 export interface GameEntity {
   id: string;
@@ -10,6 +11,7 @@ export interface GameEntity {
   scheduledAt: string;
   location: string | null;
   uniformColor: string | null;
+  isHomeGame: boolean;
   status: 'scheduled' | 'in_progress' | 'completed';
 }
 
@@ -18,6 +20,7 @@ export interface CreateGameDto {
   scheduledAt: string;
   location?: string;
   uniformColor?: string;
+  isHomeGame?: boolean;
 }
 
 export interface UpdateGameDto {
@@ -25,6 +28,7 @@ export interface UpdateGameDto {
   scheduledAt?: string;
   location?: string;
   uniformColor?: string;
+  isHomeGame?: boolean;
 }
 
 export interface LineupEntry {
@@ -58,6 +62,10 @@ export class GamesService {
 
   getGames(teamId: string): Observable<GameEntity[]> {
     return this.http.get<GameEntity[]>(`${this.apiUrl}/teams/${teamId}/games`);
+  }
+
+  getActiveSeason(teamId: string): Observable<Season> {
+    return this.http.get<Season>(`${this.apiUrl}/teams/${teamId}/seasons/active`);
   }
 
   createGame(teamId: string, data: CreateGameDto): Observable<GameEntity> {
