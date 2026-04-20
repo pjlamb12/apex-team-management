@@ -43,4 +43,10 @@
   --ion-color-step-100: #263044;
   --ion-color-step-150: rgba(255, 255, 255, 0.08);
   --ion-color-step-200: rgba(255, 255, 255, 0.12);
+  /* High steps needed by overlays (action-sheet, alert) — dark.class.css only
+     defines --ion-background/text-color-step-* variants, leaving the legacy
+     --ion-color-step-* chain unresolved, which falls back to #262626. */
+  --ion-color-step-850: #cfd4d9;
+  --ion-color-step-900: #dde1e5;
+  --ion-color-step-950: #eceef0;
 }

@@ -5,7 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { TeamsModule } from '../teams/teams.module';
 import { SportsModule } from '../sports/sports.module';
 import { PlayersModule } from '../players/players.module';
-import { GamesModule } from '../games/games.module';
+import { EventsModule } from '../events/events.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -30,7 +30,7 @@ import { AppController } from './app.controller';
     TeamsModule,
     SportsModule,
     PlayersModule,
-    GamesModule,
+    EventsModule,
   ],
   controllers: [AppController],
 })

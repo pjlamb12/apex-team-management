@@ -33,3 +33,13 @@
 
 // AP dark theme overrides — MUST be last to win specificity over Ionic defaults
 @import '../../../libs/client/ui/theme/src/lib/theme/theme.css';
+
+// Action sheet dark mode: CSS vars don't pierce shadow DOM reliably here,
+// so target exposed ::part() selectors directly.
+ion-action-sheet.schedule-action-sheet::part(button) {
+  color: #f1f5f9;
+}
+
+ion-action-sheet.schedule-action-sheet::part(title) {
+  color: #94a3b8;
+}

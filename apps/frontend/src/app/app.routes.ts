@@ -43,22 +43,32 @@ export const appRoutes: Route[] = [
           import('./teams/seasons/seasons-list/seasons-list').then((m) => m.SeasonsList),
       },
       {
-        path: 'teams/:id/games/new',
+        path: 'teams/:id/settings/seasons/:seasonId',
         loadComponent: () =>
-          import('./teams/games/create-game/create-game').then((m) => m.CreateGame),
+          import('./teams/seasons/season-detail/season-detail').then((m) => m.SeasonDetail),
       },
       {
-        path: 'teams/:id/games/:gameId/edit',
+        path: 'teams/:id/events/new',
         loadComponent: () =>
-          import('./teams/games/edit-game/edit-game').then((m) => m.EditGame),
+          import('./teams/events/create-event/create-event').then((m) => m.CreateEvent),
       },
       {
-        path: 'teams/:id/games/:gameId/lineup',
+        path: 'teams/:id/events/new-practice',
         loadComponent: () =>
-          import('./teams/games/lineup-editor/lineup-editor').then((m) => m.LineupEditor),
+          import('./teams/events/create-practice/create-practice').then((m) => m.CreatePractice),
       },
       {
-        path: 'teams/:id/games/:gameId/console',
+        path: 'teams/:id/events/:eventId/edit',
+        loadComponent: () =>
+          import('./teams/events/edit-event/edit-event').then((m) => m.EditEvent),
+      },
+      {
+        path: 'teams/:id/events/:eventId/lineup',
+        loadComponent: () =>
+          import('./teams/events/lineup-editor/lineup-editor').then((m) => m.LineupEditor),
+      },
+      {
+        path: 'teams/:id/events/:eventId/console',
         loadComponent: () =>
           import('@apex-team/client/feature/game-console').then((m) => m.ConsoleWrapper),
       },

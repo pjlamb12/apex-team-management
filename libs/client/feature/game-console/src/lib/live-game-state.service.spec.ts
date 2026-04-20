@@ -4,7 +4,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('LiveGameStateService', () => {
   let service: LiveGameStateService;
-  const gameId = 'game-123';
+  const eventId = 'event-123';
+  const teamId = 'team-123';
 
   const mockLineup: LineupEntry[] = [
     {
@@ -41,7 +42,7 @@ describe('LiveGameStateService', () => {
   });
 
   it('should initialize with lineup and compute active/bench players with slots', () => {
-    service.initialize(gameId, mockLineup);
+    service.initialize(eventId, mockLineup, teamId);
     
     expect(service.activePlayers().length).toBe(2);
     
@@ -58,7 +59,7 @@ describe('LiveGameStateService', () => {
   });
 
   it('should update active/bench players when a SUB event is pushed, preserving slot', () => {
-    service.initialize(gameId, mockLineup);
+    service.initialize(eventId, mockLineup, teamId);
     
     const subEvent = {
       type: 'SUB',
@@ -81,7 +82,7 @@ describe('LiveGameStateService', () => {
   });
 
   it('should handle POSITION_SWAP events', () => {
-    service.initialize(gameId, mockLineup);
+    service.initialize(eventId, mockLineup, teamId);
     
     // p1 is at slot 0 (Forward), p3 is at slot 1 (Midfielder)
     const swapEvent = {
@@ -107,7 +108,7 @@ describe('LiveGameStateService', () => {
   });
 
   it('should undo a POSITION_SWAP and restore original slots', () => {
-    service.initialize(gameId, mockLineup);
+    service.initialize(eventId, mockLineup, teamId);
     
     const swapEvent = {
       type: 'POSITION_SWAP',
@@ -133,9 +134,9 @@ describe('LiveGameStateService', () => {
 
   it('should restore state from localStorage on initialization', () => {
     const event = { type: 'GOAL', playerId: 'p1', timestamp: 1000 };
-    localStorage.setItem(`game-events-${gameId}`, JSON.stringify([event]));
+    localStorage.setItem(`event-logs-${eventId}`, JSON.stringify([event]));
     
-    service.initialize(gameId, mockLineup);
+    service.initialize(eventId, mockLineup, teamId);
     
     expect(service.events()).toEqual([event]);
   });

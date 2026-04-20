@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { GameEntity } from './game.entity';
+import { EventEntity } from './event.entity';
 import { PlayerEntity } from './player.entity';
 
 @Entity('lineup_entries')
@@ -7,12 +7,12 @@ export class LineupEntryEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => GameEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'game_id' })
-  game: GameEntity;
+  @ManyToOne(() => EventEntity, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'event_id' })
+  event: EventEntity;
 
-  @Column({ name: 'game_id' })
-  gameId: string;
+  @Column({ name: 'event_id' })
+  eventId: string;
 
   @ManyToOne(() => PlayerEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'player_id' })

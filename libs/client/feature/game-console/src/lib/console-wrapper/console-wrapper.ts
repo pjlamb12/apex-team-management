@@ -63,8 +63,8 @@ export class ConsoleWrapper implements OnInit {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
-  protected gameId = toSignal(
-    this.route.paramMap.pipe(map((params) => params.get('gameId')))
+  protected eventId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('eventId')))
   );
 
   protected teamId = toSignal(
@@ -83,32 +83,39 @@ export class ConsoleWrapper implements OnInit {
     )
   );
 
-  protected game = toSignal(
+  protected event = toSignal(
     this.route.paramMap.pipe(
-      map((params) => params.get('gameId')),
-      filter((id): id is string => !!id),
-      switchMap((id) => {
+      map((params) => ({
+        teamId: params.get('id'),
+        eventId: params.get('eventId')
+      })),
+      filter((p): p is { teamId: string; eventId: string } => !!p.teamId && !!p.eventId),
+      switchMap(({ teamId, eventId }) => {
         const url = this.apiUrl;
         if (!url) return [];
-        return this.http.get<any>(`${url}/games/${id}`);
+        return this.http.get<any>(`${url}/teams/${teamId}/events/${eventId}`);
       })
     )
   );
 
   protected lineup = toSignal(
     this.route.paramMap.pipe(
-      map((params) => params.get('gameId')),
-      filter((id): id is string => !!id),
-      switchMap((id) => {
+      map((params) => ({
+        teamId: params.get('id'),
+        eventId: params.get('eventId')
+      })),
+      filter((p): p is { teamId: string; eventId: string } => !!p.teamId && !!p.eventId),
+      switchMap(({ teamId, eventId }) => {
         const url = this.apiUrl;
         if (!url) return [];
-        return this.http.get<LineupEntry[]>(`${url}/games/${id}/lineup`);
+        return this.http.get<LineupEntry[]>(`${url}/teams/${teamId}/events/${eventId}/lineup`);
       }),
       tap((lineup) => {
-        const gameId = this.gameId();
-        if (gameId) {
-          this.stateService.initialize(gameId, lineup);
-          this.clockService.initialize(gameId);
+        const eventId = this.eventId();
+        const teamId = this.teamId();
+        if (eventId && teamId) {
+          this.stateService.initialize(eventId, lineup, teamId);
+          this.clockService.initialize(eventId);
         }
       })
     )

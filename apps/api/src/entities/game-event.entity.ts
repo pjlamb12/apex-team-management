@@ -1,17 +1,17 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { GameEntity } from './game.entity';
+import { EventEntity } from './event.entity';
 
 @Entity('game_events')
 export class GameEventEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => GameEntity)
-  @JoinColumn({ name: 'game_id' })
-  game: GameEntity;
+  @ManyToOne(() => EventEntity)
+  @JoinColumn({ name: 'event_id' })
+  event: EventEntity;
 
-  @Column({ name: 'game_id' })
-  gameId: string;
+  @Column({ name: 'event_id' })
+  eventId: string;
 
   @Column({ name: 'event_type' })
   eventType: string;

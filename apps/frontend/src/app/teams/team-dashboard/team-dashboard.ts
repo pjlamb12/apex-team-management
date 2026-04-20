@@ -24,10 +24,9 @@ import {
   IonFabButton,
   IonSegment,
   IonSegmentButton,
-  IonListHeader,
-  IonNote,
   ModalController,
   AlertController,
+  ActionSheetController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -36,14 +35,13 @@ import {
   addOutline,
   pencilOutline,
   calendarOutline,
-  locationOutline,
-  shirtOutline,
+  fitnessOutline,
 } from 'ionicons/icons';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { PlayersService, PlayerEntity, CreatePlayerDto, UpdatePlayerDto } from '../players.service';
-import { GamesService, GameEntity } from '../games/games.service';
 import { PlayerModal } from '../player-modal/player-modal';
 import { CommonModule } from '@angular/common';
+import { Schedule } from '../events/schedule/schedule';
 
 interface Sport {
   id: string;
@@ -83,8 +81,7 @@ interface Team {
     IonFabButton,
     IonSegment,
     IonSegmentButton,
-    IonListHeader,
-    IonNote,
+    Schedule,
   ],
   templateUrl: './team-dashboard.html',
   styleUrl: './team-dashboard.scss',
@@ -95,29 +92,12 @@ export class TeamDashboard implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly playersService = inject(PlayersService);
-  private readonly gamesService = inject(GamesService);
 
   protected team = signal<Team | null>(null);
   protected players = signal<PlayerEntity[]>([]);
-  protected games = signal<GameEntity[]>([]);
-  protected selectedSegment = signal<'roster' | 'games'>('roster');
+  protected selectedSegment = signal<'roster' | 'schedule'>('roster');
   protected isLoading = signal(false);
-  protected gamesLoading = signal(false);
   protected errorMessage = signal<string | null>(null);
-
-  protected upcomingGames = computed(() => {
-    const now = new Date();
-    return this.games()
-      .filter((g) => new Date(g.scheduledAt) >= now)
-      .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
-  });
-
-  protected pastGames = computed(() => {
-    const now = new Date();
-    return this.games()
-      .filter((g) => new Date(g.scheduledAt) < now)
-      .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
-  });
 
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
@@ -125,6 +105,7 @@ export class TeamDashboard implements OnInit {
 
   private readonly modalCtrl = inject(ModalController);
   private readonly alertCtrl = inject(AlertController);
+  private readonly actionSheetCtrl = inject(ActionSheetController);
 
   constructor() {
     addIcons({
@@ -133,8 +114,7 @@ export class TeamDashboard implements OnInit {
       addOutline,
       pencilOutline,
       calendarOutline,
-      locationOutline,
-      shirtOutline,
+      fitnessOutline,
     });
   }
 
@@ -162,24 +142,8 @@ export class TeamDashboard implements OnInit {
     }
   }
 
-  protected async onSegmentChange(event: any): Promise<void> {
-    const value = event.detail.value as 'roster' | 'games';
-    this.selectedSegment.set(value);
-    if (value === 'games' && this.games().length === 0) {
-      await this.loadGames();
-    }
-  }
-
-  protected async loadGames(): Promise<void> {
-    this.gamesLoading.set(true);
-    try {
-      const games = await firstValueFrom(this.gamesService.getGames(this.teamId));
-      this.games.set(games);
-    } catch {
-      this.errorMessage.set('Failed to load games. Please try again.');
-    } finally {
-      this.gamesLoading.set(false);
-    }
+  protected onSegmentChange(event: any): void {
+    this.selectedSegment.set(event.detail.value as 'roster' | 'schedule');
   }
 
   protected async deletePlayer(playerId: string): Promise<void> {
@@ -200,30 +164,6 @@ export class TeamDashboard implements OnInit {
               this.players.update((list) => list.filter((p) => p.id !== playerId));
             } catch {
               this.errorMessage.set('Failed to remove player. Please try again.');
-            }
-          },
-        },
-      ],
-    });
-
-    await alert.present();
-  }
-
-  protected async deleteGame(game: GameEntity): Promise<void> {
-    const alert = await this.alertCtrl.create({
-      header: 'Delete Game?',
-      message: `Are you sure you want to delete the game against ${game.opponent}?`,
-      buttons: [
-        'Cancel',
-        {
-          text: 'Delete',
-          role: 'confirm',
-          handler: async () => {
-            try {
-              await firstValueFrom(this.gamesService.deleteGame(game.id));
-              this.games.update((list) => list.filter((g) => g.id !== game.id));
-            } catch {
-              this.errorMessage.set('Failed to delete game. Please try again.');
             }
           },
         },
@@ -266,5 +206,30 @@ export class TeamDashboard implements OnInit {
 
   protected get teamId(): string {
     return this.route.snapshot.paramMap.get('id') ?? '';
+  }
+
+  protected async presentAddEventSheet(): Promise<void> {
+    const sheet = await this.actionSheetCtrl.create({
+      cssClass: 'schedule-action-sheet',
+      header: 'Add to Schedule',
+      buttons: [
+        {
+          text: 'Schedule Game',
+          icon: 'calendar-outline',
+          handler: () => {
+            void this.router.navigate(['/teams', this.teamId, 'events', 'new']);
+          },
+        },
+        {
+          text: 'Schedule Practice',
+          icon: 'fitness-outline',
+          handler: () => {
+            void this.router.navigate(['/teams', this.teamId, 'events', 'new-practice']);
+          },
+        },
+        { text: 'Cancel', role: 'cancel' },
+      ],
+    });
+    await sheet.present();
   }
 }

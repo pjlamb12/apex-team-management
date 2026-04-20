@@ -70,11 +70,11 @@ Season Management & Schedule. These requirements are for the current roadmap.
 
 ### Seasons
 
-- [ ] **SEAS-03**: Coach can explicitly create a new season for a team
-- [ ] **SEAS-04**: Coach can edit season details (name, start date, end date, status)
-- [ ] **SEAS-05**: Coach can set a specific season as the active season for a team
-- [ ] **SEAS-06**: Coach can delete a season
-- [ ] **SEAS-07**: Season has a default practice location that auto-populates the location for new practices
+- [x] **SEAS-03**: Coach can explicitly create a new season for a team
+- [x] **SEAS-04**: Coach can edit season details (name, start date, end date, status)
+- [x] **SEAS-05**: Coach can set a specific season as the active season for a team
+- [x] **SEAS-06**: Coach can delete a season
+- [x] **SEAS-07**: Season has a default practice location that auto-populates the location for new practices
 
 ### Game & Season Association
 
@@ -189,11 +189,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-04 | Phase 7 | Pending |
 | INFR-05 | Phase 7 | Pending |
 | INFR-06 | Phase 7 | Pending |
-| SEAS-03 | Phase 10 | Pending |
-| SEAS-04 | Phase 10 | Pending |
-| SEAS-05 | Phase 10 | Pending |
-| SEAS-06 | Phase 10 | Pending |
-| SEAS-07 | Phase 10 | Pending |
+| SEAS-03 | Phase 10 | Completed |
+| SEAS-04 | Phase 10 | Completed |
+| SEAS-05 | Phase 10 | Completed |
+| SEAS-06 | Phase 10 | Completed |
+| SEAS-07 | Phase 10 | Completed |
 | PRAC-01 | Phase 11 | Pending |
 | PRAC-02 | Phase 11 | Pending |
 | SCHD-02 | Phase 11 | Pending |

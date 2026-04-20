@@ -2,14 +2,14 @@
 gsd_state_version: 1.1
 milestone: v1.1
 milestone_name: Season Management & Schedule
-status: Planning Phase 10
-last_updated: "2026-04-20T01:30:00Z"
+status: Phase 11 planning
+last_updated: "2026-04-20T17:00:00Z"
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
+  percent: 100
 ---
 
 # State: Apex Team
@@ -20,16 +20,16 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
 **Current focus:** Season management, practice sessions, and unified schedule.
-**Current Position:** Milestone v1.1 — Phase 10: Season Lifecycle & Defaults
+**Current Position:** Milestone v1.1 — Phase 11: Practice Management & Unified Schedule
 
 ## Current Milestone
 
 **v1.1 — Season Management & Schedule**
 
 Phase: Phase 10: Season Lifecycle & Defaults
-Plan: TBD
+Plan: Completed
 
-Progress: ░░░░░░░░░░ 0%
+Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
 
 
 ## Decision Log
@@ -50,10 +50,11 @@ Progress: ░░░░░░░░░░ 0%
 | 2026-04-18 | YELLOW_CARD and RED_CARD registered as first-class event types in Soccer sport | Resolves sync mismatches where cards were logged locally but rejected by API. |
 | 2026-04-18 | Use localStorage for clock persistence keyed by gameId | Ensures game timer survives accidental page refresh (Requirement INFR-03). |
 | 2026-04-20 | Start Milestone v1.1 | v1.0 complete with Phase 9 advanced features. v1.1 focuses on Season management and Schedule. |
+| 2026-04-20 | Phase 10 completed | Season Lifecycle & Defaults implemented. Moving to Phase 11. |
 
 ## Active Context
 
-- Phase 6-9 features delivered: substitution history, event-sourced lineup logic, and season defaults.
+- Phase 10 delivered: Season creation, management, active toggle, and practice location defaults.
 - App is mobile-first, PWA-ready, and supports dark mode.
 - Core coaching console is functional.
 - Milestone v1.1 roadmap defines the next three phases (10, 11, 12).
@@ -61,7 +62,7 @@ Progress: ░░░░░░░░░░ 0%
 ## Session Continuity
 
 Last session: 2026-04-20
-Stopped at: Initialized v1.1 Roadmap and State. Ready for Phase 10 planning.
+Stopped at: Phase 10 completed. Ready for Phase 11: Practice Management & Unified Schedule planning.
 
 ## Accumulated Context
 

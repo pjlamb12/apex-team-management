@@ -22,7 +22,7 @@
     <ion-list>
       @for (season of seasons(); track season.id) {
         <ion-item>
-          <ion-icon slot="start" name="calendar-outline" color="primary"></ion-icon>
+          <ion-icon slot="start" name="calendar-outline" color="primary" style="margin-inline-end: 12px; align-self: center;"></ion-icon>
           <ion-label>
             <h2>{{ season.name }}</h2>
             <p>{{ season.startDate | date:'MMM d, yyyy' }} - {{ season.endDate | date:'MMM d, yyyy' }}</p>
@@ -47,7 +47,7 @@
     </ion-list>
   }
 
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: 60px;">
     <ion-fab-button [routerLink]="['/teams', teamId(), 'settings', 'seasons', 'new']">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>

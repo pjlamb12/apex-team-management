@@ -15,8 +15,8 @@
       <ion-segment-button value="roster">
         <ion-label>Roster</ion-label>
       </ion-segment-button>
-      <ion-segment-button value="games">
-        <ion-label>Games</ion-label>
+      <ion-segment-button value="schedule">
+        <ion-label>Schedule</ion-label>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
@@ -24,7 +24,7 @@
 
 <ion-content>
   @if (isLoading()) {
-    <div class="loading-container">
+    <div class="flex items-center justify-center h-full">
       <ion-spinner name="crescent"></ion-spinner>
     </div>
   } @else {
@@ -75,89 +75,15 @@
         </ion-fab-button>
       </ion-fab>
     } @else {
-      @if (gamesLoading()) {
-        <div class="loading-container">
-          <ion-spinner name="crescent"></ion-spinner>
-        </div>
-      } @else {
-        <ion-list>
-          @if (upcomingGames().length > 0) {
-            <ion-list-header>
-              <ion-label>Upcoming Games</ion-label>
-            </ion-list-header>
-            @for (game of upcomingGames(); track game.id) {
-              <ion-item-sliding>
-                <ion-item [routerLink]="['/teams', teamId, 'games', game.id, 'lineup']">
-                  <ion-label>
-                    <h2>vs {{ game.opponent }}</h2>
-                    <p class="game-meta">
-                      <ion-icon name="calendar-outline"></ion-icon>
-                      {{ game.scheduledAt | date: 'MMM d, h:mm a' }}
-                    </p>
-                    @if (game.location) {
-                      <p class="game-meta">
-                        <ion-icon name="location-outline"></ion-icon>
-                        {{ game.location }}
-                      </p>
-                    }
-                  </ion-label>
-                  @if (game.uniformColor) {
-                    <ion-note slot="end" class="uniform-note">
-                      <span class="color-dot" [style.background]="game.uniformColor"></span>
-                    </ion-note>
-                  }
-                </ion-item>
-                <ion-item-options side="end">
-                  <ion-item-option color="danger" (click)="deleteGame(game)">
-                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-                  </ion-item-option>
-                </ion-item-options>
-              </ion-item-sliding>
-            }
-          }
+      <div class="ion-padding">
+        <app-schedule [teamId]="teamId"></app-schedule>
+      </div>
 
-          @if (pastGames().length > 0) {
-            <ion-list-header>
-              <ion-label>Past Games</ion-label>
-            </ion-list-header>
-            @for (game of pastGames(); track game.id) {
-              <ion-item-sliding>
-                <ion-item [routerLink]="['/teams', teamId, 'games', game.id, 'lineup']">
-                  <ion-label>
-                    <h2 class="opacity-70">vs {{ game.opponent }}</h2>
-                    <p>
-                      <ion-icon name="calendar-outline"></ion-icon>
-                      {{ game.scheduledAt | date: 'MMM d, yyyy' }}
-                    </p>
-                  </ion-label>
-                  <ion-badge slot="end" [color]="game.status === 'completed' ? 'medium' : 'primary'">
-                    {{ game.status }}
-                  </ion-badge>
-                </ion-item>
-                <ion-item-options side="end">
-                  <ion-item-option color="danger" (click)="deleteGame(game)">
-                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-                  </ion-item-option>
-                </ion-item-options>
-              </ion-item-sliding>
-            }
-          }
-
-          @if (upcomingGames().length === 0 && pastGames().length === 0) {
-            <ion-item>
-              <ion-label>
-                <p>No games scheduled yet.</p>
-              </ion-label>
-            </ion-item>
-          }
-        </ion-list>
-
-        <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-          <ion-fab-button [routerLink]="['/teams', teamId, 'games', 'new']" aria-label="Schedule game">
-            <ion-icon name="add-outline"></ion-icon>
-          </ion-fab-button>
-        </ion-fab>
-      }
+      <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+        <ion-fab-button (click)="presentAddEventSheet()" aria-label="Add event">
+          <ion-icon name="add-outline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
     }
   }
 </ion-content>

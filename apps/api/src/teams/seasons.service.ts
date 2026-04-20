@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { SeasonEntity } from '../entities/season.entity';
-import { GameEntity } from '../entities/game.entity';
+import { EventEntity } from '../entities/event.entity';
 import { CreateSeasonDto } from './dto/create-season.dto';
 import { UpdateSeasonDto } from './dto/update-season.dto';
 
@@ -64,13 +64,13 @@ export class SeasonsService {
   async remove(id: string): Promise<void> {
     const season = await this.findOne(id);
 
-    const gamesCount = await this.dataSource.getRepository(GameEntity).count({
+    const eventsCount = await this.dataSource.getRepository(EventEntity).count({
       where: { seasonId: id },
     });
 
-    if (gamesCount > 0) {
+    if (eventsCount > 0) {
       throw new ConflictException(
-        `Cannot delete season ${id} because it has associated games.`,
+        `Cannot delete season ${id} because it has associated events.`,
       );
     }
 

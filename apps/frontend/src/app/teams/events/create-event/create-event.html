@@ -1,0 +1,101 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + route.snapshot.paramMap.get('id')" />
+    </ion-buttons>
+    <ion-title>Schedule Game</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="flex items-start justify-center min-h-full pt-4">
+    <ion-card class="w-full max-w-md">
+      <ion-card-header>
+        <ion-card-title class="text-xl font-bold">New Game</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <ion-item class="mb-4" lines="none">
+            <ion-toggle formControlName="isHomeGame">
+              <ion-label>
+                <h2>{{ form.get('isHomeGame')?.value ? 'Home' : 'Away' }} Game</h2>
+                <p>Use season defaults for {{ form.get('isHomeGame')?.value ? 'home' : 'away' }} settings</p>
+              </ion-label>
+            </ion-toggle>
+          </ion-item>
+
+          <ngx-control-errors-display>
+            <ion-item>
+              <ion-input
+                label="Opponent"
+                labelPlacement="floating"
+                type="text"
+                formControlName="opponent"
+                autocomplete="off"
+                placeholder="e.g. Eagles SC"
+              />
+            </ion-item>
+          </ngx-control-errors-display>
+
+          <ngx-control-errors-display class="block mt-3">
+            <ion-item>
+              <ion-label position="fixed">Date & Time</ion-label>
+              <ion-datetime-button datetime="game-datetime"></ion-datetime-button>
+            </ion-item>
+            <ion-modal [keepContentsMounted]="true">
+              <ng-template>
+                <ion-datetime
+                  id="game-datetime"
+                  presentation="date-time"
+                  formControlName="scheduledAt"
+                ></ion-datetime>
+              </ng-template>
+            </ion-modal>
+          </ngx-control-errors-display>
+
+          <ngx-control-errors-display class="block mt-3">
+            <ion-item>
+              <ion-input
+                label="Location"
+                labelPlacement="floating"
+                type="text"
+                formControlName="location"
+                autocomplete="off"
+                placeholder="e.g. West Field, Park A"
+              />
+            </ion-item>
+          </ngx-control-errors-display>
+
+          <ngx-control-errors-display class="block mt-3">
+            <ion-item>
+              <ion-input
+                label="Uniform Color"
+                labelPlacement="floating"
+                type="text"
+                formControlName="uniformColor"
+                autocomplete="off"
+                placeholder="e.g. Home (White)"
+              />
+            </ion-item>
+          </ngx-control-errors-display>
+
+          @if (errorMessage()) {
+            <ion-text color="danger">
+              <p class="text-sm mt-2">{{ errorMessage() }}</p>
+            </ion-text>
+          }
+
+          <ion-button
+            type="submit"
+            expand="block"
+            class="mt-4"
+            [disabled]="isSaving()"
+          >
+            {{ isSaving() ? 'Saving...' : 'Create Game' }}
+          </ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

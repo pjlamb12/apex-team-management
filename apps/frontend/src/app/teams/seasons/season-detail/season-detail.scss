@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+ion-content {
+  --background: var(--ion-color-light);
+}
+
+ion-item {
+  --background: white;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+
+  &.item-has-focus {
+    --border-color: var(--ion-color-primary);
+  }
+}
+
+.text-medium {
+  color: var(--ion-color-step-600);
+}
+
+ion-datetime-button::part(native) {
+  background: var(--ion-color-light-shade);
+  border-radius: 8px;
+  color: var(--ion-color-primary);
+  font-weight: 500;
+}

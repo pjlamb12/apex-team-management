@@ -7,6 +7,7 @@ import { LiveGameStateService } from '../live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { of } from 'rxjs';
 import { signal, NO_ERRORS_SCHEMA } from '@angular/core';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('ConsoleWrapper', () => {
   let component: ConsoleWrapper;
@@ -49,6 +50,7 @@ describe('ConsoleWrapper', () => {
       currentMinute: vi.fn().mockReturnValue(0),
       start: vi.fn(),
       stop: vi.fn(),
+      initialize: vi.fn(),
     };
 
     httpMock = {
@@ -61,7 +63,7 @@ describe('ConsoleWrapper', () => {
     routeMock = {
       paramMap: of({
         get: (key: string) => {
-          if (key === 'gameId') return 'game-123';
+          if (key === 'eventId') return 'event-123';
           if (key === 'id') return 'team-456';
           return null;
         },
@@ -97,10 +99,10 @@ describe('ConsoleWrapper', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load game data and lineup on init', () => {
-    expect(httpMock.get).toHaveBeenCalledWith('http://api.test/games/game-123');
-    expect(httpMock.get).toHaveBeenCalledWith('http://api.test/games/game-123/lineup');
-    expect(component['game']()?.opponent).toBe('Test Opponent');
+  it('should load event data and lineup on init', () => {
+    expect(httpMock.get).toHaveBeenCalledWith('http://api.test/teams/team-456/events/event-123');
+    expect(httpMock.get).toHaveBeenCalledWith('http://api.test/teams/team-456/events/event-123/lineup');
+    expect(component['event']()?.opponent).toBe('Test Opponent');
     expect(stateService.activePlayers().length).toBe(2);
     expect(stateService.benchPlayers().length).toBe(1);
   });

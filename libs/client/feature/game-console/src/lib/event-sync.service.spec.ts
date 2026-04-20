@@ -4,6 +4,7 @@ import { EventSyncService } from './event-sync.service';
 import { LiveGameStateService } from './live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { of } from 'rxjs';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('EventSyncService', () => {
   let service: EventSyncService;
@@ -33,7 +34,7 @@ describe('EventSyncService', () => {
     });
 
     stateService = TestBed.inject(LiveGameStateService);
-    stateService.initialize('game-123', []);
+    stateService.initialize('event-123', [], 'team-123');
 
     service = TestBed.inject(EventSyncService);
   });
@@ -56,7 +57,7 @@ describe('EventSyncService', () => {
     TestBed.flushEffects();
 
     expect(httpMock.post).toHaveBeenCalledWith(
-      'http://api.test/games/game-123/events',
+      'http://api.test/teams/team-123/events/event-123/game-events',
       {
         eventType: 'SUB',
         minuteOccurred: 10,
@@ -84,7 +85,7 @@ describe('EventSyncService', () => {
     TestBed.flushEffects();
 
     expect(httpMock.post).toHaveBeenCalledWith(
-      'http://api.test/games/game-123/events',
+      'http://api.test/teams/team-123/events/event-123/game-events',
       {
         eventType: 'POSITION_SWAP',
         minuteOccurred: 15,
@@ -132,22 +133,8 @@ describe('EventSyncService', () => {
     TestBed.flushEffects();
 
     expect(httpMock.delete).toHaveBeenCalledWith(
-      'http://api.test/games/game-123/events/server-event-1'
+      'http://api.test/teams/team-123/events/event-123/game-events/server-event-1'
     );
-  });
-
-  it('should not POST events when gameId is null', () => {
-    // The stateService used in service already has gameId set via initialize()
-    // Create a fresh state service scenario: the effect only skips if gameId is null
-    // We verify by checking the service was created without errors when gameId is absent
-    const freshStub = {
-      events: () => [],
-      gameId: () => null,
-    } as any;
-
-    // Just confirm the service does not throw when instantiated
-    expect(service).toBeTruthy();
-    expect(httpMock.post).not.toHaveBeenCalled();
   });
 
   it('should not double-sync an event that is already being synced', () => {

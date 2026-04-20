@@ -4,7 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { SeasonsService } from './seasons.service';
 import { SeasonEntity } from '../entities/season.entity';
-import { GameEntity } from '../entities/game.entity';
+import { EventEntity } from '../entities/event.entity';
 import { vi } from 'vitest';
 
 describe('SeasonsService', () => {
@@ -20,7 +20,7 @@ describe('SeasonsService', () => {
     remove: vi.fn(),
   };
 
-  const mockGameRepo = {
+  const mockEventRepo = {
     count: vi.fn(),
   };
 
@@ -34,7 +34,7 @@ describe('SeasonsService', () => {
   const mockDataSource = {
     transaction: vi.fn().mockImplementation((cb) => cb(mockEntityManager)),
     getRepository: vi.fn().mockImplementation((entity) => {
-      if (entity === GameEntity) return mockGameRepo;
+      if (entity === EventEntity) return mockEventRepo;
       return null;
     }),
   };
@@ -90,23 +90,23 @@ describe('SeasonsService', () => {
   });
 
   describe('remove', () => {
-    it('throws ConflictException if season has games', async () => {
+    it('throws ConflictException if season has events', async () => {
       const seasonId = 'season-123';
       const season = { id: seasonId };
       
       mockSeasonRepo.findOne.mockResolvedValue(season);
-      mockGameRepo.count.mockResolvedValue(1);
+      mockEventRepo.count.mockResolvedValue(1);
       
       await expect(service.remove(seasonId)).rejects.toThrow(ConflictException);
       expect(mockSeasonRepo.remove).not.toHaveBeenCalled();
     });
 
-    it('succeeds if season has no games', async () => {
+    it('succeeds if season has no events', async () => {
       const seasonId = 'season-123';
       const season = { id: seasonId };
       
       mockSeasonRepo.findOne.mockResolvedValue(season);
-      mockGameRepo.count.mockResolvedValue(0);
+      mockEventRepo.count.mockResolvedValue(0);
       
       await service.remove(seasonId);
       expect(mockSeasonRepo.remove).toHaveBeenCalledWith(season);

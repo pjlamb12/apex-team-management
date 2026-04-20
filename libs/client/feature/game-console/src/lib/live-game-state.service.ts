@@ -33,22 +33,21 @@ export interface LineupEntry {
 })
 export class LiveGameStateService {
   private _events = signal<GameEvent[]>([]);
-  private _gameId = signal<string | null>(null);
+  private _eventId = signal<string | null>(null);
+  private _teamId = signal<string | null>(null);
   private _initialLineup = signal<LineupEntry[]>([]);
 
   public readonly events = this._events.asReadonly();
-  public readonly gameId = this._gameId.asReadonly();
+  public readonly eventId = this._eventId.asReadonly();
+  public readonly teamId = this._teamId.asReadonly();
   public readonly initialLineup = this._initialLineup.asReadonly();
 
   public readonly activePlayers = computed(() => {
     const lineup = this._initialLineup();
     const events = this._events().filter((e) => e.status !== 'deleted');
 
-    // Use a map of slotIndex -> { player, position }
-    // Slot indices 0-10 for a standard 11-player lineup (soccer)
     const slotMap = new Map<number, { player: Player; position: string }>();
 
-    // 1. Initialize from initial starting players
     lineup
       .filter((e) => e.status === 'starting' && e.slotIndex !== null)
       .forEach((e) => {
@@ -58,7 +57,6 @@ export class LiveGameStateService {
         });
       });
 
-    // 2. Apply events in order
     events.forEach((event) => {
       if (event.type === 'SUB' && event.playerIdIn && event.slotIndex !== undefined) {
         const inEntry = lineup.find((e) => e.playerId === event.playerIdIn);
@@ -78,14 +76,6 @@ export class LiveGameStateService {
         const playerB = slotMap.get(event.slotIndexB);
 
         if (playerA && playerB) {
-          // Swap the contents of the slots
-          // Note: The position (e.g. "Forward") is tied to the slot, 
-          // but we swap the player objects while keeping the slot's original position label
-          // for now, OR do we swap everything? 
-          // Plan says: "players at slotIndexA and slotIndexB should swap their slots"
-          // If slot 0 is "Forward" and slot 1 is "Midfielder", and we swap players,
-          // usually the coach means "Player A is now Midfielder, Player B is now Forward".
-          
           const temp = { ...playerA };
           slotMap.set(event.slotIndexA, { ...playerB, position: playerA.position });
           slotMap.set(event.slotIndexB, { ...temp, position: playerB.position });
@@ -93,7 +83,6 @@ export class LiveGameStateService {
       }
     });
 
-    // 3. Return as array of players with their assigned slot and position
     return Array.from(slotMap.entries()).map(([slotIndex, data]) => ({
       ...data.player,
       preferredPosition: data.position,
@@ -118,8 +107,9 @@ export class LiveGameStateService {
     return { team, opponent };
   });
 
-  public initialize(gameId: string, lineup: LineupEntry[] = []): void {
-    this._gameId.set(gameId);
+  public initialize(eventId: string, lineup: LineupEntry[] = [], teamId?: string): void {
+    this._eventId.set(eventId);
+    if (teamId) this._teamId.set(teamId);
     this._initialLineup.set(lineup);
 
     const stored = localStorage.getItem(this.getStorageKey());
@@ -163,15 +153,10 @@ export class LiveGameStateService {
   }
 
   public save(): void {
-    const gameId = this._gameId();
-    if (!gameId) return;
+    if (!this._eventId()) return;
     localStorage.setItem(this.getStorageKey(), JSON.stringify(this._events()));
   }
 
-  /**
-   * Immutably marks an event as synced and records its backend ID.
-   * Required by EventSyncService — do NOT mutate signal-owned objects directly.
-   */
   public markEventSynced(localTimestamp: number, backendId: string): void {
     this._events.update((prev) =>
       prev.map((e) =>
@@ -183,9 +168,6 @@ export class LiveGameStateService {
     this.save();
   }
 
-  /**
-   * Immutably marks a deleted event's sync flag after backend DELETE succeeds.
-   */
   public markDeletionSynced(localTimestamp: number): void {
     this._events.update((prev) =>
       prev.map((e) =>
@@ -196,6 +178,6 @@ export class LiveGameStateService {
   }
 
   private getStorageKey(): string {
-    return `game-events-${this._gameId()}`;
+    return `event-logs-${this._eventId()}`;
   }
 }

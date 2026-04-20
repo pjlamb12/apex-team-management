@@ -8,7 +8,7 @@ import { UserEntity } from './entities/user.entity';
 import { TeamEntity } from './entities/team.entity';
 import { PlayerEntity } from './entities/player.entity';
 import { SeasonEntity } from './entities/season.entity';
-import { GameEntity } from './entities/game.entity';
+import { EventEntity } from './entities/event.entity';
 import { GameEventEntity } from './entities/game-event.entity';
 import { LineupEntryEntity } from './entities/lineup-entry.entity';
 
@@ -19,7 +19,7 @@ export default new DataSource({
   username: process.env['DB_USERNAME'] || 'postgres',
   password: process.env['DB_PASSWORD'] || 'postgres',
   database: process.env['DB_NAME'] || 'apex_team',
-  entities: [SportEntity, UserEntity, TeamEntity, PlayerEntity, SeasonEntity, GameEntity, GameEventEntity, LineupEntryEntity],
+  entities: [SportEntity, UserEntity, TeamEntity, PlayerEntity, SeasonEntity, EventEntity, GameEventEntity, LineupEntryEntity],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   synchronize: false,
   migrationsTableName: 'migrations',

@@ -21,20 +21,21 @@ export class EventSyncService {
   constructor() {
     effect(() => {
       const events = this.stateService.events();
-      const gameId = this.stateService.gameId();
+      const eventId = this.stateService.eventId();
+      const teamId = this.stateService.teamId();
       
-      if (!gameId) return;
+      if (!eventId || !teamId) return;
 
       events.forEach((event, index) => {
         const tempId = this.getEventTempId(event, index);
         
         // If it's active and not synced, sync it
         if (event.status === 'active' && !event.synced && !this.syncingIds.has(tempId)) {
-          this.syncAdd(gameId, event, index);
+          this.syncAdd(teamId, eventId, event, index);
         }
         // If it's deleted, has a backend ID, and is not synced (meaning deletion not synced), delete it
         else if (event.status === 'deleted' && event.id && !event.synced && !this.syncingIds.has(tempId)) {
-          this.syncDelete(gameId, event, index);
+          this.syncDelete(teamId, eventId, event, index);
         }
       });
     });
@@ -44,7 +45,7 @@ export class EventSyncService {
     return `${event.timestamp}-${index}`;
   }
 
-  private syncAdd(gameId: string, event: GameEvent, index: number) {
+  private syncAdd(teamId: string, eventId: string, event: GameEvent, index: number) {
     const tempId = this.getEventTempId(event, index);
     this.syncingIds.add(tempId);
 
@@ -62,7 +63,7 @@ export class EventSyncService {
       payload
     };
 
-    this.http.post<any>(`${this.apiUrl}/games/${gameId}/events`, body)
+    this.http.post<any>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events`, body)
       .pipe(
         retry({ count: 3, delay: 1000 }),
         catchError(err => {
@@ -79,11 +80,11 @@ export class EventSyncService {
       });
   }
 
-  private syncDelete(gameId: string, event: GameEvent, index: number) {
+  private syncDelete(teamId: string, eventId: string, event: GameEvent, index: number) {
     const tempId = this.getEventTempId(event, index);
     this.syncingIds.add(tempId);
 
-    this.http.delete<any>(`${this.apiUrl}/games/${gameId}/events/${event.id}`)
+    this.http.delete<any>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events/${event.id}`)
       .pipe(
         retry({ count: 3, delay: 1000 }),
         catchError(err => {

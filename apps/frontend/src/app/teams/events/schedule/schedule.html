@@ -1,0 +1,70 @@
+<ion-segment [value]="scope()" (ionChange)="onScopeChange($event)" class="mb-2">
+  <ion-segment-button value="upcoming">
+    <ion-label>Upcoming</ion-label>
+  </ion-segment-button>
+  <ion-segment-button value="past">
+    <ion-label>Past</ion-label>
+  </ion-segment-button>
+</ion-segment>
+
+@if (isLoading()) {
+  <div class="flex items-center justify-center py-8">
+    <ion-spinner name="crescent" />
+  </div>
+} @else {
+  <ion-list>
+    @for (event of events(); track event.id) {
+      <ion-item-sliding>
+        <ion-item 
+          [routerLink]="event.type === 'game' ? ['/teams', teamId, 'events', event.id, 'lineup'] : ['/teams', teamId, 'events', event.id, 'edit']"
+          [button]="true"
+        >
+          <ion-icon
+            slot="start"
+            [name]="getEventIcon(event)"
+            [color]="event.type === 'game' ? 'primary' : 'tertiary'"
+            style="margin-inline-end: 12px"
+          ></ion-icon>
+          <ion-label>
+            <h2 [class.opacity-70]="scope() === 'past'">{{ getEventTitle(event) }}</h2>
+            <p class="flex items-center gap-1">
+              {{ event.scheduledAt | date: (scope() === 'upcoming' ? 'MMM d, h:mm a' : 'MMM d, yyyy') }}
+              @if (event.durationMinutes) {
+                <ion-note>({{ event.durationMinutes }}m)</ion-note>
+              }
+            </p>
+            @if (event.location) {
+              <p class="flex items-center gap-1">
+                <ion-icon name="location-outline" class="text-xs"></ion-icon>
+                {{ event.location }}
+              </p>
+            }
+          </ion-label>
+          
+          @if (event.type === 'game') {
+            @if (event.uniformColor) {
+              <div slot="end" class="w-3 h-3 rounded-full border border-gray-300" [style.background]="event.uniformColor"></div>
+            }
+          }
+          
+          <ion-icon slot="end" name="chevron-forward-outline" color="medium" class="text-xs"></ion-icon>
+        </ion-item>
+
+        <ion-item-options side="end">
+          <ion-item-option color="primary" [routerLink]="['/teams', teamId, 'events', event.id, 'edit']">
+            <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+          </ion-item-option>
+          <ion-item-option color="danger" (click)="deleteEvent(event)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+    } @empty {
+      <ion-item>
+        <ion-label class="text-center py-4 italic text-gray-500">
+          No {{ scope() }} events found.
+        </ion-label>
+      </ion-item>
+    }
+  </ion-list>
+}
