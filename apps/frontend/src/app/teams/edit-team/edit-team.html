@@ -47,6 +47,16 @@
               </ngx-control-errors-display>
 
               <ion-list-header class="mt-4">
+                <ion-label>Management</ion-label>
+              </ion-list-header>
+
+              <ion-item button [routerLink]="['/teams', team()?.id, 'settings', 'seasons']">
+                <ion-icon slot="start" name="calendar-outline" color="primary"></ion-icon>
+                <ion-label>Manage Seasons</ion-label>
+                <ion-icon slot="end" name="chevron-forward-outline" color="medium"></ion-icon>
+              </ion-item>
+
+              <ion-list-header class="mt-4">
                 <ion-label>Season Defaults</ion-label>
               </ion-list-header>
 

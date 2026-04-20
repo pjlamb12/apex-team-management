@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -12,6 +12,7 @@ import {
   IonItem,
   IonInput,
   IonButton,
+  IonIcon,
   IonText,
   IonSpinner,
   IonBackButton,
@@ -24,6 +25,8 @@ import {
   IonList,
   IonListHeader,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { calendarOutline, chevronForwardOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { Season } from '@apex-team/shared/util/models';
@@ -44,6 +47,7 @@ interface Team {
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     IonContent,
     IonCard,
     IonCardHeader,
@@ -52,6 +56,7 @@ interface Team {
     IonItem,
     IonInput,
     IonButton,
+    IonIcon,
     IonText,
     IonSpinner,
     IonBackButton,
@@ -91,6 +96,10 @@ export class EditTeam implements OnInit {
 
   protected get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
+  }
+
+  constructor() {
+    addIcons({ calendarOutline, chevronForwardOutline });
   }
 
   ngOnInit(): void {

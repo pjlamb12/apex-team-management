@@ -38,6 +38,11 @@ export const appRoutes: Route[] = [
           import('./teams/edit-team/edit-team').then((m) => m.EditTeam),
       },
       {
+        path: 'teams/:id/settings/seasons',
+        loadComponent: () =>
+          import('./teams/seasons/seasons-list/seasons-list').then((m) => m.SeasonsList),
+      },
+      {
         path: 'teams/:id/games/new',
         loadComponent: () =>
           import('./teams/games/create-game/create-game').then((m) => m.CreateGame),
