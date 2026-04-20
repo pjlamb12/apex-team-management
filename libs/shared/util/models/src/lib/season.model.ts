@@ -6,4 +6,7 @@ export interface Season {
   startDate: string;   // ISO date string
   endDate: string;     // ISO date string
   isActive: boolean;
+  defaultHomeVenue?: string;
+  defaultHomeColor?: string;
+  defaultAwayColor?: string;
 }

@@ -3,5 +3,8 @@ export interface Game {
   id: string;
   seasonId: string;
   opponent?: string;
+  location?: string;
   scheduledAt?: string;  // ISO datetime string
+  isHomeGame: boolean;
+  uniformColor?: string;
 }
