@@ -42,4 +42,7 @@ export class SeasonEntity {
 
   @Column({ name: 'default_away_color', nullable: true })
   defaultAwayColor: string | null;
+
+  @Column({ name: 'default_practice_location', nullable: true })
+  defaultPracticeLocation: string | null;
 }

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsInt, Min, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsUUID } from 'class-validator';
 
 export class CreateSeasonDto {
   @IsUUID()
@@ -23,4 +23,16 @@ export class CreateSeasonDto {
   @IsString()
   @IsOptional()
   defaultAwayColor?: string;
+
+  @IsString()
+  @IsOptional()
+  defaultPracticeLocation?: string;
+
+  @IsString()
+  @IsOptional()
+  startDate?: string;
+
+  @IsString()
+  @IsOptional()
+  endDate?: string;
 }
