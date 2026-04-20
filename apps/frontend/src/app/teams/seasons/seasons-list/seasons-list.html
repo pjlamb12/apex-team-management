@@ -1,0 +1,55 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + teamId() + '/settings'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Manage Seasons</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (errorMessage()) {
+    <ion-text color="danger">
+      <p>{{ errorMessage() }}</p>
+    </ion-text>
+  }
+
+  @if (isLoading()) {
+    <div class="flex justify-center p-8">
+      <ion-spinner></ion-spinner>
+    </div>
+  } @else {
+    <ion-list>
+      @for (season of seasons(); track season.id) {
+        <ion-item>
+          <ion-icon slot="start" name="calendar-outline" color="primary"></ion-icon>
+          <ion-label>
+            <h2>{{ season.name }}</h2>
+            <p>{{ season.startDate | date:'MMM d, yyyy' }} - {{ season.endDate | date:'MMM d, yyyy' }}</p>
+          </ion-label>
+          @if (season.isActive) {
+            <ion-badge slot="end" color="success">Active</ion-badge>
+          }
+          <ion-buttons slot="end">
+            <ion-button [routerLink]="['/teams', teamId(), 'settings', 'seasons', season.id]">
+              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button color="danger" (click)="confirmDelete(season)">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-item>
+      } @empty {
+        <div class="ion-text-center ion-padding">
+          <p>No seasons found for this team.</p>
+        </div>
+      }
+    </ion-list>
+  }
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button [routerLink]="['/teams', teamId(), 'settings', 'seasons', 'new']">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>
