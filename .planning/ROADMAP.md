@@ -7,7 +7,7 @@
 
 ## Phase Overview
 
-- [ ] **Phase 10: Season Lifecycle & Defaults** - Coaches can explicitly create and manage seasons, including setting default practice locations.
+- [x] **Phase 10: Season Lifecycle & Defaults** - Coaches can explicitly create and manage seasons, including setting default practice locations.
 - [ ] **Phase 11: Practice Management & Unified Schedule** - Create practices that leverage season defaults and view a chronological schedule of all team events.
 - [ ] **Phase 12: Season-Integrated Games & Analytics** - Games automatically associate with the active season, allowing for filtered views and aggregate performance metrics.
 
@@ -23,10 +23,10 @@
   3. Coach can set a "default practice location" for a season.
   4. Coach can toggle which season is "Active" for the team (exactly one active).
 **Plans**: 4 plans
-- [ ] 10-01-PLAN.md — Backend Schema & DTOs
-- [ ] 10-02-PLAN.md — Backend Business Logic
-- [ ] 10-03-PLAN.md — Frontend Scaffolding & Navigation
-- [ ] 10-04-PLAN.md — Frontend Detail View
+- [x] 10-01-PLAN.md — Backend Schema & DTOs
+- [x] 10-02-PLAN.md — Backend Business Logic
+- [x] 10-03-PLAN.md — Frontend Scaffolding & Navigation
+- [x] 10-04-PLAN.md — Frontend Detail View
 **UI hint**: yes
 
 ### Phase 11: Practice Management & Unified Schedule
@@ -37,7 +37,10 @@
   1. Coach can create, edit, and delete practice sessions with date, time, and location.
   2. New practices automatically inherit the location from the active season's default.
   3. Team Dashboard features a "Schedule" tab that displays both Games and Practices in a unified chronological list.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 11-01-PLAN.md — Event-Centric Data Migration
+- [ ] 11-02-PLAN.md — Backend Events Refactor & Practice Logic
+- [ ] 11-03-PLAN.md — Frontend Unified Schedule & Practice Management
 **UI hint**: yes
 
 ### Phase 12: Season-Integrated Games & Analytics
@@ -55,8 +58,8 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 10. Season Lifecycle & Defaults | 0/4 | Not started | - |
-| 11. Practice Management & Unified Schedule | 0/0 | Not started | - |
+| 10. Season Lifecycle & Defaults | 4/4 | Completed | 2026-04-20 |
+| 11. Practice Management & Unified Schedule | 0/3 | Not started | - |
 | 12. Season-Integrated Games & Analytics | 0/0 | Not started | - |
 
 ---
