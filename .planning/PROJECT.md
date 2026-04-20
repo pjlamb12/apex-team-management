@@ -8,40 +8,52 @@ A game day coaching console for youth sports. Coaches create teams, manage roste
 
 A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened — no paper lineups, no mental math.
 
+## Current Milestone: v1.1 Season Management & Gaps
+
+**Goal:** Provide the ability to explicitly create and manage seasons for a team, bridging any functional gaps in the team, season, and game lifecycle before adding more complex workflows.
+
+**Target features:**
+- Create and edit seasons for a team.
+- Manage the active season lifecycle.
+- Fill any existing operational gaps around teams, seasons, and games.
+
 ## Requirements
 
 ### Validated
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- [x] Coach can sign up and log in with email/password (Phase 2)
+- [x] Coach can create a team and select a sport (soccer for v1) (Phase 3)
+- [x] Coach can add players to a roster (name, jersey number, contact email) (Phase 4)
+- [x] Coach can create a new game (opponent, location, time, uniform color) (Phase 5, 9)
+- [x] Coach can set a starting lineup by assigning players to positions (Phase 5)
+- [x] Coach can swap players in/out during a live game (Phase 6, 9)
+- [x] Coach can see at a glance who's on the field and who's on the bench (Phase 6)
+- [x] Coach can tap to log goals and assists with timestamps (Phase 6)
+- [x] Sport configuration is data-driven (positions, players on field, period type as JSONB/config) (Phase 3)
+- [x] App works as a responsive web app (mobile-first, PWA-ready) (Phase 7)
+- [x] Seasons can store default venue and jersey colors (Phase 9)
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Coach can sign up and log in with email/password
-- [ ] Coach can create a team and select a sport (soccer for v1)
-- [ ] Coach can add players to a roster (name, jersey number, contact email)
-- [ ] Coach can create a new game (opponent, location, time, uniform color)
-- [ ] Coach can set a starting lineup by assigning players to positions
-- [ ] Coach can swap players in/out during a live game
-- [ ] Coach can see at a glance who's on the field and who's on the bench
-- [ ] Coach can tap to log goals and assists with timestamps
-- [ ] Sport configuration is data-driven (positions, players on field, period type as JSONB/config)
-- [ ] App works as a responsive web app (mobile-first, PWA-ready)
+- [ ] Create and edit seasons for a team
+- [ ] Set an active season
+- [ ] Associate games and stats clearly with the active season
 
 ### Out of Scope
 
 <!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
 
-- Practice planning and drill library — deferred to v1.1
-- Automated equal-time rotation engine — deferred to v1.3 (manual swaps first)
+- Practice planning and drill library — deferred to v1.2
+- Automated equal-time rotation engine — deferred to v1.3
+- Game scheduling UI (calendar view, recurring events) — deferred to v1.3
 - Parent accounts and "claim token" onboarding — deferred to v2
 - Assistant coach / team admin roles — deferred to v2
 - Real-time coach sync (WebSocket) — deferred to v2
 - iCal sync and calendar feeds — deferred to v2
-- Game scheduling UI (calendar view, recurring events) — deferred to v2 (v1 uses "New Game" with same data model)
 - Messaging / team chat — deferred to v3
 - Media hub (photo/video uploads) — deferred to v3
 - Analytics and reporting — deferred to v3
