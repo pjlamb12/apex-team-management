@@ -42,23 +42,59 @@ describe('EventSyncService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should POST to API when a new event is pushed', () => {
+  it('should POST to API when a SUB event is pushed with slotIndex', () => {
+    const timestamp = Date.now();
     stateService.pushEvent({
-      type: 'GOAL',
-      playerId: 'p1',
-      minuteOccurred: 15,
-      timestamp: Date.now(),
+      type: 'SUB',
+      playerIdIn: 'p2',
+      playerIdOut: 'p1',
+      slotIndex: 0,
+      minuteOccurred: 10,
+      timestamp,
     });
 
-    // Flush Angular effects
     TestBed.flushEffects();
 
     expect(httpMock.post).toHaveBeenCalledWith(
       'http://api.test/games/game-123/events',
-      expect.objectContaining({
-        eventType: 'GOAL',
+      {
+        eventType: 'SUB',
+        minuteOccurred: 10,
+        payload: {
+          playerIdIn: 'p2',
+          playerIdOut: 'p1',
+          slotIndex: 0
+        }
+      }
+    );
+  });
+
+  it('should POST to API when a POSITION_SWAP event is pushed', () => {
+    const timestamp = Date.now();
+    stateService.pushEvent({
+      type: 'POSITION_SWAP',
+      playerIdA: 'p1',
+      playerIdB: 'p3',
+      slotIndexA: 0,
+      slotIndexB: 1,
+      minuteOccurred: 15,
+      timestamp,
+    });
+
+    TestBed.flushEffects();
+
+    expect(httpMock.post).toHaveBeenCalledWith(
+      'http://api.test/games/game-123/events',
+      {
+        eventType: 'POSITION_SWAP',
         minuteOccurred: 15,
-      })
+        payload: {
+          playerIdA: 'p1',
+          playerIdB: 'p3',
+          slotIndexA: 0,
+          slotIndexB: 1
+        }
+      }
     );
   });
 
