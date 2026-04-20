@@ -66,6 +66,23 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ## v1.1 Requirements
 
+Season Management & Gaps. These requirements are for the current roadmap.
+
+### Seasons
+
+- [ ] **SEAS-03**: Coach can explicitly create a new season for a team
+- [ ] **SEAS-04**: Coach can edit season details (name, start date, end date, status)
+- [ ] **SEAS-05**: Coach can set a specific season as the active season for a team
+- [ ] **SEAS-06**: Coach can delete a season
+
+### Game & Season Association
+
+- [ ] **GAME-06**: Coach can view games filtered by active season
+- [ ] **GAME-07**: Games created automatically associate with the currently active season
+- [ ] **GAME-08**: Season dashboard shows aggregate stats (wins, losses, goals) for the season
+
+## v1.2 Requirements
+
 Deferred to next minor release. Not in current roadmap.
 
 ### Practice Planning
@@ -83,11 +100,17 @@ Deferred to next minor release. Not in current roadmap.
 
 ## v1.3 Requirements
 
+Deferred to minor release. Not in current roadmap.
+
 ### Rotation Engine
 
 - **ROTN-01**: Coach can set a sub-interval (e.g., every 8 minutes) for auto-rotation prompts
 - **ROTN-02**: App generates equal-playing-time rotations based on players present
 - **ROTN-03**: Coach can override auto-generated rotations
+
+### Game Scheduling
+
+- **SCHD-01**: Game scheduling with calendar view and recurring events
 
 ## v2 Requirements
 
@@ -100,7 +123,6 @@ Deferred to second major version.
 - **SYNC-01**: Coach can invite assistant coaches to share team management
 - **SYNC-02**: Real-time WebSocket sync between coach devices during games
 - **ICAL-01**: Personalized iCal feeds for external calendars
-- **SCHD-01**: Game scheduling with calendar view and recurring events
 
 ## Out of Scope
 
