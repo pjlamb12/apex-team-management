@@ -7,6 +7,11 @@ export interface GameEvent {
   playerId?: string;
   playerIdIn?: string;
   playerIdOut?: string;
+  playerIdA?: string;
+  playerIdB?: string;
+  slotIndex?: number;
+  slotIndexA?: number;
+  slotIndexB?: number;
   position?: string;
   minuteOccurred: number;
   timestamp: number;
@@ -20,6 +25,7 @@ export interface LineupEntry {
   player: Player;
   positionName: string | null;
   status: 'starting' | 'bench';
+  slotIndex: number | null;
 }
 
 @Injectable({
@@ -36,62 +42,86 @@ export class LiveGameStateService {
 
   public readonly activePlayers = computed(() => {
     const lineup = this._initialLineup();
-    const events = this._events().filter(e => e.status !== 'deleted');
-    
-    // Start with initial starting players
-    const currentActive = new Map<string, { player: Player; position: string }>();
+    const events = this._events().filter((e) => e.status !== 'deleted');
+
+    // Use a map of slotIndex -> { player, position }
+    // Slot indices 0-10 for a standard 11-player lineup (soccer)
+    const slotMap = new Map<number, { player: Player; position: string }>();
+
+    // 1. Initialize from initial starting players
     lineup
-      .filter((e) => e.status === 'starting')
+      .filter((e) => e.status === 'starting' && e.slotIndex !== null)
       .forEach((e) => {
-        if (e.positionName) {
-          currentActive.set(e.playerId, { player: e.player, position: e.positionName });
-        }
+        slotMap.set(e.slotIndex as number, {
+          player: e.player,
+          position: e.positionName || 'Unknown',
+        });
       });
 
-    // Apply events (specifically SUB events for now)
+    // 2. Apply events in order
     events.forEach((event) => {
-      if (event.type === 'SUB' && event.playerIdIn && event.playerIdOut) {
-        const outPlayer = currentActive.get(event.playerIdOut);
-        if (outPlayer) {
-          const inEntry = lineup.find(e => e.playerId === event.playerIdIn);
-          if (inEntry) {
-            currentActive.delete(event.playerIdOut);
-            currentActive.set(event.playerIdIn, { 
-              player: inEntry.player, 
-              position: outPlayer.position // Swapped player takes the same position
-            });
-          }
+      if (event.type === 'SUB' && event.playerIdIn && event.slotIndex !== undefined) {
+        const inEntry = lineup.find((e) => e.playerId === event.playerIdIn);
+        if (inEntry) {
+          const currentInSlot = slotMap.get(event.slotIndex);
+          slotMap.set(event.slotIndex, {
+            player: inEntry.player,
+            position: currentInSlot?.position || 'Unknown',
+          });
+        }
+      } else if (
+        event.type === 'POSITION_SWAP' &&
+        event.slotIndexA !== undefined &&
+        event.slotIndexB !== undefined
+      ) {
+        const playerA = slotMap.get(event.slotIndexA);
+        const playerB = slotMap.get(event.slotIndexB);
+
+        if (playerA && playerB) {
+          // Swap the contents of the slots
+          // Note: The position (e.g. "Forward") is tied to the slot, 
+          // but we swap the player objects while keeping the slot's original position label
+          // for now, OR do we swap everything? 
+          // Plan says: "players at slotIndexA and slotIndexB should swap their slots"
+          // If slot 0 is "Forward" and slot 1 is "Midfielder", and we swap players,
+          // usually the coach means "Player A is now Midfielder, Player B is now Forward".
+          
+          const temp = { ...playerA };
+          slotMap.set(event.slotIndexA, { ...playerB, position: playerA.position });
+          slotMap.set(event.slotIndexB, { ...temp, position: playerB.position });
         }
       }
     });
 
-    return Array.from(currentActive.values()).map(a => ({
-      ...a.player,
-      preferredPosition: a.position // For visualization in SoccerPitchView
+    // 3. Return as array of players with their assigned slot and position
+    return Array.from(slotMap.entries()).map(([slotIndex, data]) => ({
+      ...data.player,
+      preferredPosition: data.position,
+      slotIndex,
     }));
   });
 
   public readonly benchPlayers = computed(() => {
     const lineup = this._initialLineup();
     const active = this.activePlayers();
-    const activeIds = new Set(active.map(p => p.id));
-    
+    const activeIds = new Set(active.map((p) => p.id));
+
     return lineup
-      .filter(e => !activeIds.has(e.playerId))
-      .map(e => e.player);
+      .filter((e) => !activeIds.has(e.playerId))
+      .map((e) => e.player);
   });
 
   public readonly score = computed(() => {
-    const events = this._events().filter(e => e.status !== 'deleted');
-    const team = events.filter(e => e.type === 'GOAL').length;
-    const opponent = events.filter(e => e.type === 'OPPONENT_GOAL').length;
+    const events = this._events().filter((e) => e.status !== 'deleted');
+    const team = events.filter((e) => e.type === 'GOAL').length;
+    const opponent = events.filter((e) => e.type === 'OPPONENT_GOAL').length;
     return { team, opponent };
   });
 
   public initialize(gameId: string, lineup: LineupEntry[] = []): void {
     this._gameId.set(gameId);
     this._initialLineup.set(lineup);
-    
+
     const stored = localStorage.getItem(this.getStorageKey());
     if (stored) {
       try {
@@ -115,17 +145,19 @@ export class LiveGameStateService {
     this.pushEvent({
       type: 'OPPONENT_GOAL',
       timestamp: Date.now(),
-      minuteOccurred
+      minuteOccurred,
     });
   }
 
   public undo(): void {
     this._events.update((prev) => {
-      const activeEvents = prev.filter(e => e.status !== 'deleted');
+      const activeEvents = prev.filter((e) => e.status !== 'deleted');
       if (activeEvents.length === 0) return prev;
-      
+
       const lastActive = activeEvents[activeEvents.length - 1];
-      return prev.map(e => e === lastActive ? { ...e, status: 'deleted', synced: false } : e);
+      return prev.map((e) =>
+        e === lastActive ? { ...e, status: 'deleted', synced: false } : e
+      );
     });
     this.save();
   }
@@ -157,9 +189,7 @@ export class LiveGameStateService {
   public markDeletionSynced(localTimestamp: number): void {
     this._events.update((prev) =>
       prev.map((e) =>
-        e.timestamp === localTimestamp
-          ? { ...e, synced: true }
-          : e
+        e.timestamp === localTimestamp ? { ...e, synced: true } : e
       )
     );
     this.save();
