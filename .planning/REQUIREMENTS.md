@@ -35,6 +35,12 @@ Requirements for initial release. Each maps to roadmap phases.
 - [/] **GAME-02**: Coach can view list of past and upcoming games
 - [/] **GAME-03**: Coach can edit game details before kickoff
 - [/] **GAME-04**: Coach can delete a game
+- [ ] **GAME-05**: Game has a home/away toggle; home games inherit home field and jersey colors from season defaults (overridable per game)
+
+### Seasons
+
+- [ ] **SEAS-01**: Season has a default home field/venue that auto-populates the location for home games
+- [ ] **SEAS-02**: Season has default home jersey color and away jersey color; game creation pre-fills jersey color based on home/away toggle
 
 ### Live Console
 
@@ -46,6 +52,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **LIVE-06**: Coach can log a goal with the scoring player and timestamp
 - [ ] **LIVE-07**: Coach can log an assist with the assisting player and timestamp
 - [ ] **LIVE-08**: Coach can view game event log (goals, assists, substitutions)
+- [ ] **LIVE-09**: When a bench player swaps onto the field, they take the exact position slot of the outgoing player (not appended to end of array)
+- [ ] **LIVE-10**: Tapping two players who are both already on the field swaps their position slots with each other
 
 ### Infrastructure
 
@@ -134,6 +142,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GAME-02 | Phase 5 | In Progress |
 | GAME-03 | Phase 5 | In Progress |
 | GAME-04 | Phase 5 | In Progress |
+| GAME-05 | TBD | Pending |
+| SEAS-01 | TBD | Pending |
+| SEAS-02 | TBD | Pending |
 | LIVE-01 | Phase 5 | In Progress |
 | LIVE-02 | Phase 5 | In Progress |
 | LIVE-03 | Phase 6 | Pending |
@@ -142,6 +153,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LIVE-06 | Phase 6 | Pending |
 | LIVE-07 | Phase 6 | Pending |
 | LIVE-08 | Phase 6 | Pending |
+| LIVE-09 | TBD | Pending |
+| LIVE-10 | TBD | Pending |
 | INFR-01 | Phase 1 | Pending |
 | INFR-02 | Phase 1 | Pending |
 | INFR-03 | Phase 6 | Pending |
@@ -150,9 +163,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-06 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 31 total
+- v1 requirements: 36 total
 - Mapped to phases: 31
-- Unmapped: 0 ✓
+- Unmapped (TBD phase): 5 — GAME-05, SEAS-01, SEAS-02, LIVE-09, LIVE-10
 
 ---
 *Requirements defined: 2026-04-14*
