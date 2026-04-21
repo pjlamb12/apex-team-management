@@ -39,4 +39,10 @@ export class EventEntity {
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;
+
+  @Column({ name: 'goals_for', type: 'int', nullable: true })
+  goalsFor: number | null;
+
+  @Column({ name: 'goals_against', type: 'int', nullable: true })
+  goalsAgainst: number | null;
 }
