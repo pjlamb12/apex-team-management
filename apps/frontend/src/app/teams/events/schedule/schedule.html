@@ -1,5 +1,34 @@
 <div class="flex flex-col">
-<ion-segment [value]="scope()" (ionChange)="onScopeChange($event)" class="mb-2">
+  <div class="px-4 mb-2">
+    @if (isLoadingSeasons()) {
+      <div class="flex items-center justify-center py-4">
+        <ion-spinner name="crescent" size="small"></ion-spinner>
+      </div>
+    } @else if (seasons().length > 0) {
+      <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
+        <ion-select
+          label="Season"
+          labelPlacement="floating"
+          [value]="selectedSeasonId()"
+          (ionChange)="onSeasonChange($event)"
+          interface="action-sheet"
+          class="w-full"
+        >
+          @for (season of seasons(); track season.id) {
+            <ion-select-option [value]="season.id">
+              {{ season.name }}{{ season.isActive ? ' (Active)' : '' }}
+            </ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+    } @else {
+      <p class="text-sm italic text-gray-500 px-2 py-4">
+        No seasons yet — create a season to get started.
+      </p>
+    }
+  </div>
+
+  <ion-segment [value]="scope()" (ionChange)="onScopeChange($event)" class="mb-2">
   <ion-segment-button value="upcoming">
     <ion-label>Upcoming</ion-label>
   </ion-segment-button>
@@ -63,7 +92,7 @@
     } @empty {
       <ion-item>
         <ion-label class="text-center py-4 italic text-gray-500">
-          No {{ scope() }} events found.
+          No {{ scope() }} events for this season.
         </ion-label>
       </ion-item>
     }
