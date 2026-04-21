@@ -1,7 +1,7 @@
 ---
 phase: 12
 slug: season-integrated-games-analytics
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-20
