@@ -22,6 +22,7 @@ describe('SeasonsService', () => {
 
   const mockEventRepo = {
     count: vi.fn(),
+    find: vi.fn(),
   };
 
   const mockEntityManager = {
@@ -110,6 +111,61 @@ describe('SeasonsService', () => {
       
       await service.remove(seasonId);
       expect(mockSeasonRepo.remove).toHaveBeenCalledWith(season);
+    });
+  });
+
+  describe('getSeasonStats', () => {
+    const teamId = 'team-123';
+    const seasonId = 'season-123';
+
+    it('throws NotFoundException if season does not exist for team', async () => {
+      mockSeasonRepo.findOne.mockResolvedValue(null);
+      await expect(service.getSeasonStats(teamId, seasonId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('returns empty stats if no completed games found', async () => {
+      mockSeasonRepo.findOne.mockResolvedValue({ id: seasonId, teamId });
+      mockEventRepo.find.mockResolvedValue([]);
+
+      const result = await service.getSeasonStats(teamId, seasonId);
+
+      expect(result).toEqual({
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+      });
+      expect(mockEventRepo.find).toHaveBeenCalledWith({
+        where: { seasonId, type: 'game', status: 'completed' },
+      });
+    });
+
+    it('aggregates stats correctly for wins, losses, and draws', async () => {
+      mockSeasonRepo.findOne.mockResolvedValue({ id: seasonId, teamId });
+      const games = [
+        { goalsFor: 2, goalsAgainst: 1 }, // Win
+        { goalsFor: 0, goalsAgainst: 2 }, // Loss
+        { goalsFor: 1, goalsAgainst: 1 }, // Draw
+        { goalsFor: 3, goalsAgainst: 0 }, // Win
+        { goalsFor: null, goalsAgainst: 0 }, // Skip
+        { goalsFor: 1, goalsAgainst: null }, // Skip
+      ];
+      mockEventRepo.find.mockResolvedValue(games);
+
+      const result = await service.getSeasonStats(teamId, seasonId);
+
+      expect(result).toEqual({
+        wins: 2,
+        losses: 1,
+        draws: 1,
+        goalsFor: 6,
+        goalsAgainst: 4,
+        goalDifference: 2,
+      });
     });
   });
 });
