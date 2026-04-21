@@ -72,9 +72,13 @@ export class EventsService {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
-  getEvents(teamId: string, scope: 'upcoming' | 'past' = 'upcoming'): Observable<EventEntity[]> {
+  getEvents(teamId: string, scope: 'upcoming' | 'past' = 'upcoming', seasonId?: string): Observable<EventEntity[]> {
+    const params: any = { scope };
+    if (seasonId) {
+      params.seasonId = seasonId;
+    }
     return this.http.get<EventEntity[]>(`${this.apiUrl}/teams/${teamId}/events`, {
-      params: { scope }
+      params
     });
   }
 
