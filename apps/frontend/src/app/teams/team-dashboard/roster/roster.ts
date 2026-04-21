@@ -77,7 +77,7 @@ export class Roster {
     this.errorMessage.set(null);
     try {
       const players = await firstValueFrom(this.playersService.getPlayers(teamId));
-      this.players.set(players);
+      this.players.set([...players].sort((a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity)));
     } catch {
       this.errorMessage.set('Failed to load roster. Please try again.');
     } finally {

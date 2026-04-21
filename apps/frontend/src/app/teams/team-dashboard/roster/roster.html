@@ -14,7 +14,7 @@
       <ion-item-sliding>
         <ion-item>
           @if (player.jerseyNumber !== null) {
-            <ion-badge slot="start" color="primary">{{ player.jerseyNumber }}</ion-badge>
+            <ion-badge slot="start" color="primary" style="min-width: 2.5rem; min-height: 2.5rem; padding: 0.5rem 0.75rem; font-size: 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-inline-end: 1rem;">{{ player.jerseyNumber }}</ion-badge>
           }
           <ion-label>
             <h2>{{ player.firstName }} {{ player.lastName }}</h2>
