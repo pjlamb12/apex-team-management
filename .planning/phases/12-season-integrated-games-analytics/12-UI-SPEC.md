@@ -60,7 +60,7 @@ Ionic typography CSS is loaded globally. All sizes below refer to the rendered C
 | Body / list label | 16px | 400 (regular) | 1.5 |
 | Supporting text / `ion-note`, hints | 12px | 400 (regular) | 1.4 |
 | Card title / section heading | 20px | 700 (bold) | 1.2 |
-| Stat display value (W/L/D/GF/GA/GD) | 28px | 600 (semibold) | 1.0 |
+| Stat display value (W/L/D/GF/GA/GD) | 28px | 700 (bold) | 1.0 |
 
 **Source:** `ion-card-title class="text-2xl font-bold"` (24px) is existing precedent; stat display uses 28px to give the numbers visual hierarchy above their labels.
 
@@ -92,7 +92,7 @@ All values pulled from the established Athletic Professional token set in `apps/
 Accent (`#3b82f6`) reserved for:
 1. The season picker `ion-select` interface button (Ionic `color="primary"` on the select trigger).
 2. The leading icon on game rows in the schedule list (`color="primary"` on `ion-icon`).
-3. The "Save" / "Update" primary action `ion-button` (Ionic's primary color).
+3. The primary action `ion-button` ("Update" / "Update Season") (Ionic's primary color).
 4. Stat card highlight border-left (left accent bar on each stat card, 3px, blue).
 
 Accent is NOT applied to: stat labels, stat values, season picker option text, score fields, informational text.
@@ -124,7 +124,7 @@ New and modified components for this phase.
 
 **States:**
 - Loading seasons: `ion-spinner name="crescent"` centered in place of the picker row.
-- No seasons (edge case): Show static label "No seasons found" in muted text; picker hidden.
+- No seasons (edge case): Show static label "No seasons yet — create a season to get started." in muted text; picker hidden.
 
 ---
 
@@ -156,7 +156,7 @@ When a game's `status` is `completed` and the edit event form loads:
 
 **Placement:** New read-only section added to the Season Detail screen (`season-detail.html`), rendered BELOW the edit form, separated by a section heading.
 
-**Section Heading:** `<h2 class="text-lg font-semibold px-4 mt-6 mb-3">Season Stats</h2>`
+**Section Heading:** `<h2 class="text-lg font-bold px-4 mt-6 mb-3">Season Stats</h2>`
 
 **Layout: Stat Card Grid**
 
@@ -165,7 +165,7 @@ Use a 3-column CSS grid of compact stat cards inside an `ion-card`.
 ```
 [ion-card class="mt-4"]
   [ion-card-header]
-    [ion-card-title class="text-base font-semibold"] Performance
+    [ion-card-title class="text-base font-bold"] Performance
   [ion-card-content]
     [div class="grid grid-cols-3 gap-3"]
       [div.stat-card] W
@@ -179,7 +179,7 @@ Use a 3-column CSS grid of compact stat cards inside an `ion-card`.
 **Stat Card Anatomy (each cell):**
 ```
 [div class="flex flex-col items-center bg-ap-surface-raised rounded-lg p-3 border-l-[3px] border-ap-accent"]
-  [span class="text-[28px] font-semibold leading-none text-ap-text"] {value}
+  [span class="text-[28px] font-bold leading-none text-ap-text"] {value}
   [span class="text-xs text-ap-muted mt-1"] {label}
 ```
 
@@ -227,6 +227,7 @@ Goal Difference display: Show `+{n}` for positive, `-{n}` for negative, `0` for 
 | Stats error state | "Could not load stats. Pull to refresh." |
 | Schedule empty state (existing, season-filtered) | "No {upcoming/past} events for this season." |
 | Schedule loading | Spinner only (existing pattern) |
+| Season picker no-seasons edge state | "No seasons yet — create a season to get started." |
 | Primary CTA — Edit Event save | "Update" (existing — no change) |
 | Primary CTA — Season detail save | "Update Season" (existing — no change) |
 
@@ -245,6 +246,7 @@ Goal Difference display: Show `+{n}` for positive, `-{n}` for negative, `0` for 
 | Active option | Name + " (Active)" suffix, no extra badge needed inside popover |
 | Changed | Spinner replaces event list; list reloads for selected season |
 | Loading seasons | Spinner in place of picker row |
+| No seasons | Static muted text: "No seasons yet — create a season to get started." Picker hidden. |
 
 ### Score Entry
 
