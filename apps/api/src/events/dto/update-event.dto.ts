@@ -33,4 +33,14 @@ export class UpdateEventDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  goalsFor?: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  goalsAgainst?: number;
 }
