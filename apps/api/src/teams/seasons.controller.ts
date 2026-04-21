@@ -44,4 +44,12 @@ export class SeasonsController {
   findActive(@Param('teamId', ParseUUIDPipe) teamId: string) {
     return this.seasonsService.findActiveForTeam(teamId);
   }
+
+  @Get('teams/:teamId/seasons/:seasonId/stats')
+  getStats(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Param('seasonId', ParseUUIDPipe) seasonId: string,
+  ) {
+    return this.seasonsService.getSeasonStats(teamId, seasonId);
+  }
 }
