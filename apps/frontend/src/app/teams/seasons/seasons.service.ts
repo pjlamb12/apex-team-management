@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { Season } from '@apex-team/shared/util/models';
+import { Season, SeasonStats } from '@apex-team/shared/util/models';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +24,10 @@ export class SeasonsService {
   }
 
   create(teamId: string, data: Partial<Season>): Observable<Season> {
-    return this.http.post<Season>(`${this.apiUrl}/teams/${teamId}/seasons`, data);
+    return this.http.post<Season>(
+      `${this.apiUrl}/teams/${teamId}/seasons`,
+      data,
+    );
   }
 
   update(id: string, data: Partial<Season>): Observable<Season> {
@@ -33,5 +36,11 @@ export class SeasonsService {
 
   remove(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/seasons/${id}`);
+  }
+
+  getSeasonStats(teamId: string, seasonId: string): Observable<SeasonStats> {
+    return this.http.get<SeasonStats>(
+      `${this.apiUrl}/teams/${teamId}/seasons/${seasonId}/stats`,
+    );
   }
 }
