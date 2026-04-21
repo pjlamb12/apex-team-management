@@ -40,8 +40,9 @@ export class EventsController {
   findAll(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('scope') scope?: 'upcoming' | 'past',
+    @Query('seasonId') seasonId?: string,
   ) {
-    return this.eventsService.findAllForTeam(teamId, scope);
+    return this.eventsService.findAllForTeam(teamId, scope, seasonId);
   }
 
   @Get(':eventId')

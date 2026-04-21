@@ -51,6 +51,7 @@ describe('EventsService', () => {
             save: vi.fn().mockImplementation((event) => Promise.resolve({ id: 'game-event-1', ...event })),
             findOne: vi.fn(),
             remove: vi.fn(),
+            count: vi.fn(),
           },
         },
       ],
@@ -186,6 +187,51 @@ describe('EventsService', () => {
       const result = await service.findAllForTeam('team-1');
 
       expect(result).toEqual([]);
+    });
+
+    it('should use provided seasonId for filtering', async () => {
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([{ id: 'event-season-2' }] as any);
+
+      const result = await service.findAllForTeam('team-1', 'upcoming', 'season-2');
+
+      expect(result).toHaveLength(1);
+      expect(eventRepo.find).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ seasonId: 'season-2' }),
+      }));
+      expect(seasonRepo.findOne).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return event and include goalEventCount for games', async () => {
+      const event = { id: 'event-1', type: 'game' };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(event as any);
+      vi.spyOn(gameEventRepo, 'count').mockResolvedValue(3);
+
+      const result = await service.findOne('event-1');
+
+      expect(result.id).toBe('event-1');
+      expect(result.goalEventCount).toBe(3);
+      expect(gameEventRepo.count).toHaveBeenCalledWith({
+        where: { eventId: 'event-1', eventType: 'GOAL' },
+      });
+    });
+
+    it('should return event without goalEventCount for practices', async () => {
+      const event = { id: 'event-1', type: 'practice' };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(event as any);
+
+      const result = await service.findOne('event-1');
+
+      expect(result.id).toBe('event-1');
+      expect(result.goalEventCount).toBeUndefined();
+      expect(gameEventRepo.count).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if event does not exist', async () => {
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(null);
+
+      await expect(service.findOne('event-1')).rejects.toThrow(NotFoundException);
     });
   });
 

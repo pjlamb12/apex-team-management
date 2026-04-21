@@ -76,19 +76,28 @@ export class EventsService {
     return this.eventRepo.save(event);
   }
 
-  async findAllForTeam(teamId: string, scope: 'upcoming' | 'past' = 'upcoming'): Promise<EventEntity[]> {
-    // Find the active season for the team.
-    const activeSeason = await this.seasonRepo.findOne({
-      where: { teamId, isActive: true },
-    });
+  async findAllForTeam(
+    teamId: string,
+    scope: 'upcoming' | 'past' = 'upcoming',
+    seasonId?: string,
+  ): Promise<EventEntity[]> {
+    let targetSeasonId = seasonId;
 
-    // If none, return empty array.
-    if (!activeSeason) {
-      return [];
+    if (!targetSeasonId) {
+      // Find the active season for the team.
+      const activeSeason = await this.seasonRepo.findOne({
+        where: { teamId, isActive: true },
+      });
+
+      // If none, return empty array.
+      if (!activeSeason) {
+        return [];
+      }
+      targetSeasonId = activeSeason.id;
     }
 
     const now = new Date();
-    const whereCondition: any = { seasonId: activeSeason.id };
+    const whereCondition: any = { seasonId: targetSeasonId };
 
     if (scope === 'upcoming') {
       whereCondition.scheduledAt = MoreThanOrEqual(now);
@@ -103,11 +112,19 @@ export class EventsService {
     });
   }
 
-  async findOne(eventId: string): Promise<EventEntity> {
+  async findOne(eventId: string): Promise<EventEntity & { goalEventCount?: number }> {
     const event = await this.eventRepo.findOne({ where: { id: eventId } });
     if (!event) {
       throw new NotFoundException(`Event ${eventId} not found`);
     }
+
+    if (event.type === 'game') {
+      const goalEventCount = await this.gameEventRepo.count({
+        where: { eventId, eventType: 'GOAL' },
+      });
+      return { ...event, goalEventCount };
+    }
+
     return event;
   }
 
