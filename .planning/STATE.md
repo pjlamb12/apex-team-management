@@ -2,11 +2,11 @@
 gsd_state_version: 1.1
 milestone: v1.1
 milestone_name: Season Management & Schedule
-status: Phase 11 planning
+status: Phase 12 planning
 last_updated: "2026-04-20T17:00:00Z"
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
   completed_plans: 4
   percent: 100
@@ -20,13 +20,13 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
 **Current focus:** Season management, practice sessions, and unified schedule.
-**Current Position:** Milestone v1.1 — Phase 11: Practice Management & Unified Schedule
+**Current Position:** Milestone v1.1 — Phase 12: Season-Integrated Games & Analytics
 
 ## Current Milestone
 
 **v1.1 — Season Management & Schedule**
 
-Phase: Phase 10: Season Lifecycle & Defaults
+Phase: Phase 11: Practice Management & Unified Schedule
 Plan: Completed
 
 Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
@@ -51,10 +51,12 @@ Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
 | 2026-04-18 | Use localStorage for clock persistence keyed by gameId | Ensures game timer survives accidental page refresh (Requirement INFR-03). |
 | 2026-04-20 | Start Milestone v1.1 | v1.0 complete with Phase 9 advanced features. v1.1 focuses on Season management and Schedule. |
 | 2026-04-20 | Phase 10 completed | Season Lifecycle & Defaults implemented. Moving to Phase 11. |
+| 2026-04-20 | Phase 11 completed | Practice Management & Unified Schedule implemented. Moving to Phase 12. |
 
 ## Active Context
 
 - Phase 10 delivered: Season creation, management, active toggle, and practice location defaults.
+- Phase 11 delivered: Practice creation/editing, unified schedule tab showing games and practices chronologically, time-of-day display on events.
 - App is mobile-first, PWA-ready, and supports dark mode.
 - Core coaching console is functional.
 - Milestone v1.1 roadmap defines the next three phases (10, 11, 12).
