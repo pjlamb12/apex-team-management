@@ -51,7 +51,12 @@
   1. New games are automatically associated with the currently active season.
   2. Coach can filter the game list by season (defaulting to the active one).
   3. Season dashboard displays aggregate stats (wins, losses, goals for/against) for the selected season.
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 12-01-PLAN.md — Backend Data Schema & DTOs
+- [ ] 12-02-PLAN.md — Backend Events Logic (Filter + Pre-fill)
+- [ ] 12-03-PLAN.md — Backend Analytics Logic (Stats endpoint)
+- [ ] 12-04-PLAN.md — Frontend Schedule Season Filter
+- [ ] 12-05-PLAN.md — Frontend Outcomes & Season Stats
 **UI hint**: yes
 
 ## Progress Table
@@ -60,7 +65,7 @@
 |-------|----------------|--------|-----------|
 | 10. Season Lifecycle & Defaults | 4/4 | Completed | 2026-04-20 |
 | 11. Practice Management & Unified Schedule | 3/3 | Completed | 2026-04-20 |
-| 12. Season-Integrated Games & Analytics | 0/0 | Not started | - |
+| 12. Season-Integrated Games & Analytics | 0/5 | In Progress | - |
 
 ---
 
