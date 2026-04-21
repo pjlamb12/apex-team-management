@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, Input } from '@angular/core';
+import { Component, inject, signal, effect, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -26,12 +26,15 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
+  IonGrid,
+  IonRow,
+  IonCol,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { saveOutline, calendarOutline } from 'ionicons/icons';
+import { saveOutline, calendarOutline, barChartOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { SeasonsService } from '../seasons.service';
-import { Season } from '@apex-team/shared/util/models';
+import { Season, SeasonStats } from '@apex-team/shared/util/models';
 
 @Component({
   selector: 'app-season-detail',
@@ -61,6 +64,9 @@ import { Season } from '@apex-team/shared/util/models';
     IonCardHeader,
     IonCardTitle,
     IonCardContent,
+    IonGrid,
+    IonRow,
+    IonCol,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './season-detail.html',
@@ -93,6 +99,24 @@ export class SeasonDetail {
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
 
+  protected stats = signal<SeasonStats | null>(null);
+  protected isLoadingStats = signal(false);
+  protected statsError = signal(false);
+
+  protected statCards = computed(() => {
+    const s = this.stats();
+    if (!s) return [];
+    
+    return [
+      { label: 'Wins', value: s.wins },
+      { label: 'Losses', value: s.losses },
+      { label: 'Draws', value: s.draws },
+      { label: 'GF', value: s.goalsFor },
+      { label: 'GA', value: s.goalsAgainst },
+      { label: 'GD', value: s.goalDifference, color: s.goalDifference > 0 ? 'success' : s.goalDifference < 0 ? 'danger' : 'medium' },
+    ];
+  });
+
   protected form = this.fb.group({
     name: ['', [Validators.required]],
     startDate: [new Date().toISOString(), [Validators.required]],
@@ -102,16 +126,21 @@ export class SeasonDetail {
   });
 
   constructor() {
-    addIcons({ saveOutline, calendarOutline });
+    addIcons({ saveOutline, calendarOutline, barChartOutline });
 
     // Load season whenever seasonId changes
     effect(() => {
       const sId = this._seasonId();
+      const tId = this._teamId();
       if (sId && sId !== 'new') {
         this.isEdit.set(true);
         void this.loadSeason(sId);
+        if (tId) {
+          void this.loadStats(tId, sId);
+        }
       } else {
         this.isEdit.set(false);
+        this.stats.set(null);
         this.form.reset({
           name: '',
           startDate: new Date().toISOString(),
@@ -139,6 +168,19 @@ export class SeasonDetail {
       this.errorMessage.set('Failed to load season. Please try again.');
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  protected async loadStats(teamId: string, seasonId: string): Promise<void> {
+    this.isLoadingStats.set(true);
+    this.statsError.set(false);
+    try {
+      const data = await firstValueFrom(this.seasonsService.getSeasonStats(teamId, seasonId));
+      this.stats.set(data);
+    } catch {
+      this.statsError.set(true);
+    } finally {
+      this.isLoadingStats.set(false);
     }
   }
 
