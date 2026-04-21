@@ -16,6 +16,9 @@ export interface EventEntity {
   status: 'scheduled' | 'in_progress' | 'completed';
   durationMinutes?: number;
   notes?: string;
+  goalsFor?: number | null;
+  goalsAgainst?: number | null;
+  goalEventCount?: number;
 }
 
 export interface CreateEventDto {
@@ -27,6 +30,8 @@ export interface CreateEventDto {
   isHomeGame?: boolean;
   durationMinutes?: number;
   notes?: string;
+  goalsFor?: number | null;
+  goalsAgainst?: number | null;
 }
 
 export interface UpdateEventDto {
@@ -38,6 +43,8 @@ export interface UpdateEventDto {
   isHomeGame?: boolean;
   durationMinutes?: number;
   notes?: string;
+  goalsFor?: number | null;
+  goalsAgainst?: number | null;
 }
 
 export interface LineupEntry {

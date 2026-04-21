@@ -66,6 +66,35 @@
             </ngx-control-errors-display>
 
             @if (event()?.type === 'game') {
+              <div class="grid grid-cols-2 gap-3 mt-3">
+                <ngx-control-errors-display>
+                  <ion-item>
+                    <ion-input
+                      label="Goals For"
+                      labelPlacement="floating"
+                      type="number"
+                      formControlName="goalsFor"
+                      placeholder="0"
+                    />
+                  </ion-item>
+                  @if (event()?.status === 'completed' && event()?.goalsFor === null && form.get('goalsFor')?.value !== null) {
+                    <p class="text-xs text-blue-600 px-4 mt-1 italic">Pre-filled from logged goal events</p>
+                  }
+                </ngx-control-errors-display>
+
+                <ngx-control-errors-display>
+                  <ion-item>
+                    <ion-input
+                      label="Goals Against"
+                      labelPlacement="floating"
+                      type="number"
+                      formControlName="goalsAgainst"
+                      placeholder="0"
+                    />
+                  </ion-item>
+                </ngx-control-errors-display>
+              </div>
+
               <ngx-control-errors-display class="block mt-3">
                 <ion-item>
                   <ion-input

@@ -22,10 +22,7 @@ import {
   IonDatetimeButton,
   IonModal,
   IonLabel,
-  IonIcon,
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { saveOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { EventsService, EventEntity } from '../events.service';
 
@@ -57,7 +54,6 @@ function toLocalISOString(date: Date): string {
     IonDatetimeButton,
     IonModal,
     IonLabel,
-    IonIcon,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './edit-event.html',
@@ -85,8 +81,6 @@ export class EditEvent {
   protected readonly fb = inject(FormBuilder);
 
   constructor() {
-    addIcons({ saveOutline });
-
     // Load event whenever teamId or eventId changes
     effect(() => {
       const tId = this._teamId();
@@ -109,6 +103,8 @@ export class EditEvent {
     uniformColor: [''],
     durationMinutes: [null as number | null, [Validators.min(1)]],
     notes: [''],
+    goalsFor: [null as number | null, [Validators.min(0)]],
+    goalsAgainst: [null as number | null, [Validators.min(0)]],
   });
 
   protected async loadEvent(teamId: string, eventId: string): Promise<void> {
@@ -117,6 +113,12 @@ export class EditEvent {
     try {
       const data = await firstValueFrom(this.eventsService.getEvent(teamId, eventId));
       this.event.set(data);
+      
+      let goalsFor = data.goalsFor;
+      if (data.status === 'completed' && data.type === 'game' && (goalsFor === null || goalsFor === undefined)) {
+        goalsFor = data.goalEventCount ?? 0;
+      }
+
       this.form.patchValue({
         opponent: data.opponent ?? '',
         scheduledAt: toLocalISOString(new Date(data.scheduledAt)),
@@ -124,6 +126,8 @@ export class EditEvent {
         uniformColor: data.uniformColor ?? '',
         durationMinutes: data.durationMinutes ?? null,
         notes: data.notes ?? '',
+        goalsFor: goalsFor,
+        goalsAgainst: data.goalsAgainst ?? null,
       });
       
       if (data.type === 'practice') {
@@ -152,7 +156,7 @@ export class EditEvent {
     this.isSaving.set(true);
     this.errorMessage.set(null);
     try {
-      const { opponent, scheduledAt, location, uniformColor, durationMinutes, notes } = this.form.getRawValue();
+      const { opponent, scheduledAt, location, uniformColor, durationMinutes, notes, goalsFor, goalsAgainst } = this.form.getRawValue();
       await firstValueFrom(
         this.eventsService.updateEvent(teamId, eventId, {
           opponent: opponent || undefined,
@@ -161,6 +165,8 @@ export class EditEvent {
           uniformColor: uniformColor || undefined,
           durationMinutes: durationMinutes || undefined,
           notes: notes || undefined,
+          goalsFor: goalsFor,
+          goalsAgainst: goalsAgainst,
         })
       );
       // Navigate back to schedule
