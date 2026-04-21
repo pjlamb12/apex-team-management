@@ -18,6 +18,8 @@ import {
   IonRouterLink,
   IonFab,
   IonFabButton,
+  IonSelect,
+  IonSelectOption,
   ActionSheetController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -31,6 +33,8 @@ import {
   addOutline,
 } from 'ionicons/icons';
 import { EventsService, EventEntity } from '../events.service';
+import { SeasonsService } from '../../seasons/seasons.service';
+import { Season } from '@apex-team/shared/util/models';
 
 @Component({
   selector: 'app-schedule',
@@ -52,6 +56,8 @@ import { EventsService, EventEntity } from '../events.service';
     IonRouterLink,
     IonFab,
     IonFabButton,
+    IonSelect,
+    IonSelectOption,
   ],
   templateUrl: './schedule.html',
 })
@@ -66,12 +72,16 @@ export class Schedule {
   }
 
   private readonly eventsService = inject(EventsService);
+  private readonly seasonsService = inject(SeasonsService);
   private readonly alertCtrl = inject(AlertController);
   private readonly actionSheetCtrl = inject(ActionSheetController);
   private readonly router = inject(Router);
 
   protected events = signal<EventEntity[]>([]);
+  protected seasons = signal<Season[]>([]);
+  protected selectedSeasonId = signal<string | null>(null);
   protected isLoading = signal(false);
+  protected isLoadingSeasons = signal(false);
   protected scope = signal<'upcoming' | 'past'>('upcoming');
 
   constructor() {
@@ -85,12 +95,21 @@ export class Schedule {
       addOutline,
     });
 
-    // Load events whenever teamId or scope changes
+    // Load seasons when teamId changes
+    effect(() => {
+      const id = this._teamId();
+      if (id) {
+        void this.loadSeasons(id);
+      }
+    });
+
+    // Load events whenever teamId, scope, or selectedSeasonId changes
     effect(() => {
       const id = this._teamId();
       const s = this.scope();
-      if (id) {
-        void this.loadEvents(id, s);
+      const seasonId = this.selectedSeasonId();
+      if (id && seasonId) {
+        void this.loadEvents(id, s, seasonId);
       }
     });
   }
@@ -100,11 +119,36 @@ export class Schedule {
     this.scope.set(value);
   }
 
-  protected async loadEvents(teamId: string, scope: 'upcoming' | 'past'): Promise<void> {
+  protected onSeasonChange(event: any): void {
+    this.selectedSeasonId.set(event.detail.value);
+  }
+
+  protected async loadSeasons(teamId: string): Promise<void> {
+    this.isLoadingSeasons.set(true);
+    try {
+      const data = await firstValueFrom(this.seasonsService.findAllForTeam(teamId));
+      this.seasons.set(data);
+
+      if (data.length > 0) {
+        const activeSeason = data.find((s) => s.isActive);
+        this.selectedSeasonId.set(activeSeason?.id ?? data[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load seasons', err);
+    } finally {
+      this.isLoadingSeasons.set(false);
+    }
+  }
+
+  protected async loadEvents(
+    teamId: string,
+    scope: 'upcoming' | 'past',
+    seasonId: string
+  ): Promise<void> {
     this.isLoading.set(true);
     try {
       const data = await firstValueFrom(
-        this.eventsService.getEvents(teamId, scope)
+        this.eventsService.getEvents(teamId, scope, seasonId)
       );
       this.events.set(data);
     } catch (err) {
