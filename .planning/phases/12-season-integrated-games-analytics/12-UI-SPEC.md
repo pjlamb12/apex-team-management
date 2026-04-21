@@ -156,7 +156,7 @@ When a game's `status` is `completed` and the edit event form loads:
 
 **Placement:** New read-only section added to the Season Detail screen (`season-detail.html`), rendered BELOW the edit form, separated by a section heading.
 
-**Section Heading:** `<h2 class="text-lg font-bold px-4 mt-6 mb-3">Season Stats</h2>`
+**Section Heading:** `<h2 class="text-xl font-bold px-4 mt-6 mb-3">Season Stats</h2>`
 
 **Layout: Stat Card Grid**
 
