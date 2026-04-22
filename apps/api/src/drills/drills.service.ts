@@ -55,9 +55,9 @@ export class DrillsService {
       ...drillData,
       coachId,
       tags,
-    });
+    } as any);
 
-    return this.drillRepo.save(drill);
+    return (await this.drillRepo.save(drill)) as any;
   }
 
   async update(id: string, coachId: string, data: any): Promise<DrillEntity> {
