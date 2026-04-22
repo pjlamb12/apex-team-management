@@ -64,7 +64,8 @@ describe('EventSyncService', () => {
         payload: {
           playerIdIn: 'p2',
           playerIdOut: 'p1',
-          slotIndex: 0
+          slotIndex: 0,
+          period: 1
         }
       }
     );
@@ -93,7 +94,8 @@ describe('EventSyncService', () => {
           playerIdA: 'p1',
           playerIdB: 'p3',
           slotIndexA: 0,
-          slotIndexB: 1
+          slotIndexB: 1,
+          period: 1
         }
       }
     );

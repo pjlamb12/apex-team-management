@@ -1,15 +1,15 @@
 ---
-gsd_state_version: 1.1
-milestone: v1.1
-milestone_name: Season Management & Schedule
-status: Phase 12 planning
-last_updated: "2026-04-20T18:00:00Z"
+gsd_state_version: 1.2
+milestone: v1.2
+milestone_name: Practice Planning & Drill Library
+status: Milestone v1.2 started
+last_updated: "2026-04-21T18:00:00Z"
 progress:
   total_phases: 3
-  completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # State: Apex Team
@@ -19,17 +19,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
-**Current focus:** Season management, practice sessions, and unified schedule.
-**Current Position:** Milestone v1.1 — Phase 12: Season-Integrated Games & Analytics
+**Current focus:** Practice planning, drill library, and live session execution.
+**Current Position:** Milestone v1.2 Started — Phase 14: Drill Library Foundation
 
 ## Current Milestone
 
-**v1.1 — Season Management & Schedule**
+**v1.2 — Practice Planning & Drill Library**
 
-Phase: Phase 11: Practice Management & Unified Schedule
-Plan: Completed
+Phase: Phase 14: Drill Library Foundation (Planned)
+Plan: TBD
 
-Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
+Progress: ▓░░░░░░░░░ 0%
 
 
 ## Decision Log
@@ -52,21 +52,27 @@ Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
 | 2026-04-20 | Start Milestone v1.1 | v1.0 complete with Phase 9 advanced features. v1.1 focuses on Season management and Schedule. |
 | 2026-04-20 | Phase 10 completed | Season Lifecycle & Defaults implemented. Moving to Phase 11. |
 | 2026-04-20 | Phase 11 completed | Practice Management & Unified Schedule implemented. Moving to Phase 12. |
+| 2026-04-21 | Non-negative integer validation for scores | Ensure goals_for and goals_against are valid. |
+| 2026-04-21 | Integrated season selection directly into Schedule tab | Ensure coaches can view past and present games in a single view. |
+| 2026-04-21 | Extracted data-access/team library | Break circular dependencies and fix test resolution issues. |
+| 2026-04-21 | Multi-period support & explicit End Game | Enable granular game tracking and lifecycle management. |
+| 2026-04-21 | Milestone v1.1 Completed | Season Management, Schedule, and Advanced Game Lifecycle fully delivered. |
+| 2026-04-21 | Start Milestone v1.2 | Focus shifts to Drill Library and Practice Planning. |
 
 ## Active Context
 
-- Phase 10 delivered: Season creation, management, active toggle, and practice location defaults.
-- Phase 11 delivered: Practice creation/editing, unified schedule tab showing games and practices chronologically, time-of-day display on events.
-- App is mobile-first, PWA-ready, and supports dark mode.
-- Core coaching console is functional.
-- Milestone v1.1 roadmap defines the next three phases (10, 11, 12).
+- Milestone v1.1 archived.
+- Current goal: Implement Phase 14: Drill Library Foundation.
+- Data models for Drills and Tags need to be defined.
+- App will support a searchable repository of coaching knowledge.
 
 ## Session Continuity
 
-Last session: 2026-04-20
-Stopped at: Phase 10 completed. Ready for Phase 11: Practice Management & Unified Schedule planning.
+Last session: 2026-04-21
+Stopped at: Milestone v1.1 complete. Milestone v1.2 roadmap defined. Ready for Phase 14 research.
 
 ## Accumulated Context
 
 ### Roadmap Evolution
-- Phase 10-12 defined: Season Lifecycle & Defaults, Practice Management & Unified Schedule, and Season-Integrated Games & Analytics.
+- Milestone v1.1 complete: Delivered SEAS-03 to SEAS-07, PRAC-01, PRAC-02, SCHD-02, GAME-06 to GAME-11.
+- Milestone v1.2 defined: Focusing on Drill Library and Practice Planning.

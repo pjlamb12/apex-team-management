@@ -24,7 +24,7 @@ import {
   IonToggle,
 } from '@ionic/angular/standalone';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { EventsService } from '../events.service';
+import { EventsService } from '@apex-team/client/data-access/team';
 import { Season } from '@apex-team/shared/util/models';
 
 function toLocalISOString(date: Date): string {
@@ -83,6 +83,8 @@ export class CreateEvent {
     location: [''],
     uniformColor: [''],
     isHomeGame: [true],
+    periodCount: [2, [Validators.min(1)]],
+    periodLengthMinutes: [45, [Validators.min(1)]],
   });
 
   constructor() {
@@ -114,16 +116,19 @@ export class CreateEvent {
     const season = this.activeSeason();
     if (!season) return;
 
+    const patches: any = {
+      periodCount: season.periodCount || 2,
+      periodLengthMinutes: season.periodLengthMinutes || 45,
+    };
+
     if (isHome) {
-      this.form.patchValue({
-        location: season.defaultHomeVenue ?? '',
-        uniformColor: season.defaultHomeColor ?? '',
-      });
+      patches.location = season.defaultHomeVenue ?? '';
+      patches.uniformColor = season.defaultHomeColor ?? '';
     } else {
-      this.form.patchValue({
-        uniformColor: season.defaultAwayColor ?? '',
-      });
+      patches.uniformColor = season.defaultAwayColor ?? '';
     }
+
+    this.form.patchValue(patches);
   }
 
   protected async submit(): Promise<void> {
@@ -141,7 +146,7 @@ export class CreateEvent {
     this.isSaving.set(true);
     this.errorMessage.set(null);
     try {
-      const { opponent, scheduledAt, location, uniformColor, isHomeGame } =
+      const { opponent, scheduledAt, location, uniformColor, isHomeGame, periodCount, periodLengthMinutes } =
         this.form.getRawValue();
       const event = await firstValueFrom(
         this.eventsService.createEvent(teamId, {
@@ -151,6 +156,8 @@ export class CreateEvent {
           location: location || undefined,
           uniformColor: uniformColor || undefined,
           isHomeGame: isHomeGame ?? true,
+          periodCount: periodCount ? Number(periodCount) : undefined,
+          periodLengthMinutes: periodLengthMinutes ? Number(periodLengthMinutes) : undefined,
         })
       );
       // Navigate back to schedule

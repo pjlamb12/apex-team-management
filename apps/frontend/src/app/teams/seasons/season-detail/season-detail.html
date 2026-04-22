@@ -6,16 +6,20 @@
     <ion-title>{{ isEdit() ? 'Edit Season' : 'New Season' }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="submit()" [disabled]="isSaving()">
-        <ion-icon slot="icon-only" name="save-outline" *ngIf="!isSaving()"></ion-icon>
-        <ion-spinner *ngIf="isSaving()"></ion-spinner>
+        @if (!isSaving()) {
+          <ion-icon slot="icon-only" name="save-outline"></ion-icon>
+        }
+        @if (isSaving()) {
+          <ion-spinner></ion-spinner>
+        }
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div class="flex items-start justify-center min-h-full pt-4">
-    <ion-card class="w-full max-w-md">
+  <div class="flex flex-col lg:flex-row items-start justify-center gap-6 min-h-full pt-4 px-4 pb-8">
+    <ion-card class="w-full max-w-md m-0">
       <ion-card-header class="pb-2 pt-6 px-6">
         <ion-card-title class="text-2xl font-bold">
           {{ isEdit() ? 'Edit Season' : 'New Season' }}
@@ -48,12 +52,13 @@
                   <div class="date-hint">Tap to change</div>
                 </ion-label>
                 <ion-datetime-button datetime="start-date"></ion-datetime-button>
-                <ion-modal [keepContentsMounted]="true">
+                <ion-modal [keepContentsMounted]="true" class="ion-palette-dark">
                   <ng-template>
                     <ion-datetime
                       id="start-date"
                       presentation="date"
                       formControlName="startDate"
+                      class="ion-palette-dark"
                     ></ion-datetime>
                   </ng-template>
                 </ion-modal>
@@ -65,12 +70,13 @@
                   <div class="date-hint">Tap to change</div>
                 </ion-label>
                 <ion-datetime-button datetime="end-date"></ion-datetime-button>
-                <ion-modal [keepContentsMounted]="true">
+                <ion-modal [keepContentsMounted]="true" class="ion-palette-dark">
                   <ng-template>
                     <ion-datetime
                       id="end-date"
                       presentation="date"
                       formControlName="endDate"
+                      class="ion-palette-dark"
                     ></ion-datetime>
                   </ng-template>
                 </ion-modal>
@@ -87,14 +93,76 @@
               </ion-item>
 
               <ion-item>
+                <ion-input
+                  label="Default Home Venue"
+                  labelPlacement="stacked"
+                  formControlName="defaultHomeVenue"
+                  placeholder="e.g. Apex Stadium"
+                  type="text"
+                ></ion-input>
+              </ion-item>
+
+              <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+                Default Jersey Colors
+              </div>
+
+              <ion-item>
+                <ion-input
+                  label="Home Jersey"
+                  labelPlacement="stacked"
+                  formControlName="defaultHomeColor"
+                  placeholder="e.g. Blue"
+                  type="text"
+                ></ion-input>
+              </ion-item>
+
+              <ion-item>
+                <ion-input
+                  label="Away Jersey"
+                  labelPlacement="stacked"
+                  formControlName="defaultAwayColor"
+                  placeholder="e.g. White"
+                  type="text"
+                ></ion-input>
+              </ion-item>
+
+              <ion-item>
                 <ion-label>Active Season</ion-label>
                 <ion-toggle formControlName="isActive" slot="end"></ion-toggle>
               </ion-item>
+
+              <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+                Default Game Format
+              </div>
+
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-input
+                    label="Number of Periods"
+                    labelPlacement="floating"
+                    formControlName="periodCount"
+                    type="number"
+                  ></ion-input>
+                </ion-item>
+              </ngx-control-errors-display>
+
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-input
+                    label="Period Length (minutes)"
+                    labelPlacement="floating"
+                    formControlName="periodLengthMinutes"
+                    type="number"
+                  ></ion-input>
+                </ion-item>
+              </ngx-control-errors-display>
             </ion-list>
 
-            <div class="note-text px-2 text-sm mt-2 mb-4" *ngIf="form.get('isActive')?.value">
-              Note: Activating this season will automatically de-activate other seasons for this team.
-            </div>
+            @if (form.get('isActive')?.value) {
+              <div class="note-text px-2 text-sm mt-2 mb-4">
+                Note: Activating this season will automatically de-activate other seasons for this team.
+              </div>
+            }
 
             @if (errorMessage()) {
               <ion-text color="danger">
@@ -108,8 +176,12 @@
               class="mt-4"
               [disabled]="isSaving() || form.invalid"
             >
-              <ion-icon slot="start" name="save-outline" style="margin-inline-end: 8px;" *ngIf="!isSaving()"></ion-icon>
-              <ion-spinner slot="start" *ngIf="isSaving()"></ion-spinner>
+              @if (!isSaving()) {
+                <ion-icon slot="start" name="save-outline" style="margin-inline-end: 8px;"></ion-icon>
+              }
+              @if (isSaving()) {
+                <ion-spinner slot="start"></ion-spinner>
+              }
               {{ isEdit() ? 'Update Season' : 'Create Season' }}
             </ion-button>
           </form>
@@ -118,7 +190,7 @@
     </ion-card>
 
     @if (isEdit() && !isLoading()) {
-      <ion-card class="w-full max-w-md mt-4">
+      <ion-card class="w-full max-w-md m-0">
         <ion-card-header class="pb-2 pt-6 px-6">
           <ion-card-title class="text-xl font-bold flex items-center gap-2">
             <ion-icon name="bar-chart-outline" class="text-blue-600"></ion-icon>
@@ -136,7 +208,7 @@
               <p>Failed to load season stats.</p>
               <ion-button fill="clear" (click)="loadStats(teamId, seasonId)">Retry</ion-button>
             </div>
-          } @else if (stats() && (stats()?.wins || stats()?.losses || stats()?.draws || stats()?.goalsFor || stats()?.goalsAgainst)) {
+          } @else if (stats()) {
             <ion-grid class="ion-no-padding">
               <ion-row>
                 @for (card of statCards(); track card.label) {

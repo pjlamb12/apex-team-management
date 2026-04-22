@@ -43,4 +43,23 @@ export class UpdateEventDto {
   @Min(0)
   @IsOptional()
   goalsAgainst?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  periodCount?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  periodLengthMinutes?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  currentPeriod?: number;
+
+  @IsString()
+  @IsOptional()
+  status?: 'scheduled' | 'in_progress' | 'completed';
 }

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsInt, Min } from 'class-validator';
 
 export class UpdateSeasonDto {
   @IsString()
@@ -33,4 +33,14 @@ export class UpdateSeasonDto {
   @IsString()
   @IsOptional()
   endDate?: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  periodCount?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  periodLengthMinutes?: number;
 }

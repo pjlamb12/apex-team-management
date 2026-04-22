@@ -19,6 +19,9 @@ export interface EventEntity {
   goalsFor?: number | null;
   goalsAgainst?: number | null;
   goalEventCount?: number;
+  periodCount?: number | null;
+  periodLengthMinutes?: number | null;
+  currentPeriod?: number;
 }
 
 export interface CreateEventDto {
@@ -32,6 +35,8 @@ export interface CreateEventDto {
   notes?: string;
   goalsFor?: number | null;
   goalsAgainst?: number | null;
+  periodCount?: number;
+  periodLengthMinutes?: number;
 }
 
 export interface UpdateEventDto {
@@ -45,6 +50,10 @@ export interface UpdateEventDto {
   notes?: string;
   goalsFor?: number | null;
   goalsAgainst?: number | null;
+  periodCount?: number;
+  periodLengthMinutes?: number;
+  currentPeriod?: number;
+  status?: 'scheduled' | 'in_progress' | 'completed';
 }
 
 export interface LineupEntry {
@@ -107,6 +116,10 @@ export class EventsService {
 
   deleteEvent(teamId: string, eventId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`);
+  }
+
+  getGameEvents(teamId: string, eventId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events`);
   }
 
   getLineup(teamId: string, eventId: string): Observable<LineupEntry[]> {

@@ -36,11 +36,15 @@ export class LiveGameStateService {
   private _eventId = signal<string | null>(null);
   private _teamId = signal<string | null>(null);
   private _initialLineup = signal<LineupEntry[]>([]);
+  private _currentPeriod = signal<number>(1);
+  private _status = signal<'scheduled' | 'in_progress' | 'completed'>('in_progress');
 
   public readonly events = this._events.asReadonly();
   public readonly eventId = this._eventId.asReadonly();
   public readonly teamId = this._teamId.asReadonly();
   public readonly initialLineup = this._initialLineup.asReadonly();
+  public readonly currentPeriod = this._currentPeriod.asReadonly();
+  public readonly status = this._status.asReadonly();
 
   public readonly activePlayers = computed(() => {
     const lineup = this._initialLineup();
@@ -117,6 +121,12 @@ export class LiveGameStateService {
       try {
         const events = JSON.parse(stored);
         this._events.set(events);
+        
+        // Recover current period from last event if possible
+        const lastEvent = events.filter((e: any) => e.status !== 'deleted').pop();
+        if (lastEvent?.period) {
+          this._currentPeriod.set(lastEvent.period);
+        }
       } catch (e) {
         console.error('Failed to parse stored events', e);
         this._events.set([]);
@@ -127,7 +137,30 @@ export class LiveGameStateService {
   }
 
   public pushEvent(event: GameEvent): void {
-    this._events.update((prev) => [...prev, { ...event, status: 'active' }]);
+    this._events.update((prev) => [
+      ...prev,
+      { ...event, status: 'active', period: this._currentPeriod() },
+    ]);
+    this.save();
+  }
+
+  public setEvents(events: GameEvent[]): void {
+    this._events.set(events);
+    this.save();
+  }
+
+  public nextPeriod(): void {
+    this._currentPeriod.update((p) => p + 1);
+    this.save();
+  }
+
+  public setPeriod(period: number): void {
+    this._currentPeriod.set(period);
+    this.save();
+  }
+
+  public endGame(): void {
+    this._status.set('completed');
     this.save();
   }
 

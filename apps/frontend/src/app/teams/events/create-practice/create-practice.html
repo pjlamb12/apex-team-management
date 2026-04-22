@@ -10,23 +10,24 @@
 <ion-content class="ion-padding">
   <div class="flex items-start justify-center min-h-full pt-4">
     <ion-card class="w-full max-w-md">
-      <ion-card-header>
+      <ion-card-header class="px-6 pt-6 pb-2">
         <ion-card-title class="text-xl font-bold">New Practice</ion-card-title>
       </ion-card-header>
 
-      <ion-card-content>
+      <ion-card-content class="px-4 pt-4">
         <form [formGroup]="form" (ngSubmit)="submit()">
           <ngx-control-errors-display class="block">
             <ion-item>
               <ion-label position="fixed">Date & Time</ion-label>
               <ion-datetime-button datetime="practice-datetime"></ion-datetime-button>
             </ion-item>
-            <ion-modal [keepContentsMounted]="true">
+            <ion-modal [keepContentsMounted]="true" class="ion-palette-dark">
               <ng-template>
                 <ion-datetime
                   id="practice-datetime"
                   presentation="date-time"
                   formControlName="scheduledAt"
+                  class="ion-palette-dark"
                 ></ion-datetime>
               </ng-template>
             </ion-modal>

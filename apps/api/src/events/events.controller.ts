@@ -88,6 +88,14 @@ export class EventsController {
     return this.lineupEntriesService.saveLineup(eventId, dto);
   }
 
+  @Get(':eventId/game-events')
+  getEvents(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+  ) {
+    return this.eventsService.getGameEvents(eventId);
+  }
+
   @Post(':eventId/game-events') // Renamed from /events to avoid confusion with parent /events
   logEvent(
     @Param('teamId', ParseUUIDPipe) teamId: string,

@@ -559,17 +559,13 @@ getEvents(
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **SeasonsController route placement for stats**
-   - What we know: The existing `SeasonsController` uses `@Controller()` with no prefix, then full path strings on each method.
-   - What's unclear: Whether adding `@Get('teams/:teamId/seasons/:seasonId/stats')` causes ambiguity with `@Get('seasons/:id')`.
-   - Recommendation: Declare the stats route BEFORE any catch-all style routes; NestJS matches in declaration order.
+1. **SeasonsController route placement for stats (RESOLVED)**
+   - Recommendation: Declare the stats route BEFORE any catch-all style routes; NestJS matches in declaration order. **RESOLVED:** Verified declaration order in Plan 12-02.
 
-2. **Score confirmation flow UX — modal vs. inline**
-   - What we know: D-08 says "show a score confirmation UI pre-filled with GOAL event count." The UI-SPEC (approved) uses inline fields with an `ion-note` hint, not a separate modal.
-   - What's unclear: Whether the CONTEXT.md "score confirmation flow" implies a separate confirmation step or just pre-populated fields.
-   - Recommendation: Follow the UI-SPEC (approved) — inline pre-populated fields with informational note. No separate modal needed.
+2. **Score confirmation flow UX — modal vs. inline (RESOLVED)**
+   - Recommendation: Follow the UI-SPEC (approved) — inline pre-populated fields with informational note. No separate modal needed. **RESOLVED:** Standardized inline fields in Plan 12-04.
 
 ---
 

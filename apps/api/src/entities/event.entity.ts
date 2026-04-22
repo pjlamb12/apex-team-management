@@ -45,4 +45,13 @@ export class EventEntity {
 
   @Column({ name: 'goals_against', type: 'int', nullable: true })
   goalsAgainst: number | null;
+
+  @Column({ name: 'period_count', type: 'int', nullable: true })
+  periodCount: number | null;
+
+  @Column({ name: 'period_length_minutes', type: 'int', nullable: true })
+  periodLengthMinutes: number | null;
+
+  @Column({ name: 'current_period', type: 'int', default: 1 })
+  currentPeriod: number;
 }

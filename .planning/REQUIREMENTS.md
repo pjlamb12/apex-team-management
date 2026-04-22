@@ -78,15 +78,21 @@ Season Management & Schedule. These requirements are for the current roadmap.
 
 ### Game & Season Association
 
-- [ ] **GAME-06**: Coach can view games filtered by active season
-- [ ] **GAME-07**: Games created automatically associate with the currently active season
-- [ ] **GAME-08**: Season dashboard shows aggregate stats (wins, losses, goals) for the season
+- [x] **GAME-06**: Coach can view games filtered by active season
+- [x] **GAME-07**: Games created automatically associate with the currently active season
+- [x] **GAME-08**: Season dashboard shows aggregate stats (wins, losses, goals) for the season
 
 ### Schedule & Practices
 
-- [ ] **PRAC-01**: Coach can create a practice session with date, time, and location
-- [ ] **PRAC-02**: Coach can edit and delete practice sessions
-- [ ] **SCHD-02**: Team Dashboard has a "Schedule" segment replacing "Games" that shows both Games and Practices chronologically
+- [x] **PRAC-01**: Coach can create a practice session with date, time, and location
+- [x] **PRAC-02**: Coach can edit and delete practice sessions
+- [x] **SCHD-02**: Team Dashboard has a "Schedule" segment replacing "Games" that shows both Games and Practices chronologically
+
+### Advanced Game Management
+
+- [ ] **GAME-09**: Coach can configure game format (period count and period length) at the season or game level
+- [ ] **GAME-10**: Coach can track game periods (e.g., "Start 2nd Half") in the Live Console to segment events
+- [ ] **GAME-11**: Coach can explicitly "End Game" in the Live Console to lock the final score and status
 
 ## v1.2 Requirements
 
@@ -194,12 +200,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEAS-05 | Phase 10 | Completed |
 | SEAS-06 | Phase 10 | Completed |
 | SEAS-07 | Phase 10 | Completed |
-| PRAC-01 | Phase 11 | Pending |
-| PRAC-02 | Phase 11 | Pending |
-| SCHD-02 | Phase 11 | Pending |
-| GAME-06 | Phase 12 | Pending |
-| GAME-07 | Phase 12 | Pending |
-| GAME-08 | Phase 12 | Pending |
+| PRAC-01 | Phase 11 | Completed |
+| PRAC-02 | Phase 11 | Completed |
+| SCHD-02 | Phase 11 | Completed |
+| GAME-06 | Phase 12 | Completed |
+| GAME-07 | Phase 12 | Completed |
+| GAME-08 | Phase 12 | Completed |
+| GAME-09 | Phase 13 | Completed |
+| GAME-10 | Phase 13 | Completed |
+| GAME-11 | Phase 13 | Completed |
 
 **Coverage:**
 - v1 requirements: 36 total (36 mapped) ✓

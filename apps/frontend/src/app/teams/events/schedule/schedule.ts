@@ -32,8 +32,7 @@ import {
   pencilOutline,
   addOutline,
 } from 'ionicons/icons';
-import { EventsService, EventEntity } from '../events.service';
-import { SeasonsService } from '../../seasons/seasons.service';
+import { EventsService, EventEntity, SeasonsService } from '@apex-team/client/data-access/team';
 import { Season } from '@apex-team/shared/util/models';
 
 @Component({
@@ -192,6 +191,21 @@ export class Schedule {
 
   protected getEventIcon(event: EventEntity): string {
     return event.type === 'game' ? 'calendar-outline' : 'fitness-outline';
+  }
+
+  protected getEventLink(event: EventEntity): string[] {
+    const teamId = this.teamId;
+    if (event.type === 'practice') {
+      return ['/teams', teamId, 'schedule', event.id, 'edit'];
+    }
+    
+    // For games, if it's completed or in_progress, show summary
+    if (event.status === 'completed' || event.status === 'in_progress') {
+      return ['/teams', teamId, 'events', event.id, 'summary'];
+    }
+    
+    // Default to lineup for upcoming games
+    return ['/teams', teamId, 'events', event.id, 'lineup'];
   }
 
   protected async presentAddEventSheet(): Promise<void> {

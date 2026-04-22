@@ -10,11 +10,11 @@
 <ion-content class="ion-padding">
   <div class="flex items-start justify-center min-h-full pt-4">
     <ion-card class="w-full max-w-md">
-      <ion-card-header>
+      <ion-card-header class="px-6 pt-6 pb-2">
         <ion-card-title class="text-xl font-bold">New Game Details</ion-card-title>
       </ion-card-header>
 
-      <ion-card-content>
+      <ion-card-content class="px-4 pt-4">
         <form [formGroup]="form" (ngSubmit)="submit()">
           <ngx-control-errors-display>
             <ion-item>
@@ -34,12 +34,13 @@
               <ion-label position="fixed">Date & Time</ion-label>
               <ion-datetime-button datetime="game-datetime"></ion-datetime-button>
             </ion-item>
-            <ion-modal [keepContentsMounted]="true">
+            <ion-modal [keepContentsMounted]="true" class="ion-palette-dark">
               <ng-template>
                 <ion-datetime
                   id="game-datetime"
                   presentation="date-time"
                   formControlName="scheduledAt"
+                  class="ion-palette-dark"
                 ></ion-datetime>
               </ng-template>
             </ion-modal>
@@ -68,6 +69,32 @@
                 autocomplete="off"
                 placeholder="e.g. Away (Blue)"
               />
+            </ion-item>
+          </ngx-control-errors-display>
+
+          <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+            Game Format (from Season Defaults)
+          </div>
+
+          <ngx-control-errors-display>
+            <ion-item>
+              <ion-input
+                label="Number of Periods"
+                labelPlacement="floating"
+                formControlName="periodCount"
+                type="number"
+              ></ion-input>
+            </ion-item>
+          </ngx-control-errors-display>
+
+          <ngx-control-errors-display>
+            <ion-item>
+              <ion-input
+                label="Period Length (minutes)"
+                labelPlacement="floating"
+                formControlName="periodLengthMinutes"
+                type="number"
+              ></ion-input>
             </ion-item>
           </ngx-control-errors-display>
 

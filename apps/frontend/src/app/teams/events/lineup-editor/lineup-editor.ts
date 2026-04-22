@@ -21,7 +21,7 @@ import {
   IonNote,
   IonBadge,
 } from '@ionic/angular/standalone';
-import { EventsService, EventEntity, LineupEntry, SaveLineupDto } from '../events.service';
+import { EventsService, EventEntity, LineupEntry, SaveLineupDto } from '@apex-team/client/data-access/team';
 import { PlayersService, PlayerEntity } from '../../players.service';
 
 interface LineupSlot {

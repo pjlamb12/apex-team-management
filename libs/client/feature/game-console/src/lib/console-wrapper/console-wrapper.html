@@ -48,6 +48,18 @@
         <ion-button color="danger" fill="outline" (click)="addOpponentGoal()">
           + Opponent Goal
         </ion-button>
+
+        <div class="w-px h-8 bg-white/10 mx-2"></div>
+
+        <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
+          <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+          Next Period
+        </ion-button>
+
+        <ion-button color="danger" fill="solid" (click)="endGame()">
+          <ion-icon name="flag-outline" slot="start"></ion-icon>
+          End Game
+        </ion-button>
       </div>
     </div>
 

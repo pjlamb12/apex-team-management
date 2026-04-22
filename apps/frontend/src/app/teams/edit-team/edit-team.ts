@@ -29,7 +29,6 @@ import { addIcons } from 'ionicons';
 import { calendarOutline, chevronForwardOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { Season } from '@apex-team/shared/util/models';
 import { CommonModule } from '@angular/common';
 
 interface Sport {
@@ -91,7 +90,6 @@ export class EditTeam {
   protected readonly fb = inject(FormBuilder);
 
   protected team = signal<Team | null>(null);
-  protected activeSeason = signal<Season | null>(null);
   protected isLoading = signal(false);
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
@@ -99,9 +97,6 @@ export class EditTeam {
 
   protected form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
-    defaultHomeVenue: [''],
-    defaultHomeColor: [''],
-    defaultAwayColor: [''],
   });
 
   protected get apiUrl(): string {
@@ -124,22 +119,13 @@ export class EditTeam {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [team, season] = await Promise.all([
-        firstValueFrom(this.http.get<Team>(`${this.apiUrl}/teams/${id}`)),
-        firstValueFrom(
-          this.http.get<Season>(`${this.apiUrl}/teams/${id}/seasons/active`)
-        ),
-      ]);
+      const team = await firstValueFrom(this.http.get<Team>(`${this.apiUrl}/teams/${id}`));
       this.team.set(team);
-      this.activeSeason.set(season);
       this.form.patchValue({
         name: team.name,
-        defaultHomeVenue: season.defaultHomeVenue ?? '',
-        defaultHomeColor: season.defaultHomeColor ?? '',
-        defaultAwayColor: season.defaultAwayColor ?? '',
       });
     } catch {
-      this.errorMessage.set('Failed to load team and season. Please try again.');
+      this.errorMessage.set('Failed to load team. Please try again.');
     } finally {
       this.isLoading.set(false);
     }
@@ -157,27 +143,12 @@ export class EditTeam {
     this.errorMessage.set(null);
     this.successMessage.set(null);
     try {
-      const { name, defaultHomeVenue, defaultHomeColor, defaultAwayColor } =
-        this.form.getRawValue();
+      const { name } = this.form.getRawValue();
 
-      const season = this.activeSeason();
-      if (!season) {
-        throw new Error('No active season found');
-      }
-
-      await Promise.all([
-        firstValueFrom(this.http.patch(`${this.apiUrl}/teams/${teamId}`, { name })),
-        firstValueFrom(
-          this.http.patch(`${this.apiUrl}/seasons/${season.id}`, {
-            defaultHomeVenue,
-            defaultHomeColor,
-            defaultAwayColor,
-          })
-        ),
-      ]);
+      await firstValueFrom(this.http.patch(`${this.apiUrl}/teams/${teamId}`, { name }));
       await this.router.navigate(['/teams', teamId, 'roster']);
     } catch {
-      this.errorMessage.set('Failed to update settings. Please try again.');
+      this.errorMessage.set('Failed to update team. Please try again.');
     } finally {
       this.isSaving.set(false);
     }

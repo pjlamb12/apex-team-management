@@ -48,6 +48,11 @@ export const appRoutes: Route[] = [
           import('./teams/seasons/season-detail/season-detail').then((m) => m.SeasonDetail),
       },
       {
+        path: 'teams/:id/events/:eventId/summary',
+        loadComponent: () =>
+          import('./teams/events/game-summary/game-summary').then((m) => m.GameSummary),
+      },
+      {
         path: 'teams/:id/events/:eventId/lineup',
         loadComponent: () =>
           import('./teams/events/lineup-editor/lineup-editor').then((m) => m.LineupEditor),

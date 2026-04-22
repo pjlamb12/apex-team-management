@@ -23,7 +23,7 @@ import {
   IonLabel,
 } from '@ionic/angular/standalone';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { EventsService } from '../events.service';
+import { EventsService } from '@apex-team/client/data-access/team';
 
 function toLocalISOString(date: Date): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().replace('Z', '');

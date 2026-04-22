@@ -31,6 +31,9 @@
   /* === Modals & Popovers === */
   --ion-modal-background: #0f172a;
 
+  /* === Datetime === */
+  --ion-datetime-background: #0f172a;
+
   /* === Text === */
   --ion-text-color: #f1f5f9;
   --ion-text-color-rgb: 241, 245, 249;

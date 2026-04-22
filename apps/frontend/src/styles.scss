@@ -43,3 +43,48 @@ ion-action-sheet.schedule-action-sheet::part(button) {
 ion-action-sheet.schedule-action-sheet::part(title) {
   color: #94a3b8;
 }
+
+// Global Datetime Fix: Ensure dark background and white text for pickers
+// We use high specificity and !important because ion-datetime's internal shadow styles 
+// can be difficult to override in certain modal contexts.
+ion-datetime,
+.ion-palette-dark ion-datetime,
+html.ion-palette-dark ion-datetime {
+  --background: #0f172a !important;
+  --background-rgb: 15, 23, 42 !important;
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+  color-scheme: dark !important;
+
+  &::part(calendar-day) {
+    color: #f1f5f9;
+  }
+
+  &::part(calendar-day-active) {
+    color: white;
+  }
+}
+
+// Ensure the modal wrapper itself has the dark background
+ion-modal,
+ion-modal.ion-palette-dark {
+  --background: #0f172a !important;
+  
+  ion-datetime {
+    --background: #0f172a !important;
+  }
+}
+
+// Fix for the wheel picker columns
+.picker-col {
+  color: #f1f5f9 !important;
+}
+
+// Global fix for datetime button appearance in dark mode
+ion-datetime-button::part(native) {
+  background: var(--color-ap-surface-raised, #263044);
+  color: var(--color-ap-text, #f1f5f9);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 500;
+}

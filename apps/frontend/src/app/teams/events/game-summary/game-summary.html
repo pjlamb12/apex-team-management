@@ -1,0 +1,167 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/schedule'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Game Summary</ion-title>
+    <ion-buttons slot="end">
+      <ion-button [routerLink]="['/teams', teamId, 'schedule', eventId, 'edit']">
+        <ion-icon slot="icon-only" name="settings-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding bg-ap-bg">
+  <div class="max-w-4xl mx-auto flex flex-col gap-6 pt-4 pb-12">
+    @if (isLoading()) {
+      <div class="flex items-center justify-center py-20">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+      </div>
+    } @else if (game(); as g) {
+      <!-- Scoreboard Header -->
+      <ion-card class="m-0 scoreboard-card overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-900 to-blue-800 p-6 text-white">
+          <div class="flex items-center justify-between gap-4">
+            <!-- Home/Our Team -->
+            <div class="flex-1 text-center">
+              <div class="text-xs uppercase tracking-widest text-blue-300 font-bold mb-2">Our Team</div>
+              <div class="text-xl font-black truncate">APEX TEAM</div>
+              <div class="text-5xl font-black mt-2 tabular-nums">{{ score().team }}</div>
+            </div>
+
+            <!-- VS / Divider -->
+            <div class="flex flex-col items-center gap-1 opacity-50">
+              <div class="h-8 w-px bg-white/20"></div>
+              <div class="text-xs font-bold uppercase tracking-tighter">FINAL</div>
+              <div class="h-8 w-px bg-white/20"></div>
+            </div>
+
+            <!-- Away/Opponent -->
+            <div class="flex-1 text-center">
+              <div class="text-xs uppercase tracking-widest text-blue-300 font-bold mb-2">Opponent</div>
+              <div class="text-xl font-black truncate">{{ g.opponent || 'Opponent' }}</div>
+              <div class="text-5xl font-black mt-2 tabular-nums">{{ score().opponent }}</div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-center">
+            <ion-badge [color]="getResultColor(g)" class="px-6 py-2 text-sm font-black tracking-widest uppercase">
+              {{ getResult(g) }}
+            </ion-badge>
+          </div>
+        </div>
+      </ion-card>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Sidebar: Game Info -->
+        <div class="md:col-span-1 flex flex-col gap-6">
+          <ion-card class="m-0 h-full">
+            <ion-card-header class="px-6 pt-6 pb-2">
+              <ion-card-title class="text-xs font-bold uppercase tracking-widest text-gray-400">Match Details</ion-card-title>
+            </ion-card-header>
+            <ion-card-content class="px-6 pb-6 flex flex-col gap-4">
+              <div class="flex items-start gap-3">
+                <ion-icon name="time-outline" class="text-blue-500 mt-1"></ion-icon>
+                <div>
+                  <div class="font-bold text-white">{{ g.scheduledAt | date: 'EEEE, MMM d' }}</div>
+                  <div class="text-xs text-gray-400">{{ g.scheduledAt | date: 'h:mm a' }}</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <ion-icon name="location-outline" class="text-blue-500 mt-1"></ion-icon>
+                <div>
+                  <div class="font-bold text-white">{{ g.location || 'No location set' }}</div>
+                  <div class="text-xs text-gray-400">Venue</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <ion-icon name="shirt-outline" class="text-blue-500 mt-1"></ion-icon>
+                <div>
+                  <div class="font-bold text-white">{{ g.uniformColor || 'Not set' }}</div>
+                  <div class="text-xs text-gray-400">Uniform Color</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <ion-icon name="stats-chart-outline" class="text-blue-500 mt-1"></ion-icon>
+                <div>
+                  <div class="font-bold text-white">{{ g.periodCount || 2 }} Periods</div>
+                  <div class="text-xs text-gray-400">{{ g.periodLengthMinutes || 45 }}m length</div>
+                </div>
+              </div>
+
+              @if (g.status === 'in_progress') {
+                <ion-button expand="block" color="success" class="mt-4" [routerLink]="['/teams', teamId, 'events', eventId, 'console']">
+                  Resume Live Console
+                </ion-button>
+              }
+            </ion-card-content>
+          </ion-card>
+        </div>
+
+        <!-- Main Content: Goal Log -->
+        <div class="md:col-span-2 flex flex-col gap-6">
+          <ion-card class="m-0">
+            <ion-card-header class="px-6 pt-6 pb-2">
+              <ion-card-title class="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                <ion-icon name="football-outline"></ion-icon>
+                Goal Timeline
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content class="p-0">
+              <ion-list lines="full">
+                @for (goal of goals(); track goal.id) {
+                  <ion-item class="goal-item">
+                    <div slot="start" class="w-12 text-center font-mono font-bold text-blue-400 border-r border-white/5 h-full flex items-center justify-center">
+                      {{ goal.minuteOccurred }}'
+                    </div>
+                    <ion-label class="pl-4">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                          <ion-icon 
+                            [name]="goal.eventType === 'GOAL' ? 'arrow-up-circle' : 'arrow-down-circle'" 
+                            [color]="goal.eventType === 'GOAL' ? 'success' : 'danger'"
+                            class="text-xl"
+                          ></ion-icon>
+                          <div>
+                            <div class="font-bold text-white leading-tight">
+                              @if (goal.eventType === 'GOAL') {
+                                Team Goal
+                                @if (goal.payload?.player; as p) {
+                                  <span class="text-blue-400 font-normal block text-xs mt-0.5">Scored by {{ p.firstName }} {{ p.lastName }}</span>
+                                }
+                              } @else {
+                                Opponent Goal
+                              }
+                            </div>
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <div class="text-[10px] font-black text-gray-500 uppercase tracking-tighter">Period</div>
+                          <div class="text-sm font-bold text-white">P{{ goal.payload?.period || '?' }}</div>
+                        </div>
+                      </div>
+                    </ion-label>
+                  </ion-item>
+                } @empty {
+                  <div class="py-12 text-center text-gray-500 italic">
+                    No goals logged for this match.
+                  </div>
+                }
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Substitutions or other summary stats could go here -->
+        </div>
+      </div>
+    } @else {
+      <div class="text-center py-20 text-gray-500">
+        {{ errorMessage() || 'Game not found.' }}
+      </div>
+    }
+  </div>
+</ion-content>

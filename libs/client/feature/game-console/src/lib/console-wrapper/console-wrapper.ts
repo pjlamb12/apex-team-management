@@ -1,9 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, switchMap, filter, tap } from 'rxjs';
+import { map, switchMap, filter, tap, firstValueFrom } from 'rxjs';
 import {
   IonHeader,
   IonToolbar,
@@ -16,9 +16,10 @@ import {
   IonBackButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, playOutline, pauseOutline } from 'ionicons/icons';
+import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline } from 'ionicons/icons';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, LineupEntry } from '../live-game-state.service';
+import { EventsService } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
@@ -53,10 +54,12 @@ import { Player } from '@apex-team/shared/util/models';
 })
 export class ConsoleWrapper implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private http = inject(HttpClient);
   private config = inject(RuntimeConfigLoaderService);
   protected clockService = inject(LiveClockService);
   protected stateService = inject(LiveGameStateService);
+  protected eventsService = inject(EventsService);
   protected syncService = inject(EventSyncService);
 
   private get apiUrl(): string {
@@ -110,12 +113,34 @@ export class ConsoleWrapper implements OnInit {
         if (!url) return [];
         return this.http.get<LineupEntry[]>(`${url}/teams/${teamId}/events/${eventId}/lineup`);
       }),
-      tap((lineup) => {
+      tap(async (lineup) => {
         const eventId = this.eventId();
         const teamId = this.teamId();
         if (eventId && teamId) {
           this.stateService.initialize(eventId, lineup, teamId);
           this.clockService.initialize(eventId);
+
+          // If no events in local state, fetch from backend to restore logs
+          if (this.stateService.events().length === 0) {
+            try {
+              const backendEvents = await firstValueFrom(this.eventsService.getGameEvents(teamId, eventId));
+              if (backendEvents && backendEvents.length > 0) {
+                // Map backend events to frontend GameEvent format
+                const mappedEvents = backendEvents.map(be => ({
+                  id: be.id,
+                  type: be.eventType,
+                  minuteOccurred: be.minuteOccurred,
+                  timestamp: Date.now(), // Use current time since backend doesn't store original local timestamp
+                  synced: true,
+                  status: 'active' as const,
+                  ...be.payload
+                }));
+                this.stateService.setEvents(mappedEvents);
+              }
+            } catch (err) {
+              console.error('Failed to restore event logs from backend', err);
+            }
+          }
         }
       })
     )
@@ -128,7 +153,7 @@ export class ConsoleWrapper implements OnInit {
   protected popoverEvent = signal<Event | null>(null);
 
   constructor() {
-    addIcons({ chevronBackOutline, playOutline, pauseOutline });
+    addIcons({ chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline });
   }
 
   ngOnInit(): void {
@@ -145,6 +170,37 @@ export class ConsoleWrapper implements OnInit {
 
   protected addOpponentGoal(): void {
     this.stateService.addOpponentGoal(this.clockService.currentMinute());
+  }
+
+  protected async nextPeriod(): Promise<void> {
+    await this.clockService.stop();
+    await this.clockService.reset();
+    this.stateService.nextPeriod();
+    
+    // Sync currentPeriod to backend
+    const teamId = this.teamId();
+    const eventId = this.eventId();
+    if (teamId && eventId) {
+      await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
+        currentPeriod: this.stateService.currentPeriod()
+      }));
+    }
+  }
+
+  protected async endGame(): Promise<void> {
+    await this.clockService.stop();
+    this.stateService.endGame();
+
+    // Sync status to backend
+    const teamId = this.teamId();
+    const eventId = this.eventId();
+    if (teamId && eventId) {
+      await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
+        status: 'completed'
+      }));
+      // Navigate to summary
+      void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary']);
+    }
   }
 
   protected handlePlayerSelection(data: { player: Player; event: Event }): void {

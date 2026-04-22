@@ -43,4 +43,19 @@ export class CreateEventDto {
   @Min(0)
   @IsOptional()
   goalsAgainst?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  periodCount?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  periodLengthMinutes?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  currentPeriod?: number;
 }

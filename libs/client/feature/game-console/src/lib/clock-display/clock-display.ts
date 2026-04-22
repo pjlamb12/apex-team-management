@@ -1,5 +1,6 @@
 import { Component, inject, computed } from '@angular/core';
 import { LiveClockService } from '../live-clock.service';
+import { LiveGameStateService } from '../live-game-state.service';
 import { intervalToDuration } from 'date-fns';
 
 @Component({
@@ -10,6 +11,15 @@ import { intervalToDuration } from 'date-fns';
 })
 export class ClockDisplayComponent {
   private readonly clockService = inject(LiveClockService);
+  private readonly stateService = inject(LiveGameStateService);
+
+  protected readonly currentPeriod = this.stateService.currentPeriod;
+
+  protected readonly periodLabel = computed(() => {
+    const period = this.currentPeriod();
+    // Default label logic, could be sport-specific later
+    return `P${period}`;
+  });
 
   protected readonly formattedTime = computed(() => {
     const ms = this.clockService.elapsedMs();

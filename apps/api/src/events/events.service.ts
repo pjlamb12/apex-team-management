@@ -56,10 +56,20 @@ export class EventsService {
 
     const type = dto.type ?? 'game';
     let location = dto.location;
+    let periodCount = dto.periodCount;
+    let periodLengthMinutes = dto.periodLengthMinutes;
 
-    // 3. Inherit default practice location if applicable
+    // 3. Inherit defaults from active season
     if (type === 'practice' && !location) {
       location = activeSeason.defaultPracticeLocation;
+    }
+    if (type === 'game') {
+      if (periodCount === undefined) {
+        periodCount = activeSeason.periodCount;
+      }
+      if (periodLengthMinutes === undefined) {
+        periodLengthMinutes = activeSeason.periodLengthMinutes;
+      }
     }
 
     // 4. Create the event with the seasonId.
@@ -67,6 +77,8 @@ export class EventsService {
       ...dto,
       type,
       location,
+      periodCount,
+      periodLengthMinutes,
       seasonId: activeSeason.id,
       status: 'scheduled',
       isHomeGame: dto.isHomeGame ?? true,
@@ -137,6 +149,13 @@ export class EventsService {
   async remove(eventId: string): Promise<void> {
     const event = await this.findOne(eventId);
     await this.eventRepo.remove(event);
+  }
+
+  async getGameEvents(eventId: string): Promise<GameEventEntity[]> {
+    return this.gameEventRepo.find({
+      where: { eventId },
+      order: { minuteOccurred: 'ASC' },
+    });
   }
 
   async logEvent(

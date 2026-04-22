@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, MoreThanOrEqual } from 'typeorm';
 import { SeasonEntity } from '../entities/season.entity';
 import { EventEntity } from '../entities/event.entity';
+import { GameEventEntity } from '../entities/game-event.entity';
 import { CreateSeasonDto } from './dto/create-season.dto';
 import { UpdateSeasonDto } from './dto/update-season.dto';
 import { SeasonStats } from './dto/season-stats.dto';
@@ -25,8 +26,9 @@ export class SeasonsService {
       );
     }
 
+    // Fetch all games for the season to calculate aggregate stats
     const games = await this.dataSource.getRepository(EventEntity).find({
-      where: { seasonId: seasonId, type: 'game', status: 'completed' },
+      where: { seasonId: seasonId, type: 'game' },
     });
 
     const stats: SeasonStats = {
@@ -39,16 +41,38 @@ export class SeasonsService {
     };
 
     for (const game of games) {
-      if (game.goalsFor === null || game.goalsAgainst === null) {
+      let gFor = game.goalsFor;
+      let gAgainst = game.goalsAgainst;
+
+      // If manual scores are not set, try to derive them from the event logs
+      if (gFor === null || gAgainst === null) {
+        const counts = await this.dataSource.getRepository(GameEventEntity).find({
+          where: { eventId: game.id },
+        });
+
+        const logFor = counts.filter(e => e.eventType === 'GOAL').length;
+        const logAgainst = counts.filter(e => e.eventType === 'OPPONENT_GOAL').length;
+
+        // Only use logs if there is actually data there, otherwise skip "empty" scheduled games
+        if (gFor === null && (logFor > 0 || logAgainst > 0 || game.status === 'completed')) {
+          gFor = logFor;
+        }
+        if (gAgainst === null && (logFor > 0 || logAgainst > 0 || game.status === 'completed')) {
+          gAgainst = logAgainst;
+        }
+      }
+
+      // If we still have no score data, skip this game (e.g. it is in the future)
+      if (gFor === null || gAgainst === null) {
         continue;
       }
 
-      stats.goalsFor += game.goalsFor;
-      stats.goalsAgainst += game.goalsAgainst;
+      stats.goalsFor += gFor;
+      stats.goalsAgainst += gAgainst;
 
-      if (game.goalsFor > game.goalsAgainst) {
+      if (gFor > gAgainst) {
         stats.wins++;
-      } else if (game.goalsFor < game.goalsAgainst) {
+      } else if (gFor < gAgainst) {
         stats.losses++;
       } else {
         stats.draws++;

@@ -154,6 +154,51 @@ describe('EventsService', () => {
 
       expect(result.location).toBe('Gym');
     });
+
+    it('should inherit game format fields from season for games', async () => {
+      vi.spyOn(teamRepo, 'findOne').mockResolvedValue({ id: teamId, coachId: userId } as any);
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ 
+        id: 'season-1', 
+        teamId, 
+        isActive: true,
+        periodCount: 2,
+        periodLengthMinutes: 45
+      } as any);
+
+      const gameDto: CreateEventDto = {
+        type: 'game',
+        scheduledAt: new Date().toISOString(),
+      };
+
+      const result = await service.create(teamId, gameDto, userId);
+
+      expect(result.type).toBe('game');
+      expect(result.periodCount).toBe(2);
+      expect(result.periodLengthMinutes).toBe(45);
+    });
+
+    it('should not override provided game format fields for games', async () => {
+      vi.spyOn(teamRepo, 'findOne').mockResolvedValue({ id: teamId, coachId: userId } as any);
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ 
+        id: 'season-1', 
+        teamId, 
+        isActive: true,
+        periodCount: 2,
+        periodLengthMinutes: 45
+      } as any);
+
+      const gameDto: CreateEventDto = {
+        type: 'game',
+        periodCount: 4,
+        periodLengthMinutes: 12,
+        scheduledAt: new Date().toISOString(),
+      };
+
+      const result = await service.create(teamId, gameDto, userId);
+
+      expect(result.periodCount).toBe(4);
+      expect(result.periodLengthMinutes).toBe(12);
+    });
   });
 
   describe('findAllForTeam', () => {

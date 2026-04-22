@@ -5,6 +5,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { SeasonsService } from './seasons.service';
 import { SeasonEntity } from '../entities/season.entity';
 import { EventEntity } from '../entities/event.entity';
+import { GameEventEntity } from '../entities/game-event.entity';
 import { vi } from 'vitest';
 
 describe('SeasonsService', () => {
@@ -25,6 +26,10 @@ describe('SeasonsService', () => {
     find: vi.fn(),
   };
 
+  const mockGameEventRepo = {
+    find: vi.fn().mockResolvedValue([]),
+  };
+
   const mockEntityManager = {
     create: vi.fn(),
     save: vi.fn(),
@@ -36,6 +41,7 @@ describe('SeasonsService', () => {
     transaction: vi.fn().mockImplementation((cb) => cb(mockEntityManager)),
     getRepository: vi.fn().mockImplementation((entity) => {
       if (entity === EventEntity) return mockEventRepo;
+      if (entity === GameEventEntity) return mockGameEventRepo;
       return null;
     }),
   };
@@ -140,7 +146,7 @@ describe('SeasonsService', () => {
         goalDifference: 0,
       });
       expect(mockEventRepo.find).toHaveBeenCalledWith({
-        where: { seasonId, type: 'game', status: 'completed' },
+        where: { seasonId, type: 'game' },
       });
     });
 

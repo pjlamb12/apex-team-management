@@ -46,7 +46,7 @@
     @for (event of events(); track event.id) {
       <ion-item-sliding>
         <ion-item 
-          [routerLink]="event.type === 'game' ? ['/teams', teamId, 'events', event.id, 'lineup'] : ['/teams', teamId, 'schedule', event.id, 'edit']"
+          [routerLink]="getEventLink(event)"
           [button]="true"
         >
           <ion-icon

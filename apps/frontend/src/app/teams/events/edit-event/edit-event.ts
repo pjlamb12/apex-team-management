@@ -24,7 +24,7 @@ import {
   IonLabel,
 } from '@ionic/angular/standalone';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { EventsService, EventEntity } from '../events.service';
+import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
 
 function toLocalISOString(date: Date): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().replace('Z', '');
@@ -105,6 +105,8 @@ export class EditEvent {
     notes: [''],
     goalsFor: [null as number | null, [Validators.min(0)]],
     goalsAgainst: [null as number | null, [Validators.min(0)]],
+    periodCount: [null as number | null, [Validators.min(1)]],
+    periodLengthMinutes: [null as number | null, [Validators.min(1)]],
   });
 
   protected async loadEvent(teamId: string, eventId: string): Promise<void> {
@@ -128,6 +130,8 @@ export class EditEvent {
         notes: data.notes ?? '',
         goalsFor: goalsFor,
         goalsAgainst: data.goalsAgainst ?? null,
+        periodCount: data.periodCount ?? null,
+        periodLengthMinutes: data.periodLengthMinutes ?? null,
       });
       
       if (data.type === 'practice') {
@@ -156,7 +160,7 @@ export class EditEvent {
     this.isSaving.set(true);
     this.errorMessage.set(null);
     try {
-      const { opponent, scheduledAt, location, uniformColor, durationMinutes, notes, goalsFor, goalsAgainst } = this.form.getRawValue();
+      const { opponent, scheduledAt, location, uniformColor, durationMinutes, notes, goalsFor, goalsAgainst, periodCount, periodLengthMinutes } = this.form.getRawValue();
       await firstValueFrom(
         this.eventsService.updateEvent(teamId, eventId, {
           opponent: opponent || undefined,
@@ -167,6 +171,8 @@ export class EditEvent {
           notes: notes || undefined,
           goalsFor: goalsFor,
           goalsAgainst: goalsAgainst,
+          periodCount: periodCount ? Number(periodCount) : undefined,
+          periodLengthMinutes: periodLengthMinutes ? Number(periodLengthMinutes) : undefined,
         })
       );
       // Navigate back to schedule

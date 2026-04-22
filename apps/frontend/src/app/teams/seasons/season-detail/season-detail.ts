@@ -1,6 +1,6 @@
 import { Component, inject, signal, effect, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -33,7 +33,7 @@ import {
 import { addIcons } from 'ionicons';
 import { saveOutline, calendarOutline, barChartOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { SeasonsService } from '../seasons.service';
+import { SeasonsService } from '@apex-team/client/data-access/team';
 import { Season, SeasonStats } from '@apex-team/shared/util/models';
 
 @Component({
@@ -73,22 +73,22 @@ import { Season, SeasonStats } from '@apex-team/shared/util/models';
   styleUrl: './season-detail.scss',
 })
 export class SeasonDetail {
-  @Input() set id(val: string) {
-    this._teamId.set(val);
-  }
   @Input() set seasonId(val: string) {
     this._seasonId.set(val);
-  }
-
-  private _teamId = signal<string | null>(null);
-  private _seasonId = signal<string | null>(null);
-
-  public get teamId(): string {
-    return this._teamId() ?? '';
   }
   public get seasonId(): string {
     return this._seasonId() ?? '';
   }
+
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+  public get teamId(): string {
+    return this._teamId() ?? '';
+  }
+
+  private _teamId = signal<string | null>(null);
+  private _seasonId = signal<string | null>(null);
 
   private readonly router = inject(Router);
   private readonly seasonsService = inject(SeasonsService);
@@ -123,6 +123,11 @@ export class SeasonDetail {
     endDate: [new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), [Validators.required]],
     isActive: [false],
     defaultPracticeLocation: [''],
+    defaultHomeVenue: [''],
+    defaultHomeColor: [''],
+    defaultAwayColor: [''],
+    periodCount: [2, [Validators.required, Validators.min(1)]],
+    periodLengthMinutes: [45, [Validators.required, Validators.min(1)]],
   });
 
   constructor() {
@@ -147,6 +152,11 @@ export class SeasonDetail {
           endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
           isActive: false,
           defaultPracticeLocation: '',
+          defaultHomeVenue: '',
+          defaultHomeColor: '',
+          defaultAwayColor: '',
+          periodCount: 2,
+          periodLengthMinutes: 45,
         });
       }
     });
@@ -163,6 +173,11 @@ export class SeasonDetail {
         endDate: season.endDate,
         isActive: season.isActive,
         defaultPracticeLocation: season.defaultPracticeLocation || '',
+        defaultHomeVenue: season.defaultHomeVenue || '',
+        defaultHomeColor: season.defaultHomeColor || '',
+        defaultAwayColor: season.defaultAwayColor || '',
+        periodCount: season.periodCount || 2,
+        periodLengthMinutes: season.periodLengthMinutes || 45,
       });
     } catch {
       this.errorMessage.set('Failed to load season. Please try again.');

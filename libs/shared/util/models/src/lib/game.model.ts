@@ -7,4 +7,10 @@ export interface Game {
   scheduledAt?: string;  // ISO datetime string
   isHomeGame: boolean;
   uniformColor?: string;
+  periodCount?: number;
+  periodLengthMinutes?: number;
+  currentPeriod?: number;
+  status?: 'scheduled' | 'in_progress' | 'completed';
+  goalsFor?: number;
+  goalsAgainst?: number;
 }

@@ -23,7 +23,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, trashOutline, createOutline, calendarOutline } from 'ionicons/icons';
-import { SeasonsService } from '../seasons.service';
+import { SeasonsService } from '@apex-team/client/data-access/team';
 import { Season } from '@apex-team/shared/util/models';
 
 @Component({

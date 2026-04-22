@@ -4,8 +4,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { Schedule } from './schedule';
-import { EventsService } from '../events.service';
-import { SeasonsService } from '../../seasons/seasons.service';
+import { EventsService, SeasonsService } from '@apex-team/client/data-access/team';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 
 describe('Schedule', () => {

@@ -1,3 +1,8 @@
-<div class="clock-display font-mono text-4xl font-bold tabular-nums text-white">
-  {{ formattedTime() }}
+<div class="flex flex-col items-center justify-center">
+  <div class="clock-display font-mono text-4xl font-bold tabular-nums text-white">
+    {{ formattedTime() }}
+  </div>
+  <div class="text-xs font-bold uppercase tracking-widest text-blue-400 mt-1">
+    {{ periodLabel() }}
+  </div>
 </div>

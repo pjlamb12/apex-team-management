@@ -23,37 +23,37 @@ describe('LiveClockService', () => {
     expect(service.elapsedMs()).toBe(0);
   });
 
-  it('should track elapsed time when started', () => {
-    service.start();
+  it('should track elapsed time when started', async () => {
+    await service.start();
     vi.advanceTimersByTime(1000);
     expect(service.elapsedMs()).toBeGreaterThanOrEqual(1000);
-    service.stop();
+    await service.stop();
   });
 
-  it('should pause when stopped', () => {
-    service.start();
+  it('should pause when stopped', async () => {
+    await service.start();
     vi.advanceTimersByTime(1000);
-    service.stop();
+    await service.stop();
     const pausedTime = service.elapsedMs();
     vi.advanceTimersByTime(1000);
     expect(service.elapsedMs()).toBe(pausedTime);
   });
 
-  it('should resume from paused time', () => {
-    service.start();
+  it('should resume from paused time', async () => {
+    await service.start();
     vi.advanceTimersByTime(1000);
-    service.stop();
+    await service.stop();
     const pausedTime = service.elapsedMs();
-    service.start();
+    await service.start();
     vi.advanceTimersByTime(1000);
     expect(service.elapsedMs()).toBeGreaterThanOrEqual(pausedTime + 1000);
-    service.stop();
+    await service.stop();
   });
 
-  it('should reset to zero', () => {
-    service.start();
+  it('should reset to zero', async () => {
+    await service.start();
     vi.advanceTimersByTime(1000);
-    service.reset();
+    await service.reset();
     expect(service.elapsedMs()).toBe(0);
   });
 });
