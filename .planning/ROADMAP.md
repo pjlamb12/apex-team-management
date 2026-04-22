@@ -16,6 +16,11 @@
 ### Phase 14: Drill Library Foundation
 **Goal**: Build the repository of team knowledge by allowing coaches to document their favorite drills.
 **Requirements**: DRIL-01, DRIL-02, DRIL-04
+**Plans**: 4 plans
+- [ ] 14-01-PLAN.md — Backend Foundation (Entities, Service, Controller)
+- [ ] 14-02-PLAN.md — Client Infrastructure & Tagging UI (Data-Access, TagInput)
+- [ ] 14-03-PLAN.md — Drill Library Browser (Search, Filtering, Integration)
+- [ ] 14-04-PLAN.md — Drill Details & Editor (Steps, Media, CRUD)
 **Success Criteria**:
   1. Coach can create a drill with name, description, and multi-step instructions.
   2. Coach can add tags to drills and filter the library by these tags.
@@ -41,7 +46,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Drill Library Foundation | 0/0 | Planned | - |
+| 14. Drill Library Foundation | 0/4 | Planned | - |
 | 15. Practice Drills Integration | 0/0 | Planned | - |
 | 16. Practice Execution (Pacer) | 0/0 | Planned | - |
 
