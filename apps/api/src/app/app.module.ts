@@ -6,6 +6,7 @@ import { TeamsModule } from '../teams/teams.module';
 import { SportsModule } from '../sports/sports.module';
 import { PlayersModule } from '../players/players.module';
 import { EventsModule } from '../events/events.module';
+import { DrillsModule } from '../drills/drills.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -31,6 +32,7 @@ import { AppController } from './app.controller';
     SportsModule,
     PlayersModule,
     EventsModule,
+    DrillsModule,
   ],
   controllers: [AppController],
 })
