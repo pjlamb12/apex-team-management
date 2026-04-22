@@ -1,0 +1,65 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Drill Library</ion-title>
+  </ion-toolbar>
+
+  <ion-toolbar>
+    <ion-searchbar
+      placeholder="Search drills..."
+      (ionInput)="handleSearch($event)"
+      [debounce]="300"
+    ></ion-searchbar>
+  </ion-toolbar>
+
+  <div class="tags-container ion-padding-start ion-padding-end ion-padding-bottom">
+    <div class="tags-scroll">
+      @for (tag of allTags(); track tag.id) {
+        <ion-chip
+          [outline]="!isTagSelected(tag.name)"
+          [color]="isTagSelected(tag.name) ? 'primary' : 'medium'"
+          (click)="toggleTag(tag.name)"
+        >
+          <ion-label>{{ tag.name }}</ion-label>
+        </ion-chip>
+      }
+    </div>
+  </div>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-grid>
+    <ion-row>
+      @for (drill of filteredDrills(); track drill.id) {
+        <ion-col size="12" size-md="6" size-lg="4">
+          <ion-card [routerLink]="[drill.id]">
+            <ion-card-header>
+              <div class="drill-card-title-row">
+                <ion-card-title>{{ drill.name }}</ion-card-title>
+              </div>
+              <div class="drill-card-tags">
+                @for (tag of drill.tags; track tag.id) {
+                  <ion-badge color="light" class="ion-margin-end">{{ tag.name }}</ion-badge>
+                }
+              </div>
+            </ion-card-header>
+
+            <ion-card-content>
+              <p class="drill-description">{{ drill.description }}</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      }
+      @if (filteredDrills().length === 0) {
+        <ion-col size="12" class="ion-text-center ion-padding">
+          <p class="ion-text-muted">No drills found. Try a different search or add one!</p>
+        </ion-col>
+      }
+    </ion-row>
+  </ion-grid>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button routerLink="new">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

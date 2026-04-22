@@ -22,6 +22,13 @@
       ],
       "@apex-team/client/feature/game-console": [
         "libs/client/feature/game-console/src/index.ts"
+      ],
+      "@apex-team/client/data-access/drill": [
+        "libs/client/data-access/drill/src/index.ts"
+      ],
+      "@apex-team/client/ui/drill": ["libs/client/ui/drill/src/index.ts"],
+      "@apex-team/client/feature/drill-library": [
+        "libs/client/feature/drill-library/src/index.ts"
       ]
     }
   },

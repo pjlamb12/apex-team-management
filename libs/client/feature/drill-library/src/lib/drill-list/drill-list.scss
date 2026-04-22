@@ -1,0 +1,42 @@
+.tags-container {
+  overflow: hidden;
+  background: var(--ion-toolbar-background, var(--ion-color-step-50, #fff));
+}
+
+.tags-scroll {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.drill-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.drill-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ion-color-step-600);
+}
+
+ion-card {
+  cursor: pointer;
+  height: 100%;
+  margin: 8px;
+  transition: transform 0.2s ease-in-out;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}

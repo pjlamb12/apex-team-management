@@ -1,0 +1,17 @@
+<div class="flex flex-wrap items-center gap-2 border border-gray-300 rounded-lg p-2 bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+  @for (tag of selectedTags(); track tag.id || tag.name) {
+    <ion-chip class="m-0 bg-blue-100 text-blue-800 border-none">
+      <ion-label>{{ tag.name }}</ion-label>
+      <ion-icon name="close-circle" (click)="removeTag(tag)" class="text-blue-600 hover:text-blue-800 cursor-pointer" />
+    </ion-chip>
+  }
+  <ion-input
+    #tagInput
+    placeholder="Add tag..."
+    fill="none"
+    class="flex-1 min-w-[120px] h-9 text-sm"
+    [value]="inputValue()"
+    (ionInput)="inputValue.set($any($event.target).value)"
+    (keydown.enter)="handleAddTag($event)"
+  />
+</div>

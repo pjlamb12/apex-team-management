@@ -1,0 +1,66 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/teams"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ drill()?.name || 'Drill Details' }}</ion-title>
+    <ion-buttons slot="end">
+      @if (drill()) {
+        <ion-button [routerLink]="['edit']">
+          <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+        </ion-button>
+        <ion-button color="danger" (click)="handleDelete()">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      }
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (drill(); as d) {
+    <div class="drill-content">
+      @if (d.sourceUrl) {
+        <app-video-embed [url]="d.sourceUrl"></app-video-embed>
+      }
+
+      <div class="ion-padding">
+        <div class="drill-meta">
+          <h1 class="ion-no-margin">{{ d.name }}</h1>
+          <div class="tags-container ion-margin-top ion-margin-bottom">
+            @for (tag of d.tags; track tag.id) {
+              <ion-badge color="light" class="ion-margin-end">{{ tag.name }}</ion-badge>
+            }
+          </div>
+          <p class="drill-description">{{ d.description }}</p>
+        </div>
+
+        <ion-list class="ion-margin-top">
+          <ion-list-header>
+            <ion-label>Instructions</ion-label>
+          </ion-list-header>
+
+          @for (step of d.instructions; track $index) {
+            <ion-item lines="none" class="step-item">
+              <ion-badge slot="start" color="primary">{{ $index + 1 }}</ion-badge>
+              <ion-label class="ion-text-wrap">
+                <h3 class="step-title">{{ step.title }}</h3>
+                <p class="step-description">{{ step.description }}</p>
+              </ion-label>
+            </ion-item>
+          }
+
+          @if (!d.instructions || d.instructions.length === 0) {
+            <ion-item>
+              <ion-label color="medium">No instructions provided.</ion-label>
+            </ion-item>
+          }
+        </ion-list>
+      </div>
+    </div>
+  } @else {
+    <div class="ion-text-center ion-padding">
+      <p>Loading drill details...</p>
+    </div>
+  }
+</ion-content>

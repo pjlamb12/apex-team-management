@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+ion-chip {
+  --background: transparent;
+  height: 28px;
+}
+
+ion-input {
+  --padding-start: 8px;
+  --padding-end: 8px;
+}

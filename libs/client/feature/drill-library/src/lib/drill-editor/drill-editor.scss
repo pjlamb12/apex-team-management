@@ -1,0 +1,46 @@
+form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.tags-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--ion-color-step-600);
+  margin-bottom: 8px;
+  margin-left: 16px;
+}
+
+.step-form-group {
+  margin-bottom: 24px;
+  border: 1px solid var(--ion-color-step-200);
+  border-radius: 8px;
+  background: var(--ion-color-step-50);
+  overflow: hidden;
+
+  .step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: var(--ion-color-step-100);
+    border-bottom: 1px solid var(--ion-color-step-200);
+
+    ion-badge {
+      font-size: 1rem;
+      padding: 6px 12px;
+    }
+  }
+
+  ion-item {
+    --background: transparent;
+  }
+}
+
+ion-list-header {
+  padding-left: 0;
+  
+  ion-button {
+    margin-left: auto;
+  }
+}

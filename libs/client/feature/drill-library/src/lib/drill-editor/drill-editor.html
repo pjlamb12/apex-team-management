@@ -1,0 +1,106 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="isEditing() ? '../../' : '../'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ isEditing() ? 'Edit Drill' : 'New Drill' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="handleSave()" [disabled]="form.invalid">
+        <ion-icon slot="start" name="save-outline"></ion-icon>
+        Save
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <form [formGroup]="form" class="ion-padding">
+    <ion-list>
+      <ion-list-header>
+        <ion-label>General Info</ion-label>
+      </ion-list-header>
+
+      <ion-item>
+        <ion-label position="stacked">Drill Name</ion-label>
+        <ion-input
+          formControlName="name"
+          placeholder="e.g., Triangle Passing"
+          type="text"
+        ></ion-input>
+        @if (form.get('name')?.touched && form.get('name')?.invalid) {
+          <ion-note slot="error" color="danger">Name is required (min 3 chars).</ion-note>
+        }
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Description</ion-label>
+        <ion-textarea
+          formControlName="description"
+          placeholder="Brief overview of the drill..."
+          [autoGrow]="true"
+        ></ion-textarea>
+        @if (form.get('description')?.touched && form.get('description')?.invalid) {
+          <ion-note slot="error" color="danger">Description is required.</ion-note>
+        }
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Video URL (YouTube/Vimeo)</ion-label>
+        <ion-input
+          formControlName="sourceUrl"
+          placeholder="https://www.youtube.com/watch?v=..."
+          type="url"
+        ></ion-input>
+      </ion-item>
+
+      <div class="ion-padding-top ion-padding-bottom">
+        <ion-label class="tags-label">Tags</ion-label>
+        <app-tag-input
+          [initialTags]="selectedTagNames()"
+          (tagsChanged)="handleTagsChanged($event)"
+        ></app-tag-input>
+      </div>
+
+      <ion-list-header class="ion-margin-top">
+        <ion-label>Instructions</ion-label>
+        <ion-button (click)="addInstruction()">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Add Step
+        </ion-button>
+      </ion-list-header>
+
+      <div formArrayName="instructions">
+        @for (step of instructions.controls; track $index) {
+          <div [formGroupName]="$index" class="step-form-group">
+            <div class="step-header">
+              <ion-badge color="primary">{{ $index + 1 }}</ion-badge>
+              <ion-button fill="clear" color="danger" (click)="removeInstruction($index)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+            
+            <ion-item>
+              <ion-label position="stacked">Step Title</ion-label>
+              <ion-input formControlName="title" placeholder="e.g., Setup"></ion-input>
+            </ion-item>
+            
+            <ion-item lines="none">
+              <ion-label position="stacked">Step Details</ion-label>
+              <ion-textarea
+                formControlName="description"
+                placeholder="Describe this step..."
+                [autoGrow]="true"
+              ></ion-textarea>
+            </ion-item>
+          </div>
+        }
+      </div>
+
+      @if (instructions.length === 0) {
+        <p class="ion-text-center ion-padding-top ion-text-muted">
+          Add at least one instruction step to help coaches run this drill.
+        </p>
+      }
+    </ion-list>
+  </form>
+</ion-content>
