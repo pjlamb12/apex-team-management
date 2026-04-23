@@ -29,6 +29,12 @@
 ### Phase 15: Practice Drills Integration
 **Goal**: Transform a practice session from a simple event into a structured plan.
 **Requirements**: PRAC-03, DRIL-03
+**Plans**: 5 plans
+- [ ] 15-01-PLAN.md — Data Model & DTOs
+- [ ] 15-02-PLAN.md — Service Logic & Tests
+- [ ] 15-03-PLAN.md — Controller & Module Integration
+- [ ] 15-04-PLAN.md — Client Data Access & Library Setup
+- [ ] 15-05-PLAN.md — Practice Console UI & Plan Management
 **Success Criteria**:
   1. Coach can select drills from the library and add them to a specific practice session.
   2. Coach can reorder drills within a practice.
@@ -47,7 +53,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Drill Library Foundation | 4/4 | Completed | 2026-04-21 |
-| 15. Practice Drills Integration | 0/0 | Planned | - |
+| 15. Practice Drills Integration | 0/5 | Planned | - |
 | 16. Practice Execution (Pacer) | 0/0 | Planned | - |
 
 ---
