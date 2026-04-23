@@ -29,6 +29,9 @@
       "@apex-team/client/ui/drill": ["libs/client/ui/drill/src/index.ts"],
       "@apex-team/client/feature/drill-library": [
         "libs/client/feature/drill-library/src/index.ts"
+      ],
+      "@apex-team/client/feature/practice-console": [
+        "libs/client/feature/practice-console/src/index.ts"
       ]
     }
   },

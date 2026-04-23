@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { SeasonEntity } from './season.entity';
+import { PracticeDrillEntity } from './practice-drill.entity';
 
 @Entity('events')
 export class EventEntity {
@@ -12,6 +13,9 @@ export class EventEntity {
 
   @Column({ name: 'season_id' })
   seasonId: string;
+
+  @OneToMany(() => PracticeDrillEntity, (pd) => pd.event)
+  practiceDrills: PracticeDrillEntity[];
 
   @Column({ default: 'game' })
   type: 'game' | 'practice';

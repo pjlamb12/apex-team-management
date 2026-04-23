@@ -198,7 +198,7 @@ export class Schedule {
   protected getEventLink(event: EventEntity): string[] {
     const teamId = this.teamId;
     if (event.type === 'practice') {
-      return ['/teams', teamId, 'schedule', event.id, 'edit'];
+      return ['/teams', teamId, 'events', event.id, 'practice'];
     }
     
     // For games, if it's completed or in_progress, show summary

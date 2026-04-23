@@ -25,3 +25,31 @@ export interface CreateDrillDto {
 }
 
 export interface UpdateDrillDto extends Partial<CreateDrillDto> {}
+
+export interface PracticeDrill {
+  id: string;
+  eventId: string;
+  drillId: string;
+  sequence: number;
+  durationMinutes: number;
+  teamRating: number | null;
+  notes: string | null;
+  drill?: Drill;
+}
+
+export interface AddDrillToPlanDto {
+  drillId: string;
+  durationMinutes: number;
+  notes?: string;
+}
+
+export interface UpdatePracticeDrillDto {
+  sequence?: number;
+  durationMinutes?: number;
+  teamRating?: number;
+  notes?: string;
+}
+
+export interface ReorderPracticeDrillsDto {
+  ids: string[];
+}

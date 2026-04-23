@@ -8,7 +8,7 @@
 ## Phase Overview
 
 - [x] **Phase 14: Drill Library Foundation** - Coaches can create, tag, and browse a library of drills with instructions and media links.
-- [ ] **Phase 15: Practice Drills Integration** - Add drills to practice sessions with sequencing and time allocation.
+- [x] **Phase 15: Practice Drills Integration** - Add drills to practice sessions with sequencing and time allocation.
 - [ ] **Phase 16: Practice Execution (Pacer)** - Use a pacer timer during practice to keep the team on schedule with the planned drills.
 
 ## Phase Details
@@ -30,11 +30,11 @@
 **Goal**: Transform a practice session from a simple event into a structured plan.
 **Requirements**: PRAC-03, DRIL-03
 **Plans**: 5 plans
-- [ ] 15-01-PLAN.md — Data Model & DTOs
-- [ ] 15-02-PLAN.md — Service Logic & Tests
-- [ ] 15-03-PLAN.md — Controller & Module Integration
-- [ ] 15-04-PLAN.md — Client Data Access & Library Setup
-- [ ] 15-05-PLAN.md — Practice Console UI & Plan Management
+- [x] 15-01-PLAN.md — Data Model & DTOs
+- [x] 15-02-PLAN.md — Service Logic & Tests
+- [x] 15-03-PLAN.md — Controller & Module Integration
+- [x] 15-04-PLAN.md — Client Data Access & Library Setup
+- [x] 15-05-PLAN.md — Practice Console UI & Plan Management
 **Success Criteria**:
   1. Coach can select drills from the library and add them to a specific practice session.
   2. Coach can reorder drills within a practice.
@@ -53,7 +53,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Drill Library Foundation | 4/4 | Completed | 2026-04-21 |
-| 15. Practice Drills Integration | 0/5 | Planned | - |
+| 15. Practice Drills Integration | 5/5 | Completed | 2026-04-23 |
 | 16. Practice Execution (Pacer) | 0/0 | Planned | - |
 
 ---

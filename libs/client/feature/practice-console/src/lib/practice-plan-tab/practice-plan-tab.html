@@ -1,0 +1,82 @@
+<div class="summary-card ion-padding">
+  <div class="stats-row">
+    <div class="stat-item">
+      <ion-label>
+        <p>Total Drills</p>
+        <h2>{{ plan().length }}</h2>
+      </ion-label>
+    </div>
+    <div class="stat-item" [class.overtime]="isOvertime()">
+      <ion-label>
+        <p>Planned Time</p>
+        <h2>
+          {{ totalDuration() }} / {{ event()?.durationMinutes }} min
+          @if (isOvertime()) {
+            <ion-icon name="warning-outline" color="warning"></ion-icon>
+          }
+        </h2>
+      </ion-label>
+    </div>
+  </div>
+</div>
+
+<ion-reorder-group [disabled]="false" (ionItemReorder)="handleReorder($event)">
+  @for (pd of plan(); track pd.id) {
+    <ion-item-sliding>
+      <ion-item>
+        <ion-reorder slot="start">
+          <ion-icon name="reorder-three-outline"></ion-icon>
+        </ion-reorder>
+        <ion-label>
+          <h3>{{ pd.drill?.name }}</h3>
+          <p>
+            <ion-icon name="time-outline" class="v-align"></ion-icon>
+            {{ pd.durationMinutes }} min
+            @if (pd.notes) {
+              • {{ pd.notes }}
+            }
+          </p>
+          @if (isRatingEnabled()) {
+            <div class="rating-row">
+              <p>Team Rating:</p>
+              @for (star of [1, 2, 3, 4, 5]; track star) {
+                <ion-icon 
+                  name="star-outline" 
+                  [class.filled]="(pd.teamRating || 0) >= star"
+                  (click)="setRating(pd, star)">
+                </ion-icon>
+              }
+            </div>
+          }
+        </ion-label>
+        <ion-buttons slot="end">
+          <ion-button (click)="editDrill(pd)">
+            <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-item>
+
+      <ion-item-options side="end">
+        <ion-item-option color="danger" (click)="deleteDrill(pd)">
+          <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  } @empty {
+    <div class="ion-text-center ion-padding empty-state">
+      <p>No drills in the plan yet.</p>
+      <ion-button fill="outline" (click)="addDrills()">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        Add First Drill
+      </ion-button>
+    </div>
+  }
+</ion-reorder-group>
+
+@if (plan().length > 0) {
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="addDrills()">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+}

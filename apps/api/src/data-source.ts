@@ -13,6 +13,7 @@ import { GameEventEntity } from './entities/game-event.entity';
 import { LineupEntryEntity } from './entities/lineup-entry.entity';
 import { DrillEntity } from './entities/drill.entity';
 import { TagEntity } from './entities/tag.entity';
+import { PracticeDrillEntity } from './entities/practice-drill.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -32,6 +33,7 @@ export default new DataSource({
     LineupEntryEntity,
     DrillEntity,
     TagEntity,
+    PracticeDrillEntity,
   ],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   synchronize: false,

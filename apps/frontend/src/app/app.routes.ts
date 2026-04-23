@@ -63,6 +63,11 @@ export const appRoutes: Route[] = [
           import('@apex-team/client/feature/game-console').then((m) => m.ConsoleWrapper),
       },
       {
+        path: 'teams/:id/events/:eventId/practice',
+        loadComponent: () =>
+          import('@apex-team/client/feature/practice-console').then((m) => m.PracticeConsoleWrapper),
+      },
+      {
         path: 'teams/:id',
         loadComponent: () =>
           import('./teams/team-dashboard/team-dashboard').then((m) => m.TeamDashboard),

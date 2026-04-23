@@ -1,0 +1,53 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/teams/{{teamId}}/schedule"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Practice Console</ion-title>
+  </ion-toolbar>
+
+  <ion-toolbar>
+    <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChange($event)">
+      <ion-segment-button value="summary">
+        <ion-label>Summary</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="plan">
+        <ion-label>Plan</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (selectedSegment() === 'summary') {
+    <ion-list>
+      <ion-item>
+        <ion-label>
+          <h2>{{ event()?.notes || 'No practice notes' }}</h2>
+          <p>{{ event()?.scheduledAt | date:'fullDate' }} @ {{ event()?.scheduledAt | date:'shortTime' }}</p>
+          <p>{{ event()?.location }}</p>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Status</p>
+          <h2>{{ event()?.status | uppercase }}</h2>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <p>Duration</p>
+          <h2>{{ event()?.durationMinutes }} minutes</h2>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  } @else if (selectedSegment() === 'plan') {
+    <app-practice-plan-tab 
+      [teamId]="teamId" 
+      [eventId]="eventId" 
+      [plan]="plan()" 
+      [event]="event()"
+      (planChanged)="loadData()">
+    </app-practice-plan-tab>
+  }
+</ion-content>

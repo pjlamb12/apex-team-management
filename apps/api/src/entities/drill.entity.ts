@@ -9,9 +9,11 @@ import {
   Index,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { TagEntity } from './tag.entity';
+import { PracticeDrillEntity } from './practice-drill.entity';
 
 @Entity('drills')
 export class DrillEntity {
@@ -25,6 +27,9 @@ export class DrillEntity {
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'coach_id' })
   coach: UserEntity;
+
+  @OneToMany(() => PracticeDrillEntity, (pd) => pd.drill)
+  practiceDrills: PracticeDrillEntity[];
 
   @Column()
   name: string;

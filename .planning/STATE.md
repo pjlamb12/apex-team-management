@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 **v1.2 — Practice Planning & Drill Library**
 
-Phase: Phase 14: Drill Library Foundation (Completed)
-Plan: 14-04
+Phase: Phase 15: Practice Drills Integration (Completed)
+Plan: 15-05
 
-Progress: ▓▓▓▓░░░░░░ 40%
+Progress: ▓▓▓▓▓▓▓▓▓░ 90%
 
 
 ## Decision Log
@@ -59,12 +59,13 @@ Progress: ▓▓▓▓░░░░░░ 40%
 | 2026-04-21 | Milestone v1.1 Completed | Season Management, Schedule, and Advanced Game Lifecycle fully delivered. |
 | 2026-04-21 | Start Milestone v1.2 | Focus shifts to Drill Library and Practice Planning. |
 | 2026-04-21 | Phase 14 completed | Drill Library Foundation (Backend, UI components, and Dashboard integration) complete. |
+| 2026-04-23 | Phase 15 completed | Practice Drills Integration (Backend entities/service/API, Client data-access, and Practice Console UI) complete. |
 
 ## Active Context
 
-- Milestone v1.1 archived.
-- Phase 14 completed.
-- Current goal: Implement Phase 15: Practice Execution.
+- Milestone v1.2 in progress.
+- Phase 15 completed.
+- Current goal: Verify Phase 15 and prepare for Milestone v1.2 wrap-up.
 
 ## Session Continuity
 

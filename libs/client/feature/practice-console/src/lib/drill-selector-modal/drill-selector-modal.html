@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>Select Drills</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="confirm()" [disabled]="selectedDrills().length === 0" color="primary">Add ({{selectedDrills().length}})</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar (ionInput)="handleSearch($event)" placeholder="Search drills..."></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @for (drill of filteredDrills(); track drill.id) {
+      <ion-item (click)="toggleSelection(drill)">
+        <ion-label>
+          <h3>{{ drill.name }}</h3>
+          <p>{{ drill.description }}</p>
+        </ion-label>
+        <ion-checkbox 
+          slot="end" 
+          [checked]="isSelected(drill)"
+          aria-label="Select drill">
+        </ion-checkbox>
+      </ion-item>
+    } @empty {
+      <div class="ion-text-center ion-padding">
+        <p>No drills found matching your search.</p>
+      </div>
+    }
+  </ion-list>
+</ion-content>
