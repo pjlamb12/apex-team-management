@@ -82,6 +82,7 @@ export class Schedule {
   protected isLoading = signal(false);
   protected isLoadingSeasons = signal(false);
   protected scope = signal<'upcoming' | 'past'>('upcoming');
+  private readonly refreshTrigger = signal(0);
 
   constructor() {
     addIcons({
@@ -94,16 +95,9 @@ export class Schedule {
       addOutline,
     });
 
-    // Load seasons when teamId changes
+    // Load events whenever teamId, scope, selectedSeasonId, or refreshTrigger changes
     effect(() => {
-      const id = this._teamId();
-      if (id) {
-        void this.loadSeasons(id);
-      }
-    });
-
-    // Load events whenever teamId, scope, or selectedSeasonId changes
-    effect(() => {
+      this.refreshTrigger(); // Track refresh trigger
       const id = this._teamId();
       const s = this.scope();
       const seasonId = this.selectedSeasonId();
@@ -111,6 +105,14 @@ export class Schedule {
         void this.loadEvents(id, s, seasonId);
       }
     });
+  }
+
+  ionViewWillEnter(): void {
+    const id = this._teamId();
+    if (id) {
+      void this.loadSeasons(id);
+      this.refreshTrigger.update((n) => n + 1);
+    }
   }
 
   protected onScopeChange(event: any): void {

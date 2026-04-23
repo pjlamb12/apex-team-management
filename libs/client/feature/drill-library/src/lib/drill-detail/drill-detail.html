@@ -21,7 +21,7 @@
   @if (drill(); as d) {
     <div class="drill-content">
       @if (d.sourceUrl) {
-        <app-video-embed [url]="d.sourceUrl"></app-video-embed>
+        <app-video-embed [sourceUrl]="d.sourceUrl"></app-video-embed>
       }
 
       <div class="ion-padding">
@@ -29,7 +29,9 @@
           <h1 class="ion-no-margin">{{ d.name }}</h1>
           <div class="tags-container ion-margin-top ion-margin-bottom">
             @for (tag of d.tags; track tag.id) {
-              <ion-badge color="light" class="ion-margin-end">{{ tag.name }}</ion-badge>
+              <ion-chip class="m-0 text-sm h-7 px-3 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
+                <ion-label>{{ tag.name }}</ion-label>
+              </ion-chip>
             }
           </div>
           <p class="drill-description">{{ d.description }}</p>

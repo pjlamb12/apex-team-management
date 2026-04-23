@@ -4,11 +4,12 @@
 }
 
 ion-chip {
-  --background: transparent;
-  height: 28px;
+  height: 32px;
 }
 
 ion-input {
   --padding-start: 8px;
   --padding-end: 8px;
+  --color: var(--ion-text-color, #000);
+  --placeholder-color: var(--ion-color-step-400, #999);
 }

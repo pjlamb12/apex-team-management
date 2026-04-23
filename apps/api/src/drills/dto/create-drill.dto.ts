@@ -11,14 +11,15 @@ export class CreateDrillDto {
 
   @IsOptional()
   @IsUrl()
+  @IsString()
   sourceUrl?: string;
 
-  @IsObject()
+  @IsArray()
   @IsNotEmpty()
-  instructions: any;
+  instructions: any[];
 
   @IsOptional()
   @IsArray()
-  @IsUUID('all', { each: true })
-  tagIds?: string[];
+  @IsString({ each: true })
+  tagNames?: string[];
 }

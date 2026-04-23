@@ -5,7 +5,6 @@ import { firstValueFrom } from 'rxjs';
 import { AlertController } from '@ionic/angular/standalone';
 import {
   IonContent,
-  IonList,
   IonCard,
   IonCardHeader,
   IonCardTitle,
@@ -39,7 +38,6 @@ interface Team {
   imports: [
     RouterLink,
     IonContent,
-    IonList,
     IonCard,
     IonCardHeader,
     IonCardTitle,

@@ -19,10 +19,6 @@ import {
   IonBadge,
   IonIcon,
   IonSpinner,
-  IonText,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -62,10 +58,6 @@ import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
     IonBadge,
     IonIcon,
     IonSpinner,
-    IonText,
-    IonGrid,
-    IonRow,
-    IonCol,
     IonButton,
   ],
   templateUrl: './game-summary.html',

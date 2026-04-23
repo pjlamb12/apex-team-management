@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { Drill, Tag, CreateDrillDto, UpdateDrillDto } from './drill.model';
 
 @Injectable({
@@ -8,7 +9,15 @@ import { Drill, Tag, CreateDrillDto, UpdateDrillDto } from './drill.model';
 })
 export class DrillService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api/drills';
+  private readonly config = inject(RuntimeConfigLoaderService);
+
+  private get apiUrl(): string {
+    return this.config.getConfigObjectKey('apiBaseUrl') as string;
+  }
+
+  private get baseUrl(): string {
+    return `${this.apiUrl}/drills`;
+  }
 
   // State
   private _drills = signal<Drill[]>([]);

@@ -13,11 +13,11 @@ export const DRILL_LIBRARY_ROUTES: Routes = [
     component: DrillEditor,
   },
   {
-    path: ':id',
+    path: ':drillId',
     component: DrillDetail,
   },
   {
-    path: ':id/edit',
+    path: ':drillId/edit',
     component: DrillEditor,
   },
 ];

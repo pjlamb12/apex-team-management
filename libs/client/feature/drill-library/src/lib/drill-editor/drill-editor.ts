@@ -18,10 +18,11 @@ import {
   IonList,
   IonListHeader,
   IonNote,
+  IonBadge,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, trashOutline, saveOutline } from 'ionicons/icons';
-import { DrillService } from '@apex-team/client/data-access/drill';
+import { DrillService, Tag } from '@apex-team/client/data-access/drill';
 import { TagInput } from '@apex-team/client/ui/drill';
 import { firstValueFrom } from 'rxjs';
 
@@ -47,6 +48,7 @@ import { firstValueFrom } from 'rxjs';
     IonList,
     IonListHeader,
     IonNote,
+    IonBadge,
     TagInput,
   ],
   templateUrl: './drill-editor.html',
@@ -61,12 +63,14 @@ export class DrillEditor implements OnInit {
 
   protected readonly drillId = signal<string | null>(null);
   protected readonly isEditing = signal(false);
-  protected readonly selectedTagNames = signal<string[]>([]);
+  protected readonly selectedTags = signal<Tag[]>([]);
+  protected readonly availableTags = this.drillService.tags;
 
   protected readonly form: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     description: ['', [Validators.required]],
     sourceUrl: [''],
+    tags: [[] as string[]],
     instructions: this.fb.array([]),
   });
 
@@ -79,11 +83,13 @@ export class DrillEditor implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    const id = this.route.snapshot.params['id'];
-    if (id) {
-      this.drillId.set(id);
+    const drillId = this.route.snapshot.params['drillId'];
+    this.drillService.getTags().subscribe();
+
+    if (drillId) {
+      this.drillId.set(drillId);
       this.isEditing.set(true);
-      await this.loadDrill(id);
+      await this.loadDrill(drillId);
     } else {
       // Add one empty instruction step by default for new drills
       this.addInstruction();
@@ -97,9 +103,10 @@ export class DrillEditor implements OnInit {
         name: drill.name,
         description: drill.description,
         sourceUrl: drill.sourceUrl,
+        tags: drill.tags.map(t => t.name),
       });
 
-      this.selectedTagNames.set(drill.tags.map((t) => t.name));
+      this.selectedTags.set(drill.tags);
 
       // Load instructions
       if (drill.instructions && Array.isArray(drill.instructions)) {
@@ -127,8 +134,10 @@ export class DrillEditor implements OnInit {
     this.instructions.removeAt(index);
   }
 
-  protected handleTagsChanged(tags: string[]): void {
-    this.selectedTagNames.set(tags);
+  protected handleTagsChanged(tags: Tag[]): void {
+    this.selectedTags.set(tags);
+    this.form.get('tags')?.setValue(tags.map((t) => t.name));
+    this.form.get('tags')?.markAsDirty();
   }
 
   protected async handleSave(): Promise<void> {
@@ -139,7 +148,8 @@ export class DrillEditor implements OnInit {
 
     const payload = {
       ...this.form.value,
-      tagNames: this.selectedTagNames(),
+      tagNames: this.form.get('tags')?.value,
+      sourceUrl: this.form.get('sourceUrl')?.value || undefined,
     };
 
     try {
@@ -154,3 +164,4 @@ export class DrillEditor implements OnInit {
     }
   }
 }
+

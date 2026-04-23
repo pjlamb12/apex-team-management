@@ -1,5 +1,5 @@
 import { Component, inject, signal, effect, Input } from '@angular/core';
-import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
+import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { firstValueFrom, filter } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -42,7 +42,6 @@ interface Team {
   imports: [
     CommonModule,
     RouterLink,
-    RouterOutlet,
     IonContent,
     IonHeader,
     IonToolbar,

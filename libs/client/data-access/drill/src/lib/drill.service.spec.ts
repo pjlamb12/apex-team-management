@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { DrillService } from './drill.service';
 import { Drill, Tag } from './drill.model';
 
@@ -8,10 +9,17 @@ describe('DrillService', () => {
   let service: DrillService;
   let httpMock: HttpTestingController;
 
+  const mockConfig = {
+    getConfigObjectKey: vi.fn().mockReturnValue('http://api.test'),
+  };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [DrillService],
+      providers: [
+        DrillService,
+        { provide: RuntimeConfigLoaderService, useValue: mockConfig },
+      ],
     });
     service = TestBed.inject(DrillService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -33,7 +41,7 @@ describe('DrillService', () => {
       expect(service.drills()).toEqual(mockDrills);
     });
 
-    const req = httpMock.expectOne('/api/drills');
+    const req = httpMock.expectOne('http://api.test/drills');
     expect(req.request.method).toBe('GET');
     req.flush(mockDrills);
   });
@@ -44,7 +52,7 @@ describe('DrillService', () => {
     
     service.getDrills(tags).subscribe();
 
-    const req = httpMock.expectOne(req => req.url === '/api/drills' && req.params.get('tags') === 'shooting,dribbling');
+    const req = httpMock.expectOne(req => req.url === 'http://api.test/drills' && req.params.get('tags') === 'shooting,dribbling');
     expect(req.request.method).toBe('GET');
     req.flush(mockDrills);
   });
@@ -57,7 +65,7 @@ describe('DrillService', () => {
       expect(service.tags()).toEqual(mockTags);
     });
 
-    const req = httpMock.expectOne('/api/drills/tags');
+    const req = httpMock.expectOne('http://api.test/drills/tags');
     expect(req.request.method).toBe('GET');
     req.flush(mockTags);
   });
@@ -69,16 +77,16 @@ describe('DrillService', () => {
     service.createDrill(dto).subscribe();
 
     // Mock the POST request
-    const postReq = httpMock.expectOne('/api/drills');
+    const postReq = httpMock.expectOne('http://api.test/drills');
     expect(postReq.request.method).toBe('POST');
     postReq.flush(mockDrill);
 
     // Should refresh drills and tags
-    const drillsReq = httpMock.expectOne('/api/drills');
+    const drillsReq = httpMock.expectOne('http://api.test/drills');
     expect(drillsReq.request.method).toBe('GET');
     drillsReq.flush([mockDrill]);
 
-    const tagsReq = httpMock.expectOne('/api/drills/tags');
+    const tagsReq = httpMock.expectOne('http://api.test/drills/tags');
     expect(tagsReq.request.method).toBe('GET');
     tagsReq.flush([]);
   });

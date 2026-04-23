@@ -13,16 +13,16 @@ export class DrillsService {
     private readonly tagRepo: Repository<TagEntity>,
   ) {}
 
-  async findAll(coachId: string, tagIds?: string[]): Promise<DrillEntity[]> {
+  async findAll(coachId: string, tagNames?: string[]): Promise<DrillEntity[]> {
     const query = this.drillRepo
       .createQueryBuilder('drill')
       .leftJoinAndSelect('drill.tags', 'tag')
       .where('drill.coachId = :coachId', { coachId });
 
-    if (tagIds && tagIds.length > 0) {
+    if (tagNames && tagNames.length > 0) {
       // Pitfall 1 Mitigation: Double-join to filter by tags without ghosting other tags
       query.innerJoin('drill.tags', 'filterTag');
-      query.andWhere('filterTag.id IN (:...tagIds)', { tagIds });
+      query.andWhere('filterTag.name IN (:...tagNames)', { tagNames });
     }
 
     return query.getMany();
@@ -42,13 +42,11 @@ export class DrillsService {
   }
 
   async create(coachId: string, data: any): Promise<DrillEntity> {
-    const { tagIds, ...drillData } = data;
+    const { tagNames, ...drillData } = data;
     let tags: TagEntity[] = [];
 
-    if (tagIds && tagIds.length > 0) {
-      tags = await this.tagRepo.find({
-        where: { id: In(tagIds), coachId },
-      });
+    if (tagNames && tagNames.length > 0) {
+      tags = await this.findOrCreateTags(coachId, tagNames);
     }
 
     const drill = this.drillRepo.create({
@@ -62,17 +60,31 @@ export class DrillsService {
 
   async update(id: string, coachId: string, data: any): Promise<DrillEntity> {
     const drill = await this.findOne(id, coachId);
-    const { tagIds, ...drillData } = data;
+    const { tagNames, ...drillData } = data;
 
-    if (tagIds) {
-      drill.tags = await this.tagRepo.find({
-        where: { id: In(tagIds), coachId },
-      });
+    if (tagNames) {
+      drill.tags = await this.findOrCreateTags(coachId, tagNames);
     }
 
     Object.assign(drill, drillData);
 
     return this.drillRepo.save(drill);
+  }
+
+  private async findOrCreateTags(coachId: string, names: string[]): Promise<TagEntity[]> {
+    const uniqueNames = [...new Set(names)];
+    const existingTags = await this.tagRepo.find({
+      where: { coachId, name: In(uniqueNames) },
+    });
+
+    const existingNames = existingTags.map((t) => t.name.toLowerCase());
+    const newNames = uniqueNames.filter((name) => !existingNames.includes(name.toLowerCase()));
+
+    const newTags = await Promise.all(
+      newNames.map((name) => this.createTag(coachId, name))
+    );
+
+    return [...existingTags, ...newTags];
   }
 
   async remove(id: string, coachId: string): Promise<void> {

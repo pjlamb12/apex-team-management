@@ -9,9 +9,7 @@ import {
   IonButton,
   IonContent,
   IonItem,
-  IonLabel,
   IonInput,
-  IonNote,
 } from '@ionic/angular/standalone';
 import { PlayerEntity } from '../players.service';
 
@@ -27,9 +25,7 @@ import { PlayerEntity } from '../players.service';
     IonButton,
     IonContent,
     IonItem,
-    IonLabel,
     IonInput,
-    IonNote,
   ],
   templateUrl: './player-modal.html',
   styleUrl: './player-modal.scss',

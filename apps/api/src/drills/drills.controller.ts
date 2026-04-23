@@ -25,8 +25,8 @@ export class DrillsController {
     @Request() req: { user: { sub: string } },
     @Query('tags') tags?: string | string[],
   ) {
-    const tagIds = typeof tags === 'string' ? [tags] : tags;
-    return this.drillsService.findAll(req.user.sub, tagIds);
+    const tagNames = typeof tags === 'string' ? [tags] : tags;
+    return this.drillsService.findAll(req.user.sub, tagNames);
   }
 
   @Get('tags')

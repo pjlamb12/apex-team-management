@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap, filter, tap, firstValueFrom } from 'rxjs';
@@ -33,7 +33,6 @@ import { Player } from '@apex-team/shared/util/models';
   selector: 'app-console-wrapper',
   imports: [
     CommonModule,
-    RouterLink,
     IonHeader,
     IonToolbar,
     IonTitle,

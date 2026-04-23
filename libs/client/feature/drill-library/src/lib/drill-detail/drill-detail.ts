@@ -12,13 +12,11 @@ import {
   IonButton,
   IonIcon,
   IonBadge,
+  IonChip,
   IonList,
   IonListHeader,
   IonItem,
   IonLabel,
-  IonText,
-  IonCard,
-  IonCardContent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { createOutline, trashOutline } from 'ionicons/icons';
@@ -41,13 +39,11 @@ import { map, switchMap } from 'rxjs';
     IonButton,
     IonIcon,
     IonBadge,
+    IonChip,
     IonList,
     IonListHeader,
     IonItem,
     IonLabel,
-    IonText,
-    IonCard,
-    IonCardContent,
     VideoEmbed,
   ],
   templateUrl: './drill-detail.html',
@@ -60,7 +56,7 @@ export class DrillDetail {
 
   protected readonly drill = toSignal(
     this.route.params.pipe(
-      map((params) => params['id']),
+      map((params) => params['drillId']),
       switchMap((id) => this.drillService.getDrillById(id))
     )
   );

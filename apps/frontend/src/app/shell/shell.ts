@@ -5,7 +5,6 @@ import {
   IonTabButton,
   IonIcon,
   IonLabel,
-  IonRouterOutlet,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { peopleOutline } from 'ionicons/icons';
@@ -13,7 +12,7 @@ import { peopleOutline } from 'ionicons/icons';
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })

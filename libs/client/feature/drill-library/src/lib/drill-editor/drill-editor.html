@@ -56,7 +56,8 @@
       <div class="ion-padding-top ion-padding-bottom">
         <ion-label class="tags-label">Tags</ion-label>
         <app-tag-input
-          [initialTags]="selectedTagNames()"
+          [selectedTags]="selectedTags()"
+          [availableTags]="availableTags()"
           (tagsChanged)="handleTagsChanged($event)"
         ></app-tag-input>
       </div>

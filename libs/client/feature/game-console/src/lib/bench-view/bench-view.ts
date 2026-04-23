@@ -1,11 +1,11 @@
 import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Player } from '@apex-team/shared/util/models';
-import { IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle } from '@ionic/angular/standalone';
+import { IonCard, IonCardHeader } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-bench-view',
-  imports: [CommonModule, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle],
+  imports: [CommonModule, IonCard, IonCardHeader],
   templateUrl: './bench-view.html',
   styleUrls: ['./bench-view.scss'],
 })

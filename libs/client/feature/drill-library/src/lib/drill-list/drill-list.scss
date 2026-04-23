@@ -1,6 +1,8 @@
 .tags-container {
   overflow: hidden;
   background: var(--ion-toolbar-background, var(--ion-color-step-50, #fff));
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 .tags-scroll {
@@ -8,17 +10,32 @@
   overflow-x: auto;
   white-space: nowrap;
   -webkit-overflow-scrolling: touch;
+  gap: 8px;
+  padding-bottom: 4px; /* Space for the scroll indicator if visible */
 
   &::-webkit-scrollbar {
     display: none;
   }
 }
 
+ion-toolbar {
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
 .drill-card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+ion-card-header {
+  padding: 20px 20px 12px 20px;
+}
+
+ion-card-content {
+  padding: 0 20px 20px 20px;
 }
 
 .drill-description {
