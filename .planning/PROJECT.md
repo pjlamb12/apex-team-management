@@ -8,16 +8,15 @@ A game day coaching console for youth sports. Coaches create teams, manage roste
 
 A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened — no paper lineups, no mental math.
 
-## Current Milestone: v1.1 Season Management & Schedule
+## Current Milestone: v1.3 Rotation Engine & Tactical Subs
 
-**Goal:** Enhance season lifecycle management with default locations and introduce a unified Schedule (Games + Practices) into the team workflow.
+**Goal:** Provide professional-grade substitution management including a "Sub-Queue" for staging tactical changes and an automated rotation engine for equal playtime.
 
 **Target features:**
-- Create and edit seasons for a team (explicit management).
-- Default practice location for seasons (auto-populates new practices).
-- Create and view practice sessions.
-- Unified "Schedule" tab replacing "Games" (combines games and practices).
-- Reorganize Team dashboard to prioritize "Schedule" and "Roster".
+- **Tactical Sub-Queue:** Stage multiple substitutions and apply them simultaneously with one button.
+- **Minutes Tracking:** Real-time tracking of playtime for all players during games.
+- **Rotation Engine:** Auto-generate substitution suggestions based on equal playtime goals.
+- **Tactical Alerts:** Notifications for sub-windows and playtime imbalances.
 
 ## Requirements
 
@@ -36,25 +35,27 @@ A coach shows up to a game and can instantly see who's on the field, swap player
 - [x] Sport configuration is data-driven (positions, players on field, period type as JSONB/config) (Phase 3)
 - [x] App works as a responsive web app (mobile-first, PWA-ready) (Phase 7)
 - [x] Seasons can store default venue and jersey colors (Phase 9)
+- [x] Create and edit seasons for a team (Milestone v1.1)
+- [x] Unified "Schedule" view in Team Dashboard (Games + Practices) (Milestone v1.1)
+- [x] Drill Library with tagging and media instructions (Milestone v1.2)
+- [x] Practice Drills integration with sequencing and durations (Milestone v1.2)
+- [x] Live Practice Pacer with countdowns and alerts (Milestone v1.2)
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Create and edit seasons for a team
-- [ ] Set an active season
-- [ ] Create and manage practice sessions (date, time, location)
-- [ ] Default practice location for seasons
-- [ ] Unified "Schedule" view in Team Dashboard (Games + Practices)
-- [ ] Reorganize Team Dashboard segments: "Schedule" and "Roster"
+- [ ] Sub-Queue: Stage substitutions without immediate execution
+- [ ] Bulk Apply: Execute all staged substitutions with a single "Whistle/Sub" button
+- [ ] Real-time Playtime Tracking: Track minutes played for every player
+- [ ] Equal Playtime Engine: Suggest rotations based on playtime targets
+- [ ] Substitution Windows: Configurable rotation intervals (e.g., every 8 minutes)
+- [ ] Rotation Alerts: Haptic/visual alerts when a sub window is reached
 
 ### Out of Scope
 
 <!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
 
-- Practice drills and sequencing — deferred to v1.2
-- Automated equal-time rotation engine — deferred to v1.3
-- Game scheduling UI (calendar view, recurring events) — deferred to v1.3
 - Parent accounts and "claim token" onboarding — deferred to v2
 - Assistant coach / team admin roles — deferred to v2
 - Real-time coach sync (WebSocket) — deferred to v2

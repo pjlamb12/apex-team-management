@@ -90,39 +90,44 @@ Season Management & Schedule. These requirements are for the current roadmap.
 
 ### Advanced Game Management
 
-- [ ] **GAME-09**: Coach can configure game format (period count and period length) at the season or game level
-- [ ] **GAME-10**: Coach can track game periods (e.g., "Start 2nd Half") in the Live Console to segment events
-- [ ] **GAME-11**: Coach can explicitly "End Game" in the Live Console to lock the final score and status
+- [x] **GAME-09**: Coach can configure game format (period count and period length) at the season or game level
+- [x] **GAME-10**: Coach can track game periods (e.g., "Start 2nd Half") in the Live Console to segment events
+- [x] **GAME-11**: Coach can explicitly "End Game" in the Live Console to lock the final score and status
 
 ## v1.2 Requirements
 
-Deferred to next minor release. Not in current roadmap.
+Practice Planning & Drill Library.
 
 ### Practice Planning
 
-- **PRAC-03**: Coach can add drills to a practice with sequencing and time allocation
-- **PRAC-04**: Coach can use a pacer timer during practice
+- [x] **PRAC-03**: Coach can add drills to a practice with sequencing and time allocation
+- [x] **PRAC-04**: Coach can use a pacer timer during practice
 
 ### Drill Library
 
-- **DRIL-01**: Coach can create drills with name, description, source URL, and multi-step instructions
-- **DRIL-02**: Coach can tag drills (e.g., #Defense, #U10, #Dribbling)
-- **DRIL-03**: Coach can rate drills per practice (1-5 star team rating)
-- **DRIL-04**: Coach can browse and search the drill library
+- [x] **DRIL-01**: Coach can create drills with name, description, source URL, and multi-step instructions
+- [x] **DRIL-02**: Coach can tag drills (e.g., #Defense, #U10, #Dribbling)
+- [x] **DRIL-03**: Coach can rate drills per practice (1-5 star team rating)
+- [x] **DRIL-04**: Coach can browse and search the drill library
 
-## v1.3 Requirements
+## v1.3 Requirements: Rotation Engine & Tactical Subs
 
-Deferred to minor release. Not in current roadmap.
+Milestone v1.3 scope.
+
+### Tactical Subs
+
+- [ ] **SUBS-01**: Coach can stage multiple substitutions in a "Sub-Queue" before applying them
+- [ ] **SUBS-02**: Coach can apply all queued substitutions simultaneously with a single "Apply" button
+- [ ] **SUBS-03**: Coach can perform high-performance manual position swaps (Field <-> Field) via tap-tap or drag
+- [ ] **SUBS-04**: Sub-Queue UI clearly distinguishes between current field players and staged incoming players
 
 ### Rotation Engine
 
-- **ROTN-01**: Coach can set a sub-interval (e.g., every 8 minutes) for auto-rotation prompts
-- **ROTN-02**: App generates equal-playing-time rotations based on players present
-- **ROTN-03**: Coach can override auto-generated rotations
-
-### Game Scheduling
-
-- **SCHD-01**: Game scheduling with calendar view and recurring events
+- [ ] **ROTN-01**: Coach can set a rotation interval (e.g., every 8 minutes) in game settings
+- [ ] **ROTN-02**: System calculates real-time "minutes played" for all players based on game events
+- [ ] **ROTN-03**: Engine generates optimal rotation suggestions based on equal playtime and bench depth
+- [ ] **ROTN-04**: Coach receives visual/audible alerts when rotation interval is reached
+- [ ] **ROTN-05**: Coach can load engine suggestions directly into the Sub-Queue for review/modification
 
 ## v2 Requirements
 
@@ -130,11 +135,11 @@ Deferred to second major version.
 
 ### Parent & Sync Layer
 
-- **PRNT-01**: Parent can register and claim a player profile via claim token
-- **PRNT-02**: Multiple guardians per player supported
-- **SYNC-01**: Coach can invite assistant coaches to share team management
-- **SYNC-02**: Real-time WebSocket sync between coach devices during games
-- **ICAL-01**: Personalized iCal feeds for external calendars
+- [ ] **PRNT-01**: Parent can register and claim a player profile via claim token
+- [ ] **PRNT-02**: Multiple guardians per player supported
+- [ ] **SYNC-01**: Coach can invite assistant coaches to share team management
+- [ ] **SYNC-02**: Real-time WebSocket sync between coach devices during games
+- [ ] **ICAL-01**: Personalized iCal feeds for external calendars
 
 ## Out of Scope
 
@@ -172,15 +177,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ROST-02 | Phase 4 | Pending |
 | ROST-03 | Phase 4 | Pending |
 | ROST-04 | Phase 4 | Pending |
-| GAME-01 | Phase 5 | In Progress |
-| GAME-02 | Phase 5 | In Progress |
-| GAME-03 | Phase 5 | In Progress |
-| GAME-04 | Phase 5 | In Progress |
+| GAME-01 | Phase 5 | Completed |
+| GAME-02 | Phase 5 | Completed |
+| GAME-03 | Phase 5 | Completed |
+| GAME-04 | Phase 5 | Completed |
 | GAME-05 | Phase 9 | Pending |
 | SEAS-01 | Phase 9 | Pending |
 | SEAS-02 | Phase 9 | Pending |
-| LIVE-01 | Phase 5 | In Progress |
-| LIVE-02 | Phase 5 | In Progress |
+| LIVE-01 | Phase 5 | Completed |
+| LIVE-02 | Phase 5 | Completed |
 | LIVE-03 | Phase 6 | Pending |
 | LIVE-04 | Phase 6 | Pending |
 | LIVE-05 | Phase 9 | Pending |
@@ -209,12 +214,29 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GAME-09 | Phase 13 | Completed |
 | GAME-10 | Phase 13 | Completed |
 | GAME-11 | Phase 13 | Completed |
+| PRAC-03 | Phase 15 | Completed |
+| PRAC-04 | Phase 16 | Completed |
+| DRIL-01 | Phase 14 | Completed |
+| DRIL-02 | Phase 14 | Completed |
+| DRIL-03 | Phase 15 | Completed |
+| DRIL-04 | Phase 14 | Completed |
+| SUBS-01 | Phase 17 | Pending |
+| SUBS-02 | Phase 17 | Pending |
+| SUBS-03 | Phase 17 | Pending |
+| SUBS-04 | Phase 17 | Pending |
+| ROTN-01 | Phase 18 | Pending |
+| ROTN-02 | Phase 18 | Pending |
+| ROTN-03 | Phase 18 | Pending |
+| ROTN-04 | Phase 19 | Pending |
+| ROTN-05 | Phase 18 | Pending |
 
 **Coverage:**
 - v1 requirements: 36 total (36 mapped) ✓
 - v1.1 requirements: 11 total (11 mapped) ✓
-- Total requirements mapped: 47/47 ✓
+- v1.2 requirements: 6 total (6 mapped) ✓
+- v1.3 requirements: 9 total (9 mapped) ✓
+- Total requirements mapped: 62/62 ✓
 
 ---
 *Requirements defined: 2026-04-14*
-*Last updated: 2026-04-20 — v1.1 traceability complete*
+*Last updated: 2026-05-10 — v1.3 traceability complete*

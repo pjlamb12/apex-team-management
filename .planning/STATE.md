@@ -1,36 +1,35 @@
 ---
 gsd_state_version: 1.2
-milestone: v1.2
-milestone_name: Practice Planning & Drill Library
-status: Milestone v1.2 completed
-last_updated: "2026-04-23T18:00:00Z"
+milestone: v1.3
+milestone_name: Rotation Engine & Tactical Subs
+status: In Progress
+last_updated: "2026-05-10T12:00:00Z"
 progress:
   total_phases: 3
-  completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # State: Apex Team
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-20)
+See: .planning/PROJECT.md (updated 2026-05-10)
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
-**Current focus:** Practice planning, drill library, and live session execution.
-**Current Position:** Milestone v1.2 Completed — Moving to v1.3 Rotation Engine
+**Current focus:** Tactical substitution staging and automated rotation logic.
+**Current Position:** Starting Milestone v1.3 — Phase 17: Tactical Sub-Queue
 
 ## Current Milestone
 
-**v1.2 — Practice Planning & Drill Library**
+**v1.3 — Rotation Engine & Tactical Subs**
 
-Phase: Phase 16: Practice Execution (Pacer) (Completed)
-Plan: 16-02
+Phase: Phase 17: Tactical Sub-Queue (Planning)
+Plan: N/A
 
-Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
-
+Progress: ▓░░░░░░░░░ 0%
 
 ## Decision Log
 
@@ -50,31 +49,26 @@ Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
 | 2026-04-18 | YELLOW_CARD and RED_CARD registered as first-class event types in Soccer sport | Resolves sync mismatches where cards were logged locally but rejected by API. |
 | 2026-04-18 | Use localStorage for clock persistence keyed by gameId | Ensures game timer survives accidental page refresh (Requirement INFR-03). |
 | 2026-04-20 | Start Milestone v1.1 | v1.0 complete with Phase 9 advanced features. v1.1 focuses on Season management and Schedule. |
-| 2026-04-20 | Phase 10 completed | Season Lifecycle & Defaults implemented. Moving to Phase 11. |
-| 2026-04-20 | Phase 11 completed | Practice Management & Unified Schedule implemented. Moving to Phase 12. |
-| 2026-04-21 | Non-negative integer validation for scores | Ensure goals_for and goals_against are valid. |
-| 2026-04-21 | Integrated season selection directly into Schedule tab | Ensure coaches can view past and present games in a single view. |
-| 2026-04-21 | Extracted data-access/team library | Break circular dependencies and fix test resolution issues. |
-| 2026-04-21 | Multi-period support & explicit End Game | Enable granular game tracking and lifecycle management. |
 | 2026-04-21 | Milestone v1.1 Completed | Season Management, Schedule, and Advanced Game Lifecycle fully delivered. |
 | 2026-04-21 | Start Milestone v1.2 | Focus shifts to Drill Library and Practice Planning. |
-| 2026-04-21 | Phase 14 completed | Drill Library Foundation (Backend, UI components, and Dashboard integration) complete. |
-| 2026-04-23 | Phase 15 completed | Practice Drills Integration (Backend entities/service/API, Client data-access, and Practice Console UI) complete. |
-| 2026-04-23 | Phase 16 completed | Practice Execution (Pacer) implemented with live tracking, countdowns, and alerts. Milestone v1.2 Complete. |
+| 2026-04-23 | Phase 16 completed | Practice Execution (Pacer) implemented. Milestone v1.2 Complete. |
+| 2026-05-10 | Sub-Queue UX: Tap-Tap Staging | Coach will click a bench player then a field player to stage a sub. |
+| 2026-05-10 | Rotation Logic: Hybrid Configuration | System will support Pure Equalization, Position-Aware, and Target-Based goals. |
+| 2026-05-10 | Auto-Rotation: Suggested (One-Tap Apply) | Interval timer will pre-fill the Sub-Queue and notify the coach to Apply. |
+| 2026-05-10 | Persistent Sub-Queue Sidebar/Footer | The staging area and Apply button will be permanently visible during games. |
 
 ## Active Context
 
-- Milestone v1.2 in progress.
-- Phase 15 completed.
-- Current goal: Verify Phase 15 and prepare for Milestone v1.2 wrap-up.
+- Milestone v1.3 started.
+- Goal: Implement Tactical Sub-Queue (Phase 17).
 
 ## Session Continuity
 
-Last session: 2026-04-21
-Stopped at: Phase 14 complete. Drill Library browser and editor integrated. Ready for Phase 15.
+Last session: 2026-04-23
+Stopped at: Milestone v1.2 complete. Ready for v1.3.
 
 ## Accumulated Context
 
 ### Roadmap Evolution
-- Milestone v1.1 complete: Delivered SEAS-03 to SEAS-07, PRAC-01, PRAC-02, SCHD-02, GAME-06 to GAME-11.
-- Milestone v1.2 in progress: Phase 14 complete. Delivered DRIL-01 to DRIL-04.
+- Milestone v1.2 complete: Delivered Practice Planning and Drill Library.
+- Milestone v1.3 started: Focus on Rotation Engine and Tactical Subs.
