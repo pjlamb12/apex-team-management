@@ -34,6 +34,14 @@ export interface LineupEntry {
   slotIndex: number | null;
 }
 
+export interface RotationConfig {
+  enabled: boolean;
+  intervalMinutes: number;
+  mode: 'PURE' | 'POSITION' | 'CONSTRAINT';
+  minBenchMinutes?: number;
+  maxFieldMinutes?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -45,6 +53,12 @@ export class LiveGameStateService {
   private _currentPeriod = signal<number>(1);
   private _status = signal<'scheduled' | 'in_progress' | 'completed'>('in_progress');
   private _stagedSubs = signal<StagedSub[]>([]);
+  private _lastIntervalTriggered = signal<number>(0);
+  private _rotationConfig = signal<RotationConfig>({
+    enabled: false,
+    intervalMinutes: 8,
+    mode: 'PURE',
+  });
 
   public readonly events = this._events.asReadonly();
   public readonly eventId = this._eventId.asReadonly();
@@ -53,6 +67,8 @@ export class LiveGameStateService {
   public readonly currentPeriod = this._currentPeriod.asReadonly();
   public readonly status = this._status.asReadonly();
   public readonly stagedSubs = this._stagedSubs.asReadonly();
+  public readonly lastIntervalTriggered = this._lastIntervalTriggered.asReadonly();
+  public readonly rotationConfig = this._rotationConfig.asReadonly();
 
   public readonly activePlayers = computed(() => {
     const lineup = this._initialLineup();
@@ -124,10 +140,10 @@ export class LiveGameStateService {
     if (teamId) this._teamId.set(teamId);
     this._initialLineup.set(lineup);
 
-    const stored = localStorage.getItem(this.getStorageKey());
-    if (stored) {
+    const storedEvents = localStorage.getItem(this.getStorageKey());
+    if (storedEvents) {
       try {
-        const events = JSON.parse(stored);
+        const events = JSON.parse(storedEvents);
         this._events.set(events);
         
         // Recover current period from last event if possible
@@ -142,6 +158,38 @@ export class LiveGameStateService {
     } else {
       this._events.set([]);
     }
+
+    const storedConfig = localStorage.getItem(this.getConfigStorageKey());
+    if (storedConfig) {
+      try {
+        const config = JSON.parse(storedConfig);
+        this._rotationConfig.set(config);
+      } catch (e) {
+        console.error('Failed to parse stored rotation config', e);
+      }
+    }
+
+    const storedRotationState = localStorage.getItem(this.getRotationStateStorageKey());
+    if (storedRotationState) {
+      try {
+        const state = JSON.parse(storedRotationState);
+        if (state.lastIntervalTriggered !== undefined) {
+          this._lastIntervalTriggered.set(state.lastIntervalTriggered);
+        }
+      } catch (e) {
+        console.error('Failed to parse stored rotation state', e);
+      }
+    }
+  }
+
+  public updateRotationConfig(config: Partial<RotationConfig>): void {
+    this._rotationConfig.update((prev) => ({ ...prev, ...config }));
+    this.saveConfig();
+  }
+
+  public setLastIntervalTriggered(interval: number): void {
+    this._lastIntervalTriggered.set(interval);
+    this.saveRotationState();
   }
 
   public pushEvent(event: GameEvent): void {
@@ -233,6 +281,18 @@ export class LiveGameStateService {
     localStorage.setItem(this.getStorageKey(), JSON.stringify(this._events()));
   }
 
+  public saveConfig(): void {
+    if (!this._eventId()) return;
+    localStorage.setItem(this.getConfigStorageKey(), JSON.stringify(this._rotationConfig()));
+  }
+
+  public saveRotationState(): void {
+    if (!this._eventId()) return;
+    localStorage.setItem(this.getRotationStateStorageKey(), JSON.stringify({
+      lastIntervalTriggered: this._lastIntervalTriggered()
+    }));
+  }
+
   public markEventSynced(localTimestamp: number, backendId: string): void {
     this._events.update((prev) =>
       prev.map((e) =>
@@ -255,5 +315,13 @@ export class LiveGameStateService {
 
   private getStorageKey(): string {
     return `event-logs-${this._eventId()}`;
+  }
+
+  private getConfigStorageKey(): string {
+    return `rotation-config-${this._eventId()}`;
+  }
+
+  private getRotationStateStorageKey(): string {
+    return `rotation-state-${this._eventId()}`;
   }
 }
