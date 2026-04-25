@@ -7,9 +7,9 @@
 }
 
 ion-toolbar {
-  --color: white;
+  --color: var(--ap-text);
   --border-width: 0 0 1px;
-  --border-color: rgba(255, 255, 255, 0.1);
+  --border-color: var(--ap-border);
   --padding-top: 10px;
   --padding-bottom: 10px;
   height: 96px;
@@ -31,7 +31,7 @@ ion-title {
   font-family: 'Inter', system-ui, sans-serif;
   font-weight: 900;
   font-size: 2.25rem;
-  color: white;
+  color: var(--ap-text);
 }
 
 .team-label {
@@ -39,14 +39,39 @@ ion-title {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--ap-muted);
 }
 
 .team-name {
   font-size: 1.25rem;
   font-weight: 700;
-  color: white;
+  color: var(--ap-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.rotation-alert-toolbar {
+  --min-height: 48px;
+  height: auto;
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+  --border-width: 0 0 1px;
+  --border-color: rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.3s ease-out;
+
+  ion-button {
+    --box-shadow: none;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }

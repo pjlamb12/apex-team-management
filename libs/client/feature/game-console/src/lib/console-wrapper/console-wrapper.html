@@ -13,7 +13,7 @@
         <!-- Score -->
         <div class="scoreboard-container flex items-center gap-4 shrink-0">
           <span class="score-value tabular-nums">{{ stateService.score().team }}</span>
-          <span class="text-xl text-white/10 font-black">-</span>
+          <span class="text-xl text-ap-border font-black">-</span>
           <span class="score-value tabular-nums">{{ stateService.score().opponent }}</span>
         </div>
 
@@ -23,16 +23,87 @@
         </div>
       </div>
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button id="rotation-settings-button" fill="clear">
+        <ion-icon name="settings-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      <app-theme-toggle></app-theme-toggle>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <ion-toolbar *ngIf="rotationAlertVisible()" color="warning" class="rotation-alert-toolbar">
+    <div class="flex items-center justify-between px-4 py-1">
+      <div class="flex items-center gap-2">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span class="text-sm font-bold">Rotation Interval Reached</span>
+      </div>
+      <div class="flex gap-2">
+        <ion-button size="small" fill="solid" color="light" (click)="handleApplySuggestions()">
+          Apply
+        </ion-button>
+        <ion-button size="small" fill="outline" color="light" (click)="handleDismissAlert()">
+          Dismiss
+        </ion-button>
+      </div>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-no-padding overflow-hidden">
-  <div class="flex flex-col h-full bg-ap-bg overflow-hidden">
-    <!-- Top Bar: Clock and Quick Actions -->
-    <div class="flex items-center justify-between gap-4 p-4 bg-ap-surface-raised border-b border-white/5 shrink-0">
-      <app-clock-display></app-clock-display>
+<ion-popover trigger="rotation-settings-button" side="bottom" alignment="end">
+  <ng-template>
+    <div class="p-4 w-72 space-y-4 bg-ap-surface-raised">
+      <h3 class="text-lg font-bold text-ap-text mb-2">Rotation Rules</h3>
       
-      <div class="flex gap-2">
+      <ion-item lines="none" class="ion-no-padding !bg-transparent">
+        <ion-label class="text-ap-text">Enable Rotation</ion-label>
+        <ion-toggle 
+          [checked]="stateService.rotationConfig().enabled"
+          (ionChange)="stateService.updateRotationConfig({ enabled: $event.detail.checked })">
+        </ion-toggle>
+      </ion-item>
+
+      <div class="space-y-2">
+        <div class="flex justify-between text-sm text-ap-muted">
+          <span>Interval</span>
+          <span class="font-bold text-ap-primary">{{ stateService.rotationConfig().intervalMinutes }} min</span>
+        </div>
+        <ion-range 
+          min="1" max="30" step="1" 
+          [value]="stateService.rotationConfig().intervalMinutes"
+          (ionChange)="stateService.updateRotationConfig({ intervalMinutes: +$event.detail.value })">
+        </ion-range>
+      </div>
+
+      <ion-item lines="none" class="ion-no-padding !bg-transparent">
+        <ion-label position="stacked" class="text-ap-muted mb-2">Rotation Mode</ion-label>
+        <ion-select 
+          interface="popover"
+          [value]="stateService.rotationConfig().mode"
+          (ionChange)="stateService.updateRotationConfig({ mode: $event.detail.value })">
+          <ion-select-option value="PURE">Pure (Most Playtime)</ion-select-option>
+          <ion-select-option value="POSITION">Position-Based</ion-select-option>
+          <ion-select-option value="CONSTRAINT">Smart Constraints</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <p class="text-xs text-ap-muted italic mt-4">
+        Automatic rotation stages subs every interval and alerts with haptics.
+      </p>
+    </div>
+  </ng-template>
+</ion-popover>
+
+<ion-content class="ion-no-padding">
+  <div class="flex flex-col bg-ap-bg">
+    <!-- Top Bar: Clock and Quick Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-ap-surface-raised border-b border-ap-border shrink-0">
+      <!-- Clock: centered on mobile, left on desktop -->
+      <div class="flex justify-center sm:justify-start">
+        <app-clock-display></app-clock-display>
+      </div>
+
+      <!-- Buttons: 2-col grid on mobile, single row on desktop -->
+      <div class="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
         @if (isRunning()) {
           <ion-button color="warning" (click)="stopClock()">
             <ion-icon name="pause-outline" slot="start"></ion-icon>
@@ -44,12 +115,10 @@
             Start
           </ion-button>
         }
-        
+
         <ion-button color="danger" fill="outline" (click)="addOpponentGoal()">
           + Opponent Goal
         </ion-button>
-
-        <div class="w-px h-8 bg-white/10 mx-2"></div>
 
         <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
           <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
@@ -63,32 +132,43 @@
       </div>
     </div>
 
-    <!-- Main Game Area -->
-    <div class="flex flex-col sm:flex-row flex-1 min-h-0 overflow-hidden">
-      <!-- Pitch View: Full width on mobile, 2/3 on sm+ -->
-      <div class="flex-[3] sm:flex-[2] flex min-h-0">
+    <!-- Main Game Area: pitch left, bench + sub-queue right on desktop; stacked on mobile -->
+    <div class="flex flex-col sm:flex-row">
+      <!-- Pitch View -->
+      <div class="sm:flex-[2] flex min-h-[320px] sm:min-h-[600px]">
         <app-soccer-pitch-view
           class="w-full"
           [players]="stateService.activePlayers()"
+          [initialLineup]="stateService.initialLineup()"
+          [stagedSubs]="stateService.stagedSubs()"
           [selectedPlayerId]="selectedPlayerId()"
           (playerSelected)="handlePlayerSelection($event)">
         </app-soccer-pitch-view>
       </div>
 
-      <!-- Sideline: Bench and Event Log -->
-      <div class="flex-[2] sm:flex-1 flex flex-col border-t sm:border-t-0 sm:border-l border-white/10 bg-ap-surface-raised overflow-hidden min-h-0">
-        <div class="flex-1 overflow-y-auto">
-          <app-bench-view
-            [players]="stateService.benchPlayers()"
-            [selectedPlayerId]="selectedPlayerId()"
-            (playerSelected)="handlePlayerSelection($event)">
-          </app-bench-view>
-        </div>
-
-        <div class="h-[160px] sm:h-1/3 border-t border-white/10 overflow-hidden shrink-0">
-          <app-event-log></app-event-log>
+      <!-- Right Column: Bench + Sub-Queue -->
+      <div class="sm:flex-1 flex flex-col border-t sm:border-t-0 sm:border-l border-ap-border bg-ap-surface-raised">
+        <app-bench-view
+          [players]="stateService.benchPlayers()"
+          [stagedInIds]="stagedInIds()"
+          [selectedPlayerId]="selectedPlayerId()"
+          (playerSelected)="handlePlayerSelection($event)">
+        </app-bench-view>
+        <div class="border-t border-ap-border flex-1">
+          <app-sub-queue
+            [stagedSubs]="stateService.stagedSubs()"
+            [initialLineup]="stateService.initialLineup()"
+            (remove)="handleUnstageSub($event)"
+            (clear)="handleClearSubs()"
+            (apply)="handleApplySubs()">
+          </app-sub-queue>
         </div>
       </div>
+    </div>
+
+    <!-- Event Log: full width at bottom -->
+    <div class="border-t border-ap-border">
+      <app-event-log></app-event-log>
     </div>
   </div>
 

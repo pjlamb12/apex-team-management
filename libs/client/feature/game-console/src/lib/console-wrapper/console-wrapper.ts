@@ -22,7 +22,7 @@ import {
   IonSelectOption,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline } from 'ionicons/icons';
+import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline } from 'ionicons/icons';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, LineupEntry, RotationConfig } from '../live-game-state.service';
@@ -183,6 +183,7 @@ export class ConsoleWrapper implements OnInit {
       arrowForwardOutline,
       flagOutline,
       settingsOutline,
+      alertCircleOutline,
     });
 
     effect(() => {
