@@ -1,11 +1,13 @@
 import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Player } from '@apex-team/shared/util/models';
+import { StagedSub, LineupEntry } from '../live-game-state.service';
 
 export interface PositionedPlayer extends Player {
   x: number;
   y: number;
   slotIndex?: number;
+  isStaged?: boolean;
 }
 
 @Component({
@@ -16,6 +18,8 @@ export interface PositionedPlayer extends Player {
 })
 export class SoccerPitchViewComponent {
   players = input.required<Player[]>();
+  initialLineup = input<LineupEntry[]>([]);
+  stagedSubs = input<StagedSub[]>([]);
   selectedPlayerId = input<string | null>(null);
   playerSelected = output<{ player: Player; event: Event }>();
 
@@ -33,6 +37,34 @@ export class SoccerPitchViewComponent {
     9: { x: 35, y: 20 }, // LF
     10: { x: 65, y: 20 }, // RF
   };
+
+  protected stagedOutIds = computed(() => {
+    return new Set(this.stagedSubs().map(s => s.outPlayerId));
+  });
+
+  protected stagedInPlayers = computed(() => {
+    const stagedSubs = this.stagedSubs();
+    const activePlayers = this.players() as (Player & { slotIndex?: number })[];
+    const lineup = this.initialLineup();
+
+    return stagedSubs.map(sub => {
+      const outPlayer = activePlayers.find(p => p.id === sub.outPlayerId);
+      if (!outPlayer || outPlayer.slotIndex === undefined) return null;
+
+      const inEntry = lineup.find(e => e.playerId === sub.inPlayerId);
+      if (!inEntry) return null;
+
+      const coords = this.SLOT_COORDINATES[outPlayer.slotIndex];
+
+      return {
+        ...inEntry.player,
+        slotIndex: outPlayer.slotIndex,
+        x: coords?.x ?? 50,
+        y: coords?.y ?? 50,
+        isStaged: true
+      } as PositionedPlayer;
+    }).filter((p): p is PositionedPlayer => p !== null);
+  });
 
   protected positionedPlayers = computed(() => {
     const players = this.players() as (Player & { slotIndex?: number })[];

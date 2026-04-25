@@ -5,11 +5,21 @@
       *ngFor="let player of players()"
       (click)="selectPlayer(player, $event)"
       [class.selected]="selectedPlayerId() === player.id"
+      [class.border-2]="stagedInIds().has(player.id)"
+      [class.border-green-500]="stagedInIds().has(player.id)"
       class="m-0 cursor-pointer transition-all duration-200"
     >
       <ion-card-header>
-        <div class="jersey-number">#{{ player.jerseyNumber }}</div>
-        <div class="player-name">{{ player.firstName }} {{ player.lastName }}</div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="jersey-number">#{{ player.jerseyNumber }}</div>
+            <div class="player-name">{{ player.firstName }} {{ player.lastName }}</div>
+          </div>
+          <div *ngIf="stagedInIds().has(player.id)" 
+               class="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+            STAGED
+          </div>
+        </div>
       </ion-card-header>
     </ion-card>
   </div>

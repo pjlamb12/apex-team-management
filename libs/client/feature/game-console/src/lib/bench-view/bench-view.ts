@@ -11,6 +11,7 @@ import { IonCard, IonCardHeader } from '@ionic/angular/standalone';
 })
 export class BenchViewComponent {
   players = input.required<Player[]>();
+  stagedInIds = input<Set<string>>(new Set());
   selectedPlayerId = input<string | null>(null);
   playerSelected = output<{ player: Player; event: Event }>();
 
