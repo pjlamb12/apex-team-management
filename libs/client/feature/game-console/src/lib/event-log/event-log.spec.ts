@@ -56,7 +56,8 @@ describe('EventLogViewComponent', () => {
     fixture.detectChanges();
 
     const items = fixture.nativeElement.querySelectorAll('ion-item');
-    expect(items.length).toBe(1);
+    // 1 event + 1 undo-note = 2 items
+    expect(items.length).toBe(2);
   });
 
   it('should call stateService.undo when undo button is clicked', () => {
@@ -91,5 +92,28 @@ describe('EventLogViewComponent', () => {
     const events = component['events']();
     expect(events[0].minuteOccurred).toBe(10);
     expect(events[1].minuteOccurred).toBe(5);
+  });
+
+  it('should filter out deleted events', () => {
+    stateService.pushEvent({
+      type: 'GOAL',
+      playerId: 'p1',
+      minuteOccurred: 15,
+      timestamp: Date.now()
+    });
+    stateService.pushEvent({
+      type: 'ASSIST',
+      playerId: 'p1',
+      minuteOccurred: 20,
+      timestamp: Date.now() + 1000
+    });
+    
+    // Undo the last event (ASSIST)
+    stateService.undo();
+    fixture.detectChanges();
+
+    const events = component['events']();
+    expect(events.length).toBe(1);
+    expect(events[0].type).toBe('GOAL');
   });
 });

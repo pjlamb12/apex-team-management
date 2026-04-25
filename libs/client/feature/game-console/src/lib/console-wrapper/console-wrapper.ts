@@ -180,6 +180,14 @@ export class ConsoleWrapper implements OnInit {
   }
 
   protected async nextPeriod(): Promise<void> {
+    const gameTimeMs = this.clockService.elapsedMs();
+    this.stateService.pushEvent({
+      type: 'PERIOD_END',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs,
+    });
+
     await this.clockService.stop();
     await this.clockService.reset();
     this.stateService.nextPeriod();

@@ -118,7 +118,7 @@ describe('ConsoleWrapper', () => {
     expect(component['selectedPlayerId']()).toBe(null);
   });
 
-  it('should trigger SUB event when swapping bench and active player', () => {
+  it('should stage a sub when swapping bench and active player', () => {
     const activePlayer = mockLineup[0].player as any;
     const benchPlayer = mockLineup[1].player as any;
     const mockEvent = new MouseEvent('click');
@@ -132,6 +132,15 @@ describe('ConsoleWrapper', () => {
 
     // Selection should be cleared
     expect(component['selectedPlayerId']()).toBe(null);
+
+    // Sub should be staged
+    const staged = stateService.stagedSubs();
+    expect(staged.length).toBe(1);
+    expect(staged[0].inPlayerId).toBe('p2');
+    expect(staged[0].outPlayerId).toBe('p1');
+
+    // Apply subs
+    component['handleApplySubs']();
 
     // Event should be logged
     const events = stateService.events();
