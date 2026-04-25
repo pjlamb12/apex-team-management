@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -14,11 +14,19 @@ import {
   IonContent,
   IonPopover,
   IonBackButton,
+  IonItem,
+  IonLabel,
+  IonToggle,
+  IonRange,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline } from 'ionicons/icons';
+import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline } from 'ionicons/icons';
+import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
-import { LiveGameStateService, LineupEntry } from '../live-game-state.service';
+import { LiveGameStateService, LineupEntry, RotationConfig } from '../live-game-state.service';
+import { RotationService } from '../rotation-engine/rotation.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
@@ -43,6 +51,12 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
     IonIcon,
     IonContent,
     IonPopover,
+    IonItem,
+    IonLabel,
+    IonToggle,
+    IonRange,
+    IonSelect,
+    IonSelectOption,
     ClockDisplayComponent,
     BenchViewComponent,
     SoccerPitchViewComponent,
@@ -62,6 +76,7 @@ export class ConsoleWrapper implements OnInit {
   private config = inject(RuntimeConfigLoaderService);
   protected clockService = inject(LiveClockService);
   protected stateService = inject(LiveGameStateService);
+  protected rotationService = inject(RotationService);
   protected eventsService = inject(EventsService);
   protected syncService = inject(EventSyncService);
 
@@ -151,6 +166,7 @@ export class ConsoleWrapper implements OnInit {
 
   protected isRunning = this.clockService.isRunning;
 
+  protected rotationAlertVisible = signal(false);
   protected selectedPlayerId = signal<string | null>(null);
   protected actionPlayer = signal<Player | null>(null);
   protected popoverEvent = signal<Event | null>(null);
@@ -160,7 +176,36 @@ export class ConsoleWrapper implements OnInit {
   });
 
   constructor() {
-    addIcons({ chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline });
+    addIcons({
+      chevronBackOutline,
+      playOutline,
+      pauseOutline,
+      arrowForwardOutline,
+      flagOutline,
+      settingsOutline,
+    });
+
+    effect(() => {
+      const elapsedMs = this.clockService.elapsedMs();
+      const config = this.stateService.rotationConfig();
+
+      if (!config.enabled || elapsedMs === 0) return;
+
+      const intervalMs = config.intervalMinutes * 60000;
+      const currentInterval = Math.floor(elapsedMs / intervalMs);
+
+      if (currentInterval > this.stateService.lastIntervalTriggered()) {
+        this.stateService.setLastIntervalTriggered(currentInterval);
+
+        // Skip alert if subs are already staged
+        if (this.stateService.stagedSubs().length > 0) {
+          return;
+        }
+
+        this.rotationAlertVisible.set(true);
+        this.triggerRotationAlert();
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -191,6 +236,7 @@ export class ConsoleWrapper implements OnInit {
     await this.clockService.stop();
     await this.clockService.reset();
     this.stateService.nextPeriod();
+    this.stateService.setLastIntervalTriggered(0);
     
     // Sync currentPeriod to backend
     const teamId = this.teamId();
@@ -200,6 +246,28 @@ export class ConsoleWrapper implements OnInit {
         currentPeriod: this.stateService.currentPeriod()
       }));
     }
+  }
+
+  private async triggerRotationAlert(): Promise<void> {
+    // 1. Haptic alert
+    try {
+      await Haptics.notification({ type: NotificationType.Success });
+    } catch (e) {
+      // Ignore if not supported
+    }
+  }
+
+  protected handleApplySuggestions(): void {
+    const config = this.stateService.rotationConfig();
+    const suggestions = this.rotationService.generateSuggestions(config);
+    suggestions.forEach((s) => {
+      this.stateService.stageSub(s.inPlayerId, s.outPlayerId);
+    });
+    this.rotationAlertVisible.set(false);
+  }
+
+  protected handleDismissAlert(): void {
+    this.rotationAlertVisible.set(false);
   }
 
   protected async endGame(): Promise<void> {
