@@ -5,10 +5,7 @@ import {
   computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  IonIcon,
-  IonButton,
-} from '@ionic/angular/standalone';
+import { IonIcon, IonButton } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   playOutline,
@@ -24,19 +21,7 @@ import { PracticePacerService } from '@apex-team/client/data-access/drill';
 @Component({
   selector: 'app-practice-execution-tab',
   standalone: true,
-  imports: [
-    CommonModule,
-    IonIcon,
-    IonButton,
-    IonLabel,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardContent,
-    IonGrid,
-    IonRow,
-    IonCol,
-  ],
+  imports: [CommonModule, IonIcon, IonButton],
   templateUrl: './practice-execution-tab.html',
   styleUrl: './practice-execution-tab.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

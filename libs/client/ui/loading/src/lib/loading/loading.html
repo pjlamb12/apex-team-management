@@ -1,0 +1,31 @@
+@if (variant() === 'spinner') {
+  <div class="flex items-center justify-center py-12">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+  </div>
+}
+
+@if (variant() === 'list') {
+  <div class="flex flex-col gap-3 px-4 py-4">
+    @for (row of rows; track row) {
+      <div class="flex items-center gap-3 animate-pulse">
+        <div class="w-10 h-10 rounded-full bg-ap-surface-raised shrink-0"></div>
+        <div class="flex-1 flex flex-col gap-2">
+          <div class="h-4 bg-ap-surface-raised rounded w-3/4"></div>
+          <div class="h-3 bg-ap-surface-raised rounded w-1/2"></div>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (variant() === 'card') {
+  <div class="flex flex-col gap-4 p-4">
+    @for (row of rows; track row) {
+      <div class="rounded-xl bg-ap-surface p-4 flex flex-col gap-3 animate-pulse">
+        <div class="h-5 bg-ap-surface-raised rounded w-2/3"></div>
+        <div class="h-3 bg-ap-surface-raised rounded w-full"></div>
+        <div class="h-3 bg-ap-surface-raised rounded w-4/5"></div>
+      </div>
+    }
+  </div>
+}

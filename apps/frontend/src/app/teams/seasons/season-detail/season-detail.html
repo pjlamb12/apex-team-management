@@ -102,7 +102,7 @@
                 ></ion-input>
               </ion-item>
 
-              <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+              <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
                 Default Jersey Colors
               </div>
 
@@ -131,7 +131,7 @@
                 <ion-toggle formControlName="isActive" slot="end"></ion-toggle>
               </ion-item>
 
-              <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+              <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
                 Default Game Format
               </div>
 
@@ -219,7 +219,7 @@
                            [class.text-red-600]="card.color === 'danger'">
                         {{ card.value }}
                       </div>
-                      <div class="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+                      <div class="text-[10px] uppercase tracking-wider text-ap-muted font-bold">
                         {{ card.label }}
                       </div>
                     </div>
@@ -228,7 +228,7 @@
               </ion-row>
             </ion-grid>
           } @else {
-            <div class="text-center py-8 text-gray-500 italic">
+            <div class="text-center py-8 text-ap-muted italic">
               No game data available for this season yet.
             </div>
           }

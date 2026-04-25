@@ -13,9 +13,9 @@
 
   @if (!isLoading() && teams().length === 0 && !errorMessage()) {
     <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-8">
-      <ion-icon name="people-outline" class="text-6xl text-gray-500 mb-4" />
-      <h2 class="text-xl font-semibold text-gray-300 mb-2">No teams yet</h2>
-      <p class="text-sm text-gray-500 mb-6">Create your first team to get started</p>
+      <ion-icon name="people-outline" class="text-6xl text-ap-muted mb-4" />
+      <h2 class="text-xl font-semibold text-ap-text mb-2">No teams yet</h2>
+      <p class="text-sm text-ap-muted mb-6">Create your first team to get started</p>
       <ion-button routerLink="/teams/new" expand="block" class="w-full max-w-xs">
         <ion-icon name="add-outline" slot="start" />
         Create Team
@@ -30,7 +30,7 @@
           <ion-card-header>
             <div class="flex flex-row items-start justify-between">
               <div>
-                <ion-card-title>{{ team.name }}</ion-card-title>
+                <ion-card-title class="text-ap-text">{{ team.name }}</ion-card-title>
                 <div class="mt-2">
                   <ion-badge color="primary">{{ team.sport.name }}</ion-badge>
                 </div>
@@ -39,7 +39,7 @@
                 <ion-button
                   size="small"
                   fill="clear"
-                  color="light"
+                  color="medium"
                   [routerLink]="['/teams', team.id, 'settings']"
                   (click)="$event.stopPropagation()"
                   aria-label="Edit Team"
@@ -59,7 +59,7 @@
             </div>
           </ion-card-header>
           <ion-card-content>
-            <div class="flex items-center gap-2 text-sm text-gray-400">
+            <div class="flex items-center gap-2 text-sm text-ap-muted">
               <span class="font-medium">Manage Roster & Games</span>
               <ion-icon name="chevron-forward-outline" class="text-xs" />
             </div>

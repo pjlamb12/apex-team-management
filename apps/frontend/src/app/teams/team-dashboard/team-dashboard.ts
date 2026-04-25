@@ -75,7 +75,7 @@ export class TeamDashboard {
   private readonly router = inject(Router);
 
   protected team = signal<Team | null>(null);
-  protected selectedSegment = signal<'roster' | 'schedule' | 'drills'>('roster');
+  protected selectedSegment = signal<'roster' | 'schedule'>('roster');
   protected isLoading = signal(false);
   protected errorMessage = signal<string | null>(null);
 
@@ -123,22 +123,18 @@ export class TeamDashboard {
     const url = this.router.url;
     if (url.includes('/schedule')) {
       this.selectedSegment.set('schedule');
-    } else if (url.includes('/drills')) {
-      this.selectedSegment.set('drills');
     } else {
       this.selectedSegment.set('roster');
     }
   }
 
   protected onSegmentChange(event: Event): void {
-    const segment = (event as CustomEvent).detail.value as 'roster' | 'schedule' | 'drills';
+    const segment = (event as CustomEvent).detail.value as 'roster' | 'schedule';
     this.selectedSegment.set(segment);
     
     const teamId = this.teamId;
     if (segment === 'schedule') {
       void this.router.navigate(['/teams', teamId, 'schedule']);
-    } else if (segment === 'drills') {
-      void this.router.navigate(['/teams', teamId, 'drills']);
     } else {
       void this.router.navigate(['/teams', teamId, 'roster']);
     }

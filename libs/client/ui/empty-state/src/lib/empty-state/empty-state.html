@@ -1,0 +1,10 @@
+<div class="flex flex-col items-center justify-center text-center px-8 py-12">
+  <ion-icon [name]="icon()" class="text-6xl text-ap-muted mb-4"></ion-icon>
+  <h2 class="text-xl font-semibold text-ap-text mb-2">{{ title() }}</h2>
+  @if (message()) {
+    <p class="text-sm text-ap-muted mb-6">{{ message() }}</p>
+  }
+  @if (actionLabel()) {
+    <ion-button (click)="actionClick.emit()">{{ actionLabel() }}</ion-button>
+  }
+</div>

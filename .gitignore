@@ -51,3 +51,6 @@ vitest.config.*.timestamp*
 
 # Environment files
 apps/api/.env
+# Python
+__pycache__/
+*.pyc

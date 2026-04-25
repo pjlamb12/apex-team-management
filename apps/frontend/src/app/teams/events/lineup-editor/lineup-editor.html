@@ -37,7 +37,7 @@
         <h2 class="text-xl font-bold">
           {{ event()?.type === 'practice' ? 'Practice' : 'vs ' + event()?.opponent }}
         </h2>
-        <p class="text-sm text-gray-500">
+        <p class="text-sm text-ap-muted">
           {{ event()?.scheduledAt | date: 'MMM d, y, h:mm a' }}
         </p>
       </div>
@@ -100,7 +100,7 @@
           </ion-item>
         } @empty {
           <ion-item>
-            <ion-label class="text-center text-gray-500 italic">
+            <ion-label class="text-center text-ap-muted italic">
               No players on bench
             </ion-label>
           </ion-item>

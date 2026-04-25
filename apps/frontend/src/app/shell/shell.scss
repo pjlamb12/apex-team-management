@@ -1,1 +1,4 @@
-// Shell layout — no custom styles needed; Ionic IonTabBar handles spacing natively
+// Left padding for the toolbar title (Ionic MD default strips it)
+ion-toolbar ion-title {
+  padding-inline-start: 16px;
+}

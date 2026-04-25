@@ -1,53 +1,130 @@
 @import 'tailwindcss';
 
+// Layer 1: Tailwind sees these token names and generates utility classes.
+// Values are dynamic CSS vars so they respond to theme class changes at runtime.
 @theme {
-  --color-ap-bg: #0f172a;
-  --color-ap-surface: #1e293b;
-  --color-ap-surface-raised: #263044;
-  --color-ap-accent: #3b82f6;
-  --color-ap-success: #22c55e;
-  --color-ap-warning: #eab308;
-  --color-ap-danger: #ef4444;
-  --color-ap-text: #f1f5f9;
-  --color-ap-muted: #94a3b8;
+  --color-ap-bg: var(--ap-bg);
+  --color-ap-surface: var(--ap-surface);
+  --color-ap-surface-raised: var(--ap-surface-raised);
+  --color-ap-accent: var(--ap-accent);
+  --color-ap-success: var(--ap-success);
+  --color-ap-warning: var(--ap-warning);
+  --color-ap-danger: var(--ap-danger);
+  --color-ap-text: var(--ap-text);
+  --color-ap-muted: var(--ap-muted);
+  --color-ap-border: var(--ap-border);
 }
 
-// Tailwind v4: override dark variant to use .dark class on <html> (D-09)
-// This enables dark: utility classes when <html class="dark"> is set
+// Layer 2: Actual values. :root = light defaults, html.dark = dark overrides.
+:root {
+  --ap-bg: #f8fafc;
+  --ap-surface: #ffffff;
+  --ap-surface-raised: #f1f5f9;
+  --ap-accent: #3b82f6;
+  --ap-success: #16a34a;
+  --ap-warning: #ca8a04;
+  --ap-danger: #dc2626;
+  --ap-text: #0f172a;
+  --ap-muted: #64748b;
+  --ap-border: rgba(0, 0, 0, 0.1);
+}
+
+html.dark {
+  --ap-bg: #0d1117;
+  --ap-surface: #0f1929;      /* distinct step up from bg */
+  --ap-surface-raised: #1a2d45; /* more saturated blue — clearly elevated */
+  --ap-accent: #3b82f6;
+  --ap-success: #22c55e;
+  --ap-warning: #eab308;
+  --ap-danger: #ef4444;
+  --ap-text: #f1f5f9;
+  --ap-muted: #94a3b8;
+  --ap-border: rgba(255, 255, 255, 0.07);
+}
+
+// Tailwind v4: override dark variant to use .dark class on <html>
 @custom-variant dark (&:where(.dark, .dark *));
 
-// Tailwind v4: explicit source paths for Nx libs (Pitfall 3 in RESEARCH.md)
-// Prevents Tailwind from purging classes used in lib component templates
+// Tailwind v4: explicit source paths for Nx libs
 @source '../../../libs/client/ui/theme/src';
 @source '../../../libs/client/feature/game-console/src';
 @source '../../../libs/client/feature/practice-console/src';
+@source '../../../libs/client/ui/drill/src';
+@source '../../../libs/client/ui/empty-state/src';
+@source '../../../libs/client/ui/section-label/src';
+@source '../../../libs/client/ui/loading/src';
 
-// Ionic core CSS — must be imported after Tailwind to allow Ionic's reset to coexist
+// Ionic core CSS — imported after Tailwind to allow coexistence
 @import '@ionic/angular/css/core.css';
 @import '@ionic/angular/css/normalize.css';
 @import '@ionic/angular/css/structure.css';
 @import '@ionic/angular/css/typography.css';
 
-// Ionic dark palette — class-based, activated when <html class="ion-palette-dark"> is set
-// ThemeService (Plan 05) applies BOTH .dark AND .ion-palette-dark simultaneously
+// Ionic dark palette — activated when <html class="ion-palette-dark"> is set
 @import '@ionic/angular/css/palettes/dark.class.css';
 
-// AP dark theme overrides — MUST be last to win specificity over Ionic defaults
+// AP theme token overrides for Ionic — must be last to win specificity
 @import '../../../libs/client/ui/theme/src/lib/theme/theme.css';
 
-// Action sheet dark mode: CSS vars don't pierce shadow DOM reliably here,
-// so target exposed ::part() selectors directly.
+// === Typography ===
+h1, h2, h3, h4,
+ion-card-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+// === Global UX ===
+
+// Smooth theme switch — prevents jarring flash when toggling
+html {
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+// Visible focus rings for keyboard navigation
+:focus-visible {
+  outline: 2px solid var(--ap-accent);
+  outline-offset: 2px;
+}
+
+// Respect user's motion preference
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Shell header offset — child route ion-content is outside the shell component's
+// encapsulation scope, so this must live in global styles to reach it.
+// The value matches Ionic's MD toolbar height (56px).
+app-shell ion-content {
+  --padding-top: 56px;
+}
+
+// Dark mode card elevation — subtle accent-tinted shadow makes cards float above the deep base
+html.dark ion-card {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6),
+              0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+// ion-card-title uses an internal --color var that doesn't always pick up
+// --ion-text-color changes, so force it globally via the exposed CSS part.
+ion-card-title {
+  --color: var(--ion-text-color);
+}
+
+// === Ionic Component Overrides ===
+
+// Action sheet text — shadow DOM can't be pierced with CSS vars reliably
 ion-action-sheet.schedule-action-sheet::part(button) {
-  color: #f1f5f9;
+  color: var(--ap-text);
 }
 
 ion-action-sheet.schedule-action-sheet::part(title) {
-  color: #94a3b8;
+  color: var(--ap-muted);
 }
 
-// Global Datetime Fix: Ensure dark background and white text for pickers
-// We use high specificity and !important because ion-datetime's internal shadow styles 
-// can be difficult to override in certain modal contexts.
+// Datetime picker — shadow DOM requires !important overrides in some modal contexts
 ion-datetime,
 .ion-palette-dark ion-datetime,
 html.ion-palette-dark ion-datetime {
@@ -66,25 +143,41 @@ html.ion-palette-dark ion-datetime {
   }
 }
 
-// Ensure the modal wrapper itself has the dark background
+html:not(.dark) ion-datetime,
+html:not(.dark) .ion-datetime {
+  --background: #ffffff !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  color-scheme: light !important;
+
+  &::part(calendar-day) {
+    color: #0f172a;
+  }
+}
+
+// Modal wrapper background
 ion-modal,
 ion-modal.ion-palette-dark {
   --background: #0f172a !important;
-  
+
   ion-datetime {
     --background: #0f172a !important;
   }
 }
 
-// Fix for the wheel picker columns
-.picker-col {
-  color: #f1f5f9 !important;
+html:not(.dark) ion-modal {
+  --background: #ffffff !important;
 }
 
-// Global fix for datetime button appearance in dark mode
+// Wheel picker columns
+.picker-col {
+  color: var(--ap-text) !important;
+}
+
+// Datetime button styling
 ion-datetime-button::part(native) {
-  background: var(--color-ap-surface-raised, #263044);
-  color: var(--color-ap-text, #f1f5f9);
+  background: var(--ap-surface-raised);
+  color: var(--ap-text);
   border-radius: 8px;
   padding: 6px 12px;
   font-weight: 500;

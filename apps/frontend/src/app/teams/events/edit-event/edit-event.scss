@@ -3,9 +3,9 @@
 }
 
 ion-datetime-button::part(native) {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--ion-color-step-100);
   border-radius: 8px;
-  color: white;
+  color: var(--ion-text-color);
   font-weight: 500;
 }
 

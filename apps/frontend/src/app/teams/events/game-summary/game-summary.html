@@ -58,38 +58,38 @@
         <div class="md:col-span-1 flex flex-col gap-6">
           <ion-card class="m-0 h-full">
             <ion-card-header class="px-6 pt-6 pb-2">
-              <ion-card-title class="text-xs font-bold uppercase tracking-widest text-gray-400">Match Details</ion-card-title>
+              <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted">Match Details</ion-card-title>
             </ion-card-header>
             <ion-card-content class="px-6 pb-6 flex flex-col gap-4">
               <div class="flex items-start gap-3">
                 <ion-icon name="time-outline" class="text-blue-500 mt-1"></ion-icon>
                 <div>
-                  <div class="font-bold text-white">{{ g.scheduledAt | date: 'EEEE, MMM d' }}</div>
-                  <div class="text-xs text-gray-400">{{ g.scheduledAt | date: 'h:mm a' }}</div>
+                  <div class="font-bold text-ap-text">{{ g.scheduledAt | date: 'EEEE, MMM d' }}</div>
+                  <div class="text-xs text-ap-muted">{{ g.scheduledAt | date: 'h:mm a' }}</div>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
                 <ion-icon name="location-outline" class="text-blue-500 mt-1"></ion-icon>
                 <div>
-                  <div class="font-bold text-white">{{ g.location || 'No location set' }}</div>
-                  <div class="text-xs text-gray-400">Venue</div>
+                  <div class="font-bold text-ap-text">{{ g.location || 'No location set' }}</div>
+                  <div class="text-xs text-ap-muted">Venue</div>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
                 <ion-icon name="shirt-outline" class="text-blue-500 mt-1"></ion-icon>
                 <div>
-                  <div class="font-bold text-white">{{ g.uniformColor || 'Not set' }}</div>
-                  <div class="text-xs text-gray-400">Uniform Color</div>
+                  <div class="font-bold text-ap-text">{{ g.uniformColor || 'Not set' }}</div>
+                  <div class="text-xs text-ap-muted">Uniform Color</div>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
                 <ion-icon name="stats-chart-outline" class="text-blue-500 mt-1"></ion-icon>
                 <div>
-                  <div class="font-bold text-white">{{ g.periodCount || 2 }} Periods</div>
-                  <div class="text-xs text-gray-400">{{ g.periodLengthMinutes || 45 }}m length</div>
+                  <div class="font-bold text-ap-text">{{ g.periodCount || 2 }} Periods</div>
+                  <div class="text-xs text-ap-muted">{{ g.periodLengthMinutes || 45 }}m length</div>
                 </div>
               </div>
 
@@ -106,7 +106,7 @@
         <div class="md:col-span-2 flex flex-col gap-6">
           <ion-card class="m-0">
             <ion-card-header class="px-6 pt-6 pb-2">
-              <ion-card-title class="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+              <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
                 <ion-icon name="football-outline"></ion-icon>
                 Goal Timeline
               </ion-card-title>
@@ -115,7 +115,7 @@
               <ion-list lines="full">
                 @for (goal of goals(); track goal.id) {
                   <ion-item class="goal-item">
-                    <div slot="start" class="w-12 text-center font-mono font-bold text-blue-400 border-r border-white/5 h-full flex items-center justify-center">
+                    <div slot="start" class="w-12 text-center font-mono font-bold text-blue-400 border-r border-ap-border h-full flex items-center justify-center">
                       {{ goal.minuteOccurred }}'
                     </div>
                     <ion-label class="pl-4">
@@ -127,7 +127,7 @@
                             class="text-xl"
                           ></ion-icon>
                           <div>
-                            <div class="font-bold text-white leading-tight">
+                            <div class="font-bold text-ap-text leading-tight">
                               @if (goal.eventType === 'GOAL') {
                                 Team Goal
                                 @if (goal.payload?.player; as p) {
@@ -140,14 +140,14 @@
                           </div>
                         </div>
                         <div class="text-right">
-                          <div class="text-[10px] font-black text-gray-500 uppercase tracking-tighter">Period</div>
-                          <div class="text-sm font-bold text-white">P{{ goal.payload?.period || '?' }}</div>
+                          <div class="text-[10px] font-black text-ap-muted uppercase tracking-tighter">Period</div>
+                          <div class="text-sm font-bold text-ap-text">P{{ goal.payload?.period || '?' }}</div>
                         </div>
                       </div>
                     </ion-label>
                   </ion-item>
                 } @empty {
-                  <div class="py-12 text-center text-gray-500 italic">
+                  <div class="py-12 text-center text-ap-muted italic">
                     No goals logged for this match.
                   </div>
                 }
@@ -159,7 +159,7 @@
         </div>
       </div>
     } @else {
-      <div class="text-center py-20 text-gray-500">
+      <div class="text-center py-20 text-ap-muted">
         {{ errorMessage() || 'Game not found.' }}
       </div>
     }

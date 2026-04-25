@@ -28,6 +28,11 @@ export const appRoutes: Route[] = [
           import('./teams/teams-list/teams-list').then((m) => m.TeamsList),
       },
       {
+        path: 'drills',
+        loadChildren: () =>
+          import('@apex-team/client/feature/drill-library').then((m) => m.DRILL_LIBRARY_ROUTES),
+      },
+      {
         path: 'teams/new',
         loadComponent: () =>
           import('./teams/create-team/create-team').then((m) => m.CreateTeam),
@@ -96,11 +101,6 @@ export const appRoutes: Route[] = [
             path: 'schedule/:eventId/edit',
             loadComponent: () =>
               import('./teams/events/edit-event/edit-event').then((m) => m.EditEvent),
-          },
-          {
-            path: 'drills',
-            loadChildren: () =>
-              import('@apex-team/client/feature/drill-library').then((m) => m.DRILL_LIBRARY_ROUTES),
           },
           { path: '', redirectTo: 'roster', pathMatch: 'full' },
         ],

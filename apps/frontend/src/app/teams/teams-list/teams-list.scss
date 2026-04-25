@@ -1,10 +1,10 @@
 // Teams list page styles
 ion-card {
   --background: var(--ion-card-background);
-  --color: var(--ion-text-color, white);
+  --color: var(--ion-text-color);
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--ap-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   margin-bottom: 16px;
   overflow: hidden;
 }
@@ -18,7 +18,7 @@ ion-card-content {
 }
 
 ion-card-title {
-  color: white;
+  color: inherit;
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.025em;
