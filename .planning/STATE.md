@@ -2,14 +2,14 @@
 gsd_state_version: 1.2
 milestone: v1.2
 milestone_name: Practice Planning & Drill Library
-status: Milestone v1.2 started
-last_updated: "2026-04-21T18:00:00Z"
+status: Milestone v1.2 completed
+last_updated: "2026-04-23T18:00:00Z"
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 3
+  total_plans: 11
+  completed_plans: 11
+  percent: 100
 ---
 
 # State: Apex Team
@@ -20,16 +20,16 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
 **Current focus:** Practice planning, drill library, and live session execution.
-**Current Position:** Phase 14: Drill Library Foundation Completed — Moving to Phase 15: Practice Execution
+**Current Position:** Milestone v1.2 Completed — Moving to v1.3 Rotation Engine
 
 ## Current Milestone
 
 **v1.2 — Practice Planning & Drill Library**
 
-Phase: Phase 15: Practice Drills Integration (Completed)
-Plan: 15-05
+Phase: Phase 16: Practice Execution (Pacer) (Completed)
+Plan: 16-02
 
-Progress: ▓▓▓▓▓▓▓▓▓░ 90%
+Progress: ▓▓▓▓▓▓▓▓▓▓ 100%
 
 
 ## Decision Log
@@ -60,6 +60,7 @@ Progress: ▓▓▓▓▓▓▓▓▓░ 90%
 | 2026-04-21 | Start Milestone v1.2 | Focus shifts to Drill Library and Practice Planning. |
 | 2026-04-21 | Phase 14 completed | Drill Library Foundation (Backend, UI components, and Dashboard integration) complete. |
 | 2026-04-23 | Phase 15 completed | Practice Drills Integration (Backend entities/service/API, Client data-access, and Practice Console UI) complete. |
+| 2026-04-23 | Phase 16 completed | Practice Execution (Pacer) implemented with live tracking, countdowns, and alerts. Milestone v1.2 Complete. |
 
 ## Active Context
 

@@ -23,10 +23,12 @@ import {
 import {
   PracticeDrillsService,
   PracticeDrill,
+  PracticePacerService,
 } from '@apex-team/client/data-access/drill';
 import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { PracticePlanTab } from '../practice-plan-tab/practice-plan-tab';
+import { PracticeExecutionTab } from '../practice-execution-tab/practice-execution-tab';
 
 @Component({
   selector: 'app-practice-console-wrapper',
@@ -46,6 +48,7 @@ import { PracticePlanTab } from '../practice-plan-tab/practice-plan-tab';
     IonList,
     IonItem,
     PracticePlanTab,
+    PracticeExecutionTab,
   ],
   templateUrl: './practice-console-wrapper.html',
   styleUrl: './practice-console-wrapper.scss',
@@ -54,11 +57,12 @@ export class PracticeConsoleWrapper implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly eventsService = inject(EventsService);
   private readonly practiceDrillsService = inject(PracticeDrillsService);
+  private readonly pacerService = inject(PracticePacerService);
 
   protected teamId = this.route.snapshot.params['id'];
   protected eventId = this.route.snapshot.params['eventId'];
 
-  protected selectedSegment = signal<'summary' | 'plan'>('summary');
+  protected selectedSegment = signal<'summary' | 'plan' | 'execution'>('summary');
   
   private _event = signal<EventEntity | null>(null);
   protected event = this._event.asReadonly();
@@ -77,6 +81,7 @@ export class PracticeConsoleWrapper implements OnInit {
 
     this.practiceDrillsService.getPlan(this.teamId, this.eventId).subscribe((plan) => {
       this._plan.set(plan);
+      this.pacerService.initialize(this.eventId, plan);
     });
   }
 

@@ -9,7 +9,7 @@
 
 - [x] **Phase 14: Drill Library Foundation** - Coaches can create, tag, and browse a library of drills with instructions and media links.
 - [x] **Phase 15: Practice Drills Integration** - Add drills to practice sessions with sequencing and time allocation.
-- [ ] **Phase 16: Practice Execution (Pacer)** - Use a pacer timer during practice to keep the team on schedule with the planned drills.
+- [x] **Phase 16: Practice Execution (Pacer)** - Use a pacer timer during practice to keep the team on schedule with the planned drills.
 
 ## Phase Details
 
@@ -54,7 +54,7 @@
 |-------|----------------|--------|-----------|
 | 14. Drill Library Foundation | 4/4 | Completed | 2026-04-21 |
 | 15. Practice Drills Integration | 5/5 | Completed | 2026-04-23 |
-| 16. Practice Execution (Pacer) | 0/0 | Planned | - |
+| 16. Practice Execution (Pacer) | 2/2 | Completed | 2026-04-23 |
 
 ---
 

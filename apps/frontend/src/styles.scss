@@ -20,6 +20,7 @@
 // Prevents Tailwind from purging classes used in lib component templates
 @source '../../../libs/client/ui/theme/src';
 @source '../../../libs/client/feature/game-console/src';
+@source '../../../libs/client/feature/practice-console/src';
 
 // Ionic core CSS — must be imported after Tailwind to allow Ionic's reset to coexist
 @import '@ionic/angular/css/core.css';

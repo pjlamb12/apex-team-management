@@ -63,7 +63,11 @@ export class PracticeDrillsService {
       sequence,
     });
 
-    return this.practiceDrillRepo.save(practiceDrill);
+    const saved = await this.practiceDrillRepo.save(practiceDrill);
+    return this.practiceDrillRepo.findOne({
+      where: { id: saved.id },
+      relations: ['drill', 'drill.tags'],
+    }) as Promise<PracticeDrillEntity>;
   }
 
   async update(
@@ -90,7 +94,12 @@ export class PracticeDrillsService {
     }
 
     Object.assign(practiceDrill, dto);
-    return this.practiceDrillRepo.save(practiceDrill);
+    await this.practiceDrillRepo.save(practiceDrill);
+
+    return this.practiceDrillRepo.findOne({
+      where: { id: practiceDrillId },
+      relations: ['drill', 'drill.tags'],
+    }) as Promise<PracticeDrillEntity>;
   }
 
   async remove(userId: string, eventId: string, practiceDrillId: string): Promise<void> {

@@ -24,7 +24,9 @@ export interface CreateDrillDto {
   tagNames: string[];
 }
 
-export interface UpdateDrillDto extends Partial<CreateDrillDto> {}
+export interface UpdateDrillDto extends Partial<CreateDrillDto> {
+  lastUpdated?: string;
+}
 
 export interface PracticeDrill {
   id: string;

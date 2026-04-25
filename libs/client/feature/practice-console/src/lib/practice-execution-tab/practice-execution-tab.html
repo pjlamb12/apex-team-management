@@ -1,0 +1,65 @@
+<div class="execution-container ion-padding">
+  @if (pacer.currentDrill(); as drill) {
+    <div class="timer-section text-center">
+      <h1 class="timer-display tabular-nums" [style.color]="'var(--color-ap-' + timerColor().split('-')[1] + ')'">
+        {{ formattedTime() }}
+      </h1>
+      <p class="drill-sequence text-sm uppercase tracking-widest text-ap-muted">
+        Drill {{ pacer.activeDrillIndex() + 1 }}
+      </p>
+      <h2 class="drill-name text-2xl font-bold mt-2 text-ap-text">
+        {{ drill.drill?.name }}
+      </h2>
+      <p class="drill-desc text-ap-muted mt-2 max-w-md mx-auto">
+        {{ drill.drill?.description }}
+      </p>
+    </div>
+
+    <div class="controls-section flex justify-center items-center gap-6 mt-12">
+      <ion-button fill="clear" color="medium" (click)="pacer.previous()" [disabled]="pacer.activeDrillIndex() === 0">
+        <ion-icon name="play-skip-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+
+      <ion-button class="play-btn" size="large" [color]="pacer.isRunning() ? 'warning' : 'success'" (click)="togglePlay()">
+        <ion-icon [name]="pacer.isRunning() ? 'pause-outline' : 'play-outline'" slot="icon-only"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="clear" color="medium" (click)="pacer.next()">
+        <ion-icon name="play-skip-forward-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
+
+    @if (pacer.nextDrill(); as next) {
+      <div class="up-next-section mt-12 p-4 bg-ap-surface-raised rounded-xl border border-white/5">
+        <p class="text-xs uppercase tracking-wider text-ap-muted mb-2">Up Next</p>
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-ap-text">{{ next.drill?.name }}</h3>
+          <span class="text-ap-muted">{{ next.durationMinutes }}m</span>
+        </div>
+      </div>
+    }
+
+    <div class="reset-section text-center mt-8">
+      <ion-button fill="clear" size="small" color="medium" (click)="pacer.reset()">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Reset Practice
+      </ion-button>
+    </div>
+  } @else if (pacer.isFinished()) {
+    <div class="finished-state text-center mt-20">
+      <ion-icon name="checkmark-circle-outline" color="success" class="text-6xl"></ion-icon>
+      <h2 class="text-2xl font-bold mt-4 text-ap-text">Practice Complete!</h2>
+      <p class="text-ap-muted mt-2">You've covered all the drills in your plan.</p>
+      <ion-button class="mt-8" (click)="pacer.reset()">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Start Over
+      </ion-button>
+    </div>
+  } @else {
+    <div class="empty-state text-center mt-20">
+      <ion-icon name="time-outline" color="medium" class="text-6xl"></ion-icon>
+      <h2 class="text-2xl font-bold mt-4 text-ap-text">No Drills Planned</h2>
+      <p class="text-ap-muted mt-2">Go to the Plan tab to add drills before starting.</p>
+    </div>
+  }
+</div>

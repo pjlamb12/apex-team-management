@@ -1,18 +1,21 @@
-<ion-header>
-  <ion-toolbar color="primary">
+<ion-header class="ion-no-border">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/teams/{{teamId}}/schedule"></ion-back-button>
     </ion-buttons>
     <ion-title>Practice Console</ion-title>
   </ion-toolbar>
 
-  <ion-toolbar>
+  <ion-toolbar class="border-b border-white/5">
     <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChange($event)">
       <ion-segment-button value="summary">
         <ion-label>Summary</ion-label>
       </ion-segment-button>
       <ion-segment-button value="plan">
         <ion-label>Plan</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="execution">
+        <ion-label>Execution</ion-label>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
@@ -49,5 +52,7 @@
       [event]="event()"
       (planChanged)="loadData()">
     </app-practice-plan-tab>
+  } @else if (selectedSegment() === 'execution') {
+    <app-practice-execution-tab></app-practice-execution-tab>
   }
 </ion-content>
