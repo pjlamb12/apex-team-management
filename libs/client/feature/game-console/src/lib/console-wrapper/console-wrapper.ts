@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -26,8 +26,10 @@ import { BenchViewComponent } from '../bench-view/bench-view';
 import { SoccerPitchViewComponent } from '../soccer-pitch-view/soccer-pitch-view';
 import { PlayerActionMenuComponent } from '../player-action-menu/player-action-menu';
 import { EventLogViewComponent } from '../event-log/event-log';
+import { SubQueueComponent } from '../sub-queue/sub-queue';
 import { EventSyncService } from '../event-sync.service';
 import { Player } from '@apex-team/shared/util/models';
+import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 
 @Component({
   selector: 'app-console-wrapper',
@@ -46,7 +48,9 @@ import { Player } from '@apex-team/shared/util/models';
     SoccerPitchViewComponent,
     PlayerActionMenuComponent,
     EventLogViewComponent,
+    SubQueueComponent,
     IonBackButton,
+    ThemeToggle,
   ],
   templateUrl: './console-wrapper.html',
   styleUrls: ['./console-wrapper.scss'],
@@ -151,6 +155,10 @@ export class ConsoleWrapper implements OnInit {
   protected actionPlayer = signal<Player | null>(null);
   protected popoverEvent = signal<Event | null>(null);
 
+  protected stagedInIds = computed(() => {
+    return new Set(this.stateService.stagedSubs().map(s => s.inPlayerId));
+  });
+
   constructor() {
     addIcons({ chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline });
   }
@@ -168,7 +176,7 @@ export class ConsoleWrapper implements OnInit {
   }
 
   protected addOpponentGoal(): void {
-    this.stateService.addOpponentGoal(this.clockService.currentMinute());
+    this.stateService.addOpponentGoal(this.clockService.currentMinute(), this.clockService.elapsedMs());
   }
 
   protected async nextPeriod(): Promise<void> {
@@ -247,29 +255,18 @@ export class ConsoleWrapper implements OnInit {
           slotIndexB: playerB.slotIndex,
           timestamp: Date.now(),
           minuteOccurred: this.clockService.currentMinute(),
+          gameTimeMs: this.clockService.elapsedMs(),
         });
       }
       this.selectedPlayerId.set(null);
       this.actionPlayer.set(null);
     }
-    // 2. Substitution: One active, one bench
+    // 2. Tactical Substitution Staging: One active, one bench
     else if ((isSelectedOnBench && isTappedActive) || (isSelectedActive && isTappedOnBench)) {
       const inPlayerId = isSelectedOnBench ? currentSelectionId : player.id;
       const outPlayerId = isSelectedActive ? currentSelectionId : player.id;
 
-      const outgoingActive = activePlayers.find(p => (p as any).id === outPlayerId) as any;
-      
-      if (outgoingActive && outgoingActive.slotIndex !== undefined) {
-        this.stateService.pushEvent({
-          type: 'SUB',
-          playerIdIn: inPlayerId,
-          playerIdOut: outPlayerId,
-          slotIndex: outgoingActive.slotIndex,
-          positionName: outgoingActive.preferredPosition ?? 'Unknown',
-          timestamp: Date.now(),
-          minuteOccurred: this.clockService.currentMinute(),
-        });
-      }
+      this.stateService.stageSub(inPlayerId, outPlayerId);
       
       this.selectedPlayerId.set(null);
       this.actionPlayer.set(null);
@@ -287,11 +284,48 @@ export class ConsoleWrapper implements OnInit {
     }
   }
 
+  protected handleApplySubs(): void {
+    const staged = this.stateService.stagedSubs();
+    if (staged.length === 0) return;
+
+    const currentMinute = this.clockService.currentMinute();
+    const gameTimeMs = this.clockService.elapsedMs();
+    const timestamp = Date.now();
+    const activePlayers = this.stateService.activePlayers();
+
+    const events = staged.map(sub => {
+      const outgoingActive = activePlayers.find(p => (p as any).id === sub.outPlayerId) as any;
+      
+      return {
+        type: 'SUB',
+        playerIdIn: sub.inPlayerId,
+        playerIdOut: sub.outPlayerId,
+        slotIndex: outgoingActive?.slotIndex ?? 0,
+        positionName: outgoingActive?.preferredPosition ?? 'Unknown',
+        timestamp,
+        minuteOccurred: currentMinute,
+        gameTimeMs,
+      };
+    });
+
+    this.stateService.pushEvents(events);
+    this.stateService.clearStagedSubs();
+  }
+
+  protected handleUnstageSub(playerId: string): void {
+    this.stateService.unstageSub(playerId);
+  }
+
+  protected handleClearSubs(): void {
+    this.stateService.clearStagedSubs();
+  }
+
   protected handleAction(action: { type: string; playerId: string }): void {
     const baseEvent = {
       type: action.type,
       timestamp: Date.now(),
       minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
     };
 
     let eventPayload: Record<string, any>;

@@ -14,6 +14,7 @@ export interface GameEvent {
   slotIndexB?: number;
   position?: string;
   minuteOccurred: number;
+  gameTimeMs?: number;
   timestamp: number;
   synced?: boolean;
   status?: 'active' | 'deleted';
@@ -205,11 +206,12 @@ export class LiveGameStateService {
     this.save();
   }
 
-  public addOpponentGoal(minuteOccurred: number): void {
+  public addOpponentGoal(minuteOccurred: number, gameTimeMs?: number): void {
     this.pushEvent({
       type: 'OPPONENT_GOAL',
       timestamp: Date.now(),
       minuteOccurred,
+      gameTimeMs,
     });
   }
 
