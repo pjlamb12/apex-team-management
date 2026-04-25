@@ -140,4 +140,56 @@ describe('LiveGameStateService', () => {
     
     expect(service.events()).toEqual([event]);
   });
+
+  describe('Bulk push and staging', () => {
+    beforeEach(() => {
+      service.initialize(eventId, mockLineup, teamId);
+    });
+
+    it('should push multiple events in a single update', () => {
+      const events = [
+        { type: 'GOAL', playerId: 'p1', timestamp: Date.now(), minuteOccurred: 10 },
+        { type: 'SUB', playerIdIn: 'p2', playerIdOut: 'p1', slotIndex: 0, timestamp: Date.now() + 1, minuteOccurred: 10 }
+      ];
+
+      service.pushEvents(events);
+
+      expect(service.events().length).toBe(2);
+      expect(service.events()[0].type).toBe('GOAL');
+      expect(service.events()[1].type).toBe('SUB');
+      expect(service.events()[0].status).toBe('active');
+      expect(service.events()[1].status).toBe('active');
+    });
+
+    it('should stage a substitution', () => {
+      service.stageSub('p2', 'p1');
+      expect(service.stagedSubs()).toEqual([{ inPlayerId: 'p2', outPlayerId: 'p1' }]);
+    });
+
+    it('should enforce exclusivity when staging subs (one player per pair)', () => {
+      // Stage (p2, p1)
+      service.stageSub('p2', 'p1');
+      expect(service.stagedSubs()).toEqual([{ inPlayerId: 'p2', outPlayerId: 'p1' }]);
+
+      // New sub involving same 'in' player: stage (p2, p3) replaces (p2, p1)
+      service.stageSub('p2', 'p3');
+      expect(service.stagedSubs()).toEqual([{ inPlayerId: 'p2', outPlayerId: 'p3' }]);
+
+      // New sub involving same 'out' player: stage (p4, p3) replaces (p2, p3)
+      service.stageSub('p4', 'p3');
+      expect(service.stagedSubs()).toEqual([{ inPlayerId: 'p4', outPlayerId: 'p3' }]);
+    });
+
+    it('should unstage a player', () => {
+      service.stageSub('p2', 'p1');
+      service.unstageSub('p1');
+      expect(service.stagedSubs()).toEqual([]);
+    });
+
+    it('should clear staged subs', () => {
+      service.stageSub('p2', 'p1');
+      service.clearStagedSubs();
+      expect(service.stagedSubs()).toEqual([]);
+    });
+  });
 });

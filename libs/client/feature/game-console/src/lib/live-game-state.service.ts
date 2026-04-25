@@ -20,6 +20,11 @@ export interface GameEvent {
   [key: string]: any;
 }
 
+export interface StagedSub {
+  inPlayerId: string;
+  outPlayerId: string;
+}
+
 export interface LineupEntry {
   playerId: string;
   player: Player;
@@ -38,6 +43,7 @@ export class LiveGameStateService {
   private _initialLineup = signal<LineupEntry[]>([]);
   private _currentPeriod = signal<number>(1);
   private _status = signal<'scheduled' | 'in_progress' | 'completed'>('in_progress');
+  private _stagedSubs = signal<StagedSub[]>([]);
 
   public readonly events = this._events.asReadonly();
   public readonly eventId = this._eventId.asReadonly();
@@ -45,6 +51,7 @@ export class LiveGameStateService {
   public readonly initialLineup = this._initialLineup.asReadonly();
   public readonly currentPeriod = this._currentPeriod.asReadonly();
   public readonly status = this._status.asReadonly();
+  public readonly stagedSubs = this._stagedSubs.asReadonly();
 
   public readonly activePlayers = computed(() => {
     const lineup = this._initialLineup();
@@ -144,9 +151,43 @@ export class LiveGameStateService {
     this.save();
   }
 
+  public pushEvents(events: GameEvent[]): void {
+    const decoratedEvents = events.map((e) => ({
+      ...e,
+      status: 'active' as const,
+      period: this._currentPeriod(),
+    }));
+    this._events.update((prev) => [...prev, ...decoratedEvents]);
+    this.save();
+  }
+
   public setEvents(events: GameEvent[]): void {
     this._events.set(events);
     this.save();
+  }
+
+  public stageSub(inPlayerId: string, outPlayerId: string): void {
+    this._stagedSubs.update((prev) => {
+      // Remove any existing sub where either player is already involved
+      const filtered = prev.filter(
+        (s) =>
+          s.inPlayerId !== inPlayerId &&
+          s.outPlayerId !== outPlayerId &&
+          s.inPlayerId !== outPlayerId &&
+          s.outPlayerId !== inPlayerId
+      );
+      return [...filtered, { inPlayerId, outPlayerId }];
+    });
+  }
+
+  public unstageSub(playerId: string): void {
+    this._stagedSubs.update((prev) =>
+      prev.filter((s) => s.inPlayerId !== playerId && s.outPlayerId !== playerId)
+    );
+  }
+
+  public clearStagedSubs(): void {
+    this._stagedSubs.set([]);
   }
 
   public nextPeriod(): void {
