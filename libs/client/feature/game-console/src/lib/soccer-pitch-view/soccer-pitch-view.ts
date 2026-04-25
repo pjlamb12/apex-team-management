@@ -1,7 +1,8 @@
-import { Component, input, output, computed } from '@angular/core';
+import { Component, input, output, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Player } from '@apex-team/shared/util/models';
 import { StagedSub, LineupEntry } from '../live-game-state.service';
+import { PlaytimeService } from '../rotation-engine/playtime.service';
 
 export interface PositionedPlayer extends Player {
   x: number;
@@ -17,6 +18,8 @@ export interface PositionedPlayer extends Player {
   styleUrls: ['./soccer-pitch-view.scss'],
 })
 export class SoccerPitchViewComponent {
+  protected playtimeService = inject(PlaytimeService);
+
   players = input.required<Player[]>();
   initialLineup = input<LineupEntry[]>([]);
   stagedSubs = input<StagedSub[]>([]);
@@ -87,5 +90,12 @@ export class SoccerPitchViewComponent {
 
   protected trackBySlot(index: number, player: PositionedPlayer): string | number {
     return player.slotIndex !== undefined ? player.slotIndex : player.id;
+  }
+
+  protected formatPlaytime(playerId: string): string {
+    const seconds = this.playtimeService.playtimeMap()[playerId] || 0;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 }

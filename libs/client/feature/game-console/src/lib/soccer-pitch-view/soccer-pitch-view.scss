@@ -3,10 +3,16 @@
 }
 
 .player-slot {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.5s ease-in-out, top 0.5s ease-in-out;
+
   &.selected {
-    z-index: 20;
-    // Removed translate(-50%, -50%) to prevent double-translation with Tailwind classes
-    transform: scale(1.1);
+    z-index: 30;
+    transform: scale(1.15) translate(-50%, -50%) !important;
+    
+    .player-circle {
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.6), 0 0 5px rgba(250, 204, 21, 0.4);
+      animation: selected-pulse 2s infinite;
+    }
   }
 
   // Add color change on hover for the circle
@@ -16,6 +22,16 @@
   }
 }
 
+@keyframes selected-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 .player-name {
+  text-shadow: none;
+}
+
+:global(html.dark) .player-name {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }

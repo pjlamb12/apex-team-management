@@ -10,14 +10,17 @@
       class="m-0 cursor-pointer transition-all duration-200"
     >
       <ion-card-header>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
             <div class="jersey-number">#{{ player.jerseyNumber }}</div>
             <div class="player-name">{{ player.firstName }} {{ player.lastName }}</div>
           </div>
-          <div *ngIf="stagedInIds().has(player.id)" 
-               class="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
-            STAGED
+          <div class="flex flex-col items-end">
+            <div class="text-[10px] font-mono text-ap-muted font-bold">{{ formatPlaytime(player.id) }}</div>
+            <div *ngIf="stagedInIds().has(player.id)"
+                 class="staged-badge mt-1 bg-green-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full animate-pulse border border-white/20">
+              STAGED
+            </div>
           </div>
         </div>
       </ion-card-header>
