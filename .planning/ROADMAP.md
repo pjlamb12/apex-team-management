@@ -6,7 +6,7 @@
 
 ## Phases
 
-- [ ] **Phase 17: Tactical Sub-Queue** - Staged substitutions and bulk execution.
+- [x] **Phase 17: Tactical Sub-Queue** - Staged substitutions and bulk execution.
 - [ ] **Phase 18: Rotation Engine & Playtime** - Equal playtime logic and real-time minutes tracking.
 - [ ] **Phase 19: Tactical Polish & Alerts** - Audible/visual notifications and high-performance manual swaps.
 
@@ -21,36 +21,42 @@
   2. The UI clearly displays "staged" players overlaying or replacing their target positions in a pending state.
   3. Coach can stage multiple substitutions simultaneously.
   4. A single "Apply Subs" button executes all staged changes, updating the live lineup and logging events.
-**Plans**: TBD
+**Plans**:
+- [x] 17-01-PLAN.md — Live Game State Sub-Queue Core
+- [x] 17-02-PLAN.md — Sub-Queue UI & View Indicators
+- [x] 17-03-PLAN.md — Console Integration & Workflow
 **UI hint**: yes
 
 ### Phase 18: Rotation Engine & Playtime
 **Goal**: Calculate player minutes in real-time and generate optimal rotation suggestions.
 **Depends on**: Phase 17
-**Requirements**: ROTN-01, ROTN-02, ROTN-03, ROTN-05
+**Requirements**: ROTN-01, ROTN-02, ROTN-03, ROTN-04, ROTN-05
 **Success Criteria** (what must be TRUE):
   1. The system tracks "minutes played" for every rostered player based on SUB and PERIOD events.
-  2. Coach can configure a "Rotation Interval" (e.g., 8 minutes) for the active game.
-  3. At each interval, the engine suggests a set of substitutions that balances playtime across the roster.
-  4. Coach can load these suggestions into the Sub-Queue with one tap for final review.
-**Plans**: TBD
+  2. Coach can configure a "Rotation Interval" (e.g., 8 minutes) and "Rotation Mode" for the active game.
+  3. Cumulative playtime (MM:SS) is visible for all players in the Live Console.
+  4. At each interval, the engine suggests a set of substitutions that balances playtime across the roster, automatically staging them into the Sub-Queue.
+  5. The coach receives a haptic/visual alert when rotation suggestions are ready.
+**Plans**:
+- [x] 18-01-PLAN.md — Real-time Playtime Tracking
+- [x] 18-02-PLAN.md — Rotation Engine Logic
+- [ ] 18-03-PLAN.md — Configuration & Live Integration
 **UI hint**: yes
 
 ### Phase 19: Tactical Polish & Alerts
-**Goal**: Enhance the game day experience with timely alerts and refined tactical interactions.
+**Goal**: Enhance the game day experience with refined tactical interactions and UI polish.
 **Depends on**: Phase 18
-**Requirements**: ROTN-04, SUBS-03
+**Requirements**: SUBS-03
 **Success Criteria** (what must be TRUE):
-  1. The app provides a visual countdown and an audible/vibration alert when the next rotation window is reached.
-  2. High-performance "Field-to-Field" position swaps are implemented with intuitive gestures (tap-tap or drag).
-  3. The Game Console UI remains responsive and fluid even with complex sub-queue overlays.
-**Plans**: TBD
+  1. High-performance "Field-to-Field" position swaps are implemented with intuitive gestures (tap-tap or drag).
+  2. The Game Console UI remains responsive and fluid even with complex sub-queue overlays.
+**Plans**: [To be planned]
 **UI hint**: yes
 
 ## Progress Table
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 17. Tactical Sub-Queue | 0/1 | Not started | - |
-| 18. Rotation Engine & Playtime | 0/1 | Not started | - |
+| 17. Tactical Sub-Queue | 3/3 | Completed | 2026-05-10 |
+| 18. Rotation Engine & Playtime | 2/3 | In Progress | - |
 | 19. Tactical Polish & Alerts | 0/1 | Not started | - |

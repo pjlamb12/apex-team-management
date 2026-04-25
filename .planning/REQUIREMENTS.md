@@ -116,18 +116,19 @@ Milestone v1.3 scope.
 
 ### Tactical Subs
 
-- [ ] **SUBS-01**: Coach can stage multiple substitutions in a "Sub-Queue" before applying them
-- [ ] **SUBS-02**: Coach can apply all queued substitutions simultaneously with a single "Apply" button
-- [ ] **SUBS-03**: Coach can perform high-performance manual position swaps (Field <-> Field) via tap-tap or drag
-- [ ] **SUBS-04**: Sub-Queue UI clearly distinguishes between current field players and staged incoming players
+- [x] **SUBS-01**: Coach can stage multiple substitutions in a "Sub-Queue" before applying them
+- [x] **SUBS-02**: Coach can apply all queued substitutions simultaneously with a single "Apply" button
+- [x] **SUBS-03**: Coach can perform high-performance manual position swaps (Field <-> Field) via tap-tap or drag
+- [x] **SUBS-04**: Sub-Queue UI clearly distinguishes between current field players and staged incoming players
 
 ### Rotation Engine
 
 - [ ] **ROTN-01**: Coach can set a rotation interval (e.g., every 8 minutes) in game settings
-- [ ] **ROTN-02**: System calculates real-time "minutes played" for all players based on game events
-- [ ] **ROTN-03**: Engine generates optimal rotation suggestions based on equal playtime and bench depth
+- [x] **ROTN-02**: System calculates real-time "minutes played" for all players based on game events
+- [x] **ROTN-03**: Engine generates optimal rotation suggestions based on equal playtime and bench depth
 - [ ] **ROTN-04**: Coach receives visual/audible alerts when rotation interval is reached
 - [ ] **ROTN-05**: Coach can load engine suggestions directly into the Sub-Queue for review/modification
+
 
 ## v2 Requirements
 
@@ -220,14 +221,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DRIL-02 | Phase 14 | Completed |
 | DRIL-03 | Phase 15 | Completed |
 | DRIL-04 | Phase 14 | Completed |
-| SUBS-01 | Phase 17 | Pending |
-| SUBS-02 | Phase 17 | Pending |
-| SUBS-03 | Phase 17 | Pending |
-| SUBS-04 | Phase 17 | Pending |
+| SUBS-01 | Phase 17 | Completed |
+| SUBS-02 | Phase 17 | Completed |
+| SUBS-03 | Phase 17 | Completed |
+| SUBS-04 | Phase 17 | Completed |
 | ROTN-01 | Phase 18 | Pending |
-| ROTN-02 | Phase 18 | Pending |
-| ROTN-03 | Phase 18 | Pending |
-| ROTN-04 | Phase 19 | Pending |
+| ROTN-02 | Phase 18 | Completed |
+| ROTN-03 | Phase 18 | Completed |
+| ROTN-04 | Phase 18 | Pending |
 | ROTN-05 | Phase 18 | Pending |
 
 **Coverage:**
