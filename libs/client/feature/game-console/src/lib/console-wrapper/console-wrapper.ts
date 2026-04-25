@@ -295,15 +295,15 @@ export class ConsoleWrapper implements OnInit {
     const benchPlayers = this.stateService.benchPlayers();
     const activePlayers = this.stateService.activePlayers();
 
-    const isTappedActive = activePlayers.some(p => p.id === player.id);
-    const isTappedOnBench = benchPlayers.some(p => p.id === player.id);
+    const tappedActive = activePlayers.find(p => p.id === player.id);
+    const tappedOnBench = !tappedActive && benchPlayers.some(p => p.id === player.id);
 
     // If no selection, select this player
     if (!currentSelectionId) {
       this.selectedPlayerId.set(player.id);
       
       // If we tapped an active player and no bench player was selected, show actions
-      if (isTappedActive) {
+      if (tappedActive) {
         this.actionPlayer.set(player);
         this.popoverEvent.set(event);
       }
@@ -317,15 +317,15 @@ export class ConsoleWrapper implements OnInit {
       return;
     }
 
-    const isSelectedOnBench = benchPlayers.some(p => p.id === currentSelectionId);
-    const isSelectedActive = activePlayers.some(p => (p as any).id === currentSelectionId);
+    const selectedActive = activePlayers.find(p => (p as any).id === currentSelectionId);
+    const selectedOnBench = !selectedActive && benchPlayers.some(p => p.id === currentSelectionId);
     
     // 1. Position Swap: Both are active
-    if (isSelectedActive && isTappedActive) {
-      const playerA = activePlayers.find(p => (p as any).id === currentSelectionId) as any;
-      const playerB = activePlayers.find(p => (p as any).id === player.id) as any;
+    if (selectedActive && tappedActive) {
+      const playerA = selectedActive as any;
+      const playerB = tappedActive as any;
 
-      if (playerA && playerB && playerA.slotIndex !== undefined && playerB.slotIndex !== undefined) {
+      if (playerA.slotIndex !== undefined && playerB.slotIndex !== undefined) {
         this.stateService.pushEvent({
           type: 'POSITION_SWAP',
           slotIndexA: playerA.slotIndex,
@@ -339,9 +339,9 @@ export class ConsoleWrapper implements OnInit {
       this.actionPlayer.set(null);
     }
     // 2. Tactical Substitution Staging: One active, one bench
-    else if ((isSelectedOnBench && isTappedActive) || (isSelectedActive && isTappedOnBench)) {
-      const inPlayerId = isSelectedOnBench ? currentSelectionId : player.id;
-      const outPlayerId = isSelectedActive ? currentSelectionId : player.id;
+    else if ((selectedOnBench && tappedActive) || (selectedActive && tappedOnBench)) {
+      const inPlayerId = selectedOnBench ? currentSelectionId : player.id;
+      const outPlayerId = selectedActive ? currentSelectionId : player.id;
 
       this.stateService.stageSub(inPlayerId, outPlayerId);
       
@@ -352,7 +352,7 @@ export class ConsoleWrapper implements OnInit {
       this.selectedPlayerId.set(player.id);
 
       // If we switched to another active player, show its actions
-      if (isTappedActive) {
+      if (tappedActive) {
         this.actionPlayer.set(player);
         this.popoverEvent.set(event);
       } else {
