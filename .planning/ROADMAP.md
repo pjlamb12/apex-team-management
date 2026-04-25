@@ -7,8 +7,8 @@
 ## Phases
 
 - [x] **Phase 17: Tactical Sub-Queue** - Staged substitutions and bulk execution.
-- [ ] **Phase 18: Rotation Engine & Playtime** - Equal playtime logic and real-time minutes tracking.
-- [ ] **Phase 19: Tactical Polish & Alerts** - Audible/visual notifications and high-performance manual swaps.
+- [x] **Phase 18: Rotation Engine & Playtime** - Equal playtime logic and real-time minutes tracking.
+- [ ] **Phase 19: Tactical Polish & Alerts** - Refined tactical interactions and UI polish.
 
 ## Phase Details
 
@@ -40,17 +40,21 @@
 **Plans**:
 - [x] 18-01-PLAN.md — Real-time Playtime Tracking
 - [x] 18-02-PLAN.md — Rotation Engine Logic
-- [ ] 18-03-PLAN.md — Configuration & Live Integration
+- [x] 18-03-PLAN.md — Configuration & Live Integration
 **UI hint**: yes
 
 ### Phase 19: Tactical Polish & Alerts
 **Goal**: Enhance the game day experience with refined tactical interactions and UI polish.
 **Depends on**: Phase 18
-**Requirements**: SUBS-03
+**Requirements**: SUBS-03, ROTN-04, ROTN-05
 **Success Criteria** (what must be TRUE):
-  1. High-performance "Field-to-Field" position swaps are implemented with intuitive gestures (tap-tap or drag).
-  2. The Game Console UI remains responsive and fluid even with complex sub-queue overlays.
-**Plans**: [To be planned]
+  1. High-performance "Field-to-Field" position swaps are implemented with intuitive gestures (tap-tap).
+  2. A rotation alert banner appears at interval boundaries with Apply/Dismiss options.
+  3. Rotation interval state persists across page refreshes.
+  4. Automation skips alerts if manual substitutions are already staged.
+**Plans**:
+- [ ] 19-01-PLAN.md — Rotation Alert Logic & Persistence
+- [ ] 19-02-PLAN.md — Rotation Alert UI & Performance Polish
 **UI hint**: yes
 
 ## Progress Table
@@ -58,5 +62,5 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 17. Tactical Sub-Queue | 3/3 | Completed | 2026-05-10 |
-| 18. Rotation Engine & Playtime | 2/3 | In Progress | - |
-| 19. Tactical Polish & Alerts | 0/1 | Not started | - |
+| 18. Rotation Engine & Playtime | 3/3 | Completed | 2026-05-12 |
+| 19. Tactical Polish & Alerts | 0/2 | In Progress | - |
