@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { RotationService, RotationConfig } from './rotation.service';
-import { LiveGameStateService } from '../live-game-state.service';
+import { RotationService } from './rotation.service';
+import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { PlaytimeService } from './playtime.service';
 import { LiveClockService } from '../live-clock.service';
 import { signal } from '@angular/core';
@@ -60,7 +60,7 @@ describe('RotationService', () => {
 
   describe('PURE mode', () => {
     it('should suggest least-played bench for most-played active, protecting GK', () => {
-      const config: RotationConfig = { rotationMode: 'PURE' };
+      const config: any = { mode: 'PURE' };
       const suggestions = service.generateSuggestions(config);
 
       // Active candidates sorted by playtime (desc): p2 (600), p3 (300), p4 (300). p1 is GK (slot 0) so excluded.
@@ -74,7 +74,7 @@ describe('RotationService', () => {
 
   describe('POSITION mode', () => {
     it('should suggest swaps within the same position group', () => {
-      const config: RotationConfig = { rotationMode: 'POSITION' };
+      const config: any = { mode: 'POSITION' };
       const suggestions = service.generateSuggestions(config);
 
       // Forward: active p2 (600), bench p5 (0) -> suggestion
@@ -92,7 +92,7 @@ describe('RotationService', () => {
     it('should respect maxFieldMinutes limit', () => {
       // p2 has 600s (10 mins), p3 and p4 have 300s (5 mins)
       // If maxFieldMinutes is 8, only p2 should be suggested for sub out if possible.
-      const config: RotationConfig = { rotationMode: 'CONSTRAINT', maxFieldMinutes: 8 };
+      const config: any = { mode: 'CONSTRAINT', maxFieldMinutes: 8 };
       const suggestions = service.generateSuggestions(config);
 
       expect(suggestions.length).toBe(1);
@@ -106,7 +106,7 @@ describe('RotationService', () => {
         { type: 'SUB', playerIdOut: 'p5', gameTimeMs: 720000, status: 'active' }
       ]);
       
-      const config: RotationConfig = { rotationMode: 'CONSTRAINT', minBenchMinutes: 5 };
+      const config: any = { mode: 'CONSTRAINT', minBenchMinutes: 5 };
       const suggestions = service.generateSuggestions(config);
 
       // p5 excluded from constrained bench. p6 and p7 available.
@@ -117,7 +117,7 @@ describe('RotationService', () => {
     });
 
     it('should fallback to PURE if no active player meets constraints', () => {
-      const config: RotationConfig = { rotationMode: 'CONSTRAINT', maxFieldMinutes: 15 };
+      const config: any = { mode: 'CONSTRAINT', maxFieldMinutes: 15 };
       const suggestions = service.generateSuggestions(config);
 
       // Nobody has played 15 mins (900s). Fallback to PURE logic.
@@ -127,7 +127,7 @@ describe('RotationService', () => {
 
   describe('Goalkeeper Protection', () => {
     it('should never suggest swapping out the player in slot 0', () => {
-      const config: RotationConfig = { rotationMode: 'PURE' };
+      const config: any = { mode: 'PURE' };
       // Give player 1 (GK) the most playtime
       mockPlaytimeService.playtimeMap.set({
         p1: 1000,
@@ -146,4 +146,3 @@ describe('RotationService', () => {
     });
   });
 });
-
