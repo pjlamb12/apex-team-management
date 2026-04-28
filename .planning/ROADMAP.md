@@ -53,8 +53,33 @@
   3. Rotation interval state persists across page refreshes.
   4. Automation skips alerts if manual substitutions are already staged.
 **Plans**:
-- [ ] 19-01-PLAN.md — Rotation Alert Logic & Persistence
-- [ ] 19-02-PLAN.md — Rotation Alert UI & Performance Polish
+- [x] 19-01-PLAN.md — Rotation Alert Logic & Persistence
+- [x] 19-02-PLAN.md — Rotation Alert UI & Performance Polish
+**UI hint**: yes
+
+## Milestone v1.4: Assistant Coach Invites
+
+**Goal**: Allow coaches to securely invite assistant coaches via unique alphanumeric team join codes, laying the foundation for multi-user team management.
+
+## Phases
+
+- [ ] **Phase 20: Team Join Codes & Assistant Onboarding** - Generate alphanumeric codes and implement the join flow for assistants.
+
+## Phase Details
+
+### Phase 20: Team Join Codes & Assistant Onboarding
+**Goal**: Implement the core flow for a head coach to share a code and an assistant coach to use it to join the team.
+**Depends on**: Milestone v1.3
+**Requirements**: SYNC-01, SYNC-02
+**Success Criteria** (what must be TRUE):
+  1. A unique alphanumeric join code is generated for each team.
+  2. The head coach can view the code in the Team Settings/Dashboard.
+  3. A new user or existing coach can enter the code to join the team as an assistant coach.
+  4. Assistant coaches have access to view and manage team data (permissions mapped).
+**Plans**:
+- [ ] 20-01-PLAN.md — Foundation & Data Migration
+- [ ] 20-02-PLAN.md — Backend Logic & RBAC
+- [ ] 20-03-PLAN.md — Frontend Join Flow & UI
 **UI hint**: yes
 
 ## Progress Table
@@ -63,4 +88,5 @@
 |-------|----------------|--------|-----------|
 | 17. Tactical Sub-Queue | 3/3 | Completed | 2026-05-10 |
 | 18. Rotation Engine & Playtime | 3/3 | Completed | 2026-05-12 |
-| 19. Tactical Polish & Alerts | 0/2 | In Progress | - |
+| 19. Tactical Polish & Alerts | 2/2 | Completed | 2026-05-12 |
+| 20. Team Join Codes & Assistant Onboarding | 0/3 | Pending | - |
