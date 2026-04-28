@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColum
 import { SportEntity } from './sport.entity';
 import { SeasonEntity } from './season.entity';
 import { UserEntity } from './user.entity';
+import { TeamMemberEntity } from './team-member.entity';
 
 @Entity('teams')
 export class TeamEntity {
@@ -25,6 +26,12 @@ export class TeamEntity {
   @Column({ name: 'coach_id', nullable: true })
   coachId: string;
 
+  @Column({ name: 'join_code', unique: true, nullable: true })
+  joinCode: string;
+
   @OneToMany(() => SeasonEntity, (season) => season.team)
   seasons: SeasonEntity[];
+
+  @OneToMany(() => TeamMemberEntity, (member) => member.team)
+  members: TeamMemberEntity[];
 }
