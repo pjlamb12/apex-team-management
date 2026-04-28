@@ -1,8 +1,6 @@
 import { Component, inject, signal, effect, Input } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import {
   IonContent,
   IonCard,
@@ -24,12 +22,14 @@ import {
   IonLabel,
   IonList,
   IonListHeader,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { calendarOutline, chevronForwardOutline } from 'ionicons/icons';
+import { calendarOutline, chevronForwardOutline, refreshOutline, trashOutline, copyOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { CommonModule } from '@angular/common';
+import { TeamService } from '../../../../../libs/client/data-access/team/src/lib/team.service';
 
 interface Sport {
   id: string;
@@ -40,6 +40,8 @@ interface Team {
   id: string;
   name: string;
   sport: Sport;
+  role?: 'HEAD_COACH' | 'ASSISTANT';
+  joinCode?: string;
 }
 
 @Component({
@@ -84,9 +86,10 @@ export class EditTeam {
     return this._teamId() ?? '';
   }
 
-  private readonly http = inject(HttpClient);
+  private readonly teamService = inject(TeamService);
   private readonly config = inject(RuntimeConfigLoaderService);
   private readonly router = inject(Router);
+  private readonly alertCtrl = inject(AlertController);
   protected readonly fb = inject(FormBuilder);
 
   protected team = signal<Team | null>(null);
@@ -104,7 +107,13 @@ export class EditTeam {
   }
 
   constructor() {
-    addIcons({ calendarOutline, chevronForwardOutline });
+    addIcons({
+      calendarOutline,
+      chevronForwardOutline,
+      refreshOutline,
+      trashOutline,
+      copyOutline,
+    });
 
     // Load team whenever id changes
     effect(() => {
@@ -119,7 +128,10 @@ export class EditTeam {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const team = await firstValueFrom(this.http.get<Team>(`${this.apiUrl}/teams/${id}`));
+      // We still use direct http for specific team fetch since it's not in the basic TeamService yet
+      // but let's check if TeamService has it. It doesn't.
+      // Actually, let's add it to TeamService for consistency.
+      const team = await this.teamService.getTeam(id);
       this.team.set(team);
       this.form.patchValue({
         name: team.name,
@@ -128,6 +140,61 @@ export class EditTeam {
       this.errorMessage.set('Failed to load team. Please try again.');
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  protected async regenerateCode(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Regenerate Join Code?',
+      message: 'This will invalidate the current code. Anyone with the old code will no longer be able to join.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Regenerate',
+          handler: async () => {
+            try {
+              const { joinCode } = await this.teamService.regenerateCode(this.teamId);
+              this.team.update((t) => (t ? { ...t, joinCode } : null));
+            } catch {
+              this.errorMessage.set('Failed to regenerate code.');
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  protected async deleteTeam(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Team?',
+      message: 'This action is permanent and cannot be undone.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Delete',
+          cssClass: 'alert-button-delete',
+          handler: async () => {
+            this.isSaving.set(true);
+            try {
+              await this.teamService.deleteTeam(this.teamId);
+              await this.router.navigate(['/teams']);
+            } catch {
+              this.errorMessage.set('Failed to delete team.');
+            } finally {
+              this.isSaving.set(false);
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  protected async copyCode(): Promise<void> {
+    const code = this.team()?.joinCode;
+    if (code) {
+      await navigator.clipboard.writeText(code);
     }
   }
 
@@ -145,7 +212,7 @@ export class EditTeam {
     try {
       const { name } = this.form.getRawValue();
 
-      await firstValueFrom(this.http.patch(`${this.apiUrl}/teams/${teamId}`, { name }));
+      await this.teamService.updateTeam(teamId, { name });
       await this.router.navigate(['/teams', teamId, 'roster']);
     } catch {
       this.errorMessage.set('Failed to update team. Please try again.');

@@ -57,6 +57,34 @@
               </ion-item>
             </ion-list>
 
+            <ion-list class="mt-4">
+              <ion-list-header>
+                <ion-label>Join Code</ion-label>
+              </ion-list-header>
+
+              <ion-item>
+                <ion-label>
+                  <p class="text-xs text-ap-muted uppercase tracking-wide mb-1">Current Code</p>
+                  <h2 class="text-2xl font-mono font-bold tracking-widest">{{ team()?.joinCode }}</h2>
+                </ion-label>
+                <ion-buttons slot="end">
+                  <ion-button (click)="copyCode()" fill="clear" color="primary">
+                    <ion-icon name="copy-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  @if (team()?.role === 'HEAD_COACH') {
+                    <ion-button (click)="regenerateCode()" fill="clear" color="medium">
+                      <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+                    </ion-button>
+                  }
+                </ion-buttons>
+              </ion-item>
+              <div class="px-4 py-2">
+                <p class="text-xs text-ap-muted italic">
+                  Share this code with assistant coaches so they can join your team.
+                </p>
+              </div>
+            </ion-list>
+
             @if (errorMessage()) {
               <ion-text color="danger">
                 <p class="text-sm mt-2">{{ errorMessage() }}</p>
@@ -66,11 +94,26 @@
             <ion-button
               type="submit"
               expand="block"
-              class="mt-4"
+              class="mt-6"
               [disabled]="isSaving()"
             >
               {{ isSaving() ? 'Saving...' : 'Save Changes' }}
             </ion-button>
+
+            @if (team()?.role === 'HEAD_COACH') {
+              <ion-button
+                type="button"
+                expand="block"
+                fill="clear"
+                color="danger"
+                class="mt-2"
+                [disabled]="isSaving()"
+                (click)="deleteTeam()"
+              >
+                <ion-icon slot="start" name="trash-outline"></ion-icon>
+                Delete Team
+              </ion-button>
+            }
           </form>
         }
       </ion-card-content>

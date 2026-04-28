@@ -20,6 +20,18 @@ export class TeamService {
     );
   }
 
+  async getTeam(id: string): Promise<any> {
+    return firstValueFrom(
+      this.http.get<any>(`${this.apiUrl}/teams/${id}`)
+    );
+  }
+
+  async updateTeam(id: string, data: { name: string }): Promise<any> {
+    return firstValueFrom(
+      this.http.patch<any>(`${this.apiUrl}/teams/${id}`, data)
+    );
+  }
+
   async joinTeam(code: string): Promise<any> {
     return firstValueFrom(
       this.http.post<any>(`${this.apiUrl}/teams/join`, { code })
