@@ -29,7 +29,7 @@ export class TeamRoleGuard implements CanActivate {
     }
 
     // Try to find teamId in params, then query, then body
-    const teamId = request.params.teamId || request.query.teamId || request.body.teamId;
+    const teamId = request.params.teamId || request.params.id || request.query.teamId || request.body.teamId;
 
     if (!teamId) {
       // If we need a role but don't have a teamId, we can't verify

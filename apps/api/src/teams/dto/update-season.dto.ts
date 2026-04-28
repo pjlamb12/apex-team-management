@@ -43,4 +43,9 @@ export class UpdateSeasonDto {
   @Min(1)
   @IsOptional()
   periodLengthMinutes?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  playersOnField?: number;
 }

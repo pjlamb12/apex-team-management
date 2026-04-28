@@ -6,10 +6,11 @@ import { TeamsService } from './teams.service';
 import { TeamsJoinCodeService } from './teams.join-code.service';
 import { SeasonsService } from './seasons.service';
 import { TeamEntity } from '../entities/team.entity';
+import { TeamMemberEntity } from '../entities/team-member.entity';
 import { SeasonEntity } from '../entities/season.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TeamEntity, SeasonEntity])],
+  imports: [TypeOrmModule.forFeature([TeamEntity, TeamMemberEntity, SeasonEntity])],
   controllers: [TeamsController, SeasonsController],
   providers: [TeamsService, TeamsJoinCodeService, SeasonsService],
   exports: [SeasonsService],
