@@ -144,6 +144,9 @@ export class EditTeam {
   }
 
   protected async regenerateCode(): Promise<void> {
+    const teamId = this._teamId();
+    if (!teamId) return;
+
     const alert = await this.alertCtrl.create({
       header: 'Regenerate Join Code?',
       message: 'This will invalidate the current code. Anyone with the old code will no longer be able to join.',
@@ -153,7 +156,7 @@ export class EditTeam {
           text: 'Regenerate',
           handler: async () => {
             try {
-              const { joinCode } = await this.teamService.regenerateCode(this.teamId);
+              const { joinCode } = await this.teamService.regenerateCode(teamId);
               this.team.update((t) => (t ? { ...t, joinCode } : null));
             } catch {
               this.errorMessage.set('Failed to regenerate code.');
@@ -166,6 +169,9 @@ export class EditTeam {
   }
 
   protected async deleteTeam(): Promise<void> {
+    const teamId = this._teamId();
+    if (!teamId) return;
+
     const alert = await this.alertCtrl.create({
       header: 'Delete Team?',
       message: 'This action is permanent and cannot be undone.',
@@ -177,7 +183,7 @@ export class EditTeam {
           handler: async () => {
             this.isSaving.set(true);
             try {
-              await this.teamService.deleteTeam(this.teamId);
+              await this.teamService.deleteTeam(teamId);
               await this.router.navigate(['/teams']);
             } catch {
               this.errorMessage.set('Failed to delete team.');
@@ -210,7 +216,8 @@ export class EditTeam {
     this.errorMessage.set(null);
     this.successMessage.set(null);
     try {
-      const { name } = this.form.getRawValue();
+      const { name } = this.form.value;
+      if (!name) return;
 
       await this.teamService.updateTeam(teamId, { name });
       await this.router.navigate(['/teams', teamId, 'roster']);
