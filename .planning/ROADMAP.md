@@ -78,8 +78,10 @@
   4. Assistant coaches have access to view and manage team data (permissions mapped).
 **Plans**:
 - [ ] 20-01-PLAN.md — Foundation & Data Migration
-- [ ] 20-02-PLAN.md — Backend Logic & RBAC
-- [ ] 20-03-PLAN.md — Frontend Join Flow & UI
+- [ ] 20-02-PLAN.md — Membership Logic & RBAC
+- [ ] 20-03-PLAN.md — Join Code Logic & Service Updates
+- [ ] 20-04-PLAN.md — Frontend Join Flow & UI
+- [ ] 20-05-PLAN.md — Frontend Management & RBAC UI
 **UI hint**: yes
 
 ## Progress Table
@@ -89,4 +91,4 @@
 | 17. Tactical Sub-Queue | 3/3 | Completed | 2026-05-10 |
 | 18. Rotation Engine & Playtime | 3/3 | Completed | 2026-05-12 |
 | 19. Tactical Polish & Alerts | 2/2 | Completed | 2026-05-12 |
-| 20. Team Join Codes & Assistant Onboarding | 0/3 | Pending | - |
+| 20. Team Join Codes & Assistant Onboarding | 0/5 | Pending | - |
