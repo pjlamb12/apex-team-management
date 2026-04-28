@@ -1,22 +1,24 @@
 import { Component, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader } from '@ionic/angular/standalone';
+import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline } from 'ionicons/icons';
 import { LiveGameStateService } from '../live-game-state.service';
 
 @Component({
   selector: 'app-event-log',
-  imports: [CommonModule, IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader],
+  imports: [IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader],
   templateUrl: './event-log.html',
   styleUrls: ['./event-log.scss']
 })
 export class EventLogViewComponent {
   protected stateService = inject(LiveGameStateService);
+  private toastController = inject(ToastController);
 
   protected events = computed(() => {
-    // Reverse events to show newest first
-    return [...this.stateService.events()].reverse();
+    // Filter out deleted events and reverse to show newest first
+    return this.stateService.events()
+      .filter(e => e.status !== 'deleted')
+      .reverse();
   });
 
   constructor() {
@@ -60,7 +62,19 @@ export class EventLogViewComponent {
     return entry ? `${entry.player.firstName} ${entry.player.lastName}` : 'Unknown Player';
   }
 
-  protected undo(): void {
-    this.stateService.undo();
+  protected async undo(): Promise<void> {
+    const activeEvents = this.stateService.events().filter(e => e.status !== 'deleted');
+    if (activeEvents.length > 0) {
+      const lastEvent = activeEvents[activeEvents.length - 1];
+      this.stateService.undo();
+      
+      const toast = await this.toastController.create({
+        message: `Undone: ${lastEvent.type.replace('_', ' ')}`,
+        duration: 2000,
+        position: 'bottom',
+        color: 'medium'
+      });
+      await toast.present();
+    }
   }
 }

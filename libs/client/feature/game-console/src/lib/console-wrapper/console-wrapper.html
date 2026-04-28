@@ -31,22 +31,24 @@
     </ion-buttons>
   </ion-toolbar>
 
-  <ion-toolbar *ngIf="rotationAlertVisible()" color="warning" class="rotation-alert-toolbar">
-    <div class="flex items-center justify-between px-4 py-1">
-      <div class="flex items-center gap-2">
-        <ion-icon name="alert-circle-outline"></ion-icon>
-        <span class="text-sm font-bold">Rotation Interval Reached</span>
+  @if (rotationAlertVisible()) {
+    <ion-toolbar color="warning" class="rotation-alert-toolbar">
+      <div class="flex items-center justify-between px-4 py-1">
+        <div class="flex items-center gap-2">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <span class="text-sm font-bold">Rotation Interval Reached</span>
+        </div>
+        <div class="flex gap-2">
+          <ion-button size="small" fill="solid" color="light" (click)="handleApplySuggestions()">
+            Apply
+          </ion-button>
+          <ion-button size="small" fill="outline" color="light" (click)="handleDismissAlert()">
+            Dismiss
+          </ion-button>
+        </div>
       </div>
-      <div class="flex gap-2">
-        <ion-button size="small" fill="solid" color="light" (click)="handleApplySuggestions()">
-          Apply
-        </ion-button>
-        <ion-button size="small" fill="outline" color="light" (click)="handleDismissAlert()">
-          Dismiss
-        </ion-button>
-      </div>
-    </div>
-  </ion-toolbar>
+    </ion-toolbar>
+  }
 </ion-header>
 
 <ion-popover trigger="rotation-settings-button" side="bottom" alignment="end">
@@ -135,14 +137,17 @@
     <!-- Main Game Area: pitch left, bench + sub-queue right on desktop; stacked on mobile -->
     <div class="flex flex-col sm:flex-row">
       <!-- Pitch View -->
-      <div class="sm:flex-[2] flex min-h-[320px] sm:min-h-[600px]">
+      <div class="sm:flex-[2] flex min-h-[370px] sm:min-h-[650px]">
         <app-soccer-pitch-view
           class="w-full"
           [players]="stateService.activePlayers()"
           [initialLineup]="stateService.initialLineup()"
           [stagedSubs]="stateService.stagedSubs()"
+          [playersOnField]="stateService.playersOnField()"
           [selectedPlayerId]="selectedPlayerId()"
-          (playerSelected)="handlePlayerSelection($event)">
+          (playerSelected)="handlePlayerSelection($event)"
+          (emptySlotSelected)="handleEmptySlotSelection($event)"
+          (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
         </app-soccer-pitch-view>
       </div>
 

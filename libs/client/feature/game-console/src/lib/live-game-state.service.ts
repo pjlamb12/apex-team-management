@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Player } from '@apex-team/shared/util/models';
+import { Player, LineupEntry, StagedSub } from '@apex-team/shared/util/models';
 
 export interface GameEvent {
   id?: string;
@@ -21,19 +21,6 @@ export interface GameEvent {
   [key: string]: any;
 }
 
-export interface StagedSub {
-  inPlayerId: string;
-  outPlayerId: string;
-}
-
-export interface LineupEntry {
-  playerId: string;
-  player: Player;
-  positionName: string | null;
-  status: 'starting' | 'bench';
-  slotIndex: number | null;
-}
-
 export interface RotationConfig {
   enabled: boolean;
   intervalMinutes: number;
@@ -50,6 +37,7 @@ export class LiveGameStateService {
   private _eventId = signal<string | null>(null);
   private _teamId = signal<string | null>(null);
   private _initialLineup = signal<LineupEntry[]>([]);
+  private _playersOnField = signal<number>(11);
   private _currentPeriod = signal<number>(1);
   private _status = signal<'scheduled' | 'in_progress' | 'completed'>('in_progress');
   private _stagedSubs = signal<StagedSub[]>([]);
@@ -64,6 +52,7 @@ export class LiveGameStateService {
   public readonly eventId = this._eventId.asReadonly();
   public readonly teamId = this._teamId.asReadonly();
   public readonly initialLineup = this._initialLineup.asReadonly();
+  public readonly playersOnField = this._playersOnField.asReadonly();
   public readonly currentPeriod = this._currentPeriod.asReadonly();
   public readonly status = this._status.asReadonly();
   public readonly stagedSubs = this._stagedSubs.asReadonly();
@@ -135,10 +124,11 @@ export class LiveGameStateService {
     return { team, opponent };
   });
 
-  public initialize(eventId: string, lineup: LineupEntry[] = [], teamId?: string): void {
+  public initialize(eventId: string, lineup: LineupEntry[] = [], teamId?: string, playersOnField?: number): void {
     this._eventId.set(eventId);
     if (teamId) this._teamId.set(teamId);
     this._initialLineup.set(lineup);
+    if (playersOnField) this._playersOnField.set(playersOnField);
 
     const storedEvents = localStorage.getItem(this.getStorageKey());
     if (storedEvents) {
@@ -310,6 +300,56 @@ export class LiveGameStateService {
         e.timestamp === localTimestamp ? { ...e, synced: true } : e
       )
     );
+    this.save();
+  }
+
+  public handleRemoteEvent(event: any): void {
+    this._events.update((prev) => {
+      // Check if event already exists (either by id or local timestamp matching payload)
+      const existingIndex = prev.findIndex(e => e.id === event.id);
+      
+      if (existingIndex > -1) {
+        // Update existing event
+        const newEvents = [...prev];
+        newEvents[existingIndex] = {
+          ...newEvents[existingIndex],
+          ...event,
+          type: event.eventType || newEvents[existingIndex].type, // Backend uses eventType
+          synced: true,
+          status: 'active'
+        };
+        return newEvents;
+      } else {
+        // Add as new event
+        return [
+          ...prev,
+          {
+            ...event,
+            type: event.eventType,
+            timestamp: Date.now(), // Local arrival time
+            synced: true,
+            status: 'active'
+          }
+        ];
+      }
+    });
+    this.save();
+  }
+
+  public handleRemoteDeletion(data: { id: string }): void {
+    this._events.update((prev) =>
+      prev.filter(e => e.id !== data.id)
+    );
+    this.save();
+  }
+
+  public handleRemoteStatusUpdate(event: any): void {
+    if (event.status) {
+      this._status.set(event.status);
+    }
+    if (event.currentPeriod) {
+      this._currentPeriod.set(event.currentPeriod);
+    }
     this.save();
   }
 

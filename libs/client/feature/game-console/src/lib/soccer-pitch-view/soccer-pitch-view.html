@@ -1,10 +1,11 @@
-<div class="pitch-container relative w-full h-full bg-green-700 overflow-hidden border-4 border-white rounded-lg shadow-inner">
+<div class="pitch-container relative w-full h-full bg-green-700 overflow-hidden border-4 border-white rounded-lg shadow-inner"
+     (click)="deselect()">
   <!-- Pitch Markings -->
   <div class="absolute inset-0 pointer-events-none opacity-40">
     <!-- Half-way line -->
     <div class="absolute top-1/2 left-0 right-0 h-1 bg-white"></div>
     <!-- Center circle -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 aspect-square border-4 border-white rounded-full"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-4 border-white rounded-full"></div>
     <!-- Center spot -->
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full"></div>
     
@@ -19,74 +20,91 @@
     <div class="absolute bottom-0 left-[35%] right-[35%] h-[5%] border-x-4 border-t-4 border-white"></div>
   </div>
 
-  <!-- Players -->
-  <div *ngFor="let player of positionedPlayers(); trackBy: trackBySlot" 
-       class="player-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 transition-all duration-500 ease-in-out"
-       [class.selected]="selectedPlayerId() === player.id"
-       [class.opacity-50]="stagedOutIds().has(player.id)"
-       [class.grayscale]="stagedOutIds().has(player.id)"
-       [style.left.%]="player.x"
-       [style.top.%]="player.y"
-       (click)="selectPlayer(player, $event)">
-    
-    <div class="flex flex-col items-center">
-      <div 
-        class="player-circle flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-lg transition-all duration-200"
-        [class.selected-circle]="selectedPlayerId() === player.id"
-        [class.bg-ap-primary]="selectedPlayerId() !== player.id"
-        [class.bg-yellow-400]="selectedPlayerId() === player.id"
-        [class.border-white]="selectedPlayerId() !== player.id"
-        [class.border-ap-bg]="selectedPlayerId() === player.id"
-      >
-        <span class="text-white font-bold text-sm" [class.text-ap-bg]="selectedPlayerId() === player.id">
-          {{ player.jerseyNumber || '?' }}
-        </span>
+  <!-- Empty Slots (Shown only when a player is selected) -->
+  @if (selectedPlayerId()) {
+    @for (slot of emptySlots(); track slot.slotIndex) {
+      <div class="empty-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 transition-all duration-300"
+           [style.left.%]="slot.x"
+           [style.top.%]="slot.y"
+           (click)="$event.stopPropagation(); selectEmptySlot(slot.slotIndex)">
+        <div class="w-10 h-10 rounded-full border-2 border-dashed border-white/50 flex items-center justify-center bg-white/10 hover:bg-white/30 transition-colors">
+          <ion-icon name="add-outline" class="text-white text-xl"></ion-icon>
+        </div>
       </div>
-      <span class="player-name text-[10px] font-bold text-ap-text bg-ap-bg/85 px-2 py-0.5 rounded shadow-md mt-1 whitespace-nowrap border border-white/10">
-        {{ player.lastName }}
-      </span>
-      <span class="text-[9px] font-mono text-white bg-black/50 px-1.5 rounded-sm mt-0.5 border border-white/5">
-        {{ formatPlaytime(player.id) }}
-      </span>
+    }
+  }
+
+  <!-- Players -->
+  @for (player of positionedPlayers(); track player.slotIndex ?? player.id) {
+    <div class="player-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-20 transition-all duration-500 ease-in-out"
+         [class.selected]="selectedPlayerId() === player.id"
+         [class.opacity-50]="stagedOutIds().has(player.id)"
+         [class.grayscale]="stagedOutIds().has(player.id)"
+         [style.left.%]="player.x"
+         [style.top.%]="player.y"
+         (click)="$event.stopPropagation(); selectPlayer(player, $event)">
       
-      <!-- OUT Badge -->
-      <div *ngIf="stagedOutIds().has(player.id)" 
-           class="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] font-black rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-md z-30">
-        OUT
+      <div class="flex flex-col items-center">
+        <div 
+          class="player-circle flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-lg transition-all duration-200"
+          [class.selected-circle]="selectedPlayerId() === player.id"
+          [class.bg-ap-primary]="selectedPlayerId() !== player.id"
+          [class.bg-yellow-400]="selectedPlayerId() === player.id"
+          [class.border-white]="selectedPlayerId() !== player.id"
+          [class.border-ap-bg]="selectedPlayerId() === player.id"
+        >
+          <span class="text-white font-bold text-sm" [class.text-ap-bg]="selectedPlayerId() === player.id">
+            {{ player.jerseyNumber || '?' }}
+          </span>
+        </div>
+        <span class="player-name text-[10px] font-bold text-ap-text bg-ap-bg/85 px-2 py-0.5 rounded shadow-md mt-1 whitespace-nowrap border border-white/10">
+          {{ player.lastName }}
+        </span>
+        <span class="text-[9px] font-mono text-white bg-black/50 px-1.5 rounded-sm mt-0.5 border border-white/5">
+          {{ formatPlaytime(player.id) }}
+        </span>
+        
+        <!-- OUT Badge -->
+        @if (stagedOutIds().has(player.id)) {
+          <div class="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] font-black rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-md z-30">
+            OUT
+          </div>
+        }
       </div>
     </div>
-  </div>
+  }
 
   <!-- Staged In Players (Overlays) -->
-  <div *ngFor="let player of stagedInPlayers(); trackBy: trackBySlot" 
-       class="player-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-20 transition-all duration-500 ease-in-out"
-       [class.selected]="selectedPlayerId() === player.id"
-       [style.left.%]="player.x"
-       [style.top.%]="player.y"
-       (click)="selectPlayer(player, $event)">
-    
-    <div class="flex flex-col items-center">
-      <div 
-        class="player-circle flex items-center justify-center w-10 h-10 rounded-full border-2 border-dashed border-white bg-green-500 shadow-xl animate-pulse"
-        [class.selected-circle]="selectedPlayerId() === player.id"
-        [class.border-yellow-400]="selectedPlayerId() === player.id"
-        [class.border-solid]="selectedPlayerId() === player.id"
-      >
-        <span class="text-white font-bold text-sm">
-          {{ player.jerseyNumber || '?' }}
-        </span>
-      </div>
-      <span class="player-name text-[10px] font-bold text-white bg-green-700 px-2 py-0.5 rounded shadow-md mt-1 whitespace-nowrap border border-green-400">
-        {{ player.lastName }}
-      </span>
-      <span class="text-[9px] font-mono text-white bg-black/50 px-1.5 rounded-sm mt-0.5 border border-white/5">
-        {{ formatPlaytime(player.id) }}
-      </span>
+  @for (player of stagedInPlayers(); track player.slotIndex ?? player.id) {
+    <div class="player-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-30 transition-all duration-500 ease-in-out"
+         [class.selected]="selectedPlayerId() === player.id"
+         [style.left.%]="player.x"
+         [style.top.%]="player.y"
+         (click)="$event.stopPropagation(); selectPlayer(player, $event)">
       
-      <!-- IN Badge -->
-      <div class="absolute -top-1 -right-1 bg-green-500 text-white text-[8px] font-black rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-md z-30">
-        IN
+      <div class="flex flex-col items-center">
+        <div 
+          class="player-circle flex items-center justify-center w-10 h-10 rounded-full border-2 border-dashed border-white bg-green-500 shadow-xl animate-pulse"
+          [class.selected-circle]="selectedPlayerId() === player.id"
+          [class.border-yellow-400]="selectedPlayerId() === player.id"
+          [class.border-solid]="selectedPlayerId() === player.id"
+        >
+          <span class="text-white font-bold text-sm">
+            {{ player.jerseyNumber || '?' }}
+          </span>
+        </div>
+        <span class="player-name text-[10px] font-bold text-white bg-green-700 px-2 py-0.5 rounded shadow-md mt-1 whitespace-nowrap border border-green-400">
+          {{ player.lastName }}
+        </span>
+        <span class="text-[9px] font-mono text-white bg-black/50 px-1.5 rounded-sm mt-0.5 border border-white/5">
+          {{ formatPlaytime(player.id) }}
+        </span>
+        
+        <!-- IN Badge -->
+        <div class="absolute -top-1 -right-1 bg-green-500 text-white text-[8px] font-black rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-md z-30">
+          IN
+        </div>
       </div>
     </div>
-  </div>
+  }
 </div>

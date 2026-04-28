@@ -75,6 +75,11 @@ ion-card-title {
 
 // === Global UX ===
 
+// Left padding for the toolbar title (Ionic MD default strips it)
+ion-toolbar ion-title {
+  padding-inline-start: 16px;
+}
+
 // Smooth theme switch — prevents jarring flash when toggling
 html {
   transition: background-color 200ms ease, color 200ms ease;
@@ -99,6 +104,12 @@ html {
 // The value matches Ionic's MD toolbar height (56px).
 app-shell ion-content {
   --padding-top: 56px;
+}
+
+// Game console has its own ion-header so Ionic auto-offsets by the header height.
+// Cancel the shell padding-top so no empty gap appears between the score bar and timer.
+app-console-wrapper ion-content {
+  --padding-top: 0;
 }
 
 // Dark mode card elevation — subtle accent-tinted shadow makes cards float above the deep base
@@ -172,6 +183,14 @@ html:not(.dark) ion-modal {
 // Wheel picker columns
 .picker-col {
   color: var(--ap-text) !important;
+}
+
+// Join code input — apply mono/tracking only to the native input, not the floating label
+ion-input.join-code-input::part(native) {
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.2em;
+  font-size: 1.125rem;
+  text-transform: uppercase;
 }
 
 // Datetime button styling

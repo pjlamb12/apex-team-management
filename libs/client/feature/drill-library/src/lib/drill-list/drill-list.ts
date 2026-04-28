@@ -20,10 +20,12 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, searchOutline, filterOutline } from 'ionicons/icons';
 import { DrillService } from '@apex-team/client/data-access/drill';
+import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 
 @Component({
   selector: 'app-drill-list',
@@ -49,6 +51,8 @@ import { DrillService } from '@apex-team/client/data-access/drill';
     IonGrid,
     IonRow,
     IonCol,
+    IonButtons,
+    ThemeToggle,
   ],
   templateUrl: './drill-list.html',
   styleUrl: './drill-list.scss',

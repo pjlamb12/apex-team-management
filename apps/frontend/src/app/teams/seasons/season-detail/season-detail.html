@@ -156,6 +156,17 @@
                   ></ion-input>
                 </ion-item>
               </ngx-control-errors-display>
+
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-input
+                    label="Number of Players on Field"
+                    labelPlacement="floating"
+                    formControlName="playersOnField"
+                    type="number"
+                  ></ion-input>
+                </ion-item>
+              </ngx-control-errors-display>
             </ion-list>
 
             @if (form.get('isActive')?.value) {

@@ -107,6 +107,7 @@ export class EditEvent {
     goalsAgainst: [null as number | null, [Validators.min(0)]],
     periodCount: [null as number | null, [Validators.min(1)]],
     periodLengthMinutes: [null as number | null, [Validators.min(1)]],
+    playersOnField: [null as number | null, [Validators.min(1)]],
   });
 
   protected async loadEvent(teamId: string, eventId: string): Promise<void> {
@@ -132,6 +133,7 @@ export class EditEvent {
         goalsAgainst: data.goalsAgainst ?? null,
         periodCount: data.periodCount ?? null,
         periodLengthMinutes: data.periodLengthMinutes ?? null,
+        playersOnField: data.playersOnField ?? null,
       });
       
       if (data.type === 'practice') {
@@ -160,7 +162,7 @@ export class EditEvent {
     this.isSaving.set(true);
     this.errorMessage.set(null);
     try {
-      const { opponent, scheduledAt, location, uniformColor, durationMinutes, notes, goalsFor, goalsAgainst, periodCount, periodLengthMinutes } = this.form.getRawValue();
+      const { opponent, scheduledAt, location, uniformColor, durationMinutes, notes, goalsFor, goalsAgainst, periodCount, periodLengthMinutes, playersOnField } = this.form.getRawValue();
       await firstValueFrom(
         this.eventsService.updateEvent(teamId, eventId, {
           opponent: opponent || undefined,
@@ -173,6 +175,7 @@ export class EditEvent {
           goalsAgainst: goalsAgainst,
           periodCount: periodCount ? Number(periodCount) : undefined,
           periodLengthMinutes: periodLengthMinutes ? Number(periodLengthMinutes) : undefined,
+          playersOnField: playersOnField ? Number(playersOnField) : undefined,
         })
       );
       // Navigate back to schedule

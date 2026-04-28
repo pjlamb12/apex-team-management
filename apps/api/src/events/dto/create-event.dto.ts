@@ -58,4 +58,9 @@ export class CreateEventDto {
   @Min(1)
   @IsOptional()
   currentPeriod?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  playersOnField?: number;
 }

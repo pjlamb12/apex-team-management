@@ -59,6 +59,11 @@ export class UpdateEventDto {
   @IsOptional()
   currentPeriod?: number;
 
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  playersOnField?: number;
+
   @IsString()
   @IsOptional()
   status?: 'scheduled' | 'in_progress' | 'completed';

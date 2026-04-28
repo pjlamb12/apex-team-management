@@ -128,6 +128,7 @@ export class SeasonDetail {
     defaultAwayColor: [''],
     periodCount: [2, [Validators.required, Validators.min(1)]],
     periodLengthMinutes: [45, [Validators.required, Validators.min(1)]],
+    playersOnField: [11, [Validators.required, Validators.min(1)]],
   });
 
   constructor() {
@@ -157,6 +158,7 @@ export class SeasonDetail {
           defaultAwayColor: '',
           periodCount: 2,
           periodLengthMinutes: 45,
+          playersOnField: 11,
         });
       }
     });
@@ -178,6 +180,7 @@ export class SeasonDetail {
         defaultAwayColor: season.defaultAwayColor || '',
         periodCount: season.periodCount || 2,
         periodLengthMinutes: season.periodLengthMinutes || 45,
+        playersOnField: season.playersOnField || 11,
       });
     } catch {
       this.errorMessage.set('Failed to load season. Please try again.');

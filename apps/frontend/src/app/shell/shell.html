@@ -1,20 +1,3 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Apex Team</ion-title>
-    <ion-buttons slot="end">
-      <ion-button
-        (click)="themeService.toggle()"
-        [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-      >
-        <ion-icon
-          [name]="themeService.isDark() ? 'sunny-outline' : 'moon-outline'"
-          slot="icon-only"
-        />
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
 <ion-tabs>
   <ion-tab-bar slot="bottom">
     <ion-tab-button tab="teams" href="/teams">

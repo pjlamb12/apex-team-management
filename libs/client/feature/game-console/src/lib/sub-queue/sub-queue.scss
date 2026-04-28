@@ -5,31 +5,49 @@
 
 .sub-queue-panel {
   user-select: none;
+  padding-bottom: var(--ion-safe-area-bottom, 0px);
 }
 
 .sub-card {
   transition: all 0.2s ease-out;
+  flex-shrink: 0;
+  height: 80px; // Significantly taller for easier scrolling
+  min-width: 180px; // Ensure cards have a substantial footprint
   
   &:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--ap-surface-raised);
+    border-color: var(--ap-accent);
     transform: translateY(-1px);
   }
 }
 
 .apply-button {
-  --border-radius: 8px;
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  height: 44px;
-  font-size: 0.9rem;
-  letter-spacing: 0.025em;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  height: 54px; // Taller button
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
-// Hide scrollbar but keep functionality
-.overflow-x-auto {
-  scrollbar-width: none;
+// Ensure vertical scroll is easy to use
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  
   &::-webkit-scrollbar {
-    display: none;
+    width: 4px; // Thin scrollbar for vertical
+    display: block; 
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--ap-surface);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--ap-border);
+    border-radius: 2px;
   }
 }

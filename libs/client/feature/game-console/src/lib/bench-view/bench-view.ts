@@ -1,12 +1,11 @@
 import { Component, input, output, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Player } from '@apex-team/shared/util/models';
 import { IonCard, IonCardHeader } from '@ionic/angular/standalone';
 import { PlaytimeService } from '../rotation-engine/playtime.service';
 
 @Component({
   selector: 'app-bench-view',
-  imports: [CommonModule, IonCard, IonCardHeader],
+  imports: [IonCard, IonCardHeader],
   templateUrl: './bench-view.html',
   styleUrls: ['./bench-view.scss'],
 })

@@ -85,6 +85,7 @@ export class CreateEvent {
     isHomeGame: [true],
     periodCount: [2, [Validators.min(1)]],
     periodLengthMinutes: [45, [Validators.min(1)]],
+    playersOnField: [11, [Validators.min(1)]],
   });
 
   constructor() {
@@ -119,6 +120,7 @@ export class CreateEvent {
     const patches: any = {
       periodCount: season.periodCount || 2,
       periodLengthMinutes: season.periodLengthMinutes || 45,
+      playersOnField: season.playersOnField || 11,
     };
 
     if (isHome) {
@@ -146,7 +148,7 @@ export class CreateEvent {
     this.isSaving.set(true);
     this.errorMessage.set(null);
     try {
-      const { opponent, scheduledAt, location, uniformColor, isHomeGame, periodCount, periodLengthMinutes } =
+      const { opponent, scheduledAt, location, uniformColor, isHomeGame, periodCount, periodLengthMinutes, playersOnField } =
         this.form.getRawValue();
       const event = await firstValueFrom(
         this.eventsService.createEvent(teamId, {
@@ -158,6 +160,7 @@ export class CreateEvent {
           isHomeGame: isHomeGame ?? true,
           periodCount: periodCount ? Number(periodCount) : undefined,
           periodLengthMinutes: periodLengthMinutes ? Number(periodLengthMinutes) : undefined,
+          playersOnField: playersOnField ? Number(playersOnField) : undefined,
         })
       );
       // Navigate back to schedule

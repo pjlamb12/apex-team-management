@@ -1,7 +1,8 @@
 import { Component, input, output, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Player } from '@apex-team/shared/util/models';
-import { StagedSub, LineupEntry } from '../live-game-state.service';
+import { Player, StagedSub, LineupEntry } from '@apex-team/shared/util/models';
+import { IonIcon } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { addOutline } from 'ionicons/icons';
 import { PlaytimeService } from '../rotation-engine/playtime.service';
 
 export interface PositionedPlayer extends Player {
@@ -13,7 +14,7 @@ export interface PositionedPlayer extends Player {
 
 @Component({
   selector: 'app-soccer-pitch-view',
-  imports: [CommonModule],
+  imports: [IonIcon],
   templateUrl: './soccer-pitch-view.html',
   styleUrls: ['./soccer-pitch-view.scss'],
 })
@@ -23,23 +24,42 @@ export class SoccerPitchViewComponent {
   players = input.required<Player[]>();
   initialLineup = input<LineupEntry[]>([]);
   stagedSubs = input<StagedSub[]>([]);
+  playersOnField = input<number>(11);
   selectedPlayerId = input<string | null>(null);
   playerSelected = output<{ player: Player; event: Event }>();
+  emptySlotSelected = output<number>();
+  backgroundClicked = output<void>();
 
-  // Fixed coordinate map for slots 0-10 (standard 4-4-2)
-  private readonly SLOT_COORDINATES: Record<number, { x: number; y: number }> = {
-    0: { x: 50, y: 90 }, // GK
-    1: { x: 20, y: 70 }, // LB
-    2: { x: 40, y: 70 }, // LCB
-    3: { x: 60, y: 70 }, // RCB
-    4: { x: 80, y: 70 }, // RB
-    5: { x: 20, y: 45 }, // LM
-    6: { x: 40, y: 45 }, // LCM
-    7: { x: 60, y: 45 }, // RCM
-    8: { x: 80, y: 45 }, // RM
-    9: { x: 35, y: 20 }, // LF
-    10: { x: 65, y: 20 }, // RF
-  };
+  constructor() {
+    addIcons({ addOutline });
+  }
+
+  protected slotCoordinates = computed(() => {
+    return {
+      0: { x: 50, y: 91 }, // GK
+      
+      // Defenders (1-5)
+      1: { x: 15, y: 68 },
+      2: { x: 32.5, y: 68 },
+      3: { x: 50, y: 68 },
+      4: { x: 67.5, y: 68 },
+      5: { x: 85, y: 68 },
+
+      // Midfielders (6-10)
+      6: { x: 15, y: 44 },
+      7: { x: 32.5, y: 44 },
+      8: { x: 50, y: 44 },
+      9: { x: 67.5, y: 44 },
+      10: { x: 85, y: 44 },
+
+      // Forwards (11-15)
+      11: { x: 15, y: 20 },
+      12: { x: 32.5, y: 20 },
+      13: { x: 50, y: 20 },
+      14: { x: 67.5, y: 20 },
+      15: { x: 85, y: 20 },
+    } as Record<number, { x: number; y: number }>;
+  });
 
   protected stagedOutIds = computed(() => {
     return new Set(this.stagedSubs().map(s => s.outPlayerId));
@@ -49,6 +69,7 @@ export class SoccerPitchViewComponent {
     const stagedSubs = this.stagedSubs();
     const activePlayers = this.players() as (Player & { slotIndex?: number })[];
     const lineup = this.initialLineup();
+    const coordsMap = this.slotCoordinates();
 
     return stagedSubs.map(sub => {
       const outPlayer = activePlayers.find(p => p.id === sub.outPlayerId);
@@ -57,7 +78,7 @@ export class SoccerPitchViewComponent {
       const inEntry = lineup.find(e => e.playerId === sub.inPlayerId);
       if (!inEntry) return null;
 
-      const coords = this.SLOT_COORDINATES[outPlayer.slotIndex];
+      const coords = coordsMap[outPlayer.slotIndex];
 
       return {
         ...inEntry.player,
@@ -71,10 +92,11 @@ export class SoccerPitchViewComponent {
 
   protected positionedPlayers = computed(() => {
     const players = this.players() as (Player & { slotIndex?: number })[];
+    const coordsMap = this.slotCoordinates();
     
     return players.map(player => {
       const slotIndex = player.slotIndex;
-      const coords = slotIndex !== undefined ? this.SLOT_COORDINATES[slotIndex] : { x: 50, y: 50 };
+      const coords = slotIndex !== undefined ? coordsMap[slotIndex] : { x: 50, y: 50 };
       
       return {
         ...player,
@@ -84,8 +106,26 @@ export class SoccerPitchViewComponent {
     }) as PositionedPlayer[];
   });
 
+  protected emptySlots = computed(() => {
+    const players = this.players() as (Player & { slotIndex?: number })[];
+    const occupiedSlots = new Set(players.map(p => p.slotIndex).filter((s): s is number => s !== undefined));
+    const coordsMap = this.slotCoordinates();
+    
+    return Object.entries(coordsMap)
+      .map(([slot, coords]) => ({ slotIndex: Number(slot), ...coords }))
+      .filter(s => !occupiedSlots.has(s.slotIndex));
+  });
+
   protected selectPlayer(player: Player, event: Event) {
     this.playerSelected.emit({ player, event });
+  }
+
+  protected selectEmptySlot(slotIndex: number) {
+    this.emptySlotSelected.emit(slotIndex);
+  }
+
+  protected deselect() {
+    this.backgroundClicked.emit();
   }
 
   protected trackBySlot(index: number, player: PositionedPlayer): string | number {

@@ -33,7 +33,7 @@
     </div>
   } @else {
     <div class="p-4">
-      <div class="mb-6">
+      <div class="mb-4">
         <h2 class="text-xl font-bold">
           {{ event()?.type === 'practice' ? 'Practice' : 'vs ' + event()?.opponent }}
         </h2>
@@ -42,47 +42,69 @@
         </p>
       </div>
 
-      <ion-list>
-        <ion-list-header>
-          <ion-label>Starting 11</ion-label>
-        </ion-list-header>
+      <ion-segment [value]="viewMode()" (ionChange)="setViewMode($event.detail.value)" class="mb-4">
+        <ion-segment-button value="list">
+          <ion-label>List View</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="pitch">
+          <ion-label>Pitch View</ion-label>
+        </ion-segment-button>
+      </ion-segment>
 
-        @for (slot of slots(); track slot.slotIndex) {
-          <ion-item>
-            <div class="slot-row w-full flex gap-2 py-2">
-              <div class="w-24">
-                <ion-select
-                  label="Pos"
-                  label-placement="stacked"
-                  placeholder="Pos"
-                  [value]="slot.positionName"
-                  (ionChange)="updateSlot(slot.slotIndex, 'positionName', $event.detail.value)"
-                >
-                  @for (pos of positionOptions; track pos) {
-                    <ion-select-option [value]="pos">{{ pos }}</ion-select-option>
-                  }
-                </ion-select>
+      @if (viewMode() === 'list') {
+        <ion-list>
+          <ion-list-header>
+            <ion-label>Starting {{ event()?.playersOnField || 11 }}</ion-label>
+          </ion-list-header>
+
+          @for (slot of slots(); track slot.slotIndex; let idx = $index) {
+            <ion-item>
+              <div class="slot-row w-full flex gap-2 py-2">
+                <div class="w-24">
+                  <ion-select
+                    label="Pos"
+                    label-placement="stacked"
+                    placeholder="Pos"
+                    [value]="slot.positionName"
+                    (ionChange)="updateSlot(idx, 'positionName', $event.detail.value)"
+                  >
+                    @for (pos of positionOptions; track pos) {
+                      <ion-select-option [value]="pos">{{ pos }}</ion-select-option>
+                    }
+                  </ion-select>
+                </div>
+                <div class="flex-1">
+                  <ion-select
+                    label="Player"
+                    label-placement="stacked"
+                    placeholder="Select Player"
+                    [value]="slot.playerId"
+                    (ionChange)="updateSlot(idx, 'playerId', $event.detail.value)"
+                  >
+                    <ion-select-option [value]="null">-- None --</ion-select-option>
+                    @for (player of availablePlayers(slot.slotIndex); track player.id) {                      <ion-select-option [value]="player.id">
+                        #{{ player.jerseyNumber }} {{ player.firstName }} {{ player.lastName }}
+                      </ion-select-option>
+                    }
+                  </ion-select>
+                </div>
               </div>
-              <div class="flex-1">
-                <ion-select
-                  label="Player"
-                  label-placement="stacked"
-                  placeholder="Select Player"
-                  [value]="slot.playerId"
-                  (ionChange)="updateSlot(slot.slotIndex, 'playerId', $event.detail.value)"
-                >
-                  <ion-select-option [value]="null">-- None --</ion-select-option>
-                  @for (player of availablePlayers(slot.slotIndex); track player.id) {
-                    <ion-select-option [value]="player.id">
-                      #{{ player.jerseyNumber }} {{ player.firstName }} {{ player.lastName }}
-                    </ion-select-option>
-                  }
-                </ion-select>
-              </div>
-            </div>
-          </ion-item>
-        }
-      </ion-list>
+            </ion-item>
+          }
+        </ion-list>
+      } @else {
+        <div class="h-[450px] mb-4">
+          <app-soccer-pitch-view
+            [players]="pitchPlayers()"
+            [playersOnField]="event()?.playersOnField || 11"
+            [selectedPlayerId]="selectedPlayerId()"
+            (playerSelected)="handlePitchPlayerSelected($event)"
+            (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
+            (backgroundClicked)="selectedPlayerId.set(null)"
+          >
+          </app-soccer-pitch-view>
+        </div>
+      }
 
       <ion-list class="mt-4">
         <ion-list-header>
@@ -91,12 +113,14 @@
         </ion-list-header>
 
         @for (player of benchPlayers(); track player.id) {
-          <ion-item>
+          <ion-item button (click)="handleBenchPlayerClick(player)" [detail]="false" [class.selected-player]="selectedPlayerId() === player.id">
             <ion-label>
               <h2>{{ player.firstName }} {{ player.lastName }}</h2>
               <p>#{{ player.jerseyNumber }}</p>
             </ion-label>
-            <ion-badge slot="end" color="medium">Bench</ion-badge>
+            <ion-badge slot="end" [color]="selectedPlayerId() === player.id ? 'primary' : 'medium'">
+              {{ selectedPlayerId() === player.id ? 'SELECTED' : 'Bench' }}
+            </ion-badge>
           </ion-item>
         } @empty {
           <ion-item>

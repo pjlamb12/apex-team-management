@@ -27,6 +27,7 @@
         "libs/client/data-access/drill/src/index.ts"
       ],
       "@apex-team/client/ui/drill": ["libs/client/ui/drill/src/index.ts"],
+      "@apex-team/client/ui/theme-toggle": ["libs/client/ui/theme-toggle/src/index.ts"],
       "@apex-team/client/ui/empty-state": ["libs/client/ui/empty-state/src/index.ts"],
       "@apex-team/client/ui/section-label": ["libs/client/ui/section-label/src/index.ts"],
       "@apex-team/client/ui/loading": ["libs/client/ui/loading/src/index.ts"],

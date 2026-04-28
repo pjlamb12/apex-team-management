@@ -1,5 +1,4 @@
-import { Component, inject, signal, computed, OnInit, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -25,9 +24,9 @@ import { addIcons } from 'ionicons';
 import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline } from 'ionicons/icons';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
-import { LiveGameStateService, LineupEntry, RotationConfig } from '../live-game-state.service';
+import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
-import { EventsService } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
@@ -36,13 +35,13 @@ import { PlayerActionMenuComponent } from '../player-action-menu/player-action-m
 import { EventLogViewComponent } from '../event-log/event-log';
 import { SubQueueComponent } from '../sub-queue/sub-queue';
 import { EventSyncService } from '../event-sync.service';
-import { Player } from '@apex-team/shared/util/models';
+import { SocketService } from '../../../../../apps/frontend/src/app/shared/services/socket.service';
+import { Player, LineupEntry } from '@apex-team/shared/util/models';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 
 @Component({
   selector: 'app-console-wrapper',
   imports: [
-    CommonModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -69,7 +68,7 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
   templateUrl: './console-wrapper.html',
   styleUrls: ['./console-wrapper.scss'],
 })
-export class ConsoleWrapper implements OnInit {
+export class ConsoleWrapper implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
@@ -79,6 +78,7 @@ export class ConsoleWrapper implements OnInit {
   protected rotationService = inject(RotationService);
   protected eventsService = inject(EventsService);
   protected syncService = inject(EventSyncService);
+  private socketService = inject(SocketService);
 
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
@@ -114,7 +114,7 @@ export class ConsoleWrapper implements OnInit {
       switchMap(({ teamId, eventId }) => {
         const url = this.apiUrl;
         if (!url) return [];
-        return this.http.get<any>(`${url}/teams/${teamId}/events/${eventId}`);
+        return this.http.get<EventEntity>(`${url}/teams/${teamId}/events/${eventId}`);
       })
     )
   );
@@ -126,6 +126,18 @@ export class ConsoleWrapper implements OnInit {
         eventId: params.get('eventId')
       })),
       filter((p): p is { teamId: string; eventId: string } => !!p.teamId && !!p.eventId),
+      tap(({ eventId }) => {
+        this.socketService.joinEvent(eventId);
+        this.socketService.onEvent('gameEventLogged', (event) => {
+          this.stateService.handleRemoteEvent(event);
+        });
+        this.socketService.onEvent('gameEventRemoved', (data: any) => {
+          this.stateService.handleRemoteDeletion(data);
+        });
+        this.socketService.onEvent('gameStatusUpdated', (event) => {
+          this.stateService.handleRemoteStatusUpdate(event);
+        });
+      }),
       switchMap(({ teamId, eventId }) => {
         const url = this.apiUrl;
         if (!url) return [];
@@ -134,8 +146,9 @@ export class ConsoleWrapper implements OnInit {
       tap(async (lineup) => {
         const eventId = this.eventId();
         const teamId = this.teamId();
+        const eventData = this.event();
         if (eventId && teamId) {
-          this.stateService.initialize(eventId, lineup, teamId);
+          this.stateService.initialize(eventId, lineup, teamId, eventData?.playersOnField || undefined);
           this.clockService.initialize(eventId);
 
           // If no events in local state, fetch from backend to restore logs
@@ -211,6 +224,16 @@ export class ConsoleWrapper implements OnInit {
 
   ngOnInit(): void {
     // Initialization logic if needed
+  }
+
+  ngOnDestroy(): void {
+    const eventId = this.eventId();
+    if (eventId) {
+      this.socketService.offEvent('gameEventLogged');
+      this.socketService.offEvent('gameEventRemoved');
+      this.socketService.offEvent('gameStatusUpdated');
+      this.socketService.leaveEvent(eventId);
+    }
   }
 
   protected startClock(): void {
@@ -302,18 +325,17 @@ export class ConsoleWrapper implements OnInit {
     if (!currentSelectionId) {
       this.selectedPlayerId.set(player.id);
       
-      // If we tapped an active player and no bench player was selected, show actions
+      // If we tapped an active player, don't show popover immediately
+      // User must tap AGAIN to show popover
+      return;
+    }
+
+    // If tapping same player, show actions (modal/popover)
+    if (currentSelectionId === player.id) {
       if (tappedActive) {
         this.actionPlayer.set(player);
         this.popoverEvent.set(event);
       }
-      return;
-    }
-
-    // If tapping same player, deselect
-    if (currentSelectionId === player.id) {
-      this.selectedPlayerId.set(null);
-      this.actionPlayer.set(null);
       return;
     }
 
@@ -350,15 +372,30 @@ export class ConsoleWrapper implements OnInit {
     } else {
       // Just change selection to the new player
       this.selectedPlayerId.set(player.id);
-
-      // If we switched to another active player, show its actions
-      if (tappedActive) {
-        this.actionPlayer.set(player);
-        this.popoverEvent.set(event);
-      } else {
-        this.actionPlayer.set(null);
-      }
+      this.actionPlayer.set(null);
     }
+  }
+
+  protected handleEmptySlotSelection(slotIndex: number): void {
+    const currentSelectionId = this.selectedPlayerId();
+    if (!currentSelectionId) return;
+
+    const activePlayers = this.stateService.activePlayers();
+    const selectedActive = activePlayers.find(p => p.id === currentSelectionId) as any;
+
+    if (selectedActive && selectedActive.slotIndex !== undefined) {
+      // Move active player to new slot
+      this.stateService.pushEvent({
+        type: 'POSITION_SWAP',
+        slotIndexA: selectedActive.slotIndex,
+        slotIndexB: slotIndex,
+        timestamp: Date.now(),
+        minuteOccurred: this.clockService.currentMinute(),
+        gameTimeMs: this.clockService.elapsedMs(),
+      });
+    }
+
+    this.selectedPlayerId.set(null);
   }
 
   protected handleApplySubs(): void {

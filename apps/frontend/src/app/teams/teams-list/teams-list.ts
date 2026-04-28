@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AlertController, ModalController } from '@ionic/angular/standalone';
 import {
@@ -23,6 +23,7 @@ import { addIcons } from 'ionicons';
 import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline } from 'ionicons/icons';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 import { TeamService } from '@apex-team/client/data-access/team';
+import { SocketService } from '../../shared/services/socket.service';
 import { JoinTeamModal } from '../join-team/join-team-modal';
 
 interface Sport {
@@ -63,10 +64,11 @@ interface Team {
   templateUrl: './teams-list.html',
   styleUrl: './teams-list.scss',
 })
-export class TeamsList {
+export class TeamsList implements OnDestroy {
   private readonly teamService = inject(TeamService);
   protected readonly alertCtrl = inject(AlertController);
   private readonly modalCtrl = inject(ModalController);
+  private readonly socketService = inject(SocketService);
 
   protected teams = signal<Team[]>([]);
   protected isLoading = signal(false);
@@ -74,10 +76,22 @@ export class TeamsList {
 
   constructor() {
     addIcons({ peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline });
+
+    this.socketService.onEvent('eventCreated', () => {
+      void this.loadTeams();
+    });
   }
 
   ionViewWillEnter(): void {
     void this.loadTeams();
+  }
+
+  ngOnDestroy(): void {
+    this.socketService.offEvent('eventCreated');
+    // Leave all team rooms
+    this.teams().forEach(team => {
+      this.socketService.leaveTeam(team.id);
+    });
   }
 
   protected async loadTeams(): Promise<void> {
@@ -86,6 +100,10 @@ export class TeamsList {
     try {
       const data = await this.teamService.getTeams();
       this.teams.set(data);
+      // Join rooms for all teams to get notifications
+      data.forEach(team => {
+        this.socketService.joinTeam(team.id);
+      });
     } catch {
       this.errorMessage.set('Failed to load teams. Please try again.');
     } finally {

@@ -1,15 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { LiveGameStateService, StagedSub } from '../live-game-state.service';
+import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
+import { StagedSub } from '@apex-team/shared/util/models';
 import { PlaytimeService } from './playtime.service';
 import { LiveClockService } from '../live-clock.service';
-
-export type RotationMode = 'PURE' | 'POSITION' | 'CONSTRAINT';
-
-export interface RotationConfig {
-  rotationMode: RotationMode;
-  minBenchMinutes?: number;
-  maxFieldMinutes?: number;
-}
 
 @Injectable({
   providedIn: 'root',
@@ -36,15 +29,15 @@ export class RotationService {
     const benchCandidates = benchPlayers
       .sort((a, b) => (playtimeMap[a.id] || 0) - (playtimeMap[b.id] || 0));
 
-    if (config.rotationMode === 'PURE') {
+    if (config.mode === 'PURE') {
       return this.generatePureSuggestions(activeCandidates, benchCandidates);
     }
 
-    if (config.rotationMode === 'POSITION') {
+    if (config.mode === 'POSITION') {
       return this.generatePositionSuggestions(activeCandidates, benchCandidates);
     }
 
-    if (config.rotationMode === 'CONSTRAINT') {
+    if (config.mode === 'CONSTRAINT') {
       return this.generateConstraintSuggestions(activeCandidates, benchCandidates, config);
     }
 

@@ -1,31 +1,12 @@
-:host {
-  display: block;
-  height: 100%;
-  overflow-y: auto;
-  border-left: 1px solid var(--ion-color-step-150, rgba(255, 255, 255, 0.08));
-  background: var(--ion-background-color, transparent);
+.undo-note {
+  --min-height: 24px;
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-top: -8px;
+  margin-bottom: 8px;
 }
 
 .empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 32px;
+  padding: 24px;
   text-align: center;
-}
-
-ion-badge {
-  min-width: 40px;
-}
-
-ion-list {
-  padding-top: 0;
-}
-
-ion-list-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--ion-background-color, var(--color-ap-surface-raised));
-  border-bottom: 1px solid var(--ion-color-step-100, rgba(255, 255, 255, 0.08));
 }

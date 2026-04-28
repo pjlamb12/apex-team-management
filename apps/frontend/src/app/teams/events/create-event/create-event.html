@@ -98,6 +98,17 @@
             </ion-item>
           </ngx-control-errors-display>
 
+          <ngx-control-errors-display>
+            <ion-item>
+              <ion-input
+                label="Number of Players on Field"
+                labelPlacement="floating"
+                formControlName="playersOnField"
+                type="number"
+              ></ion-input>
+            </ion-item>
+          </ngx-control-errors-display>
+
           <ion-item lines="none" class="mt-2">
             <ion-toggle formControlName="isHomeGame" justify="space-between">
               Home Game?

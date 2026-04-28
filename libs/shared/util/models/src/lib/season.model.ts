@@ -12,6 +12,7 @@ export interface Season {
   defaultPracticeLocation?: string;
   periodCount?: number;
   periodLengthMinutes?: number;
+  playersOnField?: number;
 }
 
 export interface SeasonStats {

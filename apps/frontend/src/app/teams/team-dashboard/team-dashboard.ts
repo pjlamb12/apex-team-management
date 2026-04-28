@@ -24,6 +24,7 @@ import {
 } from 'ionicons/icons';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { CommonModule } from '@angular/common';
+import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 
 interface Sport {
   id: string;
@@ -56,6 +57,7 @@ interface Team {
     IonLabel,
     IonRouterOutlet,
     IonText,
+    ThemeToggle,
   ],
   templateUrl: './team-dashboard.html',
   styleUrl: './team-dashboard.scss',

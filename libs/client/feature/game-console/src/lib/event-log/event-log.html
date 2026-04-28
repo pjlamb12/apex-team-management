@@ -7,27 +7,39 @@
     </ion-button>
   </ion-list-header>
 
-  <ion-item *ngFor="let event of events()">
-    <ion-badge slot="start" color="light">{{ event.minuteOccurred }}'</ion-badge>
-    
-    <ion-icon 
-      slot="start" 
-      [name]="getEventIcon(event.type)" 
-      [color]="getEventColor(event.type)"
-    ></ion-icon>
+  @if (events().length > 0) {
+    <ion-item lines="none" class="undo-note">
+      <ion-note color="medium">Undoing will permanently remove the last logged event.</ion-note>
+    </ion-item>
+  }
 
-    <ion-label>
-      <h3 class="font-bold">{{ event.type.replace('_', ' ') }}</h3>
-      <p *ngIf="event.type === 'SUB'">
-        {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
-      </p>
-      <p *ngIf="event.type !== 'SUB' && event.type !== 'OPPONENT_GOAL'">
-        {{ getPlayerName(event.playerId) }}
-      </p>
-    </ion-label>
-  </ion-item>
+  @for (event of events(); track event.id) {
+    <ion-item>
+      <ion-badge slot="start" color="light">{{ event.minuteOccurred }}'</ion-badge>
+      
+      <ion-icon 
+        slot="start" 
+        [name]="getEventIcon(event.type)" 
+        [color]="getEventColor(event.type)"
+      ></ion-icon>
 
-  <div *ngIf="events().length === 0" class="empty-state">
-    <ion-note>No events logged yet.</ion-note>
-  </div>
+      <ion-label>
+        <h3 class="font-bold">{{ event.type.replace('_', ' ') }}</h3>
+        @if (event.type === 'SUB') {
+          <p>
+            {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
+          </p>
+        }
+        @if (event.type !== 'SUB' && event.type !== 'OPPONENT_GOAL') {
+          <p>
+            {{ getPlayerName(event.playerId) }}
+          </p>
+        }
+      </ion-label>
+    </ion-item>
+  } @empty {
+    <div class="empty-state">
+      <ion-note>No events logged yet.</ion-note>
+    </div>
+  }
 </ion-list>

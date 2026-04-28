@@ -5,6 +5,7 @@
     </ion-buttons>
     <ion-title>{{ team()?.name ?? 'Team Dashboard' }}</ion-title>
     <ion-buttons slot="end">
+      <app-theme-toggle></app-theme-toggle>
       <ion-button [routerLink]="['/teams', teamId, 'settings']" aria-label="Team settings">
         <ion-icon slot="icon-only" name="settings-outline"></ion-icon>
       </ion-button>

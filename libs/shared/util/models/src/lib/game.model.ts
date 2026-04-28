@@ -9,6 +9,7 @@ export interface Game {
   uniformColor?: string;
   periodCount?: number;
   periodLengthMinutes?: number;
+  playersOnField?: number;
   currentPeriod?: number;
   status?: 'scheduled' | 'in_progress' | 'completed';
   goalsFor?: number;

@@ -56,6 +56,9 @@ export class EventEntity {
   @Column({ name: 'period_length_minutes', type: 'int', nullable: true })
   periodLengthMinutes: number | null;
 
+  @Column({ name: 'players_on_field', type: 'int', nullable: true })
+  playersOnField: number | null;
+
   @Column({ name: 'current_period', type: 'int', default: 1 })
   currentPeriod: number;
 }

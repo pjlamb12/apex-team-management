@@ -1,71 +1,74 @@
-<div class="sub-queue-panel flex flex-col h-full bg-ap-bg/95 backdrop-blur-md border-t border-white/10 shadow-2xl overflow-hidden">
+<div class="sub-queue-panel flex flex-col h-full bg-ap-bg/95 backdrop-blur-md shadow-2xl">
   <!-- Header -->
-  <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+  <div class="flex items-center justify-between px-4 py-3 border-b border-ap-border">
     <div class="flex items-center space-x-2">
       <div class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
-      <h3 class="text-white font-bold tracking-tight uppercase text-xs">Tactical Sub-Queue</h3>
-      <span class="bg-white/10 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">
+      <h3 class="text-ap-text font-bold tracking-tight uppercase text-xs">Tactical Sub-Queue</h3>
+      <span class="bg-ap-surface-raised text-ap-text text-[10px] px-1.5 py-0.5 rounded font-mono">
         {{ subViewModels().length }}
       </span>
     </div>
     
-    <button *ngIf="subViewModels().length > 0" 
-            (click)="onClear()"
-            class="text-white/40 hover:text-white text-[10px] flex items-center space-x-1 transition-colors">
-      <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
-      <span>Clear All</span>
-    </button>
+    @if (subViewModels().length > 0) {
+      <button (click)="onClear()"
+              class="text-ap-muted hover:text-ap-text text-[10px] flex items-center space-x-1 transition-colors">
+        <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
+        <span>Clear All</span>
+      </button>
+    }
   </div>
 
   <!-- Queue Content -->
-  <div class="flex-1 overflow-x-auto overflow-y-hidden px-2 py-3">
-    <div *ngIf="subViewModels().length === 0" class="h-full flex items-center justify-center px-4">
-      <p class="text-white/30 text-[10px] italic text-center leading-relaxed">
-        Select a bench player and a field player to stage a sub
-      </p>
-    </div>
+  <div class="flex-1 overflow-y-auto px-2 py-2">
+    @if (subViewModels().length === 0) {
+      <div class="h-full flex items-center justify-center px-4 py-4">
+        <p class="text-ap-muted text-[10px] italic text-center leading-relaxed">
+          Select a bench player and a field player to stage a sub
+        </p>
+      </div>
+    }
 
-    <div class="flex space-x-3 items-center min-w-max">
-      <div *ngFor="let sub of subViewModels(); let last = last" class="flex items-center">
-        <div class="sub-card flex items-center bg-white/5 border border-white/10 rounded-lg p-1 pr-2 relative group">
+    <div class="flex flex-col gap-2">
+      @for (sub of subViewModels(); track sub.inPlayerId) {
+        <div class="sub-card flex items-center bg-ap-surface border border-ap-border rounded-lg p-2 pr-1 relative group overflow-hidden">
           <!-- Out Player -->
-          <div class="flex flex-col items-center px-2 border-r border-white/10">
-            <span class="text-red-400 text-[8px] font-black uppercase mb-0.5">Out</span>
-            <div class="flex items-center space-x-1.5">
-              <span class="text-white font-bold text-xs">#{{ sub.outPlayer?.jerseyNumber }}</span>
-              <span class="text-white/80 text-[10px] truncate max-w-[60px]">{{ sub.outPlayer?.lastName }}</span>
+          <div class="flex flex-col items-center px-3 border-r border-ap-border">
+            <span class="text-red-400 text-[10px] font-black uppercase mb-1">Out</span>
+            <div class="flex items-center space-x-2">
+              <span class="text-ap-text font-bold text-lg">#{{ sub.outPlayer?.jerseyNumber }}</span>
+              <span class="text-ap-muted text-xs truncate max-w-[70px]">{{ sub.outPlayer?.lastName }}</span>
             </div>
           </div>
           
           <!-- Arrow -->
-          <div class="px-2">
-            <ion-icon name="arrow-forward-outline" class="text-yellow-400 text-sm"></ion-icon>
+          <div class="px-3">
+            <ion-icon name="arrow-forward-outline" class="text-yellow-400 text-xl"></ion-icon>
           </div>
           
           <!-- In Player -->
-          <div class="flex flex-col items-center px-2">
-            <span class="text-green-400 text-[8px] font-black uppercase mb-0.5">In</span>
-            <div class="flex items-center space-x-1.5">
-              <span class="text-white font-bold text-xs">#{{ sub.inPlayer?.jerseyNumber }}</span>
-              <span class="text-white/80 text-[10px] truncate max-w-[60px]">{{ sub.inPlayer?.lastName }}</span>
+          <div class="flex flex-col items-center px-3">
+            <span class="text-green-400 text-[10px] font-black uppercase mb-1">In</span>
+            <div class="flex items-center space-x-2">
+              <span class="text-ap-text font-bold text-lg">#{{ sub.inPlayer?.jerseyNumber }}</span>
+              <span class="text-ap-muted text-xs truncate max-w-[70px]">{{ sub.inPlayer?.lastName }}</span>
             </div>
           </div>
 
-          <!-- Remove Button (Hover) -->
-          <button (click)="onRemove(sub.inPlayerId)" 
-                  class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
-            <ion-icon name="trash-outline" class="text-[10px]"></ion-icon>
-          </button>
+          <!-- Dedicated Remove Button (Mobile Friendly) -->
+          <div class="ml-auto pl-2 pr-1 border-l border-ap-border h-full flex items-center">
+            <button (click)="onRemove(sub.inPlayerId)" 
+                    class="w-10 h-10 flex items-center justify-center bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all active:scale-95"
+                    aria-label="Remove substitution">
+              <ion-icon name="trash-outline" class="text-lg"></ion-icon>
+            </button>
+          </div>
         </div>
-
-        <!-- Divider between cards -->
-        <div *ngIf="!last" class="w-px h-6 bg-white/10 mx-1"></div>
-      </div>
+      }
     </div>
   </div>
 
   <!-- Actions -->
-  <div class="p-3 border-t border-white/10 bg-black/20">
+  <div class="p-3 border-t border-ap-border bg-ap-surface-raised">
     <ion-button 
       expand="block" 
       color="success" 

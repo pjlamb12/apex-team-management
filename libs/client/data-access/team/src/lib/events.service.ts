@@ -21,6 +21,7 @@ export interface EventEntity {
   goalEventCount?: number;
   periodCount?: number | null;
   periodLengthMinutes?: number | null;
+  playersOnField?: number | null;
   currentPeriod?: number;
 }
 
@@ -37,6 +38,7 @@ export interface CreateEventDto {
   goalsAgainst?: number | null;
   periodCount?: number;
   periodLengthMinutes?: number;
+  playersOnField?: number;
 }
 
 export interface UpdateEventDto {
@@ -52,6 +54,7 @@ export interface UpdateEventDto {
   goalsAgainst?: number | null;
   periodCount?: number;
   periodLengthMinutes?: number;
+  playersOnField?: number;
   currentPeriod?: number;
   status?: 'scheduled' | 'in_progress' | 'completed';
 }

@@ -8,6 +8,7 @@ import { PlayersModule } from '../players/players.module';
 import { EventsModule } from '../events/events.module';
 import { DrillsModule } from '../drills/drills.module';
 import { MembershipsModule } from '../memberships/memberships.module';
+import { SocketModule } from '../socket/socket.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -35,6 +36,7 @@ import { AppController } from './app.controller';
     EventsModule,
     DrillsModule,
     MembershipsModule,
+    SocketModule,
   ],
   controllers: [AppController],
 })

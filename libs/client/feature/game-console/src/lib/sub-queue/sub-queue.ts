@@ -1,13 +1,12 @@
 import { Component, input, output, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { StagedSub, LineupEntry } from '../live-game-state.service';
+import { StagedSub, LineupEntry } from '@apex-team/shared/util/models';
 import { IonButton, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { arrowForwardOutline, trashOutline, flashOutline, closeCircleOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-sub-queue',
-  imports: [CommonModule, IonButton, IonIcon],
+  imports: [IonButton, IonIcon],
   templateUrl: './sub-queue.html',
   styleUrls: ['./sub-queue.scss'],
 })

@@ -147,7 +147,7 @@ Deferred to second major version.
 
 - [ ] **PRNT-01**: Parent can register and claim a player profile via claim token
 - [ ] **PRNT-02**: Multiple guardians per player supported
-- [ ] **SYNC-03**: Real-time WebSocket sync between coach devices during games
+- [x] **SYNC-03**: Real-time WebSocket sync between coach devices during games
 - [ ] **ICAL-01**: Personalized iCal feeds for external calendars
 
 ## Out of Scope
@@ -240,6 +240,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ROTN-05 | Phase 18 | Completed |
 | SYNC-01 | Phase 20 | Completed |
 | SYNC-02 | Phase 20 | Completed |
+| SYNC-03 | Phase 22 | Completed |
 
 **Coverage:**
 - v1 requirements: 36 total (36 mapped) ✓
@@ -247,8 +248,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 - v1.2 requirements: 6 total (6 mapped) ✓
 - v1.3 requirements: 9 total (9 mapped) ✓
 - v1.4 requirements: 2 total (2 mapped) ✓
-- Total requirements mapped: 64/64 ✓
+- v1.5 requirements: 1 total (1 mapped) ✓
+- Total requirements mapped: 65/65 ✓
 
 ---
 *Requirements defined: 2026-04-14*
-*Last updated: 2026-05-12 — v1.4 traceability complete*
+*Last updated: 2026-05-13 — v1.5 traceability complete*

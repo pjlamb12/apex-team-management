@@ -9,6 +9,7 @@ import { TeamEntity } from '../entities/team.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { SocketGateway } from '../socket/socket.gateway';
 
 @Injectable()
 export class EventsService {
@@ -23,6 +24,7 @@ export class EventsService {
     private readonly teamRepo: Repository<TeamEntity>,
     @InjectRepository(GameEventEntity)
     private readonly gameEventRepo: Repository<GameEventEntity>,
+    private readonly socketGateway: SocketGateway,
   ) {
     this.ajv = new Ajv();
     addFormats(this.ajv);
@@ -58,6 +60,7 @@ export class EventsService {
     let location = dto.location;
     let periodCount = dto.periodCount;
     let periodLengthMinutes = dto.periodLengthMinutes;
+    let playersOnField = dto.playersOnField;
 
     // 3. Inherit defaults from active season
     if (type === 'practice' && !location) {
@@ -70,6 +73,9 @@ export class EventsService {
       if (periodLengthMinutes === undefined) {
         periodLengthMinutes = activeSeason.periodLengthMinutes;
       }
+      if (playersOnField === undefined) {
+        playersOnField = activeSeason.playersOnField;
+      }
     }
 
     // 4. Create the event with the seasonId.
@@ -79,13 +85,16 @@ export class EventsService {
       location,
       periodCount,
       periodLengthMinutes,
+      playersOnField,
       seasonId: activeSeason.id,
       status: 'scheduled',
       isHomeGame: dto.isHomeGame ?? true,
     });
 
     // 5. Save the event.
-    return this.eventRepo.save(event);
+    const savedEvent = await this.eventRepo.save(event);
+    this.socketGateway.server.to(`team:${teamId}`).emit('eventCreated', savedEvent);
+    return savedEvent;
   }
 
   async findAllForTeam(
@@ -143,7 +152,9 @@ export class EventsService {
   async update(eventId: string, dto: UpdateEventDto): Promise<EventEntity> {
     const event = await this.findOne(eventId);
     Object.assign(event, dto);
-    return this.eventRepo.save(event);
+    const saved = await this.eventRepo.save(event);
+    this.socketGateway.server.to(`event:${eventId}`).emit('gameStatusUpdated', saved);
+    return saved;
   }
 
   async remove(eventId: string): Promise<void> {
@@ -207,7 +218,9 @@ export class EventsService {
       eventId,
     });
 
-    return this.gameEventRepo.save(gameEvent as any);
+    const saved = await this.gameEventRepo.save(gameEvent as any);
+    this.socketGateway.server.to(`event:${eventId}`).emit('gameEventLogged', saved);
+    return saved as any;
   }
 
   async removeEvent(eventId: string, gameEventId: string, userId: string): Promise<void> {
@@ -225,5 +238,6 @@ export class EventsService {
     }
 
     await this.gameEventRepo.remove(gameEvent);
+    this.socketGateway.server.to(`event:${eventId}`).emit('gameEventRemoved', { id: gameEventId });
   }
 }
