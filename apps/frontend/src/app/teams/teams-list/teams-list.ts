@@ -1,8 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, ModalController } from '@ionic/angular/standalone';
 import {
   IonContent,
   IonCard,
@@ -16,10 +14,15 @@ import {
   IonSpinner,
   IonBadge,
   IonText,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
 } from '@ionic/angular/standalone';
-import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { addIcons } from 'ionicons';
-import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline } from 'ionicons/icons';
+import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, enterOutline } from 'ionicons/icons';
+import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
+import { TeamService } from '@apex-team/client/data-access/team';
 
 interface Sport {
   id: string;
@@ -49,25 +52,26 @@ interface Team {
     IonSpinner,
     IonBadge,
     IonText,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    ThemeToggle,
   ],
   templateUrl: './teams-list.html',
   styleUrl: './teams-list.scss',
 })
 export class TeamsList {
-  private readonly http = inject(HttpClient);
-  private readonly config = inject(RuntimeConfigLoaderService);
+  private readonly teamService = inject(TeamService);
   protected readonly alertCtrl = inject(AlertController);
+  private readonly modalCtrl = inject(ModalController);
 
   protected teams = signal<Team[]>([]);
   protected isLoading = signal(false);
   protected errorMessage = signal<string | null>(null);
 
-  protected get apiUrl(): string {
-    return this.config.getConfigObjectKey('apiBaseUrl') as string;
-  }
-
   constructor() {
-    addIcons({ peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline });
+    addIcons({ peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, enterOutline });
   }
 
   ionViewWillEnter(): void {
@@ -78,15 +82,18 @@ export class TeamsList {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const data = await firstValueFrom(
-        this.http.get<Team[]>(`${this.apiUrl}/teams`)
-      );
+      const data = await this.teamService.getTeams();
       this.teams.set(data);
     } catch {
       this.errorMessage.set('Failed to load teams. Please try again.');
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  protected async openJoinModal(): Promise<void> {
+    // We'll implement this in the next task
+    console.log('Open join modal');
   }
 
   protected async confirmDelete(team: Team): Promise<void> {
@@ -110,9 +117,7 @@ export class TeamsList {
 
   private async deleteTeam(id: string): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.delete(`${this.apiUrl}/teams/${id}`)
-      );
+      await this.teamService.deleteTeam(id);
       await this.loadTeams();
     } catch {
       this.errorMessage.set('Failed to delete team. Please try again.');

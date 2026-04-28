@@ -1,3 +1,15 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Teams</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openJoinModal()" aria-label="Join Team">
+        <ion-icon name="enter-outline" slot="icon-only" />
+      </ion-button>
+      <app-theme-toggle></app-theme-toggle>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
 <ion-content class="ion-padding">
   @if (isLoading()) {
     <div class="flex items-center justify-center min-h-[200px]">
@@ -15,11 +27,17 @@
     <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-8">
       <ion-icon name="people-outline" class="text-6xl text-ap-muted mb-4" />
       <h2 class="text-xl font-semibold text-ap-text mb-2">No teams yet</h2>
-      <p class="text-sm text-ap-muted mb-6">Create your first team to get started</p>
-      <ion-button routerLink="/teams/new" expand="block" class="w-full max-w-xs">
-        <ion-icon name="add-outline" slot="start" />
-        Create Team
-      </ion-button>
+      <p class="text-sm text-ap-muted mb-6">Create your first team or join an existing one</p>
+      <div class="flex flex-col gap-3 w-full max-w-xs">
+        <ion-button routerLink="/teams/new" expand="block">
+          <ion-icon name="add-outline" slot="start" />
+          Create Team
+        </ion-button>
+        <ion-button (click)="openJoinModal()" expand="block" fill="outline">
+          <ion-icon name="enter-outline" slot="start" />
+          Join Team
+        </ion-button>
+      </div>
     </div>
   }
 
