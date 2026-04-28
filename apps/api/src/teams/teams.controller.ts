@@ -29,22 +29,22 @@ export class TeamsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.teamsService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req: { user: { sub: string } }) {
+    return this.teamsService.findOne(id, req.user.sub);
   }
 
   @Patch(':id')
   @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
-  update(@Param('id') id: string, @Body() dto: UpdateTeamDto) {
-    return this.teamsService.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateTeamDto, @Request() req: { user: { sub: string } }) {
+    return this.teamsService.update(id, dto, req.user.sub);
   }
 
   @Delete(':id')
   @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH)
-  remove(@Param('id') id: string) {
-    return this.teamsService.remove(id);
+  remove(@Param('id') id: string, @Request() req: { user: { sub: string } }) {
+    return this.teamsService.remove(id, req.user.sub);
   }
 
   @Post(':id/code/regenerate')

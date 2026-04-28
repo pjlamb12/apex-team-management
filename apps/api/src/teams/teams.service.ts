@@ -18,14 +18,21 @@ export class TeamsService {
     private readonly joinCodeService: TeamsJoinCodeService,
   ) {}
 
-  async findAllByCoach(userId: string): Promise<TeamEntity[]> {
-    // Return teams where the user is a member OR the legacy coachId (for safety)
-    return this.teamRepo.createQueryBuilder('team')
+  async findAllByCoach(userId: string): Promise<(TeamEntity & { role?: TeamRole })[]> {
+    const teams = await this.teamRepo.createQueryBuilder('team')
       .leftJoinAndSelect('team.sport', 'sport')
-      .leftJoin('team.members', 'member')
+      .leftJoinAndSelect('team.members', 'member')
       .where('member.userId = :userId', { userId })
       .orWhere('team.coachId = :userId', { userId })
       .getMany();
+
+    return teams.map(team => {
+      const membership = team.members?.find(m => m.userId === userId);
+      return {
+        ...team,
+        role: membership?.role || (team.coachId === userId ? TeamRole.HEAD_COACH : undefined)
+      };
+    });
   }
 
   async create(dto: CreateTeamDto, coachId: string): Promise<TeamEntity> {
@@ -49,23 +56,27 @@ export class TeamsService {
     return savedTeam;
   }
 
-  async findOne(id: string): Promise<TeamEntity> {
+  async findOne(id: string, userId?: string): Promise<TeamEntity & { role?: TeamRole }> {
     const team = await this.teamRepo.findOne({
       where: { id },
-      relations: ['sport'],
+      relations: ['sport', 'members'],
     });
     if (!team) throw new NotFoundException(`Team ${id} not found`);
-    return team;
+
+    return {
+      ...team,
+      role: team.members?.find(m => m.userId === userId)?.role || (team.coachId === userId ? TeamRole.HEAD_COACH : undefined)
+    };
   }
 
-  async update(id: string, dto: UpdateTeamDto): Promise<TeamEntity> {
-    const team = await this.findOne(id);
+  async update(id: string, dto: UpdateTeamDto, userId?: string): Promise<TeamEntity> {
+    const team = await this.findOne(id, userId);
     Object.assign(team, dto);
     return this.teamRepo.save(team);
   }
 
-  async remove(id: string): Promise<void> {
-    const team = await this.findOne(id);
+  async remove(id: string, userId?: string): Promise<void> {
+    const team = await this.findOne(id, userId);
     await this.teamRepo.remove(team);
   }
 
