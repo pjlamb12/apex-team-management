@@ -2,7 +2,9 @@
   "name": "@apex-team/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js"
+  },
   "private": true,
   "dependencies": {
     "@angular/common": "~21.2.0",
