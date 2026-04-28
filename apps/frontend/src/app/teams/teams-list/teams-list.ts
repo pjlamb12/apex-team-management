@@ -34,6 +34,7 @@ interface Team {
   id: string;
   name: string;
   sport: Sport;
+  role?: 'HEAD_COACH' | 'ASSISTANT';
 }
 
 @Component({

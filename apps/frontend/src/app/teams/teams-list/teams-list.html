@@ -64,15 +64,17 @@
                 >
                   <ion-icon name="create-outline" slot="icon-only" />
                 </ion-button>
-                <ion-button
-                  size="small"
-                  fill="clear"
-                  color="danger"
-                  (click)="confirmDelete(team); $event.stopPropagation()"
-                  aria-label="Delete Team"
-                >
-                  <ion-icon name="trash-outline" slot="icon-only" />
-                </ion-button>
+                @if (team.role === 'HEAD_COACH') {
+                  <ion-button
+                    size="small"
+                    fill="clear"
+                    color="danger"
+                    (click)="confirmDelete(team); $event.stopPropagation()"
+                    aria-label="Delete Team"
+                  >
+                    <ion-icon name="trash-outline" slot="icon-only" />
+                  </ion-button>
+                }
               </div>
             </div>
           </ion-card-header>
