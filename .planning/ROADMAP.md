@@ -63,7 +63,7 @@
 
 ## Phases
 
-- [ ] **Phase 20: Team Join Codes & Assistant Onboarding** - Generate alphanumeric codes and implement the join flow for assistants.
+- [x] **Phase 20: Team Join Codes & Assistant Onboarding** - Generate alphanumeric codes and implement the join flow for assistants.
 
 ## Phase Details
 
@@ -77,11 +77,11 @@
   3. A new user or existing coach can enter the code to join the team as an assistant coach.
   4. Assistant coaches have access to view and manage team data (permissions mapped).
 **Plans**:
-- [ ] 20-01-PLAN.md — Foundation & Data Migration
-- [ ] 20-02-PLAN.md — Membership Logic & RBAC
-- [ ] 20-03-PLAN.md — Join Code Logic & Service Updates
-- [ ] 20-04-PLAN.md — Frontend Join Flow & UI
-- [ ] 20-05-PLAN.md — Frontend Management & RBAC UI
+- [x] 20-01-PLAN.md — Foundation & Data Migration
+- [x] 20-02-PLAN.md — Membership Logic & RBAC
+- [x] 20-03-PLAN.md — Join Code Logic & Service Updates
+- [x] 20-04-PLAN.md — Frontend Join Flow & UI
+- [x] 20-05-PLAN.md — Frontend Management & RBAC UI
 **UI hint**: yes
 
 ## Progress Table
@@ -91,4 +91,4 @@
 | 17. Tactical Sub-Queue | 3/3 | Completed | 2026-05-10 |
 | 18. Rotation Engine & Playtime | 3/3 | Completed | 2026-05-12 |
 | 19. Tactical Polish & Alerts | 2/2 | Completed | 2026-05-12 |
-| 20. Team Join Codes & Assistant Onboarding | 0/5 | Pending | - |
+| 20. Team Join Codes & Assistant Onboarding | 5/5 | Completed | 2026-05-12 |

@@ -130,6 +130,15 @@ Milestone v1.3 scope.
 - [ ] **ROTN-05**: Coach can load engine suggestions directly into the Sub-Queue for review/modification
 
 
+## v1.4 Requirements: Assistant Coach Invites
+
+Milestone v1.4 scope. Before giving parents access, coaches need to be able to invite their assistants.
+
+### Team Sharing
+
+- [ ] **SYNC-01**: Coach can generate a unique alphanumeric "Join Code" for their team and share it
+- [ ] **SYNC-02**: A user can use a "Join Code" to join an existing team as an assistant coach
+
 ## v2 Requirements
 
 Deferred to second major version.
@@ -138,8 +147,7 @@ Deferred to second major version.
 
 - [ ] **PRNT-01**: Parent can register and claim a player profile via claim token
 - [ ] **PRNT-02**: Multiple guardians per player supported
-- [ ] **SYNC-01**: Coach can invite assistant coaches to share team management
-- [ ] **SYNC-02**: Real-time WebSocket sync between coach devices during games
+- [ ] **SYNC-03**: Real-time WebSocket sync between coach devices during games
 - [ ] **ICAL-01**: Personalized iCal feeds for external calendars
 
 ## Out of Scope
@@ -225,19 +233,22 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SUBS-02 | Phase 17 | Completed |
 | SUBS-03 | Phase 17 | Completed |
 | SUBS-04 | Phase 17 | Completed |
-| ROTN-01 | Phase 18 | Pending |
+| ROTN-01 | Phase 18 | Completed |
 | ROTN-02 | Phase 18 | Completed |
 | ROTN-03 | Phase 18 | Completed |
-| ROTN-04 | Phase 18 | Pending |
-| ROTN-05 | Phase 18 | Pending |
+| ROTN-04 | Phase 19 | Completed |
+| ROTN-05 | Phase 18 | Completed |
+| SYNC-01 | Phase 20 | Completed |
+| SYNC-02 | Phase 20 | Completed |
 
 **Coverage:**
 - v1 requirements: 36 total (36 mapped) ✓
 - v1.1 requirements: 11 total (11 mapped) ✓
 - v1.2 requirements: 6 total (6 mapped) ✓
 - v1.3 requirements: 9 total (9 mapped) ✓
-- Total requirements mapped: 62/62 ✓
+- v1.4 requirements: 2 total (2 mapped) ✓
+- Total requirements mapped: 64/64 ✓
 
 ---
 *Requirements defined: 2026-04-14*
-*Last updated: 2026-05-10 — v1.3 traceability complete*
+*Last updated: 2026-05-12 — v1.4 traceability complete*

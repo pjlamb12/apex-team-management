@@ -2,14 +2,14 @@
 gsd_state_version: 1.2
 milestone: v1.4
 milestone_name: Assistant Coach Invites
-status: Planning
-last_updated: "2026-05-12T16:15:00Z"
+status: Completed
+last_updated: "2026-05-12T22:50:00Z"
 progress:
-  total_phases: 1
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 4
+  completed_phases: 4
+  total_plans: 13
+  completed_plans: 13
+  percent: 100
 ---
 
 # State: Apex Team
@@ -20,16 +20,16 @@ See: .planning/PROJECT.md
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
 **Current focus:** Allow head coaches to generate and share alphanumeric join codes with assistant coaches.
-**Current Position:** Milestone v1.4 — Planning
+**Current Position:** Milestone v1.4 — Completed
 
 ## Current Milestone
 
 **v1.4 — Assistant Coach Invites**
 
 Phase: Phase 20: Team Join Codes & Assistant Onboarding
-Plan: 20-01-PLAN.md (Pending)
+Plan: Completed
 
-Progress: ░░░░░░░░░░ 0%
+Progress: ██████████ 100%
 
 ## Decision Log
 

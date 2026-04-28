@@ -8,15 +8,14 @@ A game day coaching console for youth sports. Coaches create teams, manage roste
 
 A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened — no paper lineups, no mental math.
 
-## Current Milestone: v1.3 Rotation Engine & Tactical Subs
+## Current Milestone: v1.4 Assistant Coach Invites
 
-**Goal:** Provide professional-grade substitution management including a "Sub-Queue" for staging tactical changes and an automated rotation engine for equal playtime.
+**Goal:** Allow coaches to securely invite assistant coaches via unique alphanumeric team join codes, laying the foundation for multi-user team management.
 
 **Target features:**
-- **Tactical Sub-Queue:** Stage multiple substitutions and apply them simultaneously with one button.
-- **Minutes Tracking:** Real-time tracking of playtime for all players during games.
-- **Rotation Engine:** Auto-generate substitution suggestions based on equal playtime goals.
-- **Tactical Alerts:** Notifications for sub-windows and playtime imbalances.
+- **Join Code Generation:** Automatically generate a unique, short alphanumeric code for each team.
+- **Coach Invites:** UI for head coach to view and share the code.
+- **Join Flow:** New and existing users can input a code to securely join a team as an assistant coach.
 
 ## Requirements
 
@@ -40,24 +39,25 @@ A coach shows up to a game and can instantly see who's on the field, swap player
 - [x] Drill Library with tagging and media instructions (Milestone v1.2)
 - [x] Practice Drills integration with sequencing and durations (Milestone v1.2)
 - [x] Live Practice Pacer with countdowns and alerts (Milestone v1.2)
+- [x] Sub-Queue: Stage substitutions without immediate execution (Milestone v1.3)
+- [x] Bulk Apply: Execute all staged substitutions with a single "Whistle/Sub" button (Milestone v1.3)
+- [x] Real-time Playtime Tracking: Track minutes played for every player (Milestone v1.3)
+- [x] Equal Playtime Engine: Suggest rotations based on playtime targets (Milestone v1.3)
+- [x] Substitution Windows: Configurable rotation intervals (e.g., every 8 minutes) (Milestone v1.3)
+- [x] Rotation Alerts: Haptic/visual alerts when a sub window is reached (Milestone v1.3)
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Sub-Queue: Stage substitutions without immediate execution
-- [ ] Bulk Apply: Execute all staged substitutions with a single "Whistle/Sub" button
-- [ ] Real-time Playtime Tracking: Track minutes played for every player
-- [ ] Equal Playtime Engine: Suggest rotations based on playtime targets
-- [ ] Substitution Windows: Configurable rotation intervals (e.g., every 8 minutes)
-- [ ] Rotation Alerts: Haptic/visual alerts when a sub window is reached
+- [ ] Assistant Coach Join Codes: Generate and display alphanumeric codes.
+- [ ] Assistant Onboarding Flow: Enter code to join a team.
 
 ### Out of Scope
 
 <!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
 
 - Parent accounts and "claim token" onboarding — deferred to v2
-- Assistant coach / team admin roles — deferred to v2
 - Real-time coach sync (WebSocket) — deferred to v2
 - iCal sync and calendar feeds — deferred to v2
 - Messaging / team chat — deferred to v3
