@@ -20,7 +20,7 @@ import {
   IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, enterOutline } from 'ionicons/icons';
+import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline } from 'ionicons/icons';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 import { TeamService } from '@apex-team/client/data-access/team';
 import { JoinTeamModal } from '../join-team/join-team-modal';
@@ -73,7 +73,7 @@ export class TeamsList {
   protected errorMessage = signal<string | null>(null);
 
   constructor() {
-    addIcons({ peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, enterOutline });
+    addIcons({ peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline });
   }
 
   ionViewWillEnter(): void {

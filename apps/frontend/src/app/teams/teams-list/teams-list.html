@@ -2,8 +2,8 @@
   <ion-toolbar>
     <ion-title>Teams</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="openJoinModal()" aria-label="Join Team">
-        <ion-icon name="enter-outline" slot="icon-only" />
+      <ion-button (click)="openJoinModal()" aria-label="Join Team" title="Join Team">
+        <ion-icon name="person-add-outline" slot="icon-only" />
       </ion-button>
       <app-theme-toggle></app-theme-toggle>
     </ion-buttons>
@@ -34,7 +34,7 @@
           Create Team
         </ion-button>
         <ion-button (click)="openJoinModal()" expand="block" fill="outline">
-          <ion-icon name="enter-outline" slot="start" />
+          <ion-icon name="person-add-outline" slot="start" />
           Join Team
         </ion-button>
       </div>
