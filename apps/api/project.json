@@ -45,21 +45,21 @@
     "migration:generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npx typeorm-ts-node-commonjs migration:generate apps/api/src/migrations/{args.name} -d apps/api/src/data-source.ts",
+        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npm run typeorm migration:generate apps/api/src/migrations/{args.name} -- -d apps/api/src/data-source.ts",
         "cwd": "{workspaceRoot}"
       }
     },
     "migration:run": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npx typeorm-ts-node-commonjs migration:run -d apps/api/src/data-source.ts",
+        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npm run typeorm migration:run -- -d apps/api/src/data-source.ts",
         "cwd": "{workspaceRoot}"
       }
     },
     "migration:revert": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npx typeorm-ts-node-commonjs migration:revert -d apps/api/src/data-source.ts",
+        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npm run typeorm migration:revert -- -d apps/api/src/data-source.ts",
         "cwd": "{workspaceRoot}"
       }
     },
