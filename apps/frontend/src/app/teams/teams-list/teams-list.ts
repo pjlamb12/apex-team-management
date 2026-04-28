@@ -23,6 +23,7 @@ import { addIcons } from 'ionicons';
 import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, enterOutline } from 'ionicons/icons';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 import { TeamService } from '@apex-team/client/data-access/team';
+import { JoinTeamModal } from '../join-team/join-team-modal';
 
 interface Sport {
   id: string;
@@ -92,8 +93,15 @@ export class TeamsList {
   }
 
   protected async openJoinModal(): Promise<void> {
-    // We'll implement this in the next task
-    console.log('Open join modal');
+    const modal = await this.modalCtrl.create({
+      component: JoinTeamModal,
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data?.joined) {
+      await this.loadTeams();
+    }
   }
 
   protected async confirmDelete(team: Team): Promise<void> {

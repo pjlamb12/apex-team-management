@@ -1,0 +1,44 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Join Team</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="dismiss()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button (click)="submit()" [disabled]="joinCode().length !== 6 || isSubmitting()" color="primary">
+        @if (isSubmitting()) {
+          <ion-spinner name="crescent" slot="start" size="small" />
+        }
+        Join
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="max-w-md mx-auto">
+    <p class="text-sm text-ap-muted mb-4">
+      Enter the 6-character code shared by your head coach to join their team.
+    </p>
+
+    <ion-list lines="none" class="bg-transparent">
+      <ion-item class="rounded-lg border border-ap-border overflow-hidden mb-2">
+        <ion-input
+          label="Join Code"
+          labelPlacement="floating"
+          placeholder="e.g. A4K9X2"
+          [value]="joinCode()"
+          (ionInput)="onCodeInput($event)"
+          maxlength="6"
+          class="font-mono text-xl tracking-widest uppercase"
+        />
+      </ion-item>
+    </ion-list>
+
+    @if (errorMessage()) {
+      <ion-text color="danger">
+        <p class="text-sm px-1">{{ errorMessage() }}</p>
+      </ion-text>
+    }
+  </div>
+</ion-content>
