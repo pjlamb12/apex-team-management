@@ -7,11 +7,11 @@ import {
   IonButtons,
   IonButton,
   IonContent,
-  IonList,
   IonItem,
   IonInput,
   IonText,
   IonSpinner,
+  IonIcon,
   ModalController,
 } from '@ionic/angular/standalone';
 import { TeamService } from '@apex-team/client/data-access/team';
@@ -27,11 +27,11 @@ import { TeamService } from '@apex-team/client/data-access/team';
     IonButtons,
     IonButton,
     IonContent,
-    IonList,
     IonItem,
     IonInput,
     IonText,
     IonSpinner,
+    IonIcon,
   ],
   templateUrl: './join-team-modal.html',
 })

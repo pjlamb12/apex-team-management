@@ -16,29 +16,38 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div class="max-w-md mx-auto">
-    <p class="text-sm text-ap-muted mb-4">
+  <div class="max-w-md mx-auto flex flex-col items-center pt-6">
+    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+      <ion-icon name="people-outline" class="text-3xl" color="primary" />
+    </div>
+
+    <p class="text-sm text-ap-muted text-center leading-relaxed mb-6 px-2">
       Enter the 6-character code shared by your head coach to join their team.
     </p>
 
-    <ion-list lines="none" class="bg-transparent">
-      <ion-item class="rounded-lg border border-ap-border overflow-hidden mb-2">
+    <div class="w-full">
+      <ion-item class="rounded-lg border border-ap-border overflow-hidden">
         <ion-input
           label="Join Code"
-          labelPlacement="floating"
+          labelPlacement="stacked"
           placeholder="e.g. A4K9X2"
           [value]="joinCode()"
           (ionInput)="onCodeInput($event)"
           maxlength="6"
-          class="font-mono text-xl tracking-widest uppercase"
+          class="join-code-input"
         />
       </ion-item>
-    </ion-list>
 
-    @if (errorMessage()) {
-      <ion-text color="danger">
-        <p class="text-sm px-1">{{ errorMessage() }}</p>
-      </ion-text>
-    }
+      <div class="flex justify-between items-center px-1 mt-1">
+        <div class="flex-1">
+          @if (errorMessage()) {
+            <ion-text color="danger">
+              <p class="text-sm">{{ errorMessage() }}</p>
+            </ion-text>
+          }
+        </div>
+        <p class="text-xs text-ap-muted">{{ joinCode().length }}/6</p>
+      </div>
+    </div>
   </div>
 </ion-content>
