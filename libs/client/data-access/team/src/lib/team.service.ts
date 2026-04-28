@@ -40,7 +40,7 @@ export class TeamService {
 
   async regenerateCode(teamId: string): Promise<{ joinCode: string }> {
     return firstValueFrom(
-      this.http.post<{ joinCode: string }>(`${this.apiUrl}/teams/${teamId}/regenerate-code`, {})
+      this.http.post<{ joinCode: string }>(`${this.apiUrl}/teams/${teamId}/code/regenerate`, {})
     );
   }
 

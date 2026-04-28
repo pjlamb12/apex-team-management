@@ -29,7 +29,7 @@ import { calendarOutline, chevronForwardOutline, refreshOutline, trashOutline, c
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { CommonModule } from '@angular/common';
-import { TeamService } from '../../../../../libs/client/data-access/team/src/lib/team.service';
+import { TeamService } from '@apex-team/client/data-access/team';
 
 interface Sport {
   id: string;
@@ -203,7 +203,7 @@ export class EditTeam {
       this.form.markAllAsTouched();
       return;
     }
-    const teamId = this.teamId;
+    const teamId = this._teamId();
     if (!teamId) return;
 
     this.isSaving.set(true);
