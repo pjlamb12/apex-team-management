@@ -70,15 +70,15 @@
           @if (parsedDrill()?.tagNames?.length) {
             <div class="flex flex-wrap gap-2">
               @for (tag of parsedDrill()?.tagNames; track tag) {
-                <ion-chip class="ion-no-margin py-0 h-6 bg-ap-accent/20 text-ap-accent border border-ap-accent/30">
-                  <ion-label class="text-[10px] font-bold">{{ tag }}</ion-label>
+                <ion-chip class="m-0 text-[10px] h-6 px-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
+                  <ion-label class="font-bold">{{ tag }}</ion-label>
                 </ion-chip>
               }
             </div>
           }
 
           @if (parsedDrill()?.sourceUrl) {
-            <div class="flex items-center gap-2 text-xs text-ap-accent">
+            <div class="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
               <ion-icon name="document-outline"></ion-icon>
               <span class="truncate">{{ parsedDrill()?.sourceUrl }}</span>
             </div>
@@ -89,7 +89,7 @@
             <ion-list lines="none" class="bg-transparent">
               @for (step of parsedDrill()?.instructions; track $index) {
                 <ion-item class="--background: transparent ion-no-padding mb-3">
-                  <div slot="start" class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold mr-3 mt-1">
+                  <div slot="start" class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold mr-3 mt-1 shrink-0">
                     {{ $index + 1 }}
                   </div>
                   <ion-label class="ion-text-wrap text-sm leading-relaxed">
@@ -97,7 +97,7 @@
                       <h3 class="font-bold text-ap-text mb-0.5">{{ step.title }}</h3>
                       <p class="text-ap-muted">{{ step.description }}</p>
                     } @else {
-                      {{ step.text || step }}
+                      {{ step.text || step.instruction || (step.toString() === '[object Object]' ? (step | json) : step) }}
                     }
                   </ion-label>
                 </ion-item>
