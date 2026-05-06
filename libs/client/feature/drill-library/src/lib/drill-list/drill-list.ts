@@ -21,11 +21,14 @@ import {
   IonRow,
   IonCol,
   IonButtons,
+  IonButton,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { addOutline, searchOutline, filterOutline } from 'ionicons/icons';
+import { addOutline, searchOutline, filterOutline, cloudUploadOutline } from 'ionicons/icons';
 import { DrillService } from '@apex-team/client/data-access/drill';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
+import { ImportDrillModal } from '../import-drill-modal/import-drill-modal';
 
 @Component({
   selector: 'app-drill-list',
@@ -52,6 +55,7 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
     IonRow,
     IonCol,
     IonButtons,
+    IonButton,
     ThemeToggle,
   ],
   templateUrl: './drill-list.html',
@@ -60,6 +64,7 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 })
 export class DrillList {
   protected readonly drillService = inject(DrillService);
+  private readonly modalCtrl = inject(ModalController);
 
   protected readonly searchTerm = signal('');
   protected readonly selectedTags = signal<string[]>([]);
@@ -82,7 +87,7 @@ export class DrillList {
   });
 
   constructor() {
-    addIcons({ addOutline, searchOutline, filterOutline });
+    addIcons({ addOutline, searchOutline, filterOutline, cloudUploadOutline });
 
     // Initial data fetch
     this.drillService.getTags().subscribe();
@@ -108,5 +113,17 @@ export class DrillList {
 
   protected isTagSelected(tagName: string): boolean {
     return this.selectedTags().includes(tagName);
+  }
+
+  protected async openImportModal(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: ImportDrillModal,
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data) {
+      // Reload is handled by tap() in service
+    }
   }
 }

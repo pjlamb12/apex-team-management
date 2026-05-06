@@ -21,6 +21,8 @@ import {
   IonSelect,
   IonSelectOption,
   ActionSheetController,
+  IonBadge,
+  IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -31,6 +33,8 @@ import {
   chevronForwardOutline,
   pencilOutline,
   addOutline,
+  refreshOutline,
+  sunnyOutline,
 } from 'ionicons/icons';
 import { EventsService, EventEntity, SeasonsService } from '@apex-team/client/data-access/team';
 import { Season } from '@apex-team/shared/util/models';
@@ -57,6 +61,8 @@ import { Season } from '@apex-team/shared/util/models';
     IonFabButton,
     IonSelect,
     IonSelectOption,
+    IonBadge,
+    IonButton,
   ],
   templateUrl: './schedule.html',
 })
@@ -93,6 +99,8 @@ export class Schedule {
       chevronForwardOutline,
       pencilOutline,
       addOutline,
+      refreshOutline,
+      sunnyOutline,
     });
 
     // Load events whenever teamId, scope, selectedSeasonId, or refreshTrigger changes
@@ -159,31 +167,81 @@ export class Schedule {
     }
   }
 
+  protected async refreshWeather(event: EventEntity): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId || !event.id) return;
+
+    try {
+      const weatherData = await firstValueFrom(this.eventsService.refreshWeather(teamId, event.id));
+      this.events.update(list => list.map(e => 
+        (e.id === event.id || e.virtualId === event.virtualId) 
+          ? { ...e, weatherData } 
+          : e
+      ));
+    } catch (err) {
+      console.error('Failed to refresh weather', err);
+    }
+  }
+
   protected async deleteEvent(event: EventEntity): Promise<void> {
     const teamId = this.teamId;
     if (!teamId) return;
 
-    const alert = await this.alertCtrl.create({
-      header: 'Delete Event?',
-      message: `Are you sure you want to delete this ${event.type}?`,
-      buttons: [
-        'Cancel',
-        {
-          text: 'Delete',
-          role: 'confirm',
-          handler: async () => {
-            try {
-              await firstValueFrom(this.eventsService.deleteEvent(teamId, event.id));
-              this.events.update((list) => list.filter((e) => e.id !== event.id));
-            } catch {
-              console.error('Failed to delete event');
+    if (event.recurrenceRule) {
+      const alert = await this.alertCtrl.create({
+        header: 'Delete Recurring Event',
+        message: 'Do you want to delete just this instance or the entire series?',
+        buttons: [
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Just This Instance',
+            handler: async () => {
+              try {
+                await firstValueFrom(this.eventsService.deleteEvent(teamId, event.id));
+                this.refreshTrigger.update(n => n + 1);
+              } catch {
+                console.error('Failed to delete instance');
+              }
             }
           },
-        },
-      ],
-    });
-
-    await alert.present();
+          {
+            text: 'Entire Series',
+            role: 'confirm',
+            handler: async () => {
+              try {
+                const masterId = event.parentEventId || event.id;
+                await firstValueFrom(this.eventsService.deleteEvent(teamId, masterId));
+                this.refreshTrigger.update(n => n + 1);
+              } catch {
+                console.error('Failed to delete series');
+              }
+            }
+          }
+        ]
+      });
+      await alert.present();
+    } else {
+      const alert = await this.alertCtrl.create({
+        header: 'Delete Event?',
+        message: `Are you sure you want to delete this ${event.type}?`,
+        buttons: [
+          'Cancel',
+          {
+            text: 'Delete',
+            role: 'confirm',
+            handler: async () => {
+              try {
+                await firstValueFrom(this.eventsService.deleteEvent(teamId, event.id));
+                this.events.update((list) => list.filter((e) => (e.virtualId || e.id) !== (event.virtualId || event.id)));
+              } catch {
+                console.error('Failed to delete event');
+              }
+            },
+          },
+        ],
+      });
+      await alert.present();
+    }
   }
 
   protected getEventTitle(event: EventEntity): string {
@@ -195,19 +253,23 @@ export class Schedule {
     return event.type === 'game' ? 'calendar-outline' : 'fitness-outline';
   }
 
-  protected getEventLink(event: EventEntity): string[] {
+  protected getEventLink(event: EventEntity): any[] {
     const teamId = this.teamId;
+    const path = [];
     if (event.type === 'practice') {
-      return ['/teams', teamId, 'events', event.id, 'practice'];
+      path.push('/teams', teamId, 'events', event.id, 'practice');
+    } else if (event.status === 'completed' || event.status === 'in_progress') {
+      path.push('/teams', teamId, 'events', event.id, 'summary');
+    } else {
+      path.push('/teams', teamId, 'events', event.id, 'lineup');
     }
     
-    // For games, if it's completed or in_progress, show summary
-    if (event.status === 'completed' || event.status === 'in_progress') {
-      return ['/teams', teamId, 'events', event.id, 'summary'];
-    }
-    
-    // Default to lineup for upcoming games
-    return ['/teams', teamId, 'events', event.id, 'lineup'];
+    return path;
+  }
+
+  protected getEventEditLink(event: EventEntity): any[] {
+    const link = ['/teams', this.teamId, 'schedule', event.id, 'edit'];
+    return link;
   }
 
   protected async presentAddEventSheet(): Promise<void> {

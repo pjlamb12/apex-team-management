@@ -35,13 +35,46 @@
 
           <ngx-control-errors-display class="block mt-3">
             <ion-item>
+              <ion-select label="Repeat" label-placement="fixed" formControlName="repeat" interface="action-sheet">
+                <ion-select-option value="none">Does not repeat</ion-select-option>
+                <ion-select-option value="weekly">Weekly</ion-select-option>
+                <ion-select-option value="biweekly">Every 2 weeks</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ngx-control-errors-display>
+
+          <!-- Location Section -->
+          <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
+            Location
+          </div>
+
+          <ngx-control-errors-display>
+            <ion-item>
+              <ion-select label="Saved Location" label-placement="floating" formControlName="locationId" interface="action-sheet">
+                <ion-select-option value="">Select a location...</ion-select-option>
+                @for (loc of locations(); track loc.id) {
+                  <ion-select-option [value]="loc.id">{{ loc.name }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          </ngx-control-errors-display>
+
+          <div class="px-4 mt-2">
+            <ion-button (click)="presentLocationModal()" fill="outline" expand="block" size="small">
+              <ion-icon name="add-outline" slot="start"></ion-icon>
+              Add New Location
+            </ion-button>
+          </div>
+
+          <ngx-control-errors-display class="block mt-3">
+            <ion-item>
               <ion-input
-                label="Location"
+                label="Field/Venue Name"
                 labelPlacement="floating"
                 type="text"
-                formControlName="location"
+                formControlName="locationName"
                 autocomplete="off"
-                placeholder="e.g. West Field, Park A"
+                placeholder="e.g. West Field, Pitch 3"
               />
             </ion-item>
           </ngx-control-errors-display>

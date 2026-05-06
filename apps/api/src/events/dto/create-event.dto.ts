@@ -19,6 +19,10 @@ export class CreateEventDto {
 
   @IsString()
   @IsOptional()
+  locationId?: string;
+
+  @IsString()
+  @IsOptional()
   uniformColor?: string;
 
   @IsBoolean()
@@ -63,4 +67,8 @@ export class CreateEventDto {
   @Min(1)
   @IsOptional()
   playersOnField?: number;
+
+  @IsString()
+  @IsOptional()
+  recurrenceRule?: string;
 }

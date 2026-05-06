@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { EventEntity } from './event.entity';
 
 @Entity('game_events')
@@ -21,4 +21,7 @@ export class GameEventEntity {
 
   @Column({ type: 'jsonb', default: {} })
   payload: Record<string, unknown>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 }

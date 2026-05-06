@@ -5,4 +5,8 @@ export class UpdateTeamDto {
   @IsNotEmpty()
   @IsOptional()
   name?: string;
+
+  @IsString()
+  @IsOptional()
+  homeLocationId?: string;
 }

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { SeasonEntity } from './season.entity';
 import { PracticeDrillEntity } from './practice-drill.entity';
+import { LocationEntity } from './location.entity';
 
 @Entity('events')
 export class EventEntity {
@@ -32,6 +33,13 @@ export class EventEntity {
   @Column({ nullable: true })
   location: string | null;
 
+  @ManyToOne(() => LocationEntity, (loc) => loc.events)
+  @JoinColumn({ name: 'location_id' })
+  locationRef: LocationEntity | null;
+
+  @Column({ name: 'location_id', nullable: true })
+  locationId: string | null;
+
   @Column({ name: 'uniform_color', nullable: true })
   uniformColor: string | null;
 
@@ -61,4 +69,20 @@ export class EventEntity {
 
   @Column({ name: 'current_period', type: 'int', default: 1 })
   currentPeriod: number;
+
+  @Column({ name: 'recurrence_rule', type: 'text', nullable: true })
+  recurrenceRule: string | null;
+
+  @ManyToOne(() => EventEntity)
+  @JoinColumn({ name: 'parent_event_id' })
+  parentEvent: EventEntity | null;
+
+  @Column({ name: 'parent_event_id', nullable: true })
+  parentEventId: string | null;
+
+  @Column({ name: 'weather_data', type: 'jsonb', nullable: true })
+  weatherData: any | null;
+
+  @Column({ name: 'weather_last_updated', type: 'timestamp', nullable: true })
+  weatherLastUpdated: Date | null;
 }

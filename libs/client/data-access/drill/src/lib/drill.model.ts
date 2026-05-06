@@ -28,6 +28,8 @@ export interface UpdateDrillDto extends Partial<CreateDrillDto> {
   lastUpdated?: string;
 }
 
+export interface ImportDrillDto extends CreateDrillDto {}
+
 export interface PracticeDrill {
   id: string;
   eventId: string;

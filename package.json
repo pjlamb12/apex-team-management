@@ -45,6 +45,7 @@
     "passport-jwt": "^4.0.1",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.1.14",
+    "rrule": "^2.8.1",
     "runtime-config-loader": "^6.1.0",
     "rxjs": "~7.8.0",
     "socket.io": "^4.8.3",

@@ -1,45 +1,42 @@
 # Roadmap: Apex Team
 
-## Milestone v1.5: Real-time Synchronization
+## Milestone v1.7: Drill Import Foundation
 
-**Goal**: Implement real-time synchronization between coaches and assistants using Socket.io, ensuring game console state, event logs, and status changes are consistent across all devices.
+**Goal**: Enhance the Drill Library with import capabilities to leverage AI-generated content.
 
 ## Phases
 
-- [x] **Phase 21: Socket.io Foundation** - Setup Socket.io on backend and frontend with room logic and authentication.
-- [x] **Phase 22: Live Game Synchronization** - Real-time sync for substitutions, goals, and game status changes.
+- [ ] **Phase 27: Import API & Validation** - Backend endpoint for importing drills with strict JSON validation.
+- [ ] **Phase 28: Drill Import UI** - Frontend interface for pasting JSON and uploading files in the Drill Library.
 
 ## Phase Details
 
-### Phase 21: Socket.io Foundation
-**Goal**: Establish a secure Socket.io infrastructure for both backend and frontend.
-**Depends on**: Milestone v1.4
-**Requirements**: SYNC-03
+### Phase 27: Import API & Validation
+**Goal**: Provide a secure and validated way to ingest drill data from external sources.
+**Depends on**: Milestone v1.6
+**Requirements**: IMP-BE-01, IMP-BE-02, IMP-BE-03
 **Success Criteria** (what must be TRUE):
-  1. Socket.io dependencies installed on backend and frontend.
-  2. `SocketGateway` implemented on backend with JWT authentication.
-  3. `SocketService` implemented on frontend with automatic reconnection and event handling.
-  4. Room-based synchronization logic (Join `team:{teamId}` and `event:{eventId}` rooms).
-**Plans**:
-- [ ] 21-01-PLAN.md — Socket.io Backend & Authentication
-- [ ] 21-02-PLAN.md — Socket.io Frontend Service & Room Logic
+  1. `POST /api/drills/import` successfully creates a drill from a valid JSON body.
+  2. Missing `name` or `instructions` results in a 400 Bad Request.
+  3. Non-existent tags in the import are automatically created and linked.
 
-### Phase 22: Live Game Synchronization
-**Goal**: Broadcast and receive game state changes in real-time.
-**Depends on**: Phase 21
-**Requirements**: SYNC-03
+### Phase 28: Drill Import UI
+**Goal**: Allow coaches to use the import feature without touching the API.
+**Depends on**: Phase 27
+**Requirements**: IMP-FE-01, IMP-FE-02, IMP-FE-03, IMP-FE-04
 **Success Criteria** (what must be TRUE):
-  1. `EventsService` broadcasts new game events (subs, goals) to the `event:{eventId}` room.
-  2. `EventsService` broadcasts game status changes (Start/End/Period) to the room.
-  3. `LiveGameStateService` on the frontend updates its internal signal state when remote events are received.
-  4. State remains consistent across devices even with intermittent connectivity.
-**Plans**:
-- [ ] 22-01-PLAN.md — Backend Event Broadcasting
-- [ ] 22-02-PLAN.md — Frontend Real-time State Updates
+  1. "Import" button appears in the Drill Library.
+  2. User can toggle between "Paste JSON" and "Upload File".
+  3. Preview shows the drill's name and instructions before final confirmation.
+  4. Successful import redirects to the new drill's detail view.
 
 ## Progress Table
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 21. Socket.io Foundation | 2/2 | Completed | 2026-05-13 |
-| 22. Live Game Synchronization | 2/2 | Completed | 2026-05-13 |
+| 23. iCal Sync Integration | 2/2 | Completed | 2026-05-05 |
+| 24. Recurring Events | 2/2 | Completed | 2026-05-05 |
+| 25. Weather Integration | 1/1 | Completed | 2026-05-05 |
+| 26. Structured Locations | 1/1 | Completed | 2026-05-05 |
+| 27. Import API & Validation | 2/2 | Completed | 2026-05-05 |
+| 28. Drill Import UI | 1/1 | Completed | 2026-05-05 |

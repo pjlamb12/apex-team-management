@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { Drill, Tag, CreateDrillDto, UpdateDrillDto } from './drill.model';
+import { Drill, Tag, CreateDrillDto, UpdateDrillDto, ImportDrillDto } from './drill.model';
 
 @Injectable({
   providedIn: 'root',
@@ -48,6 +48,15 @@ export class DrillService {
 
   createDrill(dto: CreateDrillDto): Observable<Drill> {
     return this.http.post<Drill>(this.baseUrl, dto).pipe(
+      tap(() => {
+        this.getDrills().subscribe();
+        this.getTags().subscribe();
+      })
+    );
+  }
+
+  importDrill(dto: ImportDrillDto): Observable<Drill> {
+    return this.http.post<Drill>(`${this.baseUrl}/import`, dto).pipe(
       tap(() => {
         this.getDrills().subscribe();
         this.getTags().subscribe();

@@ -15,6 +15,7 @@ import { DrillEntity } from './entities/drill.entity';
 import { TagEntity } from './entities/tag.entity';
 import { PracticeDrillEntity } from './entities/practice-drill.entity';
 import { TeamMemberEntity } from './entities/team-member.entity';
+import { LocationEntity } from './entities/location.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -36,6 +37,7 @@ export default new DataSource({
     TagEntity,
     PracticeDrillEntity,
     TeamMemberEntity,
+    LocationEntity,
   ],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   synchronize: false,

@@ -20,7 +20,6 @@ import { ThemeService } from '@apex-team/client/ui/theme';
   standalone: true,
   imports: [
     IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel,
-    IonHeader, IonToolbar, IonTitle, IonButtons, IonButton,
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',

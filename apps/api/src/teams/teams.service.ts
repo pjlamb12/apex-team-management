@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { nanoid } from 'nanoid';
 import { TeamEntity } from '../entities/team.entity';
 import { TeamMemberEntity } from '../entities/team-member.entity';
 import { CreateTeamDto } from './dto/create-team.dto';
@@ -41,6 +42,7 @@ export class TeamsService {
       sportId: dto.sportId,
       coachId,
       joinCode: this.joinCodeService.generate(),
+      calendarSecret: nanoid(),
     });
     
     const savedTeam = await this.teamRepo.save(team);
@@ -132,5 +134,20 @@ export class TeamsService {
 
     team.joinCode = newCode!;
     return this.teamRepo.save(team);
+  }
+
+  async regenerateCalendarSecret(teamId: string): Promise<TeamEntity> {
+    const team = await this.findOne(teamId);
+    team.calendarSecret = nanoid();
+    return this.teamRepo.save(team);
+  }
+
+  async findByCalendarSecret(secret: string): Promise<TeamEntity> {
+    const team = await this.teamRepo.findOne({
+      where: { calendarSecret: secret },
+      relations: ['sport'],
+    });
+    if (!team) throw new NotFoundException('Invalid calendar secret');
+    return team;
   }
 }

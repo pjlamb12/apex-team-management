@@ -31,6 +31,9 @@
       "@apex-team/client/ui/empty-state": ["libs/client/ui/empty-state/src/index.ts"],
       "@apex-team/client/ui/section-label": ["libs/client/ui/section-label/src/index.ts"],
       "@apex-team/client/ui/loading": ["libs/client/ui/loading/src/index.ts"],
+      "@apex-team/client/ui/location-modal": ["libs/client/ui/location-modal/src/index.ts"],
+      "@apex-team/client/shared/services": [
+"apps/frontend/src/app/shared/services/index.ts"],
       "@apex-team/client/feature/drill-library": [
         "libs/client/feature/drill-library/src/index.ts"
       ],

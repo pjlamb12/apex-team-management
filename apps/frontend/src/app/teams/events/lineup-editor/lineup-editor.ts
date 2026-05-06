@@ -1,6 +1,6 @@
 import { Component, inject, signal, effect, computed, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   IonContent,
@@ -22,7 +22,10 @@ import {
   IonBadge,
   IonSegment,
   IonSegmentButton,
+  IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { settingsOutline } from 'ionicons/icons';
 import { EventsService, EventEntity, LineupEntry, SaveLineupDto } from '@apex-team/client/data-access/team';
 import { PlayersService, PlayerEntity } from '../../players.service';
 import { SoccerPitchViewComponent } from '@apex-team/client/feature/game-console';
@@ -55,6 +58,7 @@ function getPositionFromSlot(slot: number): string {
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -74,6 +78,7 @@ function getPositionFromSlot(slot: number): string {
     IonBadge,
     IonSegment,
     IonSegmentButton,
+    IonIcon,
     SoccerPitchViewComponent,
   ],
   templateUrl: './lineup-editor.html',
@@ -146,6 +151,7 @@ export class LineupEditor implements OnInit {
   });
 
   constructor() {
+    addIcons({ settingsOutline });
     // Load data whenever teamId or eventId changes
     effect(() => {
       const tId = this._teamId();

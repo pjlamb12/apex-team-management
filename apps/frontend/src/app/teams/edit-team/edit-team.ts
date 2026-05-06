@@ -1,6 +1,7 @@
 import { Component, inject, signal, effect, Input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import {
   IonContent,
   IonCard,
@@ -22,14 +23,27 @@ import {
   IonLabel,
   IonList,
   IonListHeader,
+  IonToast,
   AlertController,
+  ModalController,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { calendarOutline, chevronForwardOutline, refreshOutline, trashOutline, copyOutline } from 'ionicons/icons';
+import { 
+  calendarOutline, 
+  chevronForwardOutline, 
+  refreshOutline, 
+  trashOutline, 
+  copyOutline, 
+  shareOutline, 
+  addOutline
+} from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { CommonModule } from '@angular/common';
-import { TeamService } from '@apex-team/client/data-access/team';
+import { TeamService, LocationService, LocationEntity } from '@apex-team/client/data-access/team';
+import { LocationModal } from '@apex-team/client/ui/location-modal';
 
 interface Sport {
   id: string;
@@ -42,6 +56,8 @@ interface Team {
   sport: Sport;
   role?: 'HEAD_COACH' | 'ASSISTANT';
   joinCode?: string;
+  calendarSecret?: string;
+  homeLocationId?: string;
 }
 
 @Component({
@@ -71,6 +87,9 @@ interface Team {
     IonLabel,
     IonList,
     IonListHeader,
+    IonToast,
+    IonSelect,
+    IonSelectOption,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './edit-team.html',
@@ -87,9 +106,11 @@ export class EditTeam {
   }
 
   private readonly teamService = inject(TeamService);
+  private readonly locationService = inject(LocationService);
   private readonly config = inject(RuntimeConfigLoaderService);
   private readonly router = inject(Router);
   private readonly alertCtrl = inject(AlertController);
+  private readonly modalCtrl = inject(ModalController);
   protected readonly fb = inject(FormBuilder);
 
   protected team = signal<Team | null>(null);
@@ -97,9 +118,13 @@ export class EditTeam {
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
   protected successMessage = signal<string | null>(null);
+  protected toastMessage = signal<string | null>(null);
+
+  protected locations = signal<LocationEntity[]>([]);
 
   protected form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
+    homeLocationId: [''],
   });
 
   protected get apiUrl(): string {
@@ -113,6 +138,8 @@ export class EditTeam {
       refreshOutline,
       trashOutline,
       copyOutline,
+      shareOutline,
+      addOutline,
     });
 
     // Load team whenever id changes
@@ -120,6 +147,7 @@ export class EditTeam {
       const teamId = this._teamId();
       if (teamId) {
         void this.loadTeam(teamId);
+        void this.loadLocations();
       }
     });
   }
@@ -128,18 +156,49 @@ export class EditTeam {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      // We still use direct http for specific team fetch since it's not in the basic TeamService yet
-      // but let's check if TeamService has it. It doesn't.
-      // Actually, let's add it to TeamService for consistency.
       const team = await this.teamService.getTeam(id);
       this.team.set(team);
       this.form.patchValue({
         name: team.name,
+        homeLocationId: team.homeLocationId ?? '',
       });
     } catch {
       this.errorMessage.set('Failed to load team. Please try again.');
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  protected async loadLocations(): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    try {
+      const locs = await firstValueFrom(this.locationService.getLocations(teamId));
+      this.locations.set(locs);
+    } catch {
+      console.error('Failed to load locations');
+    }
+  }
+
+  protected async presentLocationModal(): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    const modal = await this.modalCtrl.create({
+      component: LocationModal,
+      componentProps: {
+        teamId: teamId
+      }
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data) {
+      const newLoc = data as LocationEntity;
+      this.locations.update(prev => [...prev, newLoc]);
+      this.form.patchValue({ homeLocationId: newLoc.id });
+      this.toastMessage.set('Location added and selected');
     }
   }
 
@@ -158,8 +217,35 @@ export class EditTeam {
             try {
               const { joinCode } = await this.teamService.regenerateCode(teamId);
               this.team.update((t) => (t ? { ...t, joinCode } : null));
+              this.toastMessage.set('Join code regenerated');
             } catch {
               this.errorMessage.set('Failed to regenerate code.');
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  protected async regenerateCalendarSecret(): Promise<void> {
+    const teamId = this._teamId();
+    if (!teamId) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Regenerate Calendar Link?',
+      message: 'This will invalidate your existing calendar subscriptions on other devices.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Regenerate',
+          handler: async () => {
+            try {
+              const updatedTeam = await this.teamService.regenerateCalendarSecret(teamId);
+              this.team.set(updatedTeam);
+              this.toastMessage.set('Calendar link regenerated');
+            } catch {
+              this.errorMessage.set('Failed to regenerate calendar link.');
             }
           },
         },
@@ -201,6 +287,16 @@ export class EditTeam {
     const code = this.team()?.joinCode;
     if (code) {
       await navigator.clipboard.writeText(code);
+      this.toastMessage.set('Join code copied to clipboard');
+    }
+  }
+
+  protected async copyCalendarUrl(): Promise<void> {
+    const secret = this.team()?.calendarSecret;
+    if (secret) {
+      const url = `${this.apiUrl}/teams/calendar/${secret}.ics`;
+      await navigator.clipboard.writeText(url);
+      this.toastMessage.set('Calendar URL copied to clipboard');
     }
   }
 
@@ -216,10 +312,13 @@ export class EditTeam {
     this.errorMessage.set(null);
     this.successMessage.set(null);
     try {
-      const { name } = this.form.value;
+      const { name, homeLocationId } = this.form.getRawValue();
       if (!name) return;
 
-      await this.teamService.updateTeam(teamId, { name });
+      await this.teamService.updateTeam(teamId, { 
+        name, 
+        homeLocationId: homeLocationId || undefined 
+      });
       await this.router.navigate(['/teams', teamId, 'roster']);
     } catch {
       this.errorMessage.set('Failed to update team. Please try again.');

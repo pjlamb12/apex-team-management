@@ -2,6 +2,7 @@ import { Component, inject, signal, effect, Input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
+import { CommonModule } from '@angular/common';
 import {
   IonContent,
   IonCard,
@@ -22,9 +23,19 @@ import {
   IonModal,
   IonLabel,
   IonToggle,
+  IonSelect,
+  IonSelectOption,
+  IonList,
+  IonNote,
+  IonSpinner,
+  IonIcon,
+  ModalController,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { addOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { EventsService } from '@apex-team/client/data-access/team';
+import { EventsService, LocationEntity, LocationService } from '@apex-team/client/data-access/team';
+import { LocationModal } from '@apex-team/client/ui/location-modal';
 import { Season } from '@apex-team/shared/util/models';
 
 function toLocalISOString(date: Date): string {
@@ -35,6 +46,7 @@ function toLocalISOString(date: Date): string {
   selector: 'app-create-event',
   standalone: true,
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     IonContent,
     IonCard,
@@ -55,6 +67,12 @@ function toLocalISOString(date: Date): string {
     IonModal,
     IonLabel,
     IonToggle,
+    IonSelect,
+    IonSelectOption,
+    IonList,
+    IonNote,
+    IonSpinner,
+    IonIcon,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './create-event.html',
@@ -71,29 +89,38 @@ export class CreateEvent {
 
   private readonly router = inject(Router);
   private readonly eventsService = inject(EventsService);
+  private readonly locationService = inject(LocationService);
+  private readonly modalCtrl = inject(ModalController);
   protected readonly fb = inject(FormBuilder);
 
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
   protected activeSeason = signal<Season | null>(null);
+  
+  protected locations = signal<LocationEntity[]>([]);
 
   protected form = this.fb.group({
     opponent: ['', [Validators.required, Validators.minLength(2)]],
     scheduledAt: [toLocalISOString(new Date()), [Validators.required]],
-    location: [''],
+    locationId: [''],
+    locationName: [''], // Field/Venue name within the location
     uniformColor: [''],
     isHomeGame: [true],
     periodCount: [2, [Validators.min(1)]],
     periodLengthMinutes: [45, [Validators.min(1)]],
     playersOnField: [11, [Validators.min(1)]],
+    repeat: ['none'],
   });
 
   constructor() {
-    // Load season whenever teamId changes
+    addIcons({ addOutline });
+
+    // Load data whenever teamId changes
     effect(() => {
       const id = this._teamId();
       if (id) {
         void this.loadSeason(id);
+        void this.loadLocations(id);
       }
     });
 
@@ -113,6 +140,33 @@ export class CreateEvent {
     }
   }
 
+  protected async loadLocations(teamId: string): Promise<void> {
+    try {
+      const locs = await firstValueFrom(this.locationService.getLocations(teamId));
+      this.locations.set(locs);
+    } catch {
+      console.error('Failed to load locations');
+    }
+  }
+
+  protected async presentLocationModal(): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    const modal = await this.modalCtrl.create({
+      component: LocationModal,
+      componentProps: { teamId }
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data) {
+      const newLoc = data as LocationEntity;
+      this.locations.update(prev => [...prev, newLoc]);
+      this.form.patchValue({ locationId: newLoc.id });
+    }
+  }
+
   private applySeasonDefaults(isHome: boolean): void {
     const season = this.activeSeason();
     if (!season) return;
@@ -124,7 +178,6 @@ export class CreateEvent {
     };
 
     if (isHome) {
-      patches.location = season.defaultHomeVenue ?? '';
       patches.uniformColor = season.defaultHomeColor ?? '';
     } else {
       patches.uniformColor = season.defaultAwayColor ?? '';
@@ -140,30 +193,43 @@ export class CreateEvent {
     }
 
     const teamId = this.teamId;
-    if (!teamId) {
-      this.errorMessage.set('Missing team ID.');
-      return;
-    }
+    if (!teamId) return;
 
     this.isSaving.set(true);
     this.errorMessage.set(null);
     try {
-      const { opponent, scheduledAt, location, uniformColor, isHomeGame, periodCount, periodLengthMinutes, playersOnField } =
-        this.form.getRawValue();
-      const event = await firstValueFrom(
+      const { 
+        opponent, scheduledAt, locationId, locationName, uniformColor, 
+        isHomeGame, periodCount, periodLengthMinutes, playersOnField, repeat 
+      } = this.form.getRawValue();
+
+      let recurrenceRule: string | undefined = undefined;
+      if (repeat && repeat !== 'none') {
+        const date = new Date(scheduledAt!);
+        const days = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+        const day = days[date.getDay()];
+        if (repeat === 'weekly') {
+          recurrenceRule = `FREQ=WEEKLY;BYDAY=${day}`;
+        } else if (repeat === 'biweekly') {
+          recurrenceRule = `FREQ=WEEKLY;INTERVAL=2;BYDAY=${day}`;
+        }
+      }
+
+      await firstValueFrom(
         this.eventsService.createEvent(teamId, {
           type: 'game',
           opponent: opponent!,
           scheduledAt: new Date(scheduledAt!).toISOString(),
-          location: location || undefined,
+          location: locationName || undefined,
+          locationId: locationId || undefined,
           uniformColor: uniformColor || undefined,
           isHomeGame: isHomeGame ?? true,
           periodCount: periodCount ? Number(periodCount) : undefined,
           periodLengthMinutes: periodLengthMinutes ? Number(periodLengthMinutes) : undefined,
           playersOnField: playersOnField ? Number(playersOnField) : undefined,
+          recurrenceRule,
         })
       );
-      // Navigate back to schedule
       await this.router.navigate(['/teams', teamId, 'schedule']);
     } catch {
       this.errorMessage.set('Failed to create game. Please try again.');

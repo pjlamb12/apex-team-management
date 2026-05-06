@@ -19,6 +19,10 @@ export class UpdateEventDto {
 
   @IsString()
   @IsOptional()
+  locationId?: string;
+
+  @IsString()
+  @IsOptional()
   uniformColor?: string;
 
   @IsBoolean()
@@ -67,4 +71,8 @@ export class UpdateEventDto {
   @IsString()
   @IsOptional()
   status?: 'scheduled' | 'in_progress' | 'completed';
+
+  @IsString()
+  @IsOptional()
+  recurrenceRule?: string;
 }

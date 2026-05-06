@@ -58,6 +58,12 @@ export class DrillsService {
     return (await this.drillRepo.save(drill)) as any;
   }
 
+  async import(coachId: string, data: any): Promise<DrillEntity> {
+    // Current logic is identical to create, but we wrap it to allow for 
+    // future AI-specific validation or mapping logic if needed.
+    return this.create(coachId, data);
+  }
+
   async update(id: string, coachId: string, data: any): Promise<DrillEntity> {
     const drill = await this.findOne(id, coachId);
     const { tagNames, ...drillData } = data;

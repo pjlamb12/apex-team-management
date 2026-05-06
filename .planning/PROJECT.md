@@ -8,62 +8,42 @@ A game day coaching console for youth sports. Coaches create teams, manage roste
 
 A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened — no paper lineups, no mental math.
 
-## Current Milestone: v1.4 Assistant Coach Invites
+## Current Milestone: v1.7 Drill Import Foundation
 
-**Goal:** Allow coaches to securely invite assistant coaches via unique alphanumeric team join codes, laying the foundation for multi-user team management.
+**Goal:** Allow coaches to easily import drills from AI-generated sources (like Gemini) via JSON or file upload.
 
 **Target features:**
-- **Join Code Generation:** Automatically generate a unique, short alphanumeric code for each team.
-- **Coach Invites:** UI for head coach to view and share the code.
-- **Join Flow:** New and existing users can input a code to securely join a team as an assistant coach.
+- **JSON Import:** Paste raw JSON into a dedicated import field in the Drill Library.
+- **File Upload:** Upload .json files directly to populate the library.
+- **Strict Validation:** Ensure imported data adheres to the `DrillEntity` schema.
 
 ## Requirements
 
 ### Validated
 
-<!-- Shipped and confirmed valuable. -->
-
-- [x] Coach can sign up and log in with email/password (Phase 2)
-- [x] Coach can create a team and select a sport (soccer for v1) (Phase 3)
-- [x] Coach can add players to a roster (name, jersey number, contact email) (Phase 4)
-- [x] Coach can create a new game (opponent, location, time, uniform color) (Phase 5, 9)
-- [x] Coach can set a starting lineup by assigning players to positions (Phase 5)
-- [x] Coach can swap players in/out during a live game (Phase 6, 9)
-- [x] Coach can see at a glance who's on the field and who's on the bench (Phase 6)
-- [x] Coach can tap to log goals and assists with timestamps (Phase 6)
-- [x] Sport configuration is data-driven (positions, players on field, period type as JSONB/config) (Phase 3)
-- [x] App works as a responsive web app (mobile-first, PWA-ready) (Phase 7)
-- [x] Seasons can store default venue and jersey colors (Phase 9)
-- [x] Create and edit seasons for a team (Milestone v1.1)
-- [x] Unified "Schedule" view in Team Dashboard (Games + Practices) (Milestone v1.1)
-- [x] Drill Library with tagging and media instructions (Milestone v1.2)
-- [x] Practice Drills integration with sequencing and durations (Milestone v1.2)
-- [x] Live Practice Pacer with countdowns and alerts (Milestone v1.2)
-- [x] Sub-Queue: Stage substitutions without immediate execution (Milestone v1.3)
-- [x] Bulk Apply: Execute all staged substitutions with a single "Whistle/Sub" button (Milestone v1.3)
-- [x] Real-time Playtime Tracking: Track minutes played for every player (Milestone v1.3)
-- [x] Equal Playtime Engine: Suggest rotations based on playtime targets (Milestone v1.3)
-- [x] Substitution Windows: Configurable rotation intervals (e.g., every 8 minutes) (Milestone v1.3)
-- [x] Rotation Alerts: Haptic/visual alerts when a sub window is reached (Milestone v1.3)
+- [x] Assistant Coach Join Codes: Generate and display alphanumeric codes.
+- [x] Assistant Onboarding Flow: Enter code to join a team.
+- [x] Real-time WebSocket sync between coach devices during games.
+- [x] iCal Sync: Generate .ics URLs for teams.
+- [x] Recurring Events: "Repeat" logic for practices and games.
+- [x] Precision Weather: Lat/Lon based forecasts via WeatherAPI.com.
+- [x] Structured Locations: Address search and coordinate mapping.
 
 ### Active
 
-<!-- Current scope. Building toward these. -->
+- [ ] JSON Paste Import: UI for pasting and validating drill JSON.
+- [ ] File Upload Import: Support for importing .json files.
+- [ ] Import Preview: Review drill data before saving to the database.
 
-- [ ] Assistant Coach Join Codes: Generate and display alphanumeric codes.
-- [ ] Assistant Onboarding Flow: Enter code to join a team.
-
-### Out of Scope
+### Out of Scope / Deferred
 
 <!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
 
-- Parent accounts and "claim token" onboarding — deferred to v2
-- Real-time coach sync (WebSocket) — deferred to v2
-- iCal sync and calendar feeds — deferred to v2
-- Messaging / team chat — deferred to v3
-- Media hub (photo/video uploads) — deferred to v3
-- Analytics and reporting — deferred to v3
-- Basketball and volleyball sport configs — deferred (architecture supports them, but only soccer is seeded in v1)
+- Parent accounts and "claim token" onboarding — deferred to v3.0
+- Personalized iCal feeds for parents — deferred to v3.0
+- Messaging / team chat — deferred to v4.0
+- Media hub (photo/video uploads) — deferred to v4.0
+- Analytics and reporting — deferred to v2.0
 
 ## Context
 

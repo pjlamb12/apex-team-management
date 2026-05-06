@@ -35,7 +35,7 @@ import { PlayerActionMenuComponent } from '../player-action-menu/player-action-m
 import { EventLogViewComponent } from '../event-log/event-log';
 import { SubQueueComponent } from '../sub-queue/sub-queue';
 import { EventSyncService } from '../event-sync.service';
-import { SocketService } from '../../../../../apps/frontend/src/app/shared/services/socket.service';
+import { SocketService } from '@apex-team/client/shared/services';
 import { Player, LineupEntry } from '@apex-team/shared/util/models';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 

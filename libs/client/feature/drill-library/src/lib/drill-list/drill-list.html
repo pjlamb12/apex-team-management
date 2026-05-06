@@ -2,6 +2,9 @@
   <ion-toolbar>
     <ion-title>Drill Library</ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="openImportModal()" title="Import Drill">
+        <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
+      </ion-button>
       <app-theme-toggle></app-theme-toggle>
     </ion-buttons>
   </ion-toolbar>

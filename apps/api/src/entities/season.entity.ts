@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { TeamEntity } from './team.entity';
+import { EventEntity } from './event.entity';
 
 @Entity('seasons')
 export class SeasonEntity {
@@ -45,4 +46,7 @@ export class SeasonEntity {
 
   @Column({ name: 'default_practice_location', nullable: true })
   defaultPracticeLocation: string | null;
+
+  @OneToMany(() => EventEntity, (event) => event.season)
+  events: EventEntity[];
 }

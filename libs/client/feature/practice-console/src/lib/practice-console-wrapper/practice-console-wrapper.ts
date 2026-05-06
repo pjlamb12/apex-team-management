@@ -19,7 +19,11 @@ import {
   IonContent,
   IonList,
   IonItem,
+  IonIcon,
+  IonButton,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { pencilOutline } from 'ionicons/icons';
 import {
   PracticeDrillsService,
   PracticeDrill,
@@ -47,6 +51,8 @@ import { PracticeExecutionTab } from '../practice-execution-tab/practice-executi
     IonContent,
     IonList,
     IonItem,
+    IonIcon,
+    IonButton,
     PracticePlanTab,
     PracticeExecutionTab,
   ],
@@ -69,6 +75,10 @@ export class PracticeConsoleWrapper implements OnInit {
 
   private _plan = signal<PracticeDrill[]>([]);
   protected plan = this._plan.asReadonly();
+
+  constructor() {
+    addIcons({ pencilOutline });
+  }
 
   ngOnInit() {
     this.loadData();

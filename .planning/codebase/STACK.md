@@ -76,10 +76,10 @@ Nx monorepo with Angular 21 frontend. Currently a fresh scaffold — single `@an
 | Target         | Executor                        | Port  |
 |----------------|---------------------------------|-------|
 | `build`        | `@angular/build:application`    | —     |
-| `serve`        | `@angular/build:dev-server`     | 4200  |
+| `serve`        | `@angular/build:dev-server`     | 8200  |
 | `test`         | `@angular/build:unit-test`      | —     |
 | `lint`         | `@nx/eslint:lint`               | —     |
-| `serve-static` | `@nx/web:file-server`           | 4200  |
+| `serve-static` | `@nx/web:file-server`           | 8200  |
 
 ### Production Build Budgets
 

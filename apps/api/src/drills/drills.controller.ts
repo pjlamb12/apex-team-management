@@ -14,6 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { DrillsService } from './drills.service';
 import { CreateDrillDto } from './dto/create-drill.dto';
 import { UpdateDrillDto } from './dto/update-drill.dto';
+import { ImportDrillDto } from './dto/import-drill.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('drills')
@@ -48,6 +49,14 @@ export class DrillsController {
     @Body() dto: CreateDrillDto,
   ) {
     return this.drillsService.create(req.user.sub, dto);
+  }
+
+  @Post('import')
+  import(
+    @Request() req: { user: { sub: string } },
+    @Body() dto: ImportDrillDto,
+  ) {
+    return this.drillsService.import(req.user.sub, dto);
   }
 
   @Get(':id')

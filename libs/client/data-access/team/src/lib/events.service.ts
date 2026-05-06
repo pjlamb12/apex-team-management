@@ -4,13 +4,27 @@ import { Observable } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { Season } from '@apex-team/shared/util/models';
 
+export interface LocationEntity {
+  id: string;
+  name: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  lat?: number;
+  lon?: number;
+}
+
 export interface EventEntity {
   id: string;
+  virtualId?: string;
   type: 'game' | 'practice';
   seasonId: string;
   opponent?: string;
   scheduledAt: string;
   location: string | null;
+  locationId?: string | null;
+  locationRef?: LocationEntity | null;
   uniformColor: string | null;
   isHomeGame: boolean;
   status: 'scheduled' | 'in_progress' | 'completed';
@@ -23,6 +37,14 @@ export interface EventEntity {
   periodLengthMinutes?: number | null;
   playersOnField?: number | null;
   currentPeriod?: number;
+  recurrenceRule?: string | null;
+  parentEventId?: string | null;
+  weatherData?: {
+    temp_f: number;
+    condition: string;
+    icon: string;
+    chance_of_rain: number;
+  } | null;
 }
 
 export interface CreateEventDto {
@@ -30,6 +52,7 @@ export interface CreateEventDto {
   opponent?: string;
   scheduledAt?: string;
   location?: string;
+  locationId?: string;
   uniformColor?: string;
   isHomeGame?: boolean;
   durationMinutes?: number;
@@ -39,6 +62,7 @@ export interface CreateEventDto {
   periodCount?: number;
   periodLengthMinutes?: number;
   playersOnField?: number;
+  recurrenceRule?: string;
 }
 
 export interface UpdateEventDto {
@@ -46,6 +70,7 @@ export interface UpdateEventDto {
   opponent?: string;
   scheduledAt?: string;
   location?: string;
+  locationId?: string;
   uniformColor?: string;
   isHomeGame?: boolean;
   durationMinutes?: number;
@@ -57,6 +82,7 @@ export interface UpdateEventDto {
   playersOnField?: number;
   currentPeriod?: number;
   status?: 'scheduled' | 'in_progress' | 'completed';
+  recurrenceRule?: string;
 }
 
 export interface LineupEntry {
@@ -131,5 +157,9 @@ export class EventsService {
 
   saveLineup(teamId: string, eventId: string, data: SaveLineupDto): Observable<LineupEntry[]> {
     return this.http.post<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`, data);
+  }
+
+  refreshWeather(teamId: string, eventId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/weather/refresh`, {});
   }
 }

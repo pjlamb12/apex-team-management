@@ -3,6 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 
+export interface CreateTeamDto {
+  name: string;
+  sportId: string;
+}
+
+export interface UpdateTeamDto {
+  name?: string;
+  homeLocationId?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -26,7 +36,13 @@ export class TeamService {
     );
   }
 
-  async updateTeam(id: string, data: { name: string }): Promise<any> {
+  async createTeam(data: CreateTeamDto): Promise<any> {
+    return firstValueFrom(
+      this.http.post<any>(`${this.apiUrl}/teams`, data)
+    );
+  }
+
+  async updateTeam(id: string, data: UpdateTeamDto): Promise<any> {
     return firstValueFrom(
       this.http.patch<any>(`${this.apiUrl}/teams/${id}`, data)
     );
@@ -41,6 +57,12 @@ export class TeamService {
   async regenerateCode(teamId: string): Promise<{ joinCode: string }> {
     return firstValueFrom(
       this.http.post<{ joinCode: string }>(`${this.apiUrl}/teams/${teamId}/code/regenerate`, {})
+    );
+  }
+
+  async regenerateCalendarSecret(teamId: string): Promise<any> {
+    return firstValueFrom(
+      this.http.post<any>(`${this.apiUrl}/teams/${teamId}/calendar/regenerate`, {})
     );
   }
 

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual, LessThan } from 'typeorm';
+import { RRule } from 'rrule';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { EventEntity } from '../entities/event.entity';
@@ -10,6 +11,7 @@ import { GameEventEntity } from '../entities/game-event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
+import { WeatherService } from './weather.service';
 
 @Injectable()
 export class EventsService {
@@ -25,73 +27,39 @@ export class EventsService {
     @InjectRepository(GameEventEntity)
     private readonly gameEventRepo: Repository<GameEventEntity>,
     private readonly socketGateway: SocketGateway,
+    private readonly weatherService: WeatherService,
   ) {
     this.ajv = new Ajv();
     addFormats(this.ajv);
   }
 
-  async create(teamId: string, dto: CreateEventDto, userId?: string): Promise<EventEntity> {
-    // Optional ownership check if userId is provided
-    if (userId) {
-      const team = await this.teamRepo.findOne({ where: { id: teamId } });
-      if (!team) throw new NotFoundException(`Team ${teamId} not found`);
-      if (team.coachId !== userId) {
-        throw new ForbiddenException('Not authorized to create events for this team');
-      }
-    }
-
-    // 1. Check for an active season on the team.
-    let activeSeason = await this.seasonRepo.findOne({
+  async create(teamId: string, dto: CreateEventDto, userId: string): Promise<EventEntity> {
+    const activeSeason = await this.seasonRepo.findOne({
       where: { teamId, isActive: true },
     });
 
-    // 2. If no active season exists, create one named "YYYY Season".
     if (!activeSeason) {
-      const year = new Date().getFullYear();
-      activeSeason = this.seasonRepo.create({
-        teamId,
-        name: `${year} Season`,
-        isActive: true,
-      });
-      activeSeason = await this.seasonRepo.save(activeSeason);
+      throw new NotFoundException('No active season found for this team');
     }
 
-    const type = dto.type ?? 'game';
-    let location = dto.location;
-    let periodCount = dto.periodCount;
-    let periodLengthMinutes = dto.periodLengthMinutes;
-    let playersOnField = dto.playersOnField;
+    const { periodCount, periodLengthMinutes, playersOnField } = dto;
 
-    // 3. Inherit defaults from active season
-    if (type === 'practice' && !location) {
-      location = activeSeason.defaultPracticeLocation;
-    }
-    if (type === 'game') {
-      if (periodCount === undefined) {
-        periodCount = activeSeason.periodCount;
-      }
-      if (periodLengthMinutes === undefined) {
-        periodLengthMinutes = activeSeason.periodLengthMinutes;
-      }
-      if (playersOnField === undefined) {
-        playersOnField = activeSeason.playersOnField;
-      }
-    }
-
-    // 4. Create the event with the seasonId.
     const event = this.eventRepo.create({
       ...dto,
-      type,
-      location,
       periodCount,
       periodLengthMinutes,
       playersOnField,
       seasonId: activeSeason.id,
       status: 'scheduled',
       isHomeGame: dto.isHomeGame ?? true,
+      recurrenceRule: dto.recurrenceRule,
     });
 
-    // 5. Save the event.
+    // Automatically calculate duration for games
+    if (event.type === 'game' && event.periodCount && event.periodLengthMinutes) {
+      event.durationMinutes = event.periodCount * event.periodLengthMinutes;
+    }
+
     const savedEvent = await this.eventRepo.save(event);
     this.socketGateway.server.to(`team:${teamId}`).emit('eventCreated', savedEvent);
     return savedEvent;
@@ -101,77 +69,156 @@ export class EventsService {
     teamId: string,
     scope: 'upcoming' | 'past' = 'upcoming',
     seasonId?: string,
-  ): Promise<EventEntity[]> {
+  ): Promise<(EventEntity & { virtualId?: string })[]> {
     let targetSeasonId = seasonId;
+    let season: SeasonEntity | null = null;
 
-    if (!targetSeasonId) {
-      // Find the active season for the team.
-      const activeSeason = await this.seasonRepo.findOne({
+    if (targetSeasonId) {
+      season = await this.seasonRepo.findOne({ where: { id: targetSeasonId } });
+    } else {
+      season = await this.seasonRepo.findOne({
         where: { teamId, isActive: true },
       });
+      if (season) targetSeasonId = season.id;
+    }
 
-      // If none, return empty array.
-      if (!activeSeason) {
-        return [];
-      }
-      targetSeasonId = activeSeason.id;
+    if (!targetSeasonId || !season) {
+      return [];
     }
 
     const now = new Date();
-    const whereCondition: any = { seasonId: targetSeasonId };
+    
+    const baseEvents = await this.eventRepo.find({
+      where: { seasonId: targetSeasonId },
+      relations: ['locationRef'],
+    });
 
-    if (scope === 'upcoming') {
-      whereCondition.scheduledAt = MoreThanOrEqual(now);
-    } else {
-      whereCondition.scheduledAt = LessThan(now);
+    const masters = baseEvents.filter(e => e.recurrenceRule && !e.parentEventId);
+    const overrides = baseEvents.filter(e => e.parentEventId);
+    const singletons = baseEvents.filter(e => !e.recurrenceRule && !e.parentEventId);
+
+    const expandedEvents: (EventEntity & { virtualId?: string })[] = [...singletons];
+
+    for (const master of masters) {
+      try {
+        const rule = RRule.fromString(master.recurrenceRule!);
+        const seasonStart = season.startDate ? new Date(season.startDate) : master.scheduledAt!;
+        const seasonEnd = season.endDate ? new Date(season.endDate) : new Date(seasonStart.getTime() + 365 * 24 * 60 * 60 * 1000);
+        
+        const occurrences = rule.all((date, i) => i < 100 && date <= seasonEnd);
+
+        for (const occurrence of occurrences) {
+          const occurrenceTime = occurrence.getTime();
+          const override = overrides.find(o => 
+            o.parentEventId === master.id && 
+            o.scheduledAt?.getTime() === occurrenceTime
+          );
+
+          if (override) {
+            if (!expandedEvents.find(e => e.id === override.id)) {
+              expandedEvents.push(override);
+            }
+          } else {
+            expandedEvents.push({
+              ...master,
+              id: master.id,
+              virtualId: `${master.id}_${occurrenceTime}`,
+              scheduledAt: occurrence,
+            } as any);
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to parse RRule for event ${master.id}:`, err);
+        expandedEvents.push(master);
+      }
     }
 
-    // Find all events for that season with chronological sorting.
-    return this.eventRepo.find({
-      where: whereCondition,
-      order: { scheduledAt: scope === 'upcoming' ? 'ASC' : 'DESC' },
+    let filtered = expandedEvents.filter(e => {
+      if (scope === 'upcoming') {
+        return (e.scheduledAt?.getTime() || 0) >= now.getTime();
+      } else {
+        return (e.scheduledAt?.getTime() || 0) < now.getTime();
+      }
     });
+
+    const sorted = filtered.sort((a, b) => {
+      const timeA = a.scheduledAt?.getTime() || 0;
+      const timeB = b.scheduledAt?.getTime() || 0;
+      return scope === 'upcoming' ? timeA - timeB : timeB - timeA;
+    });
+
+    if (scope === 'upcoming') {
+      const weatherPromises = sorted.slice(0, 10).map(async (event) => {
+        event.weatherData = await this.weatherService.getForecastForEvent(event.id, event.scheduledAt);
+      });
+      await Promise.all(weatherPromises);
+    }
+
+    return sorted;
   }
 
   async findOne(eventId: string): Promise<EventEntity & { goalEventCount?: number }> {
-    const event = await this.eventRepo.findOne({ where: { id: eventId } });
+    const event = await this.eventRepo.findOne({ 
+      where: { id: eventId },
+      relations: ['locationRef', 'season', 'season.team', 'season.team.homeLocation'] 
+    });
     if (!event) {
-      throw new NotFoundException(`Event ${eventId} not found`);
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
     }
 
-    if (event.type === 'game') {
-      const goalEventCount = await this.gameEventRepo.count({
-        where: { eventId, eventType: 'GOAL' },
-      });
-      return { ...event, goalEventCount };
-    }
+    event.weatherData = await this.weatherService.getForecastForEvent(eventId);
 
-    return event;
+    const goalEventCount = await this.gameEventRepo.count({
+      where: { eventId, eventType: 'goal' },
+    });
+
+    return { ...event, goalEventCount };
   }
 
   async update(eventId: string, dto: UpdateEventDto): Promise<EventEntity> {
-    const event = await this.findOne(eventId);
+    const event = await this.eventRepo.findOne({ 
+      where: { id: eventId },
+      relations: ['season']
+    });
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
+    }
+
     Object.assign(event, dto);
-    const saved = await this.eventRepo.save(event);
-    this.socketGateway.server.to(`event:${eventId}`).emit('gameStatusUpdated', saved);
-    return saved;
+
+    // Automatically calculate duration for games if period info is provided
+    if (event.type === 'game' && event.periodCount && event.periodLengthMinutes) {
+      event.durationMinutes = event.periodCount * event.periodLengthMinutes;
+    }
+
+    const updated = await this.eventRepo.save(event);
+    this.socketGateway.server.to(`team:${event.season.teamId}`).emit('eventUpdated', updated);
+    return updated;
   }
 
   async remove(eventId: string): Promise<void> {
-    const event = await this.findOne(eventId);
+    const event = await this.eventRepo.findOne({ 
+      where: { id: eventId },
+      relations: ['season']
+    });
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
+    }
+    const teamId = event.season.teamId;
     await this.eventRepo.remove(event);
+    this.socketGateway.server.to(`team:${teamId}`).emit('eventRemoved', { id: eventId });
   }
 
   async getGameEvents(eventId: string): Promise<GameEventEntity[]> {
     return this.gameEventRepo.find({
       where: { eventId },
-      order: { minuteOccurred: 'ASC' },
+      order: { createdAt: 'ASC' },
     });
   }
 
   async logEvent(
     eventId: string,
-    dto: any, // Using any for the CreateGameEventDto to avoid complex renames right now
+    dto: any,
     userId: string,
   ): Promise<GameEventEntity> {
     const event = await this.eventRepo.findOne({
@@ -180,11 +227,7 @@ export class EventsService {
     });
 
     if (!event) {
-      throw new NotFoundException(`Event ${eventId} not found`);
-    }
-
-    if (!event.season?.team) {
-      throw new BadRequestException('Event data incomplete (missing season or team)');
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
     }
 
     if (event.season.team.coachId !== userId) {
@@ -239,5 +282,22 @@ export class EventsService {
 
     await this.gameEventRepo.remove(gameEvent);
     this.socketGateway.server.to(`event:${eventId}`).emit('gameEventRemoved', { id: gameEventId });
+  }
+
+  async findAllForTeamBySecret(secret: string): Promise<EventEntity[]> {
+    const team = await this.teamRepo.findOne({
+      where: { calendarSecret: secret },
+      relations: ['seasons', 'seasons.events'],
+    });
+
+    if (!team) {
+      throw new NotFoundException('Invalid calendar secret');
+    }
+
+    const allEvents = team.seasons.flatMap((season) => season.events || []);
+    
+    return allEvents.sort((a, b) => 
+      (a.scheduledAt?.getTime() || 0) - (b.scheduledAt?.getTime() || 0)
+    );
   }
 }

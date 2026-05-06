@@ -23,7 +23,7 @@ export class PasswordResetService {
     await this.userRepo.save(user);
     // TODO: replace with email provider (D-11)
     // Injectable EmailService interface goes here
-    const resetUrl = `http://localhost:4200/reset-password?token=${token}`;
+    const resetUrl = `http://localhost:8200/reset-password?token=${token}`;
     console.log(`[PasswordResetService] Reset URL: ${resetUrl}`);
     return { message: 'If that email exists, a reset link has been sent.' };
   }

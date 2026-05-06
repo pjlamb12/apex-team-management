@@ -14,10 +14,11 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { EventsService } from './events.service';
 import { LineupEntriesService } from './lineup-entries.service';
+import { WeatherService } from './weather.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SaveLineupDto } from './dto/save-lineup.dto';
-import { CreateEventDto as CreateGameEventDto } from './dto/create-event.dto'; // This might need a better name later
+import { CreateEventDto as CreateGameEventDto } from './dto/create-event.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('teams/:teamId/events')
@@ -25,7 +26,15 @@ export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly lineupEntriesService: LineupEntriesService,
+    private readonly weatherService: WeatherService,
   ) {}
+
+  @Post(':eventId/weather/refresh')
+  refreshWeather(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+  ) {
+    return this.weatherService.getForecastForEvent(eventId, undefined, true);
+  }
 
   @Post()
   create(
@@ -50,7 +59,6 @@ export class EventsController {
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
   ) {
-    // Note: teamId is currently not used in findOne but kept for URL consistency
     return this.eventsService.findOne(eventId);
   }
 
@@ -96,7 +104,7 @@ export class EventsController {
     return this.eventsService.getGameEvents(eventId);
   }
 
-  @Post(':eventId/game-events') // Renamed from /events to avoid confusion with parent /events
+  @Post(':eventId/game-events')
   logEvent(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,

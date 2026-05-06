@@ -60,7 +60,7 @@ npx nx run frontend:test
 
 | Setting             | Value                                |
 |---------------------|--------------------------------------|
-| Base URL            | `http://localhost:4200`              |
+| Base URL            | `http://localhost:8200`              |
 | Trace collection    | On first retry                       |
 | Web server command  | `npx nx run frontend:serve`         |
 | Reuse server        | `true`                               |

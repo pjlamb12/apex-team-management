@@ -78,10 +78,10 @@ A game day coaching console for youth sports. Coaches create teams, manage roste
 | Target         | Executor                        | Port  |
 |----------------|---------------------------------|-------|
 | `build`        | `@angular/build:application`    | —     |
-| `serve`        | `@angular/build:dev-server`     | 4200  |
+| `serve`        | `@angular/build:dev-server`     | 8200  |
 | `test`         | `@angular/build:unit-test`      | —     |
 | `lint`         | `@nx/eslint:lint`               | —     |
-| `serve-static` | `@nx/web:file-server`           | 4200  |
+| `serve-static` | `@nx/web:file-server`           | 8200  |
 ### Production Build Budgets
 | Type              | Warning | Error |
 |-------------------|---------|-------|

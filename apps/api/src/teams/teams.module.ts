@@ -8,15 +8,20 @@ import { SeasonsService } from './seasons.service';
 import { TeamEntity } from '../entities/team.entity';
 import { TeamMemberEntity } from '../entities/team-member.entity';
 import { SeasonEntity } from '../entities/season.entity';
+import { LocationEntity } from '../entities/location.entity';
 import { MembershipsModule } from '../memberships/memberships.module';
+import { EventsModule } from '../events/events.module';
+import { LocationsModule } from '../locations/locations.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TeamEntity, TeamMemberEntity, SeasonEntity]),
+    TypeOrmModule.forFeature([TeamEntity, TeamMemberEntity, SeasonEntity, LocationEntity]),
     MembershipsModule,
+    EventsModule,
+    LocationsModule,
   ],
   controllers: [TeamsController, SeasonsController],
   providers: [TeamsService, TeamsJoinCodeService, SeasonsService],
-  exports: [SeasonsService],
+  exports: [TeamsService, SeasonsService],
 })
 export class TeamsModule {}
