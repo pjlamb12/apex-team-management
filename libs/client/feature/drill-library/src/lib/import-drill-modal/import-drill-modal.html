@@ -93,11 +93,15 @@
                     {{ $index + 1 }}
                   </div>
                   <ion-label class="ion-text-wrap text-sm leading-relaxed">
-                    @if (step.title || step.description) {
-                      <h3 class="font-bold text-ap-text mb-0.5">{{ step.title }}</h3>
-                      <p class="text-ap-muted">{{ step.description }}</p>
+                    @if (step.title || (step.description && step.title !== step.description)) {
+                      @if (step.title) {
+                        <h3 class="font-bold text-ap-text mb-0.5">{{ step.title }}</h3>
+                      }
+                      @if (step.description) {
+                        <p class="text-ap-muted">{{ step.description }}</p>
+                      }
                     } @else {
-                      {{ step.text || step.instruction || (step.toString() === '[object Object]' ? (step | json) : step) }}
+                      {{ step.instruction_text || step.text || step.instruction || step.description || step.content || (step.toString() === '[object Object]' ? (step | json) : step) }}
                     }
                   </ion-label>
                 </ion-item>
