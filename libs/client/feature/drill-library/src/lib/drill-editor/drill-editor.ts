@@ -111,7 +111,9 @@ export class DrillEditor implements OnInit {
       // Load instructions
       if (drill.instructions && Array.isArray(drill.instructions)) {
         drill.instructions.forEach((step: any) => {
-          this.addInstruction(step.title, step.description);
+          const title = step.title || '';
+          const description = step.description || step.instruction_text || step.text || step.instruction || step.content || (typeof step === 'string' ? step : '');
+          this.addInstruction(title, description);
         });
       } else {
         this.addInstruction();

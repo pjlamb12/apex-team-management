@@ -46,8 +46,14 @@
             <ion-item lines="none" class="step-item">
               <ion-badge slot="start" color="primary">{{ $index + 1 }}</ion-badge>
               <ion-label class="ion-text-wrap">
-                <h3 class="step-title">{{ step.title }}</h3>
-                <p class="step-description">{{ step.description }}</p>
+                @if (step.title || step.description) {
+                  <h3 class="step-title">{{ step.title }}</h3>
+                  <p class="step-description">{{ step.description }}</p>
+                } @else {
+                  <p class="step-description">
+                    {{ step.instruction_text || step.text || step.instruction || step.content || step }}
+                  </p>
+                }
               </ion-label>
             </ion-item>
           }
