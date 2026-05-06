@@ -87,13 +87,18 @@
           <div class="pt-4 border-t border-white/5">
             <h4 class="text-xs font-bold uppercase tracking-wider text-ap-muted mb-3">Instructions</h4>
             <ion-list lines="none" class="bg-transparent">
-              @for (step of parsedDrill()?.instructions; track step; let idx = $index) {
-                <ion-item class="--background: transparent ion-no-padding mb-2">
-                  <div slot="start" class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold mr-3">
-                    {{ idx + 1 }}
+              @for (step of parsedDrill()?.instructions; track $index) {
+                <ion-item class="--background: transparent ion-no-padding mb-3">
+                  <div slot="start" class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold mr-3 mt-1">
+                    {{ $index + 1 }}
                   </div>
                   <ion-label class="ion-text-wrap text-sm leading-relaxed">
-                    {{ step.text || step }}
+                    @if (step.title || step.description) {
+                      <h3 class="font-bold text-ap-text mb-0.5">{{ step.title }}</h3>
+                      <p class="text-ap-muted">{{ step.description }}</p>
+                    } @else {
+                      {{ step.text || step }}
+                    }
                   </ion-label>
                 </ion-item>
               }
