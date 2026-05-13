@@ -1,0 +1,100 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Export Analytics</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg">
+  <ion-list lines="full" class="bg-transparent m-4 rounded-xl border border-ap-border overflow-hidden">
+    <ion-item class="--background: transparent">
+      <ion-label>
+        <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1">File Format</div>
+        <div class="font-bold text-ap-text">Choose your export format</div>
+      </ion-label>
+      <ion-select
+        [value]="options().format"
+        (ionChange)="updateOption('format', $event.detail.value)"
+        interface="popover"
+        toggleIcon="chevron-down-outline"
+        class="font-black uppercase text-xs"
+      >
+        <ion-select-option value="pdf">PDF Report</ion-select-option>
+        <ion-select-option value="csv">CSV Data</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    @if (options().format === 'pdf') {
+      <ion-item class="--background: transparent">
+        <ion-label>
+          <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1">Report Layout</div>
+          <div class="font-bold text-ap-text">Select PDF layout style</div>
+        </ion-label>
+        <ion-select
+          [value]="options().layout"
+          (ionChange)="updateOption('layout', $event.detail.value)"
+          interface="popover"
+          toggleIcon="chevron-down-outline"
+          class="font-black uppercase text-xs"
+        >
+          <ion-select-option value="overview">Team Overview</ion-select-option>
+          <ion-select-option value="player-pack">Full Player Pack</ion-select-option>
+          <ion-select-option value="tabular">Tabular Summary</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item class="--background: transparent">
+        <ion-label>
+          <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1">Visuals</div>
+          <div class="font-bold text-ap-text">Include Charts & Heatmaps</div>
+        </ion-label>
+        <ion-toggle
+          [checked]="options().includeVisuals"
+          (ionChange)="updateOption('includeVisuals', $event.detail.checked)"
+          slot="end"
+        ></ion-toggle>
+      </ion-item>
+    } @else {
+      <ion-item class="--background: transparent">
+        <ion-label>
+          <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1">Granularity</div>
+          <div class="font-bold text-ap-text">Data detail level</div>
+        </ion-label>
+        <ion-select
+          [value]="options().granularity"
+          (ionChange)="updateOption('granularity', $event.detail.value)"
+          interface="popover"
+          toggleIcon="chevron-down-outline"
+          class="font-black uppercase text-xs"
+        >
+          <ion-select-option value="aggregated">Aggregated Totals</ion-select-option>
+          <ion-select-option value="per-game">Per-Game Breakdown</ion-select-option>
+        </ion-select>
+      </ion-item>
+    }
+  </ion-list>
+
+  <div class="p-4 text-xs text-ap-muted italic text-center">
+    @if (options().format === 'pdf') {
+      PDF reports are optimized for printing and sharing with parents/players.
+    } @else {
+      CSV files are ideal for detailed analysis in Excel or other spreadsheets.
+    }
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border bg-ap-bg p-4">
+  <ion-button
+    expand="block"
+    color="primary"
+    class="font-black uppercase tracking-widest h-14"
+    (click)="confirm()"
+  >
+    <ion-icon slot="start" name="download-outline"></ion-icon>
+    Generate Export
+  </ion-button>
+</ion-footer>

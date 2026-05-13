@@ -1,0 +1,257 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + teamId"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Team Analytics</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openExportModal()">
+        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <ion-toolbar class="border-b border-ap-border bg-ap-bg">
+    <div class="px-4 pb-2">
+      <ion-segment [value]="activeSegment()" (ionChange)="activeSegment.set($any($event).detail.value)" mode="ios" class="bg-ap-surface rounded-lg p-1">
+        <ion-segment-button value="performance">
+          <ion-label class="text-xs font-bold uppercase tracking-wider">Performance</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="participation">
+          <ion-label class="text-xs font-bold uppercase tracking-wider">Participation</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="playtime">
+          <ion-label class="text-xs font-bold uppercase tracking-wider">Playtime</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg">
+  <div class="max-w-4xl mx-auto p-4 flex flex-col gap-6">
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-20 gap-4">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p class="text-sm font-bold text-ap-muted uppercase tracking-widest">Crunching Numbers...</p>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="text-center py-20 text-ap-danger font-bold">
+        <ion-icon name="alert-circle-outline" class="text-4xl mb-2"></ion-icon>
+        <p>{{ errorMessage() }}</p>
+      </div>
+    } @else {
+      @if (activeSegment() === 'performance') {
+        <!-- Key Performance Indicators Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Top Scorers Card -->
+          <ion-card class="m-0 border border-ap-border shadow-none">
+            <ion-card-header class="pb-2">
+              <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                <ion-icon name="football-outline" class="text-blue-500"></ion-icon>
+                Top Scorers
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content class="p-0">
+              <ion-list lines="full">
+                @for (m of topScorers(); track m.playerId) {
+                  <ion-item>
+                    <ion-label>
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-ap-text">{{ m.firstName }} {{ m.lastName }}</span>
+                        <div class="flex items-center gap-2">
+                          <span class="text-xl font-black text-blue-500">{{ m.goals }}</span>
+                          <span class="text-[10px] font-bold text-ap-muted uppercase">Goals</span>
+                        </div>
+                      </div>
+                      <ion-progress-bar [value]="m.goals / (topScorers()[0]?.goals || 1)" class="h-1 mt-2 rounded-full"></ion-progress-bar>
+                    </ion-label>
+                  </ion-item>
+                } @empty {
+                  <div class="py-12 text-center text-ap-muted italic text-sm">No goals recorded.</div>
+                }
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Top Assists Card -->
+          <ion-card class="m-0 border border-ap-border shadow-none">
+            <ion-card-header class="pb-2">
+              <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                <ion-icon name="trophy-outline" class="text-amber-500"></ion-icon>
+                Top Assists
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content class="p-0">
+              <ion-list lines="full">
+                @for (m of topAssistors(); track m.playerId) {
+                  <ion-item>
+                    <ion-label>
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-ap-text">{{ m.firstName }} {{ m.lastName }}</span>
+                        <div class="flex items-center gap-2">
+                          <span class="text-xl font-black text-amber-500">{{ m.assists }}</span>
+                          <span class="text-[10px] font-bold text-ap-muted uppercase">Assists</span>
+                        </div>
+                      </div>
+                      <ion-progress-bar color="warning" [value]="m.assists / (topAssistors()[0]?.assists || 1)" class="h-1 mt-2 rounded-full"></ion-progress-bar>
+                    </ion-label>
+                  </ion-item>
+                } @empty {
+                  <div class="py-12 text-center text-ap-muted italic text-sm">No assists recorded.</div>
+                }
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+        </div>
+
+        <!-- Full Roster Stats Table -->
+        <ion-card class="m-0 border border-ap-border shadow-none">
+          <ion-card-header>
+            <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted">Roster Performance</ion-card-title>
+          </ion-card-header>
+          <ion-card-content class="p-0 overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead class="bg-ap-surface-raised">
+                <tr>
+                  <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted">Player</th>
+                  <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">GP</th>
+                  <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-blue-500">G</th>
+                  <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-amber-500">A</th>
+                  <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">YC</th>
+                  <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">RC</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-ap-border">
+                @for (m of performanceMetrics(); track m.playerId) {
+                  <tr class="hover:bg-ap-surface-raised transition-colors">
+                    <td class="px-4 py-3 font-bold text-ap-text">{{ m.firstName }} {{ m.lastName }}</td>
+                    <td class="px-4 py-3 text-center text-ap-muted">{{ m.gamesPlayed }}</td>
+                    <td class="px-4 py-3 text-center font-black text-blue-500">{{ m.goals }}</td>
+                    <td class="px-4 py-3 text-center font-black text-amber-500">{{ m.assists }}</td>
+                    <td class="px-4 py-3 text-center">
+                      @if (m.yellowCards > 0) {
+                        <span class="px-2 py-0.5 bg-yellow-400 text-black text-[10px] font-black rounded">{{ m.yellowCards }}</span>
+                      } @else { <span class="opacity-10">0</span> }
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                      @if (m.redCards > 0) {
+                        <span class="px-2 py-0.5 bg-red-600 text-white text-[10px] font-black rounded">{{ m.redCards }}</span>
+                      } @else { <span class="opacity-10">0</span> }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </ion-card-content>
+        </ion-card>
+      }
+
+      @if (activeSegment() === 'participation') {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Participation Summary Cards -->
+          <div class="md:col-span-1 flex flex-col gap-6">
+             <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+                <ion-card-content class="flex flex-col items-center py-8">
+                  <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-2">Team Average</div>
+                  <div class="text-4xl font-black text-ap-text">88%</div>
+                  <ion-icon name="trending-up-outline" color="success" class="text-xl mt-2"></ion-icon>
+                </ion-card-content>
+             </ion-card>
+
+             <ion-card class="m-0 border border-ap-border shadow-none">
+                <ion-card-header>
+                  <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Most Committed</ion-card-title>
+                </ion-card-header>
+                <ion-card-content class="p-0">
+                  <ion-list lines="full">
+                    @for (p of mostCommitted(); track p.playerId) {
+                      <ion-item>
+                        <ion-label>
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-ap-text">{{ p.firstName }}</span>
+                            <ion-badge [color]="getParticipationColor(p.percentage)" mode="ios" class="font-bold text-[10px]">{{ p.percentage }}%</ion-badge>
+                          </div>
+                        </ion-label>
+                      </ion-item>
+                    }
+                  </ion-list>
+                </ion-card-content>
+             </ion-card>
+          </div>
+
+          <!-- Roster Participation List -->
+          <div class="md:col-span-2">
+            <ion-card class="m-0 border border-ap-border shadow-none">
+              <ion-card-header>
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted">Attendance Breakdown</ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (p of participationStats(); track p.playerId) {
+                    <ion-item>
+                      <ion-label>
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="font-bold text-ap-text text-sm">{{ p.firstName }} {{ p.lastName }}</span>
+                          <div class="text-right">
+                            <span class="text-xs font-black text-ap-text">{{ p.present }} / {{ p.totalEvents }}</span>
+                            <span class="text-[10px] text-ap-muted uppercase ml-1">Sessions</span>
+                          </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                           <ion-progress-bar [color]="getParticipationColor(p.percentage)" [value]="p.percentage / 100" class="h-2 rounded-full"></ion-progress-bar>
+                           <span class="text-xs font-black min-w-[32px] text-right" [class]="'text-' + getParticipationColor(p.percentage)">{{ p.percentage }}%</span>
+                        </div>
+                      </ion-label>
+                    </ion-item>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+          </div>
+        </div>
+      }
+
+      @if (activeSegment() === 'playtime') {
+        <!-- Playing Time Aggregation -->
+        <ion-card class="m-0 border border-ap-border shadow-none">
+          <ion-card-header>
+            <div class="flex items-center justify-between">
+              <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                <ion-icon name="time-outline" class="text-blue-400"></ion-icon>
+                Minutes Distribution
+              </ion-card-title>
+            </div>
+          </ion-card-header>
+          <ion-card-content class="p-0">
+            <ion-list lines="full">
+              @for (pt of topWorkhorses(); track pt.playerId) {
+                <ion-item>
+                  <ion-label>
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="font-bold text-ap-text text-sm">{{ getPlayerName(pt.playerId) }}</span>
+                      <div class="text-right">
+                        <span class="text-lg font-black text-blue-400">{{ formatMinutes(pt.totalSeconds) }}</span>
+                        <span class="text-[10px] text-ap-muted uppercase ml-1 font-bold">Total</span>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      @for (pos of pt.positionSeconds | keyvalue; track pos.key) {
+                        <div class="flex flex-col gap-1 flex-1">
+                           <div class="text-[8px] font-black uppercase text-ap-muted truncate">{{ pos.key }}</div>
+                           <ion-progress-bar [value]="pos.value / pt.totalSeconds" class="h-1 rounded-full opacity-60"></ion-progress-bar>
+                        </div>
+                      }
+                    </div>
+                  </ion-label>
+                </ion-item>
+              } @empty {
+                <div class="py-20 text-center text-ap-muted italic">No playing time data available for this team.</div>
+              }
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      }
+    }
+  </div>
+</ion-content>
