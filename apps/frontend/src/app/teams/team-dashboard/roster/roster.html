@@ -12,16 +12,25 @@
   <ion-list>
     @for (player of players(); track player.id) {
       <ion-item-sliding>
-        <ion-item>
+        <ion-item button (click)="openPlayerAnalytics(player)">
           @if (player.jerseyNumber !== null) {
             <ion-badge slot="start" color="primary" style="min-width: 2.5rem; min-height: 2.5rem; padding: 0.5rem 0.75rem; font-size: 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-inline-end: 1rem;">{{ player.jerseyNumber }}</ion-badge>
           }
           <ion-label>
-            <h2>{{ player.firstName }} {{ player.lastName }}</h2>
+            <h2 class="font-bold">{{ player.firstName }} {{ player.lastName }}</h2>
             @if (player.parentEmail) {
-              <p>{{ player.parentEmail }}</p>
+              <p class="text-xs">{{ player.parentEmail }}</p>
             }
           </ion-label>
+          <div slot="end" class="flex items-center gap-2">
+            <div class="text-right">
+              <div class="text-[10px] font-bold text-ap-muted uppercase tracking-tighter">Participation</div>
+              <div class="font-black text-sm" [class]="'text-' + getParticipationColor(player.id)">
+                {{ getParticipation(player.id) }}%
+              </div>
+            </div>
+            <ion-icon name="stats-chart-outline" [color]="getParticipationColor(player.id)" class="opacity-40"></ion-icon>
+          </div>
         </ion-item>
         <ion-item-options side="start">
           <ion-item-option color="primary" (click)="openPlayerModal(player)">

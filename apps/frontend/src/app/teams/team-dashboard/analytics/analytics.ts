@@ -21,6 +21,7 @@ import {
   IonSegment,
   IonSegmentButton,
   IonProgressBar,
+  IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -144,8 +145,8 @@ export class TeamAnalytics {
       componentProps: {
         teamId: this.teamId,
       },
-      breakpoints: [0, 0.6, 0.9],
-      initialBreakpoint: 0.6,
+      breakpoints: [0, 0.7, 0.9],
+      initialBreakpoint: 0.7,
       handle: true,
     });
 
@@ -186,5 +187,12 @@ export class TeamAnalytics {
     if (percentage >= 75) return 'primary';
     if (percentage >= 50) return 'warning';
     return 'danger';
+  }
+
+  protected getHeatmapClass(value: number, total: number): string {
+    const ratio = value / total;
+    if (ratio > 0.5) return 'heatmap-high';
+    if (ratio > 0.2) return 'heatmap-mid';
+    return 'heatmap-low';
   }
 }

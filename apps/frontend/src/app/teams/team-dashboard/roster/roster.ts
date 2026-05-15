@@ -18,9 +18,10 @@ import {
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { addOutline, pencilOutline, trashOutline } from 'ionicons/icons';
-import { PlayersService, PlayerEntity, CreatePlayerDto, UpdatePlayerDto } from '../../players.service';
+import { addOutline, pencilOutline, trashOutline, statsChartOutline } from 'ionicons/icons';
+import { AnalyticsService, ParticipationStats, PlayersService, PlayerEntity, CreatePlayerDto, UpdatePlayerDto } from '@apex-team/client/data-access/team';
 import { PlayerModal } from '../../player-modal/player-modal';
+import { PlayerProfileAnalyticsComponent } from '../analytics/player-profile/player-profile';
 
 @Component({
   selector: 'app-roster',
@@ -53,15 +54,17 @@ export class Roster {
   }
 
   private readonly playersService = inject(PlayersService);
+  private readonly analyticsService = inject(AnalyticsService);
   private readonly modalCtrl = inject(ModalController);
   private readonly alertCtrl = inject(AlertController);
 
   protected players = signal<PlayerEntity[]>([]);
+  protected participationStats = signal<Record<string, ParticipationStats>>({});
   protected isLoading = signal(false);
   protected errorMessage = signal<string | null>(null);
 
   constructor() {
-    addIcons({ addOutline, pencilOutline, trashOutline });
+    addIcons({ addOutline, pencilOutline, trashOutline, statsChartOutline });
 
     // Load players whenever teamId changes
     effect(() => {
@@ -76,13 +79,32 @@ export class Roster {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const players = await firstValueFrom(this.playersService.getPlayers(teamId));
+      const [players, stats] = await Promise.all([
+        firstValueFrom(this.playersService.getPlayers(teamId)),
+        firstValueFrom(this.analyticsService.getParticipationStats(teamId))
+      ]);
       this.players.set([...players].sort((a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity)));
+      
+      const statsMap: Record<string, ParticipationStats> = {};
+      stats.forEach(s => statsMap[s.playerId] = s);
+      this.participationStats.set(statsMap);
     } catch {
       this.errorMessage.set('Failed to load roster. Please try again.');
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  protected getParticipation(playerId: string): number {
+    return this.participationStats()[playerId]?.percentage ?? 0;
+  }
+
+  protected getParticipationColor(playerId: string): string {
+    const p = this.getParticipation(playerId);
+    if (p >= 90) return 'success';
+    if (p >= 75) return 'primary';
+    if (p >= 50) return 'warning';
+    return 'danger';
   }
 
   protected async deletePlayer(playerId: string): Promise<void> {
@@ -138,5 +160,17 @@ export class Roster {
     } catch {
       this.errorMessage.set('Failed to save player. Please try again.');
     }
+  }
+
+  protected async openPlayerAnalytics(player: PlayerEntity): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: PlayerProfileAnalyticsComponent,
+      componentProps: { 
+        teamId: this.teamId,
+        playerId: player.id
+      },
+    });
+
+    await modal.present();
   }
 }

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Team Analytics Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-print-color-adjust: exact;
+        }
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 p-10">
+    <header class="mb-8 border-b-4 border-indigo-600 pb-6">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl font-extrabold text-indigo-900 tracking-tight">Apex Team Analytics</h1>
+                <p class="text-gray-500 mt-1 font-medium">Generated on {{generatedAt}}</p>
+            </div>
+            <div class="text-right">
+                <p class="font-bold text-lg text-indigo-800">Team Report</p>
+                <p class="text-sm text-gray-400 font-mono">ID: {{teamId}}</p>
+            </div>
+        </div>
+    </header>
+
+    {{#if isOverview}}
+        <section>
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center">
+                <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">01</span>
+                Team Overview
+            </h2>
+            
+            <div class="grid grid-cols-3 gap-6 mb-10">
+                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                    <p class="text-xs text-indigo-400 uppercase tracking-widest font-bold mb-1">Total Players</p>
+                    <p class="text-4xl font-black text-indigo-900">{{players.length}}</p>
+                </div>
+                <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
+                    <p class="text-xs text-emerald-400 uppercase tracking-widest font-bold mb-1">Active Roster</p>
+                    <p class="text-4xl font-black text-emerald-900">{{players.length}}</p>
+                </div>
+                <div class="bg-amber-50 p-6 rounded-xl border border-amber-100">
+                    <p class="text-xs text-amber-400 uppercase tracking-widest font-bold mb-1">Report Type</p>
+                    <p class="text-4xl font-black text-amber-900 capitalize">{{options.layout}}</p>
+                </div>
+            </div>
+
+            <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Player</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Games</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Goals</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Assists</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Playtime</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        {{#each players}}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap font-bold text-indigo-900">{{firstName}} {{lastName}}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-600">{{gamesPlayed}}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-sm font-bold">{{goals}}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full text-sm font-bold">{{assists}}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm font-semibold text-gray-700">{{playtimeFormatted}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {{/if}}
+
+    {{#if isPlayerPack}}
+        <section>
+            <h2 class="text-2xl font-bold mb-8 text-gray-800 flex items-center">
+                <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">02</span>
+                Individual Performance Profiles
+            </h2>
+            
+            {{#each players}}
+                <div class="mb-12 border-2 border-gray-100 rounded-2xl overflow-hidden shadow-sm page-break">
+                    <div class="bg-indigo-900 text-white p-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-black">{{firstName}} {{lastName}}</h3>
+                            <p class="text-indigo-300 text-sm font-mono mt-1">{{playerId}}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs uppercase tracking-widest text-indigo-400 font-bold">Games Played</p>
+                            <p class="text-3xl font-black">{{gamesPlayed}}</p>
+                        </div>
+                    </div>
+
+                    <div class="p-8">
+                        <div class="grid grid-cols-4 gap-6 mb-10">
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+                                <p class="text-gray-400 text-xs uppercase tracking-wider font-bold mb-1">Goals</p>
+                                <p class="text-3xl font-black text-gray-900">{{goals}}</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+                                <p class="text-gray-400 text-xs uppercase tracking-wider font-bold mb-1">Assists</p>
+                                <p class="text-3xl font-black text-gray-900">{{assists}}</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+                                <p class="text-gray-400 text-xs uppercase tracking-wider font-bold mb-1">Cards (Y/R)</p>
+                                <p class="text-3xl font-black">
+                                    <span class="text-yellow-500">{{yellowCards}}</span><span class="text-gray-300 mx-1">/</span><span class="text-red-500">{{redCards}}</span>
+                                </p>
+                            </div>
+                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center">
+                                <p class="text-indigo-400 text-xs uppercase tracking-wider font-bold mb-1">Total Playtime</p>
+                                <p class="text-2xl font-black text-indigo-900">{{playtimeFormatted}}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center">
+                                <span class="w-8 h-px bg-gray-200 mr-3"></span>
+                                Position Distribution
+                                <span class="flex-1 h-px bg-gray-200 ml-3"></span>
+                            </h4>
+                            <div class="space-y-5">
+                                {{#each positions}}
+                                    <div class="flex items-center">
+                                        <div class="w-32 font-bold text-gray-700 text-sm">{{name}}</div>
+                                        <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                                            <div class="bg-indigo-600 h-full rounded-full" style="width: 100%"></div>
+                                        </div>
+                                        <div class="w-24 text-right text-gray-500 font-mono text-sm font-bold">{{formatted}}</div>
+                                    </div>
+                                {{/each}}
+                                {{#unless positions}}
+                                    <p class="text-center text-gray-400 italic py-4">No position data available for this player.</p>
+                                {{/unless}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {{/each}}
+        </section>
+    {{/if}}
+
+    {{#if isTabular}}
+        <section>
+            <h2 class="text-2xl font-bold mb-8 text-gray-800 flex items-center">
+                <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">03</span>
+                Full Metrics Dataset
+            </h2>
+            <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-900 text-white">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Player Name</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">GP</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">G</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">A</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">YC</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">RC</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider border-l border-gray-700">Playtime</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        {{#each players}}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 whitespace-nowrap font-bold text-gray-900">{{lastName}}, {{firstName}}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center text-gray-600 border-l border-gray-50">{{gamesPlayed}}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center font-bold text-emerald-600 border-l border-gray-50">{{goals}}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center font-bold text-blue-600 border-l border-gray-50">{{assists}}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center font-bold text-amber-500 border-l border-gray-50">{{yellowCards}}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center font-bold text-red-500 border-l border-gray-50">{{redCards}}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-right font-mono text-xs font-bold text-gray-500 border-l border-gray-50 uppercase">{{playtimeFormatted}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-4 text-xs text-gray-400 italic">GP: Games Played | G: Goals | A: Assists | YC: Yellow Cards | RC: Red Cards</p>
+        </section>
+    {{/if}}
+
+    <footer class="mt-12 pt-8 border-t border-gray-100 text-center text-gray-400 text-xs">
+        <p class="font-bold text-gray-500 mb-1 tracking-widest uppercase">Apex Team Analytics Platform</p>
+        <p>&copy; 2026 Apex Coaching Systems &bull; High Performance Export Engine &bull; Professional Edition</p>
+    </footer>
+</body>
+</html>

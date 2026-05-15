@@ -1,0 +1,77 @@
+:host {
+  display: block;
+}
+
+ion-card {
+  --background: var(--ap-surface);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+ion-item {
+  --background: transparent;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 0;
+  --min-height: 64px;
+}
+
+ion-progress-bar {
+  --background: var(--ap-surface-raised);
+  --progress-background: var(--ap-chart-primary);
+  height: 6px;
+  border-radius: 3px;
+
+  &.heatmap-low { --progress-background: var(--ap-heatmap-low); }
+  &.heatmap-mid { --progress-background: var(--ap-heatmap-mid); }
+  &.heatmap-high { --progress-background: var(--ap-heatmap-high); }
+}
+
+table {
+  width: 100%;
+  border-spacing: 0;
+  
+  th {
+    background: var(--ap-surface-raised);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+  }
+
+  td {
+    white-space: nowrap;
+    
+    &.player-cell {
+      white-space: normal;
+      min-width: 140px;
+    }
+  }
+}
+
+.participation-badge {
+  --background: transparent;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  border-width: 1px;
+  border-style: solid;
+}
+
+// Mobile refinements
+@media (max-width: 640px) {
+  table {
+    font-size: 12px;
+    
+    th, td {
+      padding: 8px 4px !important;
+    }
+  }
+
+  .chart-label {
+    font-size: 10px;
+  }
+}

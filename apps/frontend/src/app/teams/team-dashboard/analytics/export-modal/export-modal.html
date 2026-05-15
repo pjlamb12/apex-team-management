@@ -85,16 +85,25 @@
       CSV files are ideal for detailed analysis in Excel or other spreadsheets.
     }
   </div>
-</ion-content>
 
-<ion-footer class="ion-no-border bg-ap-bg p-4">
-  <ion-button
-    expand="block"
-    color="primary"
-    class="font-black uppercase tracking-widest h-14"
-    (click)="confirm()"
-  >
-    <ion-icon slot="start" name="download-outline"></ion-icon>
-    Generate Export
-  </ion-button>
-</ion-footer>
+  <div class="p-4 mt-4">
+    <ion-button
+      expand="block"
+      color="primary"
+      class="font-black uppercase tracking-widest h-14"
+      (click)="confirm()"
+      [disabled]="isExporting()"
+    >
+      @if (isExporting()) {
+        <ion-spinner name="crescent" class="mr-2"></ion-spinner>
+        Generating...
+      } @else {
+        <ion-icon slot="start" name="download-outline"></ion-icon>
+        Generate Export
+      }
+    </ion-button>
+  </div>
+  
+  <!-- Extra bottom padding for sheet modal stability -->
+  <div class="h-12"></div>
+</ion-content>

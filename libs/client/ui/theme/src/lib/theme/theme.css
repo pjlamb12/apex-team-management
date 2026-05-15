@@ -39,6 +39,15 @@
   --ion-color-step-850: #334155;
   --ion-color-step-900: #1e293b;
   --ion-color-step-950: #0f172a;
+
+  /* === Chart & Heatmap Tokens === */
+  --ap-chart-primary: #3b82f6;
+  --ap-chart-secondary: #8b5cf6;
+  --ap-chart-tertiary: #ec4899;
+  
+  --ap-heatmap-low: #dbeafe;
+  --ap-heatmap-mid: #3b82f6;
+  --ap-heatmap-high: #1e3a8a;
 }
 
 /* === Dark Mode === */
@@ -75,4 +84,13 @@ html.dark,
   --ion-color-step-850: #cfd4d9;
   --ion-color-step-900: #dde1e5;
   --ion-color-step-950: #eceef0;
+
+  /* === Chart & Heatmap Tokens (Dark) === */
+  --ap-chart-primary: #60a5fa;
+  --ap-chart-secondary: #a78bfa;
+  --ap-chart-tertiary: #f472b6;
+
+  --ap-heatmap-low: #1e293b;
+  --ap-heatmap-mid: #3b82f6;
+  --ap-heatmap-high: #60a5fa;
 }

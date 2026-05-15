@@ -8,6 +8,10 @@ import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
+import { SocketGateway } from '../socket/socket.gateway';
+import { WeatherService } from './weather.service';
+import { AttendanceService } from '../attendance/attendance.service';
+import { vi } from 'vitest';
 
 describe('EventsService', () => {
   let service: EventsService;
@@ -49,9 +53,31 @@ describe('EventsService', () => {
           useValue: {
             create: vi.fn().mockImplementation((dto) => dto),
             save: vi.fn().mockImplementation((event) => Promise.resolve({ id: 'game-event-1', ...event })),
+            find: vi.fn(),
             findOne: vi.fn(),
             remove: vi.fn(),
             count: vi.fn(),
+          },
+        },
+        {
+          provide: SocketGateway,
+          useValue: {
+            server: {
+              to: vi.fn().mockReturnThis(),
+              emit: vi.fn(),
+            },
+          },
+        },
+        {
+          provide: WeatherService,
+          useValue: {
+            getForecastForEvent: vi.fn(),
+          },
+        },
+        {
+          provide: AttendanceService,
+          useValue: {
+            syncFromLineup: vi.fn(),
           },
         },
       ],
@@ -204,7 +230,9 @@ describe('EventsService', () => {
   describe('findAllForTeam', () => {
     it('should return upcoming events by default', async () => {
       vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1' } as any);
-      vi.spyOn(eventRepo, 'find').mockResolvedValue([{ id: 'event-1' }] as any);
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([{ id: 'event-1', scheduledAt: futureDate }] as any);
 
       const result = await service.findAllForTeam('team-1');
 
@@ -216,7 +244,9 @@ describe('EventsService', () => {
 
     it('should return past events when scope is past', async () => {
       vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1' } as any);
-      vi.spyOn(eventRepo, 'find').mockResolvedValue([{ id: 'event-past' }] as any);
+      const pastDate = new Date();
+      pastDate.setFullYear(pastDate.getFullYear() - 1);
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([{ id: 'event-past', scheduledAt: pastDate }] as any);
 
       const result = await service.findAllForTeam('team-1', 'past');
 
@@ -235,7 +265,10 @@ describe('EventsService', () => {
     });
 
     it('should use provided seasonId for filtering', async () => {
-      vi.spyOn(eventRepo, 'find').mockResolvedValue([{ id: 'event-season-2' }] as any);
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-2' } as any);
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([{ id: 'event-season-2', scheduledAt: futureDate }] as any);
 
       const result = await service.findAllForTeam('team-1', 'upcoming', 'season-2');
 
@@ -243,7 +276,9 @@ describe('EventsService', () => {
       expect(eventRepo.find).toHaveBeenCalledWith(expect.objectContaining({
         where: expect.objectContaining({ seasonId: 'season-2' }),
       }));
-      expect(seasonRepo.findOne).not.toHaveBeenCalled();
+      expect(seasonRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'season-2' }
+      });
     });
   });
 
@@ -258,7 +293,7 @@ describe('EventsService', () => {
       expect(result.id).toBe('event-1');
       expect(result.goalEventCount).toBe(3);
       expect(gameEventRepo.count).toHaveBeenCalledWith({
-        where: { eventId: 'event-1', eventType: 'GOAL' },
+        where: { eventId: 'event-1', eventType: 'goal' },
       });
     });
 
@@ -282,7 +317,7 @@ describe('EventsService', () => {
 
   describe('update', () => {
     it('should update event fields and return the updated event', async () => {
-      const event = { id: 'event-1', opponent: 'Old' };
+      const event = { id: 'event-1', opponent: 'Old', season: { teamId: 'team-1' } };
       vi.spyOn(eventRepo, 'findOne').mockResolvedValue(event as any);
 
       const result = await service.update('event-1', { opponent: 'New' });
@@ -300,7 +335,7 @@ describe('EventsService', () => {
 
   describe('remove', () => {
     it('should delete the event', async () => {
-      const event = { id: 'event-1' };
+      const event = { id: 'event-1', season: { teamId: 'team-1' } };
       vi.spyOn(eventRepo, 'findOne').mockResolvedValue(event as any);
 
       await service.remove('event-1');

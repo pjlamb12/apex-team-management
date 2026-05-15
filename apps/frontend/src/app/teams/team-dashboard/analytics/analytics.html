@@ -46,7 +46,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Top Scorers Card -->
           <ion-card class="m-0 border border-ap-border shadow-none">
-            <ion-card-header class="pb-2">
+            <ion-card-header class="px-6 pt-6 pb-4">
               <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
                 <ion-icon name="football-outline" class="text-blue-500"></ion-icon>
                 Top Scorers
@@ -76,7 +76,7 @@
 
           <!-- Top Assists Card -->
           <ion-card class="m-0 border border-ap-border shadow-none">
-            <ion-card-header class="pb-2">
+            <ion-card-header class="px-6 pt-6 pb-4">
               <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
                 <ion-icon name="trophy-outline" class="text-amber-500"></ion-icon>
                 Top Assists
@@ -107,7 +107,7 @@
 
         <!-- Full Roster Stats Table -->
         <ion-card class="m-0 border border-ap-border shadow-none">
-          <ion-card-header>
+          <ion-card-header class="px-6 pt-6 pb-4">
             <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted">Roster Performance</ion-card-title>
           </ion-card-header>
           <ion-card-content class="p-0 overflow-x-auto">
@@ -125,7 +125,7 @@
               <tbody class="divide-y divide-ap-border">
                 @for (m of performanceMetrics(); track m.playerId) {
                   <tr class="hover:bg-ap-surface-raised transition-colors">
-                    <td class="px-4 py-3 font-bold text-ap-text">{{ m.firstName }} {{ m.lastName }}</td>
+                    <td class="px-4 py-3 font-bold text-ap-text player-cell">{{ m.firstName }} {{ m.lastName }}</td>
                     <td class="px-4 py-3 text-center text-ap-muted">{{ m.gamesPlayed }}</td>
                     <td class="px-4 py-3 text-center font-black text-blue-500">{{ m.goals }}</td>
                     <td class="px-4 py-3 text-center font-black text-amber-500">{{ m.assists }}</td>
@@ -160,7 +160,7 @@
              </ion-card>
 
              <ion-card class="m-0 border border-ap-border shadow-none">
-                <ion-card-header>
+                <ion-card-header class="px-6 pt-6 pb-4">
                   <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Most Committed</ion-card-title>
                 </ion-card-header>
                 <ion-card-content class="p-0">
@@ -170,7 +170,13 @@
                         <ion-label>
                           <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-ap-text">{{ p.firstName }}</span>
-                            <ion-badge [color]="getParticipationColor(p.percentage)" mode="ios" class="font-bold text-[10px]">{{ p.percentage }}%</ion-badge>
+                            <ion-badge 
+                              [color]="getParticipationColor(p.percentage)" 
+                              mode="ios" 
+                              class="participation-badge"
+                              [style.border-color]="'var(--ion-color-' + getParticipationColor(p.percentage) + ')'">
+                              {{ p.percentage }}%
+                            </ion-badge>
                           </div>
                         </ion-label>
                       </ion-item>
@@ -183,7 +189,7 @@
           <!-- Roster Participation List -->
           <div class="md:col-span-2">
             <ion-card class="m-0 border border-ap-border shadow-none">
-              <ion-card-header>
+              <ion-card-header class="px-6 pt-6 pb-4">
                 <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted">Attendance Breakdown</ion-card-title>
               </ion-card-header>
               <ion-card-content class="p-0">
@@ -200,7 +206,13 @@
                         </div>
                         <div class="flex items-center gap-4">
                            <ion-progress-bar [color]="getParticipationColor(p.percentage)" [value]="p.percentage / 100" class="h-2 rounded-full"></ion-progress-bar>
-                           <span class="text-xs font-black min-w-[32px] text-right" [class]="'text-' + getParticipationColor(p.percentage)">{{ p.percentage }}%</span>
+                           <ion-badge 
+                             [color]="getParticipationColor(p.percentage)" 
+                             mode="ios" 
+                             class="participation-badge min-w-[48px] text-center"
+                             [style.border-color]="'var(--ion-color-' + getParticipationColor(p.percentage) + ')'">
+                             {{ p.percentage }}%
+                           </ion-badge>
                         </div>
                       </ion-label>
                     </ion-item>
@@ -215,7 +227,7 @@
       @if (activeSegment() === 'playtime') {
         <!-- Playing Time Aggregation -->
         <ion-card class="m-0 border border-ap-border shadow-none">
-          <ion-card-header>
+          <ion-card-header class="px-6 pt-6 pb-4">
             <div class="flex items-center justify-between">
               <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
                 <ion-icon name="time-outline" class="text-blue-400"></ion-icon>
@@ -238,8 +250,12 @@
                     <div class="flex items-center gap-2">
                       @for (pos of pt.positionSeconds | keyvalue; track pos.key) {
                         <div class="flex flex-col gap-1 flex-1">
-                           <div class="text-[8px] font-black uppercase text-ap-muted truncate">{{ pos.key }}</div>
-                           <ion-progress-bar [value]="pos.value / pt.totalSeconds" class="h-1 rounded-full opacity-60"></ion-progress-bar>
+                           <div class="text-[8px] font-black uppercase text-ap-muted truncate chart-label">{{ pos.key }}</div>
+                           <ion-progress-bar 
+                             [value]="pos.value / pt.totalSeconds" 
+                             [class]="getHeatmapClass(pos.value, pt.totalSeconds)"
+                             class="h-1 rounded-full opacity-80">
+                           </ion-progress-bar>
                         </div>
                       }
                     </div>

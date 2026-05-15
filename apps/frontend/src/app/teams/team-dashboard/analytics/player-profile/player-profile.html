@@ -1,0 +1,126 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>{{ profile()?.player?.firstName }} {{ profile()?.player?.lastName }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg">
+  <div class="p-4 flex flex-col gap-6">
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-20 gap-4">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="text-center py-20 text-ap-danger font-bold">
+        <ion-icon name="alert-circle-outline" class="text-4xl mb-2"></ion-icon>
+        <p>{{ errorMessage() }}</p>
+      </div>
+    } @else if (profile(); as p) {
+      <!-- Summary Grid -->
+      <div class="grid grid-cols-2 gap-4">
+        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+          <ion-card-content class="flex flex-col items-center py-6">
+            <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Goals</div>
+            <div class="text-3xl font-black text-blue-500 summary-value">{{ p.totalGoals }}</div>
+          </ion-card-content>
+        </ion-card>
+        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+          <ion-card-content class="flex flex-col items-center py-6">
+            <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Assists</div>
+            <div class="text-3xl font-black text-amber-500 summary-value">{{ p.totalAssists }}</div>
+          </ion-card-content>
+        </ion-card>
+        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+          <ion-card-content class="flex flex-col items-center py-6">
+            <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Minutes</div>
+            <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalMinutes }}m</div>
+          </ion-card-content>
+        </ion-card>
+        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+          <ion-card-content class="flex flex-col items-center py-6">
+            <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Games</div>
+            <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalGamesPlayed }}</div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <!-- Position Distribution -->
+      <ion-card class="m-0 border border-ap-border shadow-none">
+        <ion-card-header>
+          <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+            <ion-icon name="shirt-outline"></ion-icon>
+            Position Distribution
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="p-0">
+          <ion-list lines="full">
+            @for (pos of p.positionDistribution | keyvalue; track pos.key) {
+              <ion-item>
+                <ion-label>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="font-bold text-ap-text">{{ pos.key }}</span>
+                    <span class="text-xs font-black text-ap-muted">{{ formatMinutes(pos.value) }}</span>
+                  </div>
+                  <ion-progress-bar 
+                    [value]="pos.value / (p.totalMinutes * 60 || 1)" 
+                    [class]="getHeatmapClass(pos.value, p.totalMinutes * 60)"
+                    class="h-1 rounded-full">
+                  </ion-progress-bar>
+                </ion-label>
+              </ion-item>
+            } @empty {
+              <div class="py-12 text-center text-ap-muted italic text-sm">No position data available.</div>
+            }
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- History Log -->
+      <ion-card class="m-0 border border-ap-border shadow-none">
+        <ion-card-header>
+          <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+            <ion-icon name="time-outline"></ion-icon>
+            Session History
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="p-0">
+          <ion-list lines="full">
+            @for (h of p.history; track h.eventId) {
+              <ion-item>
+                <ion-icon slot="start" [name]="getStatusIcon(h.status)" [color]="getStatusColor(h.status)"></ion-icon>
+                <ion-label>
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="font-bold text-ap-text">{{ h.eventName }}</div>
+                      <div class="text-[10px] text-ap-muted uppercase">{{ h.scheduledAt | date:'mediumDate' }}</div>
+                    </div>
+                    <div class="text-right">
+                       @if (h.eventType === 'game') {
+                         <div class="flex gap-2">
+                            @if (h.goals > 0) {
+                              <ion-badge color="primary" mode="ios" class="text-[8px] px-1">{{ h.goals }} G</ion-badge>
+                            }
+                            @if (h.assists > 0) {
+                              <ion-badge color="warning" mode="ios" class="text-[8px] px-1">{{ h.assists }} A</ion-badge>
+                            }
+                            <span class="text-xs font-black text-ap-text">{{ formatMinutes(h.playingTimeSeconds) }}</span>
+                         </div>
+                       } @else {
+                         <ion-badge color="success" mode="ios" class="text-[8px] px-1 uppercase tracking-tighter">Practice</ion-badge>
+                       }
+                    </div>
+                  </div>
+                </ion-label>
+              </ion-item>
+            }
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+    }
+  </div>
+</ion-content>

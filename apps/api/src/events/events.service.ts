@@ -12,6 +12,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
 import { WeatherService } from './weather.service';
+import { AttendanceService } from '../attendance/attendance.service';
 
 @Injectable()
 export class EventsService {
@@ -28,32 +29,46 @@ export class EventsService {
     private readonly gameEventRepo: Repository<GameEventEntity>,
     private readonly socketGateway: SocketGateway,
     private readonly weatherService: WeatherService,
+    private readonly attendanceService: AttendanceService,
   ) {
     this.ajv = new Ajv();
     addFormats(this.ajv);
   }
 
   async create(teamId: string, dto: CreateEventDto, userId: string): Promise<EventEntity> {
-    const activeSeason = await this.seasonRepo.findOne({
+    const team = await this.teamRepo.findOne({ where: { id: teamId } });
+    if (!team) throw new NotFoundException('Team not found');
+    if (team.coachId !== userId) throw new ForbiddenException('Not authorized');
+
+    let activeSeason = await this.seasonRepo.findOne({
       where: { teamId, isActive: true },
     });
 
     if (!activeSeason) {
-      throw new NotFoundException('No active season found for this team');
+      activeSeason = this.seasonRepo.create({
+        teamId,
+        name: 'Default Season',
+        isActive: true,
+      });
+      activeSeason = await this.seasonRepo.save(activeSeason);
     }
-
-    const { periodCount, periodLengthMinutes, playersOnField } = dto;
 
     const event = this.eventRepo.create({
       ...dto,
-      periodCount,
-      periodLengthMinutes,
-      playersOnField,
       seasonId: activeSeason.id,
       status: 'scheduled',
       isHomeGame: dto.isHomeGame ?? true,
       recurrenceRule: dto.recurrenceRule,
     });
+
+    // Inherit defaults from season if not provided
+    if (event.type === 'practice') {
+      event.location = dto.location ?? activeSeason.defaultPracticeLocation;
+    } else if (event.type === 'game') {
+      event.periodCount = dto.periodCount ?? activeSeason.periodCount;
+      event.periodLengthMinutes = dto.periodLengthMinutes ?? activeSeason.periodLengthMinutes;
+      event.playersOnField = dto.playersOnField ?? activeSeason.playersOnField;
+    }
 
     // Automatically calculate duration for games
     if (event.type === 'game' && event.periodCount && event.periodLengthMinutes) {
@@ -91,6 +106,7 @@ export class EventsService {
     const baseEvents = await this.eventRepo.find({
       where: { seasonId: targetSeasonId },
       relations: ['locationRef'],
+      order: { scheduledAt: scope === 'upcoming' ? 'ASC' : 'DESC' },
     });
 
     const masters = baseEvents.filter(e => e.recurrenceRule && !e.parentEventId);
@@ -168,9 +184,12 @@ export class EventsService {
 
     event.weatherData = await this.weatherService.getForecastForEvent(eventId);
 
-    const goalEventCount = await this.gameEventRepo.count({
-      where: { eventId, eventType: 'goal' },
-    });
+    let goalEventCount: number | undefined = undefined;
+    if (event.type === 'game') {
+      goalEventCount = await this.gameEventRepo.count({
+        where: { eventId, eventType: 'goal' },
+      });
+    }
 
     return { ...event, goalEventCount };
   }
@@ -192,6 +211,12 @@ export class EventsService {
     }
 
     const updated = await this.eventRepo.save(event);
+
+    // Trigger attendance sync if game is completed
+    if (updated.type === 'game' && updated.status === 'completed') {
+      await this.attendanceService.syncFromLineup(updated.id);
+    }
+
     this.socketGateway.server.to(`team:${event.season.teamId}`).emit('eventUpdated', updated);
     return updated;
   }

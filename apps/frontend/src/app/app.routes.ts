@@ -102,6 +102,11 @@ export const appRoutes: Route[] = [
             loadComponent: () =>
               import('./teams/events/edit-event/edit-event').then((m) => m.EditEvent),
           },
+          {
+            path: 'analytics',
+            loadComponent: () =>
+              import('./teams/team-dashboard/analytics/analytics').then((m) => m.TeamAnalytics),
+          },
           { path: '', redirectTo: 'roster', pathMatch: 'full' },
         ],
       },

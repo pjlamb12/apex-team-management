@@ -159,6 +159,10 @@ export class EventsService {
     return this.http.post<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`, data);
   }
 
+  getPlayingTime(teamId: string, eventId: string): Observable<Record<string, any>> {
+    return this.http.get<Record<string, any>>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/analytics/playing-time`);
+  }
+
   refreshWeather(teamId: string, eventId: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/weather/refresh`, {});
   }

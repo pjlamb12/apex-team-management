@@ -2,7 +2,7 @@ import { Component, inject, signal, effect, Input, computed } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import {
+import { 
   IonHeader,
   IonToolbar,
   IonTitle,
@@ -20,6 +20,10 @@ import {
   IonIcon,
   IonSpinner,
   IonButton,
+  IonSegment,
+  IonSegmentButton,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -32,9 +36,15 @@ import {
   statsChartOutline,
   settingsOutline,
   arrowUpCircle,
-  arrowDownCircle
+  arrowDownCircle,
+  peopleOutline,
+  checkmarkCircleOutline,
+  closeCircleOutline,
+  alertCircleOutline,
+  bandageOutline
 } from 'ionicons/icons';
-import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
+import { AttendanceList } from '@apex-team/client/ui/attendance';
+import { EventsService, EventEntity, AttendanceService } from '@apex-team/client/data-access/team';
 
 @Component({
   selector: 'app-game-summary',
@@ -59,6 +69,11 @@ import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
     IonIcon,
     IonSpinner,
     IonButton,
+    IonSegment,
+    IonSegmentButton,
+    IonSelect,
+    IonSelectOption,
+    AttendanceList,
   ],
   templateUrl: './game-summary.html',
   styleUrl: './game-summary.scss',
@@ -86,6 +101,9 @@ export class GameSummary {
 
   protected game = signal<EventEntity | null>(null);
   protected gameEvents = signal<any[]>([]);
+  protected playingTime = signal<Record<string, any>>({});
+  protected lineup = signal<any[]>([]);
+  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime'>('highlights');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
 
@@ -100,6 +118,20 @@ export class GameSummary {
     return { team, opponent };
   });
 
+  protected sortedPlayingTime = computed(() => {
+    const pt = this.playingTime();
+    const lineup = this.lineup();
+    
+    return lineup.map(entry => {
+      const stats = pt[entry.playerId] || { totalSeconds: 0, positionSeconds: {} };
+      return {
+        ...entry,
+        totalSeconds: stats.totalSeconds,
+        positionSeconds: stats.positionSeconds
+      };
+    }).sort((a, b) => b.totalSeconds - a.totalSeconds);
+  });
+
   constructor() {
     addIcons({ 
       trophyOutline, 
@@ -111,7 +143,12 @@ export class GameSummary {
       statsChartOutline,
       settingsOutline,
       arrowUpCircle,
-      arrowDownCircle
+      arrowDownCircle,
+      peopleOutline,
+      checkmarkCircleOutline,
+      closeCircleOutline,
+      alertCircleOutline,
+      bandageOutline
     });
 
     effect(() => {
@@ -127,17 +164,33 @@ export class GameSummary {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [game, events] = await Promise.all([
+      const [game, events, playingTime, lineup] = await Promise.all([
         firstValueFrom(this.eventsService.getEvent(teamId, eventId)),
-        firstValueFrom(this.eventsService.getGameEvents(teamId, eventId))
+        firstValueFrom(this.eventsService.getGameEvents(teamId, eventId)),
+        firstValueFrom(this.eventsService.getPlayingTime(teamId, eventId)),
+        firstValueFrom(this.eventsService.getLineup(teamId, eventId))
       ]);
       this.game.set(game);
       this.gameEvents.set(events);
+      this.playingTime.set(playingTime);
+      this.lineup.set(lineup);
     } catch {
       this.errorMessage.set('Failed to load game summary.');
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  protected formatSeconds(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+  }
+
+  protected getTopPosition(positionSeconds: Record<string, number>): string | null {
+    const entries = Object.entries(positionSeconds);
+    if (entries.length === 0) return null;
+    return entries.sort((a, b) => b[1] - a[1])[0][0];
   }
 
   protected getResult(game: EventEntity): string {

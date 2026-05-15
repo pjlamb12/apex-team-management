@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  --background: var(--ap-bg);
+}
+
+ion-card {
+  --background: var(--ap-surface);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+ion-item {
+  --background: transparent;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --min-height: 64px;
+}
+
+ion-progress-bar {
+  --background: var(--ap-surface-raised);
+  --progress-background: var(--ap-chart-primary);
+  height: 6px;
+  border-radius: 3px;
+
+  &.heatmap-low { --progress-background: var(--ap-heatmap-low); }
+  &.heatmap-mid { --progress-background: var(--ap-heatmap-mid); }
+  &.heatmap-high { --progress-background: var(--ap-heatmap-high); }
+}
+
+.history-status-icon {
+  font-size: 20px;
+}
+
+@media (max-width: 640px) {
+  .summary-label {
+    font-size: 9px;
+  }
+  
+  .summary-value {
+    font-size: 24px;
+  }
+}

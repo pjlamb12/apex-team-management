@@ -11,7 +11,7 @@ import {
   IonItem,
   IonInput,
 } from '@ionic/angular/standalone';
-import { PlayerEntity } from '../players.service';
+import { PlayerEntity } from '@apex-team/client/data-access/team';
 
 @Component({
   selector: 'app-player-modal',

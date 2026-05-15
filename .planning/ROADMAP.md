@@ -11,7 +11,18 @@
 - [x] **Phase 31: Performance Metrics Aggregator** - Backend and API for aggregating goals, assists, and other game events.
 - [x] **Phase 32: Analytics Dashboard (Team View)** - Centralized dashboard for team-level stats and leaderboards.
 - [x] **Phase 33: Player Profile Analytics** - Detailed individual performance views and position heat maps.
-- [ ] **Phase 34: Export & Polish** - CSV/PDF reporting and final UI refinements.
+- [x] **Phase 34: Export & Polish** - CSV/PDF reporting and final UI refinements.
+
+## Milestone v3.0: Tryout Management & Recruiting
+
+**Goal**: Streamline the process of evaluating new talent and onboarding players to the team through a dedicated tryout and scouting workflow.
+
+## Phases
+
+- [ ] **Phase 35: Tryout Foundation** - Candidate data model, registration management, and "Tryout" event type.
+- [ ] **Phase 36: Scouting & Evaluation** - Configurable rubrics, performance ratings, and qualitative coaching notes.
+- [ ] **Phase 37: Tryout Session Management** - Attendance tracking for candidates and live evaluation entry during sessions.
+- [ ] **Phase 38: Roster Promotion** - Selection workflow and automatic conversion of candidates to rostered players.
 
 ## Phase Details
 
@@ -77,11 +88,51 @@
   2. CSV export of raw player stats is available for external use.
   3. UI adheres to "Athletic Professional" high-contrast theme across all new views.
 **Plans**: 4 plans
-- [ ] 34-01-PLAN.md — Export Infrastructure & CSV Export
-- [ ] 34-02-PLAN.md — PDF Export Engine
-- [ ] 34-03-PLAN.md — Frontend Export UI & Mobile Sharing
-- [ ] 34-04-PLAN.md — UI Polish & Dark Mode
+- [x] 34-01-PLAN.md — Export Infrastructure & CSV Export
+- [x] 34-02-PLAN.md — PDF Export Engine
+- [x] 34-03-PLAN.md — Frontend Export UI & Mobile Sharing
+- [x] 34-04-PLAN.md — UI Polish & Dark Mode
 **UI hint**: yes
+
+### Phase 35: Tryout Foundation
+**Goal**: Establish the basic infrastructure for tracking prospective players.
+**Depends on**: Milestone v2.0
+**Requirements**: TRY-CAND-01, TRY-CAND-02
+**Success Criteria** (what must be TRUE):
+  1. `Candidate` entity exists with fields for contact info, age, and status.
+  2. "Tryout" event type is available in the calendar.
+  3. Candidates can be associated with a team or specific tryout season.
+**Plans**: TBD
+
+### Phase 36: Scouting & Evaluation
+**Goal**: Enable detailed tracking of candidate performance.
+**Depends on**: Phase 35
+**Requirements**: TRY-EVAL-01, TRY-EVAL-02, TRY-EVAL-03
+**Success Criteria** (what must be TRUE):
+  1. Configurable rating categories (e.g., Technical, Tactical) are available per team.
+  2. Coaches can enter notes and 1-5 star ratings for each candidate.
+  3. Candidates can be sorted/filtered by their aggregate evaluation scores.
+**Plans**: TBD
+
+### Phase 37: Tryout Session Management
+**Goal**: Manage the live tryout environment.
+**Depends on**: Phase 36
+**Requirements**: TRY-SESS-01, TRY-SESS-02, UI-TRY-01
+**Success Criteria** (what must be TRUE):
+  1. Attendance tracking specifically for candidates at tryout events.
+  2. Mobile-optimized "Quick Evaluation" view for rapid entry during drills.
+  3. Support for multiple coaches evaluating the same candidate simultaneously.
+**Plans**: TBD
+
+### Phase 38: Roster Promotion
+**Goal**: Seamlessly transition selected talent to the team.
+**Depends on**: Phase 37
+**Requirements**: TRY-PROM-01, TRY-PROM-02
+**Success Criteria** (what must be TRUE):
+  1. "Invite to Team" action converts a `Candidate` to a `Player`.
+  2. Evaluation history is preserved and accessible from the new player's profile.
+  3. Automated notification or status update for candidates who are selected.
+**Plans**: TBD
 
 ## Progress Table
 
@@ -98,4 +149,5 @@
 | 31. Performance Metrics Aggregator | 1/1 | Completed | 2026-05-06 |
 | 32. Analytics Dashboard (Team View) | 1/1 | Completed | 2026-05-08 |
 | 33. Player Profile Analytics | 1/1 | Completed | 2026-05-08 |
-| 34. Export & Polish | 0/4 | Not started | - |
+| 34. Export & Polish | 4/4 | Completed | 2026-05-12 |
+| 35. Tryout Foundation | 0/1 | Not started | - |

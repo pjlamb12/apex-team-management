@@ -26,8 +26,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { settingsOutline } from 'ionicons/icons';
-import { EventsService, EventEntity, LineupEntry, SaveLineupDto } from '@apex-team/client/data-access/team';
-import { PlayersService, PlayerEntity } from '../../players.service';
+import { EventsService, EventEntity, LineupEntry, SaveLineupDto, PlayersService, PlayerEntity } from '@apex-team/client/data-access/team';
 import { SoccerPitchViewComponent } from '@apex-team/client/feature/game-console';
 import { Player } from '@apex-team/shared/util/models';
 

@@ -102,60 +102,130 @@
           </ion-card>
         </div>
 
-        <!-- Main Content: Goal Log -->
+        <!-- Main Content: Goal Log / Attendance / Playtime -->
         <div class="md:col-span-2 flex flex-col gap-6">
-          <ion-card class="m-0">
-            <ion-card-header class="px-6 pt-6 pb-2">
-              <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
-                <ion-icon name="football-outline"></ion-icon>
-                Goal Timeline
-              </ion-card-title>
-            </ion-card-header>
-            <ion-card-content class="p-0">
-              <ion-list lines="full">
-                @for (goal of goals(); track goal.id) {
-                  <ion-item class="goal-item">
-                    <div slot="start" class="w-12 text-center font-mono font-bold text-blue-400 border-r border-ap-border h-full flex items-center justify-center">
-                      {{ goal.minuteOccurred }}'
-                    </div>
-                    <ion-label class="pl-4">
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                          <ion-icon 
-                            [name]="goal.eventType === 'GOAL' ? 'arrow-up-circle' : 'arrow-down-circle'" 
-                            [color]="goal.eventType === 'GOAL' ? 'success' : 'danger'"
-                            class="text-xl"
-                          ></ion-icon>
-                          <div>
-                            <div class="font-bold text-ap-text leading-tight">
-                              @if (goal.eventType === 'GOAL') {
-                                Team Goal
-                                @if (goal.payload?.player; as p) {
-                                  <span class="text-blue-400 font-normal block text-xs mt-0.5">Scored by {{ p.firstName }} {{ p.lastName }}</span>
+          <ion-segment [value]="activeSegment()" (ionChange)="activeSegment.set($any($event).detail.value)" class="bg-ap-surface rounded-lg p-1">
+            <ion-segment-button value="highlights">
+              <ion-label class="text-xs font-bold">Highlights</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="attendance">
+              <ion-label class="text-xs font-bold">Attendance</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="playtime">
+              <ion-label class="text-xs font-bold">Playing Time</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+
+          @if (activeSegment() === 'highlights') {
+            <ion-card class="m-0">
+              <ion-card-header class="px-6 pt-6 pb-2">
+                <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="football-outline"></ion-icon>
+                  Goal Timeline
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (goal of goals(); track goal.id) {
+                    <ion-item class="goal-item">
+                      <div slot="start" class="w-12 text-center font-mono font-bold text-blue-400 border-r border-ap-border h-full flex items-center justify-center">
+                        {{ goal.minuteOccurred }}'
+                      </div>
+                      <ion-label class="pl-4">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-3">
+                            <ion-icon 
+                              [name]="goal.eventType === 'GOAL' ? 'arrow-up-circle' : 'arrow-down-circle'" 
+                              [color]="goal.eventType === 'GOAL' ? 'success' : 'danger'"
+                              class="text-xl"
+                            ></ion-icon>
+                            <div>
+                              <div class="font-bold text-ap-text leading-tight">
+                                @if (goal.eventType === 'GOAL') {
+                                  Team Goal
+                                  @if (goal.payload?.player; as p) {
+                                    <span class="text-blue-400 font-normal block text-xs mt-0.5">Scored by {{ p.firstName }} {{ p.lastName }}</span>
+                                  }
+                                } @else {
+                                  Opponent Goal
                                 }
+                              </div>
+                            </div>
+                          </div>
+                          <div class="text-right">
+                            <div class="text-[10px] font-black text-ap-muted uppercase tracking-tighter">Period</div>
+                            <div class="text-sm font-bold text-ap-text">P{{ goal.payload?.period || '?' }}</div>
+                          </div>
+                        </div>
+                      </ion-label>
+                    </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic">
+                      No goals logged for this match.
+                    </div>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+          }
+
+          @if (activeSegment() === 'attendance') {
+            <ion-card class="m-0 overflow-hidden">
+              <app-attendance-list [teamId]="teamId" [eventId]="eventId" [isGame]="true"></app-attendance-list>
+            </ion-card>
+          }
+
+          @if (activeSegment() === 'playtime') {
+            <!-- Playing Time Card -->
+            <ion-card class="m-0">
+              <ion-card-header class="px-6 pt-6 pb-2">
+                <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="time-outline"></ion-icon>
+                  Playing Time
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (player of sortedPlayingTime(); track player.playerId) {
+                    <ion-item>
+                      <ion-label>
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <div class="font-bold text-ap-text">
+                              {{ player.player.firstName }} {{ player.player.lastName }}
+                              <span class="text-ap-muted font-normal ml-1">#{{ player.player.jerseyNumber }}</span>
+                            </div>
+                            <div class="text-[10px] uppercase tracking-wider text-ap-muted mt-0.5">
+                              @if (player.status === 'starting') {
+                                <ion-badge color="success" mode="ios" class="text-[8px] px-1 py-0 mr-1">STARTER</ion-badge>
+                              }
+                              @if (getTopPosition(player.positionSeconds); as topPos) {
+                                {{ topPos }}
                               } @else {
-                                Opponent Goal
+                                {{ player.positionName || 'No position' }}
                               }
                             </div>
                           </div>
+                          <div class="text-right">
+                            <div class="text-lg font-black text-blue-400 tabular-nums">
+                              {{ formatSeconds(player.totalSeconds) }}
+                            </div>
+                            <div class="text-[10px] font-bold text-ap-muted uppercase tracking-tighter">
+                              Total Minutes
+                            </div>
+                          </div>
                         </div>
-                        <div class="text-right">
-                          <div class="text-[10px] font-black text-ap-muted uppercase tracking-tighter">Period</div>
-                          <div class="text-sm font-bold text-ap-text">P{{ goal.payload?.period || '?' }}</div>
-                        </div>
-                      </div>
-                    </ion-label>
-                  </ion-item>
-                } @empty {
-                  <div class="py-12 text-center text-ap-muted italic">
-                    No goals logged for this match.
-                  </div>
-                }
-              </ion-list>
-            </ion-card-content>
-          </ion-card>
-
-          <!-- Substitutions or other summary stats could go here -->
+                      </ion-label>
+                    </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic">
+                      No playing time data available.
+                    </div>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+          }
         </div>
       </div>
     } @else {

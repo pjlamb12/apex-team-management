@@ -11,6 +11,9 @@ import { MembershipsModule } from '../memberships/memberships.module';
 import { SocketModule } from '../socket/socket.module';
 import { AppController } from './app.controller';
 
+import { AnalyticsModule } from '../analytics/analytics.module';
+import { AttendanceModule } from '../attendance/attendance.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ 
@@ -40,6 +43,8 @@ import { AppController } from './app.controller';
     DrillsModule,
     MembershipsModule,
     SocketModule,
+    AnalyticsModule,
+    AttendanceModule,
   ],
   controllers: [AppController],
 })

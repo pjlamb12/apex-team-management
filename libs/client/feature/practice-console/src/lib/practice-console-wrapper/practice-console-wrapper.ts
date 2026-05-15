@@ -34,6 +34,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { PracticePlanTab } from '../practice-plan-tab/practice-plan-tab';
 import { PracticeExecutionTab } from '../practice-execution-tab/practice-execution-tab';
 
+import { AttendanceList } from '@apex-team/client/ui/attendance';
+
 @Component({
   selector: 'app-practice-console-wrapper',
   standalone: true,
@@ -55,6 +57,7 @@ import { PracticeExecutionTab } from '../practice-execution-tab/practice-executi
     IonButton,
     PracticePlanTab,
     PracticeExecutionTab,
+    AttendanceList,
   ],
   templateUrl: './practice-console-wrapper.html',
   styleUrl: './practice-console-wrapper.scss',
@@ -68,7 +71,7 @@ export class PracticeConsoleWrapper implements OnInit {
   protected teamId = this.route.snapshot.params['id'];
   protected eventId = this.route.snapshot.params['eventId'];
 
-  protected selectedSegment = signal<'summary' | 'plan' | 'execution'>('summary');
+  protected selectedSegment = signal<'summary' | 'plan' | 'execution' | 'attendance'>('summary');
   
   private _event = signal<EventEntity | null>(null);
   protected event = this._event.asReadonly();
