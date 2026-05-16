@@ -23,6 +23,7 @@ import {
   ActionSheetController,
   IonBadge,
   IonButton,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -36,6 +37,7 @@ import {
   refreshOutline,
   sunnyOutline,
   megaphoneOutline,
+  addCircleOutline,
 } from 'ionicons/icons';
 import { EventsService, EventEntity, SeasonsService } from '@apex-team/client/data-access/team';
 import { Season } from '@apex-team/shared/util/models';
@@ -66,6 +68,7 @@ import { Season } from '@apex-team/shared/util/models';
     IonButton,
   ],
   templateUrl: './schedule.html',
+  styleUrl: './schedule.scss',
 })
 export class Schedule {
   @Input() set id(val: string) {
@@ -81,6 +84,7 @@ export class Schedule {
   private readonly seasonsService = inject(SeasonsService);
   private readonly alertCtrl = inject(AlertController);
   private readonly actionSheetCtrl = inject(ActionSheetController);
+  private readonly modalCtrl = inject(ModalController);
   private readonly router = inject(Router);
 
   protected events = signal<EventEntity[]>([]);
@@ -102,6 +106,8 @@ export class Schedule {
       addOutline,
       refreshOutline,
       sunnyOutline,
+      megaphoneOutline,
+      addCircleOutline,
     });
 
     // Load events whenever teamId, scope, selectedSeasonId, or refreshTrigger changes
@@ -131,6 +137,24 @@ export class Schedule {
 
   protected onSeasonChange(event: any): void {
     this.selectedSeasonId.set(event.detail.value);
+  }
+
+  protected async presentSeasonModal(season?: Season): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: (await import('./season-modal/season-modal')).SeasonModal,
+      componentProps: { season }
+    });
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    if (role === 'confirm' && data) {
+      if (season) {
+        await firstValueFrom(this.seasonsService.update(season.id, data));
+      } else {
+        await firstValueFrom(this.seasonsService.create(this.teamId, data));
+      }
+      void this.loadSeasons(this.teamId);
+    }
   }
 
   protected async loadSeasons(teamId: string): Promise<void> {

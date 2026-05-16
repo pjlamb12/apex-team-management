@@ -4,27 +4,36 @@
       <div class="flex items-center justify-center py-4">
         <ion-spinner name="crescent" size="small"></ion-spinner>
       </div>
-    } @else if (seasons().length > 0) {
-      <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
-        <ion-select
-          label="Season"
-          labelPlacement="floating"
-          [value]="selectedSeasonId()"
-          (ionChange)="onSeasonChange($event)"
-          interface="action-sheet"
-          class="w-full"
-        >
-          @for (season of seasons(); track season.id) {
-            <ion-select-option [value]="season.id">
-              {{ season.name }}{{ season.isActive ? ' (Active)' : '' }}
-            </ion-select-option>
-          }
-        </ion-select>
-      </ion-item>
     } @else {
-      <p class="text-sm italic text-ap-muted px-2 py-4">
-        No seasons yet — create a season to get started.
-      </p>
+      <div class="flex items-center gap-2">
+        <div class="flex-1">
+          @if (seasons().length > 0) {
+            <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
+              <ion-select
+                label="Season"
+                labelPlacement="floating"
+                [value]="selectedSeasonId()"
+                (ionChange)="onSeasonChange($event)"
+                interface="action-sheet"
+                class="w-full"
+              >
+                @for (season of seasons(); track season.id) {
+                  <ion-select-option [value]="season.id">
+                    {{ season.name }}{{ season.isActive ? ' (Active)' : '' }}
+                  </ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          } @else {
+            <p class="text-sm italic text-ap-muted px-2 py-4">
+              No seasons yet — create one to get started.
+            </p>
+          }
+        </div>
+        <ion-button fill="clear" color="primary" (click)="presentSeasonModal()" class="ion-no-margin h-12">
+          <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
     }
   </div>
 

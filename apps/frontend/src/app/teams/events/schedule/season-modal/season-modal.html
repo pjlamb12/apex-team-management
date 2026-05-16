@@ -1,0 +1,41 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="dismiss()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>{{ title }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="save()" [strong]="true">Save</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form">
+    <ion-list class="space-y-4">
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Season Name</ion-label>
+        <ion-input formControlName="name" placeholder="e.g. Spring 2026"></ion-input>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Start Date</ion-label>
+        <ion-input type="date" formControlName="startDate"></ion-input>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">End Date</ion-label>
+        <ion-input type="date" formControlName="endDate"></ion-input>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-toggle formControlName="isActive" justify="space-between">
+          <ion-label>
+            <h2 class="font-bold">Set as Active Season</h2>
+            <p class="text-xs text-ap-muted">Events will be shown for this season by default.</p>
+          </ion-label>
+        </ion-toggle>
+      </ion-item>
+    </ion-list>
+  </form>
+</ion-content>
