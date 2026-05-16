@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.2
-milestone: v2.0
-milestone_name: Team Analytics & Playing Time
-status: Completed
-last_updated: "2026-05-12T11:00:00Z"
+milestone: v3.0
+milestone_name: Tryout Management & Recruiting
+status: In Progress
+last_updated: "2026-05-14T22:00:00Z"
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_phases: 4
+  completed_phases: 3
+  total_plans: 3
+  completed_plans: 3
+  percent: 75
 ---
 
 # State: Apex Team
@@ -19,22 +19,24 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** A coach shows up to a game and can instantly see who's on the field, swap players, and track what happened.
-**Current focus:** Developing a comprehensive analytics suite to track playing time, participation, and performance.
-**Current Position:** Milestone v2.0 — Completed
+**Current focus:** Developing a comprehensive tryout and scouting workflow to manage prospective players.
+**Current Position:** Milestone v3.0 — Phase 38: Roster Promotion
 
 ## Current Milestone
 
-**v2.0 — Team Analytics & Playing Time**
+**v3.0 — Tryout Management & Recruiting**
 
-Phase: Phase 34: Export & Polish (Completed)
-Plan: N/A
+Phase: Phase 38: Roster Promotion
+Plan: TBD
 
-Progress: ██████████ 100%
+Progress: ███████░░░ 75%
 
 ## Decision Log
 
 | Date | Decision | Context |
 |------|----------|---------|
+| 2026-05-14 | Tryout Notes Refinement | Added a `notes` field to `CandidateAttendance` to support per-candidate session notes as requested. Confirmed overall tryout notes are handled by the core `Event.notes` field. |
+| 2026-05-14 | Tryout Foundation Design | Defined `Candidate` entity to store prospective player data distinct from the active roster. Extended `Event` entity with `'tryout'` type and added `CandidateAttendance` to track interest levels across multiple sessions. |
 | 2026-05-12 | Server-side Export Engine | Decided to implement PDF/CSV generation on the backend (NestJS) to ensure professional quality and support future scalability. UI polish will prioritize Dark Mode Accessibility and Mobile Chart Refinement. |
 | 2026-05-08 | Individual Player Profiles | Implemented detailed player profile modals accessible from the roster. This view combines participation history, performance stats (goals/assists), and position heat maps for deep player development analysis. |
 | 2026-05-08 | Roster Performance Dashboard | Created a centralized team analytics view with segment-based navigation for Performance, Participation, and Playtime. This provides coaches with high-level leaderboards and detailed breakdowns. |

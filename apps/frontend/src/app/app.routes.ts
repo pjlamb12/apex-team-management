@@ -73,6 +73,11 @@ export const appRoutes: Route[] = [
           import('@apex-team/client/feature/practice-console').then((m) => m.PracticeConsoleWrapper),
       },
       {
+        path: 'teams/:id/events/:eventId/tryout',
+        loadComponent: () =>
+          import('./teams/events/tryout-console/tryout-console').then((m) => m.TryoutConsole),
+      },
+      {
         path: 'teams/:id',
         loadComponent: () =>
           import('./teams/team-dashboard/team-dashboard').then((m) => m.TeamDashboard),
@@ -96,6 +101,11 @@ export const appRoutes: Route[] = [
             path: 'schedule/new-practice',
             loadComponent: () =>
               import('./teams/events/create-practice/create-practice').then((m) => m.CreatePractice),
+          },
+          {
+            path: 'schedule/new-tryout',
+            loadComponent: () =>
+              import('./teams/events/create-tryout/create-tryout').then((m) => m.CreateTryout),
           },
           {
             path: 'schedule/:eventId/edit',

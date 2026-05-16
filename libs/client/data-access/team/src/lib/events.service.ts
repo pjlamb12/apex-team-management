@@ -18,7 +18,7 @@ export interface LocationEntity {
 export interface EventEntity {
   id: string;
   virtualId?: string;
-  type: 'game' | 'practice';
+  type: 'game' | 'practice' | 'tryout';
   seasonId: string;
   opponent?: string;
   scheduledAt: string;
@@ -48,7 +48,7 @@ export interface EventEntity {
 }
 
 export interface CreateEventDto {
-  type?: 'game' | 'practice';
+  type?: 'game' | 'practice' | 'tryout';
   opponent?: string;
   scheduledAt?: string;
   location?: string;
@@ -66,7 +66,7 @@ export interface CreateEventDto {
 }
 
 export interface UpdateEventDto {
-  type?: 'game' | 'practice';
+  type?: 'game' | 'practice' | 'tryout';
   opponent?: string;
   scheduledAt?: string;
   location?: string;

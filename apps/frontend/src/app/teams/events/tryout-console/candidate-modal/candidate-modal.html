@@ -1,0 +1,69 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="dismiss()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>{{ title }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="save()" [strong]="true">Save</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form">
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <ion-item class="rounded-xl border border-ap-border" lines="none">
+          <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">First Name</ion-label>
+          <ion-input formControlName="firstName" placeholder="First Name"></ion-input>
+        </ion-item>
+        <ion-item class="rounded-xl border border-ap-border" lines="none">
+          <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Last Name</ion-label>
+          <ion-input formControlName="lastName" placeholder="Last Name"></ion-input>
+        </ion-item>
+      </div>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Status</ion-label>
+        <ion-select formControlName="status" interface="popover" placeholder="Select Status">
+          <ion-select-option value="interested">Interested</ion-select-option>
+          <ion-select-option value="invited">Invited</ion-select-option>
+          <ion-select-option value="offered">Offered</ion-select-option>
+          <ion-select-option value="accepted">Accepted</ion-select-option>
+          <ion-select-option value="declined">Declined</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Preferred Position</ion-label>
+        <ion-input formControlName="preferredPosition" placeholder="e.g. Forward, Midfielder"></ion-input>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Parent Name</ion-label>
+        <ion-input formControlName="parentName" placeholder="Parent Name"></ion-input>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Parent Email</ion-label>
+        <ion-input type="email" formControlName="parentEmail" placeholder="Parent Email"></ion-input>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Parent Phone</ion-label>
+        <ion-input type="tel" formControlName="parentPhone" placeholder="Parent Phone"></ion-input>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Date of Birth</ion-label>
+        <ion-input type="date" formControlName="dateOfBirth" placeholder="Date of Birth"></ion-input>
+      </ion-item>
+
+      <ion-item class="rounded-xl border border-ap-border" lines="none">
+        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">General Notes</ion-label>
+        <ion-textarea formControlName="notes" rows="4" placeholder="Any additional details..."></ion-textarea>
+      </ion-item>
+    </div>
+  </form>
+</ion-content>

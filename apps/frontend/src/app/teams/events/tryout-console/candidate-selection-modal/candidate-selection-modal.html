@@ -1,0 +1,66 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="dismiss()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>Select Players</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="confirm()" [strong]="true">Done</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="activeSegment()" (ionChange)="onSegmentChange($event)">
+      <ion-segment-button value="roster">
+        <ion-label>From Roster</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="global">
+        <ion-label>All Candidates</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-12">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+    </div>
+  } @else {
+    <ion-list lines="full">
+      @if (activeSegment() === 'roster') {
+        @for (player of players(); track player.id) {
+          <ion-item (click)="togglePlayer(player.id)">
+            <ion-checkbox 
+              slot="start" 
+              [checked]="selectedPlayerIds().has(player.id)"
+              (ionChange)="togglePlayer(player.id)"
+              class="mr-4"
+            ></ion-checkbox>
+            <ion-label>
+              <h2 class="font-black">{{ player.firstName }} {{ player.lastName }}</h2>
+              <p class="text-xs text-ap-muted uppercase font-bold">#{{ player.jerseyNumber }} • {{ player.parentEmail }}</p>
+            </ion-label>
+          </ion-item>
+        } @empty {
+          <div class="py-12 text-center text-ap-muted italic">No rostered players found.</div>
+        }
+      } @else {
+        @for (candidate of globalCandidates(); track candidate.id) {
+          <ion-item (click)="toggleCandidate(candidate.id)">
+            <ion-checkbox 
+              slot="start" 
+              [checked]="selectedCandidateIds().has(candidate.id)"
+              (ionChange)="toggleCandidate(candidate.id)"
+            ></ion-checkbox>
+            <ion-label>
+              <h2 class="font-black">{{ candidate.firstName }} {{ candidate.lastName }}</h2>
+              <p class="text-xs text-ap-muted uppercase font-bold">{{ candidate.parentEmail }}</p>
+            </ion-label>
+          </ion-item>
+        } @empty {
+          <div class="py-12 text-center text-ap-muted italic">No available candidates found.</div>
+        }
+      }
+    </ion-list>
+  }
+</ion-content>

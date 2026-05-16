@@ -35,6 +35,7 @@ import {
   addOutline,
   refreshOutline,
   sunnyOutline,
+  megaphoneOutline,
 } from 'ionicons/icons';
 import { EventsService, EventEntity, SeasonsService } from '@apex-team/client/data-access/team';
 import { Season } from '@apex-team/shared/util/models';
@@ -246,10 +247,12 @@ export class Schedule {
 
   protected getEventTitle(event: EventEntity): string {
     if (event.type === 'practice') return 'Practice';
+    if (event.type === 'tryout') return 'Tryout Session';
     return `vs ${event.opponent}`;
   }
 
   protected getEventIcon(event: EventEntity): string {
+    if (event.type === 'tryout') return 'megaphone-outline';
     return event.type === 'game' ? 'calendar-outline' : 'fitness-outline';
   }
 
@@ -258,6 +261,8 @@ export class Schedule {
     const path = [];
     if (event.type === 'practice') {
       path.push('/teams', teamId, 'events', event.id, 'practice');
+    } else if (event.type === 'tryout') {
+      path.push('/teams', teamId, 'events', event.id, 'tryout');
     } else if (event.status === 'completed' || event.status === 'in_progress') {
       path.push('/teams', teamId, 'events', event.id, 'summary');
     } else {
@@ -289,6 +294,13 @@ export class Schedule {
           icon: 'fitness-outline',
           handler: () => {
             void this.router.navigate(['/teams', this.teamId, 'schedule', 'new-practice']);
+          },
+        },
+        {
+          text: 'Schedule Tryout',
+          icon: 'megaphone-outline',
+          handler: () => {
+            void this.router.navigate(['/teams', this.teamId, 'schedule', 'new-tryout']);
           },
         },
         { text: 'Cancel', role: 'cancel' },

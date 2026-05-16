@@ -1,0 +1,269 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/schedule'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Tryout Console</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChange($event)">
+      <ion-segment-button value="summary">
+        <ion-label>Summary</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="attendance">
+        <ion-label>Attendance</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="evaluations">
+        <ion-label>Evaluations</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="promotion">
+        <ion-label>Promotion</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg">
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-20 gap-4">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p class="text-ap-muted text-sm font-medium">Loading session data...</p>
+    </div>
+  } @else {
+    <div class="ion-padding">
+      
+      <!-- SUMMARY TAB -->
+      @if (selectedSegment() === 'summary') {
+        <div class="space-y-4">
+          <ion-card class="m-0 border border-ap-border shadow-none">
+            <ion-card-header>
+              <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                <ion-icon name="megaphone-outline" class="text-ap-primary"></ion-icon>
+                Session Overview
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content class="space-y-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-ap-surface-raised flex items-center justify-center text-ap-primary">
+                  <ion-icon name="time-outline" class="text-xl"></ion-icon>
+                </div>
+                <div>
+                  <p class="text-xs text-ap-muted font-bold uppercase tracking-wider">Scheduled At</p>
+                  <p class="font-black text-ap-text">{{ event()?.scheduledAt | date: 'MMM d, y @ h:mm a' }}</p>
+                </div>
+              </div>
+
+              @if (event()?.location) {
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-ap-surface-raised flex items-center justify-center text-emerald-500">
+                    <ion-icon name="location-outline" class="text-xl"></ion-icon>
+                  </div>
+                  <div>
+                    <p class="text-xs text-ap-muted font-bold uppercase tracking-wider">Location</p>
+                    <p class="font-black text-ap-text">{{ event()?.location }}</p>
+                  </div>
+                </div>
+              }
+
+              <div class="pt-4 border-t border-ap-border">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-xs text-ap-muted font-bold uppercase tracking-wider">Overall Tryout Notes</p>
+                  <ion-button fill="clear" size="small" class="ion-no-margin" (click)="updateOverallNotes()">
+                    <ion-icon slot="start" name="save-outline"></ion-icon>
+                    Save
+                  </ion-button>
+                </div>
+                <ion-textarea 
+                  [(ngModel)]="overallNotes" 
+                  rows="6" 
+                  class="bg-ap-surface-raised rounded-xl p-2 text-sm"
+                  placeholder="Enter overall session feedback, drills covered, etc..."
+                ></ion-textarea>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </div>
+      }
+
+      <!-- ATTENDANCE TAB -->
+      @if (selectedSegment() === 'attendance') {
+        <div class="space-y-4">
+          <div class="flex items-center justify-between px-2">
+            <h3 class="text-xs font-black uppercase tracking-widest text-ap-muted">Tryout Attendance</h3>
+            <ion-button fill="clear" size="small" (click)="openSelectionModal()">
+              <ion-icon slot="start" name="person-add-outline"></ion-icon>
+              Select Players
+            </ion-button>
+          </div>
+          
+          <ion-list lines="none" class="bg-transparent space-y-2">
+            @for (candidate of candidates(); track candidate.id) {
+              <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
+                <div class="p-4">
+                  <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-black text-ap-text tracking-tight">{{ candidate.firstName }} {{ candidate.lastName }}</h2>
+                    <div class="flex items-center gap-2">
+                      <ion-button 
+                        [fill]="getAttendanceStatus(candidate.id) === 'present' ? 'solid' : 'outline'" 
+                        size="small" 
+                        color="success"
+                        (click)="markAttendance(candidate.id, 'present')"
+                      >
+                        <ion-icon slot="icon-only" name="checkmark-circle-outline"></ion-icon>
+                      </ion-button>
+                      <ion-button 
+                        [fill]="getAttendanceStatus(candidate.id) === 'absent' ? 'solid' : 'outline'" 
+                        size="small" 
+                        color="danger"
+                        (click)="markAttendance(candidate.id, 'absent')"
+                      >
+                        <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
+                      </ion-button>
+                      <ion-button 
+                        [fill]="getAttendanceStatus(candidate.id) === 'tardy' ? 'solid' : 'outline'" 
+                        size="small" 
+                        color="warning"
+                        (click)="markAttendance(candidate.id, 'tardy')"
+                      >
+                        <ion-icon slot="icon-only" name="time-outline"></ion-icon>
+                      </ion-button>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-3">
+                    <div class="flex items-center justify-between mb-1">
+                      <p class="text-[10px] text-ap-muted font-bold uppercase tracking-widest">Candidate-specific Session Notes</p>
+                    </div>
+                    <ion-textarea 
+                      [(ngModel)]="candidateNotes()[candidate.id]" 
+                      (ionBlur)="updateCandidateNote(candidate.id)"
+                      rows="2" 
+                      class="bg-ap-surface-raised rounded-lg px-2 text-sm"
+                      placeholder="e.g. Needs better endurance..."
+                    ></ion-textarea>
+                  </div>
+                </div>
+              </ion-card>
+            } @empty {
+              <div class="flex flex-col items-center justify-center py-20 text-center">
+                <ion-icon name="people-outline" class="text-5xl text-ap-muted mb-4 opacity-30"></ion-icon>
+                <p class="text-ap-muted italic">No players added to this session yet.</p>
+                <ion-button fill="outline" class="mt-4 font-black uppercase tracking-widest" (click)="openSelectionModal()">
+                  Add Players
+                </ion-button>
+              </div>
+            }
+          </ion-list>
+        </div>
+      }
+
+      <!-- EVALUATIONS TAB -->
+      @if (selectedSegment() === 'evaluations') {
+        <div class="space-y-4 pb-20">
+          @if (rubrics().length === 0) {
+            <div class="flex flex-col items-center justify-center py-20 text-center">
+              <ion-icon name="star-outline" class="text-5xl text-ap-muted mb-4 opacity-30"></ion-icon>
+              <h3 class="text-lg font-bold text-ap-text">No Rubrics Defined</h3>
+              <p class="text-sm text-ap-muted max-w-[240px] mt-2">
+                Define scouting rubrics in team settings to begin structured evaluations.
+              </p>
+              <ion-button [routerLink]="['/teams', teamId, 'settings']" class="mt-6 font-black uppercase tracking-widest h-12">
+                Setup Rubrics
+              </ion-button>
+            </div>
+          } @else {
+            @for (candidate of candidates(); track candidate.id) {
+              <ion-card class="m-0 border border-ap-border shadow-none">
+                <ion-card-header class="border-b border-ap-border px-4">
+                  <ion-card-title class="text-lg font-black text-ap-text">{{ candidate.firstName }} {{ candidate.lastName }}</ion-card-title>
+                </ion-card-header>
+                <ion-card-content class="p-0">
+                  <ion-list lines="full">
+                    @for (rubric of rubrics(); track rubric.id) {
+                      <ion-item>
+                        <ion-label>
+                          <h3 class="text-xs font-bold uppercase tracking-wider text-ap-muted">{{ rubric.name }}</h3>
+                          <div class="flex items-center gap-1 mt-2">
+                            @for (starVal of [1,2,3,4,5]; track starVal) {
+                              <ion-icon 
+                                [name]="getRating(candidate.id, rubric.id) >= starVal ? 'star' : 'star-outline'" 
+                                [class.text-amber-400]="getRating(candidate.id, rubric.id) >= starVal"
+                                [class.text-ap-muted]="getRating(candidate.id, rubric.id) < starVal"
+                                class="text-2xl cursor-pointer"
+                                (click)="recordRating(candidate.id, rubric.id, starVal)"
+                              ></ion-icon>
+                            }
+                          </div>
+                        </ion-label>
+                      </ion-item>
+                    }
+                  </ion-list>
+                </ion-card-content>
+              </ion-card>
+            } @empty {
+              <div class="py-20 text-center text-ap-muted italic">No players to evaluate. Add them in the Attendance tab first.</div>
+            }
+          }
+        </div>
+      }
+
+      <!-- PROMOTION TAB -->
+      @if (selectedSegment() === 'promotion') {
+        <div class="space-y-4 pb-20">
+          <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
+            <h3 class="text-blue-900 font-bold text-sm mb-1 flex items-center gap-2">
+              <ion-icon name="rocket-outline"></ion-icon>
+              Final Selection
+            </h3>
+            <p class="text-blue-700 text-xs leading-relaxed">
+              Promote successful candidates to your active roster. This will create their player profiles and notify the team.
+            </p>
+          </div>
+
+          <ion-list lines="none" class="bg-transparent space-y-2">
+            @for (candidate of candidates(); track candidate.id) {
+              <ion-card class="m-0 border border-ap-border shadow-none">
+                <div class="p-4 flex items-center justify-between">
+                  <div>
+                    <h2 class="text-lg font-black text-ap-text tracking-tight">{{ candidate.firstName }} {{ candidate.lastName }}</h2>
+                    <p class="text-[10px] text-ap-muted font-bold uppercase tracking-widest">{{ candidate.parentEmail }}</p>
+                  </div>
+                  
+                  @if (candidate.status === 'accepted') {
+                    <div class="flex items-center gap-1.5 text-success font-black uppercase text-[10px] tracking-widest">
+                      <ion-icon name="checkmark-circle" class="text-lg"></ion-icon>
+                      On Roster
+                    </div>
+                  } @else {
+                    <ion-button color="primary" size="small" class="font-black uppercase tracking-widest" (click)="promoteCandidate(candidate)">
+                      Promote
+                    </ion-button>
+                  }
+                </div>
+              </ion-card>
+            } @empty {
+              <div class="py-20 text-center text-ap-muted italic">No candidates to promote yet.</div>
+            }
+          </ion-list>
+        </div>
+      }
+
+    </div>
+  }
+</ion-content>
+
+@if (selectedSegment() === 'attendance') {
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="mb-4 mr-2">
+    <ion-fab-button color="primary" (click)="openNewCandidateModal()">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+}
+
+<ion-toast
+  [isOpen]="!!toastMessage()"
+  [message]="toastMessage() ?? ''"
+  [duration]="2000"
+  (didDismiss)="toastMessage.set(null)"
+  position="bottom"
+></ion-toast>

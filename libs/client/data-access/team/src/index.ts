@@ -5,3 +5,5 @@ export * from './lib/location.service';
 export * from './lib/attendance.service';
 export * from './lib/analytics.service';
 export * from './lib/players.service';
+export * from './lib/candidates.service';
+export * from './lib/scouting.service';

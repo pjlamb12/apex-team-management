@@ -19,7 +19,7 @@ export class EventEntity {
   practiceDrills: PracticeDrillEntity[];
 
   @Column({ default: 'game' })
-  type: 'game' | 'practice';
+  type: 'game' | 'practice' | 'tryout';
 
   @Column({ nullable: true })
   opponent: string;

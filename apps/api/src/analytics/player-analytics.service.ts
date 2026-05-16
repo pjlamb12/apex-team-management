@@ -10,7 +10,7 @@ import { PlayingTimeService } from './playing-time.service';
 export interface PlayerHistoryEntry {
   eventId: string;
   eventName: string;
-  eventType: 'game' | 'practice';
+  eventType: 'game' | 'practice' | 'tryout';
   scheduledAt: Date;
   status: 'present' | 'absent' | 'tardy' | 'injured' | 'unknown';
   goals: number;
@@ -118,7 +118,7 @@ export class PlayerAnalyticsService {
 
       history.push({
         eventId: event.id,
-        eventName: event.type === 'game' ? `vs ${event.opponent}` : 'Practice',
+        eventName: event.type === 'game' ? `vs ${event.opponent}` : (event.type === 'tryout' ? 'Tryout Session' : 'Practice'),
         eventType: event.type,
         scheduledAt: event.scheduledAt!,
         status: attRecord?.status || 'unknown',

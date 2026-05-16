@@ -13,6 +13,8 @@ import { AppController } from './app.controller';
 
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { AttendanceModule } from '../attendance/attendance.module';
+import { CandidatesModule } from '../candidates/candidates.module';
+import { ScoutingModule } from '../scouting/scouting.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { AttendanceModule } from '../attendance/attendance.module';
     SocketModule,
     AnalyticsModule,
     AttendanceModule,
+    CandidatesModule,
+    ScoutingModule,
   ],
   controllers: [AppController],
 })

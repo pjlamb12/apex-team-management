@@ -1,0 +1,90 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/schedule'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Create Tryout</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding bg-ap-bg">
+  <ion-card class="m-0 border border-ap-border shadow-none">
+    <ion-card-header>
+      <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+        <ion-icon name="megaphone-outline" class="text-ap-primary"></ion-icon>
+        Tryout Session Details
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content class="space-y-4">
+      <form [formGroup]="form">
+        <div class="space-y-4">
+          <!-- Date/Time -->
+          <div class="rounded-xl border border-ap-border p-4 bg-ap-surface">
+            <div class="text-ap-muted uppercase text-[10px] font-bold tracking-widest mb-2">Date & Time</div>
+            <ion-datetime-button datetime="datetime"></ion-datetime-button>
+          </div>
+          <ion-modal [keepContentsMounted]="true">
+            <ng-template>
+              <ion-datetime 
+                id="datetime" 
+                presentation="date-time"
+                formControlName="scheduledAt" 
+                [showDefaultButtons]="true"
+              ></ion-datetime>
+            </ng-template>
+          </ion-modal>
+
+          <!-- Duration -->
+          <ion-item lines="none" class="rounded-xl border border-ap-border">
+            <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Duration (minutes)</ion-label>
+            <ion-input type="number" formControlName="durationMinutes" placeholder="e.g. 90"></ion-input>
+          </ion-item>
+
+          <!-- Location -->
+          <ion-item lines="none" class="rounded-xl border border-ap-border">
+            <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Location / Complex</ion-label>
+            <ion-select formControlName="locationId" interface="popover" placeholder="Select Location">
+              <ion-select-option value="">None / Custom</ion-select-option>
+              @for (loc of locations(); track loc.id) {
+                <ion-select-option [value]="loc.id">{{ loc.name }}</ion-select-option>
+              }
+            </ion-select>
+            <ion-button slot="end" fill="clear" (click)="presentLocationModal()">
+              <ion-icon name="add-outline"></ion-icon>
+            </ion-button>
+          </ion-item>
+
+          <ion-item lines="none" class="rounded-xl border border-ap-border">
+            <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Field / Venue Name</ion-label>
+            <ion-input formControlName="locationName" placeholder="e.g. Field 4, Gym A"></ion-input>
+          </ion-item>
+
+          <!-- Notes -->
+          <ion-item lines="none" class="rounded-xl border border-ap-border">
+            <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Overall Tryout Notes</ion-label>
+            <ion-textarea formControlName="notes" rows="3" placeholder="Instructions, goals, or general notes for this session..."></ion-textarea>
+          </ion-item>
+        </div>
+
+        @if (errorMessage()) {
+          <p class="text-danger text-sm mt-4 italic">{{ errorMessage() }}</p>
+        }
+
+        <ion-button 
+          expand="block" 
+          color="primary" 
+          class="mt-8 font-black uppercase tracking-widest h-14" 
+          (click)="submit()"
+          [disabled]="isSaving()"
+        >
+          @if (isSaving()) {
+            <ion-spinner name="crescent" class="mr-2"></ion-spinner>
+            Creating...
+          } @else {
+            Create Tryout Session
+          }
+        </ion-button>
+      </form>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

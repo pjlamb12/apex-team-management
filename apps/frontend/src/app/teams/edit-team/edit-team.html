@@ -104,6 +104,33 @@
 
             <ion-list class="mt-4">
               <ion-list-header>
+                <ion-label>Scouting Rubrics</ion-label>
+                <ion-button (click)="addRubric()" fill="clear" size="small">
+                  <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </ion-list-header>
+
+              @for (rubric of rubrics(); track rubric.id) {
+                <ion-item>
+                  <ion-icon name="star-outline" slot="start" class="text-amber-400"></ion-icon>
+                  <ion-label>
+                    <h2>{{ rubric.name }}</h2>
+                  </ion-label>
+                  <ion-button slot="end" fill="clear" color="danger" (click)="deleteRubric(rubric.id)">
+                    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </ion-item>
+              } @empty {
+                <div class="px-4 py-2">
+                  <p class="text-xs text-ap-muted italic">
+                    Add categories like "Technical Skills" or "Attitude" to evaluate candidates during tryouts.
+                  </p>
+                </div>
+              }
+            </ion-list>
+
+            <ion-list class="mt-4">
+              <ion-list-header>
                 <ion-label>External Calendar Sync</ion-label>
               </ion-list-header>
 

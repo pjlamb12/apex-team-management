@@ -37,12 +37,13 @@ import {
   trashOutline, 
   copyOutline, 
   shareOutline, 
-  addOutline
+  addOutline,
+  starOutline
 } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { CommonModule } from '@angular/common';
-import { TeamService, LocationService, LocationEntity } from '@apex-team/client/data-access/team';
+import { TeamService, LocationService, LocationEntity, ScoutingService, ScoutingRubricEntity } from '@apex-team/client/data-access/team';
 import { LocationModal } from '@apex-team/client/ui/location-modal';
 
 interface Sport {
@@ -107,6 +108,7 @@ export class EditTeam {
 
   private readonly teamService = inject(TeamService);
   private readonly locationService = inject(LocationService);
+  private readonly scoutingService = inject(ScoutingService);
   private readonly config = inject(RuntimeConfigLoaderService);
   private readonly router = inject(Router);
   private readonly alertCtrl = inject(AlertController);
@@ -121,6 +123,7 @@ export class EditTeam {
   protected toastMessage = signal<string | null>(null);
 
   protected locations = signal<LocationEntity[]>([]);
+  protected rubrics = signal<ScoutingRubricEntity[]>([]);
 
   protected form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -140,6 +143,7 @@ export class EditTeam {
       copyOutline,
       shareOutline,
       addOutline,
+      starOutline,
     });
 
     // Load team whenever id changes
@@ -148,6 +152,7 @@ export class EditTeam {
       if (teamId) {
         void this.loadTeam(teamId);
         void this.loadLocations();
+        void this.loadRubrics();
       }
     });
   }
@@ -178,6 +183,52 @@ export class EditTeam {
       this.locations.set(locs);
     } catch {
       console.error('Failed to load locations');
+    }
+  }
+
+  protected async loadRubrics(): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+    try {
+      const rubrics = await firstValueFrom(this.scoutingService.getRubrics(teamId));
+      this.rubrics.set(rubrics);
+    } catch {
+      console.error('Failed to load rubrics');
+    }
+  }
+
+  protected async addRubric(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Add Scouting Rubric',
+      message: 'Enter a name for the evaluation category (e.g. Technical Skills)',
+      inputs: [{ name: 'name', type: 'text', placeholder: 'Rubric Name' }],
+      buttons: [
+        'Cancel',
+        {
+          text: 'Add',
+          handler: async (data) => {
+            if (!data.name) return;
+            try {
+              const rubric = await firstValueFrom(this.scoutingService.addRubric(this.teamId, { name: data.name }));
+              this.rubrics.update(list => [...list, rubric]);
+              this.toastMessage.set('Rubric added');
+            } catch {
+              this.errorMessage.set('Failed to add rubric');
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  protected async deleteRubric(id: string): Promise<void> {
+    try {
+      await firstValueFrom(this.scoutingService.deleteRubric(this.teamId, id));
+      this.rubrics.update(list => list.filter(r => r.id !== id));
+      this.toastMessage.set('Rubric removed');
+    } catch {
+      this.errorMessage.set('Failed to delete rubric');
     }
   }
 
