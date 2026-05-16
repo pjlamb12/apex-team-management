@@ -32,7 +32,7 @@ export interface ParticipationStats {
 export interface PlayerHistoryEntry {
   eventId: string;
   eventName: string;
-  eventType: 'game' | 'practice';
+  eventType: 'game' | 'practice' | 'tryout';
   scheduledAt: Date;
   status: 'present' | 'absent' | 'tardy' | 'injured' | 'unknown';
   goals: number;

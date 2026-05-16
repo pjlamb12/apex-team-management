@@ -7,9 +7,9 @@ export interface PlayerEntity {
   id: string;
   firstName: string;
   lastName: string;
-  jerseyNumber: number | null;
-  preferredPosition: string | null;
-  parentEmail: string | null;
+  jerseyNumber?: number;
+  preferredPosition?: string;
+  parentEmail: string;
   teamId: string;
 }
 
@@ -17,8 +17,8 @@ export interface CreatePlayerDto {
   firstName: string;
   lastName: string;
   jerseyNumber?: number;
-  preferredPosition?: string;
-  parentEmail?: string;
+  parentEmail: string;
+  seasonId?: string; // Optional: add to season roster immediately
 }
 
 export interface UpdatePlayerDto {
@@ -44,11 +44,27 @@ export class PlayersService {
     return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players`);
   }
 
+  getPlayersForSeason(teamId: string, seasonId: string): Observable<PlayerEntity[]> {
+    return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/seasons/${seasonId}`);
+  }
+
   addPlayer(teamId: string, data: CreatePlayerDto): Observable<PlayerEntity> {
     return this.http.post<PlayerEntity>(`${this.apiUrl}/teams/${teamId}/players`, data);
   }
 
-  updatePlayer(teamId: string, playerId: string, data: UpdatePlayerDto): Observable<PlayerEntity> {
+  addPlayerToSeason(teamId: string, seasonId: string, playerId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/teams/${teamId}/players/seasons/${seasonId}/${playerId}`, {});
+  }
+
+  removePlayerFromSeason(teamId: string, seasonId: string, playerId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/players/seasons/${seasonId}/${playerId}`);
+  }
+
+  updatePlayer(
+    teamId: string,
+    playerId: string,
+    data: UpdatePlayerDto
+  ): Observable<PlayerEntity> {
     return this.http.patch<PlayerEntity>(
       `${this.apiUrl}/teams/${teamId}/players/${playerId}`,
       data

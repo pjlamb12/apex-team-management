@@ -1,0 +1,73 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="dismiss()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>Build Roster</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="confirm()" [strong]="true">Done</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="activeSegment()" (ionChange)="onSegmentChange($event)">
+      <ion-segment-button value="historical">
+        <ion-label>Roster Pool</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="candidates">
+        <ion-label>Tryout Results</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-12">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+    </div>
+  } @else {
+    <ion-list lines="full">
+      @if (activeSegment() === 'historical') {
+        <div class="px-4 py-2 bg-blue-50 border border-blue-100 rounded-xl mb-4">
+           <p class="text-blue-900 text-xs font-medium">Select players from previous seasons to add to this roster.</p>
+        </div>
+        @for (player of historicalPlayers(); track player.id) {
+          <ion-item (click)="togglePlayer(player.id)">
+            <ion-checkbox 
+              slot="start" 
+              [checked]="selectedPlayerIds().has(player.id)"
+              (ionChange)="togglePlayer(player.id)"
+              class="mr-4"
+            ></ion-checkbox>
+            <ion-label>
+              <h2 class="font-black">{{ player.firstName }} {{ player.lastName }}</h2>
+              <p class="text-xs text-ap-muted uppercase font-bold">#{{ player.jerseyNumber }} • {{ player.parentEmail }}</p>
+            </ion-label>
+          </ion-item>
+        } @empty {
+          <div class="py-12 text-center text-ap-muted italic">No players available to add.</div>
+        }
+      } @else {
+        <div class="px-4 py-2 bg-amber-50 border border-amber-100 rounded-xl mb-4">
+           <p class="text-amber-900 text-xs font-medium">Promote successful candidates to your active roster.</p>
+        </div>
+        @for (candidate of availableCandidates(); track candidate.id) {
+          <ion-item (click)="toggleCandidate(candidate.id)">
+            <ion-checkbox 
+              slot="start" 
+              [checked]="selectedCandidateIds().has(candidate.id)"
+              (ionChange)="toggleCandidate(candidate.id)"
+              class="mr-4"
+            ></ion-checkbox>
+            <ion-label>
+              <h2 class="font-black">{{ candidate.firstName }} {{ candidate.lastName }}</h2>
+              <p class="text-xs text-ap-muted uppercase font-bold">{{ candidate.parentEmail }}</p>
+            </ion-label>
+          </ion-item>
+        } @empty {
+          <div class="py-12 text-center text-ap-muted italic">No new candidates found.</div>
+        }
+      }
+    </ion-list>
+  }
+</ion-content>

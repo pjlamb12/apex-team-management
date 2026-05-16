@@ -39,8 +39,12 @@ export class CandidatesController {
   }
 
   @Post(':id/promote')
-  async promote(@Param('teamId') teamId: string, @Param('id') id: string): Promise<any> {
-    return this.candidatesService.promote(teamId, id);
+  async promote(
+    @Param('teamId') teamId: string, 
+    @Param('id') id: string,
+    @Body('seasonId') seasonId?: string
+  ): Promise<any> {
+    return this.candidatesService.promote(teamId, id, seasonId);
   }
 
   @Get('events/:eventId/attendance')

@@ -72,7 +72,7 @@ export class CandidatesService {
     return this.http.post<CandidateAttendanceEntity>(`${this.apiUrl}/teams/${teamId}/candidates/${candidateId}/events/${eventId}/attendance`, { status, notes });
   }
 
-  promoteCandidate(teamId: string, id: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/teams/${teamId}/candidates/${id}/promote`, {});
+  promoteCandidate(teamId: string, id: string, seasonId?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/teams/${teamId}/candidates/${id}/promote`, { seasonId });
   }
 }

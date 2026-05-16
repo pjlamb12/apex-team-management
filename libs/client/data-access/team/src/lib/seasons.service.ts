@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom, tap } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { Season, SeasonStats } from '@apex-team/shared/util/models';
 
@@ -11,8 +11,21 @@ export class SeasonsService {
   private readonly http = inject(HttpClient);
   private readonly config = inject(RuntimeConfigLoaderService);
 
+  public readonly selectedSeasonId = signal<string | null>(null);
+  public readonly seasons = signal<Season[]>([]);
+
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
+  }
+
+  async initialize(teamId: string): Promise<void> {
+    const seasons = await firstValueFrom(this.findAllForTeam(teamId));
+    this.seasons.set(seasons);
+    
+    if (seasons.length > 0 && !this.selectedSeasonId()) {
+      const active = seasons.find(s => s.isActive);
+      this.selectedSeasonId.set(active?.id ?? seasons[0].id);
+    }
   }
 
   findAllForTeam(teamId: string): Observable<Season[]> {

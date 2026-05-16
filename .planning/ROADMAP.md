@@ -25,6 +25,7 @@
 - [x] **Phase 36: Scouting & Evaluation** - Configurable rubrics, performance ratings, and qualitative coaching notes.
 - [x] **Phase 37: Tryout Session Management** - Attendance tracking for candidates and live evaluation entry during sessions.
 - [ ] **Phase 38: Roster Promotion** - Selection workflow and automatic conversion of candidates to rostered players.
+- [ ] **Phase 39: Multi-Season Roster Management** - Season-specific rosters, roster importing from previous seasons, and historical data isolation.
 
 ## Phase Details
 
@@ -60,3 +61,4 @@ Generate downloadable reports and polish the UI for a professional athletic look
 | 36. Scouting & Evaluation | 1/1 | Completed | 2026-05-14 |
 | 37. Tryout Session Management | 1/1 | Completed | 2026-05-14 |
 | 38. Roster Promotion | 0/1 | Not started | - |
+| 39. Multi-Season Roster Management | 0/1 | Not started | - |

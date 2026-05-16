@@ -88,8 +88,8 @@ export class Schedule {
   private readonly router = inject(Router);
 
   protected events = signal<EventEntity[]>([]);
-  protected seasons = signal<Season[]>([]);
-  protected selectedSeasonId = signal<string | null>(null);
+  protected seasons = this.seasonsService.seasons;
+  protected selectedSeasonId = this.seasonsService.selectedSeasonId;
   protected isLoading = signal(false);
   protected isLoadingSeasons = signal(false);
   protected scope = signal<'upcoming' | 'past'>('upcoming');
@@ -126,7 +126,6 @@ export class Schedule {
     const id = this._teamId();
     if (id) {
       void this.loadSeasons(id);
-      this.refreshTrigger.update((n) => n + 1);
     }
   }
 
@@ -136,7 +135,7 @@ export class Schedule {
   }
 
   protected onSeasonChange(event: any): void {
-    this.selectedSeasonId.set(event.detail.value);
+    this.seasonsService.selectedSeasonId.set(event.detail.value);
   }
 
   protected async presentSeasonModal(season?: Season): Promise<void> {
@@ -160,13 +159,7 @@ export class Schedule {
   protected async loadSeasons(teamId: string): Promise<void> {
     this.isLoadingSeasons.set(true);
     try {
-      const data = await firstValueFrom(this.seasonsService.findAllForTeam(teamId));
-      this.seasons.set(data);
-
-      if (data.length > 0) {
-        const activeSeason = data.find((s) => s.isActive);
-        this.selectedSeasonId.set(activeSeason?.id ?? data[0].id);
-      }
+      await this.seasonsService.initialize(teamId);
     } catch (err) {
       console.error('Failed to load seasons', err);
     } finally {

@@ -72,7 +72,7 @@ export class CandidatesService {
     return this.attendanceRepo.save(attendance);
   }
 
-  async promote(teamId: string, id: string): Promise<any> {
+  async promote(teamId: string, id: string, seasonId?: string): Promise<any> {
     const candidate = await this.findOne(id);
     
     // 1. Check if already promoted (status 'accepted' or similar)
@@ -86,6 +86,7 @@ export class CandidatesService {
       lastName: candidate.lastName,
       parentEmail: candidate.parentEmail,
       jerseyNumber: 0,
+      seasonId, // Automatically add to season if provided
     });
 
     // 3. Update candidate status
