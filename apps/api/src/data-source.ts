@@ -16,6 +16,13 @@ import { TagEntity } from './entities/tag.entity';
 import { PracticeDrillEntity } from './entities/practice-drill.entity';
 import { TeamMemberEntity } from './entities/team-member.entity';
 import { LocationEntity } from './entities/location.entity';
+import { AttendanceEntity } from './entities/attendance.entity';
+import { LeagueEntity } from './entities/league.entity';
+import { CandidateEntity } from './entities/candidate.entity';
+import { CandidateAttendanceEntity } from './entities/candidate-attendance.entity';
+import { CandidateEvaluationEntity } from './entities/candidate-evaluation.entity';
+import { ScoutingRubricEntity } from './entities/scouting-rubric.entity';
+import { SeasonPlayerEntity } from './entities/season-player.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -38,6 +45,13 @@ export default new DataSource({
     PracticeDrillEntity,
     TeamMemberEntity,
     LocationEntity,
+    AttendanceEntity,
+    LeagueEntity,
+    CandidateEntity,
+    CandidateAttendanceEntity,
+    CandidateEvaluationEntity,
+    ScoutingRubricEntity,
+    SeasonPlayerEntity,
   ],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   synchronize: false,
