@@ -84,12 +84,18 @@ export class PdfExportService {
   private async generatePdf(html: string): Promise<Buffer> {
     let browser: puppeteer.Browser | null = null;
     try {
-      const executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-      const exists = fs.existsSync(executablePath);
+      let executablePath = process.env['PUPPETEER_EXECUTABLE_PATH'];
+      
+      if (!executablePath) {
+        const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+        if (fs.existsSync(macPath)) {
+          executablePath = macPath;
+        }
+      }
 
       browser = await puppeteer.launch({
         headless: true,
-        executablePath: exists ? executablePath : undefined,
+        executablePath,
         args: [
           '--no-sandbox', 
           '--disable-setuid-sandbox',

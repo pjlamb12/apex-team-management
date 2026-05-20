@@ -1,16 +1,43 @@
 version: '3.8'
+
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
-    container_name: apex-team-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-apex_team}
     ports:
       - '5437:5432'
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: apex_team
     volumes:
       - apex-team-db-data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-apex_team}
+      JWT_SECRET: ${JWT_SECRET:-superSecretKey}
+      WEATHER_API_KEY: ${WEATHER_API_KEY}
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - '8100:8100'
+    depends_on:
+      - api
 
 volumes:
   apex-team-db-data:
