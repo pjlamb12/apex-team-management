@@ -30,10 +30,19 @@ export class PerformanceMetricsService {
     private readonly attendanceRepo: Repository<AttendanceEntity>,
   ) {}
 
-  async getTeamMetrics(teamId: string, seasonId?: string): Promise<PlayerPerformanceMetrics[]> {
-    // Find all games for the team/season
+  async getTeamMetrics(teamId: string, seasonId?: string, leagueId?: string): Promise<PlayerPerformanceMetrics[]> {
+    // Find all games for the team/season/league
+    const where: any = { type: 'game' };
+    if (leagueId) {
+      where.leagueId = leagueId;
+    } else if (seasonId) {
+      where.seasonId = seasonId;
+    } else {
+      where.season = { teamId };
+    }
+
     const events = await this.eventRepo.find({ 
-      where: seasonId ? { seasonId, type: 'game' } : { season: { teamId }, type: 'game' },
+      where,
       relations: ['season', 'season.team']
     });
     

@@ -1,4 +1,4 @@
-import { Component, inject, signal, Input } from '@angular/core';
+import { Component, inject, signal, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -21,9 +21,10 @@ import {
 import { addIcons } from 'ionicons';
 import { closeOutline, downloadOutline, shareOutline, chevronDownOutline } from 'ionicons/icons';
 import { ModalController, Platform } from '@ionic/angular/standalone';
-import { AnalyticsService } from '@apex-team/client/data-access/team';
+import { AnalyticsService, SeasonsService, LeaguesService } from '@apex-team/client/data-access/team';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Season, League } from '@apex-team/shared/util/models';
 
 export type ExportFormat = 'pdf' | 'csv';
 export type ExportLayout = 'overview' | 'player-pack' | 'tabular';
@@ -34,6 +35,8 @@ export interface ExportOptions {
   layout?: ExportLayout;
   granularity?: ExportGranularity;
   includeVisuals: boolean;
+  seasonId?: string;
+  leagueId?: string;
 }
 
 @Component({
@@ -59,12 +62,16 @@ export interface ExportOptions {
   ],
   templateUrl: './export-modal.html',
 })
-export class ExportModalComponent {
+export class ExportModalComponent implements OnInit {
   private readonly modalCtrl = inject(ModalController);
   private readonly platform = inject(Platform);
   private readonly analyticsService = inject(AnalyticsService);
+  private readonly seasonsService = inject(SeasonsService);
+  private readonly leaguesService = inject(LeaguesService);
 
   @Input() teamId!: string;
+  @Input() seasonId?: string;
+  @Input() leagueId?: string;
 
   protected options = signal<ExportOptions>({
     format: 'pdf',
@@ -73,10 +80,38 @@ export class ExportModalComponent {
     includeVisuals: true,
   });
 
+  protected seasons = this.seasonsService.seasons;
+  protected leagues = signal<League[]>([]);
   protected isExporting = signal(false);
 
   constructor() {
     addIcons({ closeOutline, downloadOutline, shareOutline, chevronDownOutline });
+  }
+
+  ngOnInit() {
+    if (this.seasonId) {
+      this.updateOption('seasonId', this.seasonId);
+      void this.loadLeagues(this.seasonId);
+    }
+    if (this.leagueId) {
+      this.updateOption('leagueId', this.leagueId);
+    }
+  }
+
+  protected async loadLeagues(seasonId: string) {
+    try {
+      const leagues = await firstValueFrom(this.leaguesService.findAllForSeason(seasonId));
+      this.leagues.set(leagues);
+    } catch {
+      console.error('Failed to load leagues for export');
+    }
+  }
+
+  protected onSeasonChange(event: any) {
+    const id = event.detail.value;
+    this.updateOption('seasonId', id);
+    this.updateOption('leagueId', undefined);
+    void this.loadLeagues(id);
   }
 
   protected updateOption<K extends keyof ExportOptions>(key: K, value: ExportOptions[K]): void {
@@ -102,7 +137,6 @@ export class ExportModalComponent {
       void this.modalCtrl.dismiss(options);
     } catch (error) {
       console.error('Export failed', error);
-      // TODO: Show toast error
     } finally {
       this.isExporting.set(false);
     }

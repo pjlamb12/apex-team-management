@@ -24,8 +24,20 @@
 - [x] **Phase 35: Tryout Foundation** - Candidate data model, registration management, and "Tryout" event type.
 - [x] **Phase 36: Scouting & Evaluation** - Configurable rubrics, performance ratings, and qualitative coaching notes.
 - [x] **Phase 37: Tryout Session Management** - Attendance tracking for candidates and live evaluation entry during sessions.
-- [ ] **Phase 38: Roster Promotion** - Selection workflow and automatic conversion of candidates to rostered players.
-- [ ] **Phase 39: Multi-Season Roster Management** - Season-specific rosters, roster importing from previous seasons, and historical data isolation.
+- [x] **Phase 38: Roster Promotion** - Selection workflow and automatic conversion of candidates to rostered players.
+- [x] **Phase 39: Multi-Season Roster Management** - Season-specific rosters, roster importing from previous seasons, and historical data isolation.
+
+---
+
+## Milestone v4.0: Competition & League Management
+
+**Goal**: Group games and analytics into distinct competitions (Leagues, Tournaments, or Sessions) within a season to provide granular performance tracking.
+
+## Phases
+
+- [x] **Phase 40: League Data Model** - Create `League` entity and update `Event` structure to support competition grouping.
+- [x] **Phase 41: League Management UI** - Build interfaces for creating and managing leagues/tournaments within a season.
+- [ ] **Phase 42: Grouped Schedule & Analytics** - Filter and group games by competition in the schedule and analytics dashboard.
 
 ## Phase Details
 
@@ -47,6 +59,9 @@ An extension of the player profile showing their history, performance stats, and
 ### Phase 34: Export & Polish
 Generate downloadable reports and polish the UI for a professional athletic look.
 
+### Phase 40: League Data Model
+Introduces the `League` (or Competition) entity. Every game belongs to a league. A default "Main League" is created for every season.
+
 ## Progress Table
 
 | Phase | Tasks | Status | Target Date |
@@ -60,5 +75,8 @@ Generate downloadable reports and polish the UI for a professional athletic look
 | 35. Tryout Foundation | 1/1 | Completed | 2026-05-14 |
 | 36. Scouting & Evaluation | 1/1 | Completed | 2026-05-14 |
 | 37. Tryout Session Management | 1/1 | Completed | 2026-05-14 |
-| 38. Roster Promotion | 0/1 | Not started | - |
-| 39. Multi-Season Roster Management | 0/1 | Not started | - |
+| 38. Roster Promotion | 1/1 | Completed | 2026-05-16 |
+| 39. Multi-Season Roster Management | 1/1 | Completed | 2026-05-16 |
+| 40. League Data Model | 1/1 | Completed | 2026-05-20 |
+| 41. League Management UI | 1/1 | Completed | 2026-05-20 |
+| 42. Grouped Schedule & Analytics | 0/1 | Not started | - |

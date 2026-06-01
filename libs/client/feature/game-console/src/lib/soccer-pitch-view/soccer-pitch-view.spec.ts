@@ -34,7 +34,7 @@ describe('SoccerPitchViewComponent', () => {
   it('should render players at slot-based coordinates', () => {
     const players = [
       { id: '1', teamId: 't1', firstName: 'P1', lastName: 'L1', jerseyNumber: 1, slotIndex: 0 }, // GK: 50, 90
-      { id: '2', teamId: 't1', firstName: 'P2', lastName: 'L2', jerseyNumber: 10, slotIndex: 9 }, // LF: 35, 20
+      { id: '2', teamId: 't1', firstName: 'P2', lastName: 'L2', jerseyNumber: 10, slotIndex: 9 }, // Midfielder: 67.5, 44
     ];
     fixture.componentRef.setInput('players', players);
     fixture.detectChanges();
@@ -44,12 +44,12 @@ describe('SoccerPitchViewComponent', () => {
     // Check GK (Slot 0)
     const gk = Array.from(playerElements).find((el: any) => el.textContent.includes('L1')) as HTMLElement;
     expect(gk.style.left).toBe('50%');
-    expect(gk.style.top).toBe('90%');
+    expect(gk.style.top).toBe('91%');
 
-    // Check LF (Slot 9)
+    // Check Midfielder (Slot 9)
     const lf = Array.from(playerElements).find((el: any) => el.textContent.includes('L2')) as HTMLElement;
-    expect(lf.style.left).toBe('35%');
-    expect(lf.style.top).toBe('20%');
+    expect(lf.style.left).toBe('67.5%');
+    expect(lf.style.top).toBe('44%');
   });
 
   it('should emit playerSelected when a player is clicked', () => {

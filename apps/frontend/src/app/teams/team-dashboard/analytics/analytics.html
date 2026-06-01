@@ -12,7 +12,43 @@
   </ion-toolbar>
 
   <ion-toolbar class="border-b border-ap-border bg-ap-bg">
-    <div class="px-4 pb-2">
+    <div class="px-4 py-2 space-y-2">
+      <div class="flex items-center gap-2">
+        <ion-item lines="none" class="bg-ap-surface rounded-lg border border-ap-border flex-1 min-h-[44px]">
+          <ion-select
+            label="Season"
+            labelPlacement="floating"
+            [value]="selectedSeasonId()"
+            (ionChange)="onSeasonChange($event)"
+            interface="action-sheet"
+            class="w-full text-sm"
+          >
+            @for (season of seasons(); track season.id) {
+              <ion-select-option [value]="season.id">
+                {{ season.name }}
+              </ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+
+        <ion-item lines="none" class="bg-ap-surface rounded-lg border border-ap-border flex-1 min-h-[44px]">
+          <ion-select
+            label="Competition"
+            labelPlacement="floating"
+            [value]="selectedLeagueId()"
+            (ionChange)="onLeagueChange($event)"
+            interface="action-sheet"
+            placeholder="All"
+            class="w-full text-sm"
+          >
+            <ion-select-option [value]="null">All Competitions</ion-select-option>
+            @for (league of leagues(); track league.id) {
+              <ion-select-option [value]="league.id">{{ league.name }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+      </div>
+
       <ion-segment [value]="activeSegment()" (ionChange)="activeSegment.set($any($event).detail.value)" mode="ios" class="bg-ap-surface rounded-lg p-1">
         <ion-segment-button value="performance">
           <ion-label class="text-xs font-bold uppercase tracking-wider">Performance</ion-label>

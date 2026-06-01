@@ -1,21 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TeamsList } from './teams-list';
 import { HttpClient } from '@angular/common/http';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, ModalController } from '@ionic/angular/standalone';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('TeamsList', () => {
   let component: TeamsList;
   let fixture: ComponentFixture<TeamsList>;
   let alertCtrlMock: Partial<AlertController>;
+  let modalCtrlMock: Partial<ModalController>;
   let httpMock: Partial<HttpClient>;
 
   beforeEach(async () => {
     alertCtrlMock = {
       create: vi.fn().mockResolvedValue({
         present: vi.fn().mockResolvedValue(undefined),
+      }),
+    };
+    modalCtrlMock = {
+      create: vi.fn().mockResolvedValue({
+        present: vi.fn().mockResolvedValue(undefined),
+        onWillDismiss: vi.fn().mockResolvedValue({ data: undefined, role: 'cancel' }),
       }),
     };
     httpMock = {
@@ -28,8 +35,9 @@ describe('TeamsList', () => {
       providers: [
         { provide: HttpClient, useValue: httpMock },
         { provide: AlertController, useValue: alertCtrlMock },
+        { provide: ModalController, useValue: modalCtrlMock },
         { provide: RuntimeConfigLoaderService, useValue: { getConfigObjectKey: () => 'http://localhost:3000' } },
-        { provide: Router, useValue: { navigate: vi.fn() } },
+        provideRouter([]),
       ],
     }).compileComponents();
 

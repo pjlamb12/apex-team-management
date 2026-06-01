@@ -102,6 +102,7 @@ describe('PracticeDrillsService', () => {
       practiceDrillRepo.maximum.mockResolvedValue(5);
       practiceDrillRepo.create.mockReturnValue({ id: 'pd-new' });
       practiceDrillRepo.save.mockResolvedValue({ id: 'pd-new', sequence: 6 });
+      practiceDrillRepo.findOne.mockResolvedValue({ id: 'pd-new', sequence: 6, drill: mockDrill });
 
       const dto = { drillId: 'drill-1', durationMinutes: 15 };
       const result = await service.addDrillToPlan(mockUser.id, mockEvent.id, dto);

@@ -139,9 +139,18 @@ export class PlayingTimeService {
     return result;
   }
 
-  async calculateForTeam(teamId: string, seasonId?: string): Promise<Record<string, PlayerPlaytime>> {
+  async calculateForTeam(teamId: string, seasonId?: string, leagueId?: string): Promise<Record<string, PlayerPlaytime>> {
+    const where: any = { type: 'game' };
+    if (leagueId) {
+      where.leagueId = leagueId;
+    } else if (seasonId) {
+      where.seasonId = seasonId;
+    } else {
+      where.season = { teamId };
+    }
+
     const events = await this.eventRepo.find({
-      where: seasonId ? { seasonId, type: 'game' } : { season: { teamId }, type: 'game' },
+      where,
       relations: ['season', 'season.team'],
     });
 

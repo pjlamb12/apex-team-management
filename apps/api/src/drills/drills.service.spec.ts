@@ -61,10 +61,10 @@ describe('DrillsService', () => {
       expect(result).toEqual(drills);
     });
 
-    it('should filter by tagIds using double join', async () => {
+    it('should filter by tagNames using double join', async () => {
       const coachId = 'coach-1';
-      const tagIds = ['tag-1'];
-      const drills = [{ id: 'drill-1', name: 'Drill 1', coachId, tags: [{ id: 'tag-1' }] }];
+      const tagNames = ['Shooting'];
+      const drills = [{ id: 'drill-1', name: 'Drill 1', coachId, tags: [{ id: 'tag-1', name: 'Shooting' }] }];
 
       const queryBuilder: any = {
         leftJoinAndSelect: vi.fn().mockReturnThis(),
@@ -75,10 +75,10 @@ describe('DrillsService', () => {
       };
       drillRepo.createQueryBuilder!.mockReturnValue(queryBuilder);
 
-      await service.findAll(coachId, tagIds);
+      await service.findAll(coachId, tagNames);
 
       expect(queryBuilder.innerJoin).toHaveBeenCalledWith('drill.tags', 'filterTag');
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith('filterTag.id IN (:...tagIds)', { tagIds });
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith('filterTag.name IN (:...tagNames)', { tagNames });
     });
   });
 
@@ -89,7 +89,7 @@ describe('DrillsService', () => {
         name: 'New Drill',
         description: 'Desc',
         instructions: { steps: [] },
-        tagIds: ['tag-1'],
+        tagNames: ['Shooting'],
       };
       const tags = [{ id: 'tag-1', name: 'Shooting' }];
       const drill = { id: 'drill-1', ...dto, coachId, tags };
@@ -101,7 +101,7 @@ describe('DrillsService', () => {
       const result = await service.create(coachId, dto);
 
       expect(tagRepo.find).toHaveBeenCalled();
-      const { tagIds, ...expectedDrillData } = dto;
+      const { tagNames, ...expectedDrillData } = dto;
       expect(drillRepo.create).toHaveBeenCalledWith(expect.objectContaining({
         ...expectedDrillData,
         coachId,

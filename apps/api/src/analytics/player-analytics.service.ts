@@ -48,23 +48,51 @@ export class PlayerAnalyticsService {
     private readonly playingTimeService: PlayingTimeService,
   ) {}
 
-  async getPlayerProfile(playerId: string, teamId: string, seasonId?: string): Promise<PlayerProfileAnalytics> {
+  async getPlayerProfile(playerId: string, teamId: string, seasonId?: string, leagueId?: string): Promise<PlayerProfileAnalytics> {
     const player = await this.playerRepo.findOne({ where: { id: playerId, teamId } });
     if (!player) throw new NotFoundException(`Player ${playerId} not found in team ${teamId}`);
 
-    // Get all events for the team/season
+    // Get all events for the team/season/league
+    const where: any = {};
+    if (leagueId) {
+      where.leagueId = leagueId;
+    } else if (seasonId) {
+      where.seasonId = seasonId;
+    } else {
+      where.season = { teamId };
+    }
+
     const events = await this.eventRepo.find({
-      where: seasonId ? { seasonId } : { season: { teamId } },
+      where,
       relations: ['season', 'season.team'],
       order: { scheduledAt: 'DESC' }
     });
 
+    const eventIds = events.map(e => e.id);
+    if (eventIds.length === 0) {
+      return {
+        player: {
+          id: player.id,
+          firstName: player.firstName,
+          lastName: player.lastName,
+          jerseyNumber: player.jerseyNumber,
+          preferredPosition: player.preferredPosition
+        },
+        totalGamesPlayed: 0,
+        totalGoals: 0,
+        totalAssists: 0,
+        totalMinutes: 0,
+        positionDistribution: {},
+        history: []
+      };
+    }
+
     const attendance = await this.attendanceRepo.find({
-      where: { playerId, eventId: In(events.map(e => e.id)) }
+      where: { playerId, eventId: In(eventIds) }
     });
 
     const gameEvents = await this.gameEventRepo.find({
-      where: { eventId: In(events.map(e => e.id)) }
+      where: { eventId: In(eventIds) }
     });
 
     const history: PlayerHistoryEntry[] = [];

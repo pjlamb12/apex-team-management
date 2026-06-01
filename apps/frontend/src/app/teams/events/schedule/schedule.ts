@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, Input } from '@angular/core';
+import { Component, inject, signal, effect, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -24,6 +24,7 @@ import {
   IonBadge,
   IonButton,
   ModalController,
+  IonListHeader,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -38,9 +39,16 @@ import {
   sunnyOutline,
   megaphoneOutline,
   addCircleOutline,
+  trophyOutline,
+  buildOutline,
 } from 'ionicons/icons';
-import { EventsService, EventEntity, SeasonsService } from '@apex-team/client/data-access/team';
-import { Season } from '@apex-team/shared/util/models';
+import { EventsService, EventEntity, SeasonsService, LeaguesService } from '@apex-team/client/data-access/team';
+import { Season, League } from '@apex-team/shared/util/models';
+
+interface GroupedEvents {
+  leagueName: string;
+  events: EventEntity[];
+}
 
 @Component({
   selector: 'app-schedule',
@@ -66,6 +74,7 @@ import { Season } from '@apex-team/shared/util/models';
     IonSelectOption,
     IonBadge,
     IonButton,
+    IonListHeader,
   ],
   templateUrl: './schedule.html',
   styleUrl: './schedule.scss',
@@ -82,6 +91,7 @@ export class Schedule {
 
   private readonly eventsService = inject(EventsService);
   private readonly seasonsService = inject(SeasonsService);
+  private readonly leaguesService = inject(LeaguesService);
   private readonly alertCtrl = inject(AlertController);
   private readonly actionSheetCtrl = inject(ActionSheetController);
   private readonly modalCtrl = inject(ModalController);
@@ -90,10 +100,57 @@ export class Schedule {
   protected events = signal<EventEntity[]>([]);
   protected seasons = this.seasonsService.seasons;
   protected selectedSeasonId = this.seasonsService.selectedSeasonId;
+  
+  protected leagues = signal<League[]>([]);
+  protected selectedLeagueId = signal<string | null>(null);
+
   protected isLoading = signal(false);
   protected isLoadingSeasons = signal(false);
   protected scope = signal<'upcoming' | 'past'>('upcoming');
   private readonly refreshTrigger = signal(0);
+
+  protected groupedEvents = computed<GroupedEvents[]>(() => {
+    const allEvents = this.events();
+    const leagues = this.leagues();
+    const selectedLeagueId = this.selectedLeagueId();
+
+    if (selectedLeagueId) {
+      const league = leagues.find(l => l.id === selectedLeagueId);
+      return [{
+        leagueName: league?.name ?? 'Selected Competition',
+        events: allEvents
+      }];
+    }
+
+    // Group by league
+    const groups: Record<string, EventEntity[]> = {};
+    const unassigned: EventEntity[] = [];
+
+    allEvents.forEach(event => {
+      if (event.leagueId) {
+        const league = leagues.find(l => l.id === event.leagueId);
+        const name = league?.name ?? 'Other Competition';
+        if (!groups[name]) groups[name] = [];
+        groups[name].push(event);
+      } else {
+        unassigned.push(event);
+      }
+    });
+
+    const result: GroupedEvents[] = Object.entries(groups).map(([name, events]) => ({
+      leagueName: name,
+      events
+    }));
+
+    if (unassigned.length > 0) {
+      result.push({
+        leagueName: 'Practices & Tryouts',
+        events: unassigned
+      });
+    }
+
+    return result;
+  });
 
   constructor() {
     addIcons({
@@ -108,16 +165,29 @@ export class Schedule {
       sunnyOutline,
       megaphoneOutline,
       addCircleOutline,
+      trophyOutline,
+      buildOutline,
     });
 
-    // Load events whenever teamId, scope, selectedSeasonId, or refreshTrigger changes
+    // Load events whenever teamId, scope, selectedSeasonId, selectedLeagueId, or refreshTrigger changes
     effect(() => {
       this.refreshTrigger(); // Track refresh trigger
       const id = this._teamId();
       const s = this.scope();
       const seasonId = this.selectedSeasonId();
+      const leagueId = this.selectedLeagueId();
       if (id && seasonId) {
-        void this.loadEvents(id, s, seasonId);
+        void this.loadEvents(id, s, seasonId, leagueId ?? undefined);
+      }
+    });
+
+    // Load leagues whenever season changes
+    effect(() => {
+      const seasonId = this.selectedSeasonId();
+      if (seasonId) {
+        void this.loadLeagues(seasonId);
+      } else {
+        this.leagues.set([]);
       }
     });
   }
@@ -136,6 +206,11 @@ export class Schedule {
 
   protected onSeasonChange(event: any): void {
     this.seasonsService.selectedSeasonId.set(event.detail.value);
+    this.selectedLeagueId.set(null); // Reset league filter when season changes
+  }
+
+  protected onLeagueChange(event: any): void {
+    this.selectedLeagueId.set(event.detail.value);
   }
 
   protected async presentSeasonModal(season?: Season): Promise<void> {
@@ -156,6 +231,54 @@ export class Schedule {
     }
   }
 
+  protected async presentLeagueModal(league?: League): Promise<void> {
+    const seasonId = this.selectedSeasonId();
+    if (!seasonId) return;
+
+    const modal = await this.modalCtrl.create({
+      component: (await import('./league-modal/league-modal')).LeagueModal,
+      componentProps: { league }
+    });
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    if (role === 'confirm' && data) {
+      if (league) {
+        await firstValueFrom(this.leaguesService.update(league.id, data));
+      } else {
+        await firstValueFrom(this.leaguesService.create(seasonId, data));
+      }
+      void this.loadLeagues(seasonId);
+    }
+  }
+
+  protected async manageLeagues(): Promise<void> {
+    const seasonId = this.selectedSeasonId();
+    if (!seasonId) return;
+
+    const sheet = await this.actionSheetCtrl.create({
+      header: 'Manage Competitions',
+      buttons: [
+        {
+          text: 'Add New League / Tournament',
+          icon: 'add-outline',
+          handler: () => {
+            void this.presentLeagueModal();
+          }
+        },
+        ...this.leagues().map(league => ({
+          text: `Edit "${league.name}"`,
+          icon: 'pencil-outline',
+          handler: () => {
+            void this.presentLeagueModal(league);
+          }
+        })),
+        { text: 'Cancel', role: 'cancel' }
+      ]
+    });
+    await sheet.present();
+  }
+
   protected async loadSeasons(teamId: string): Promise<void> {
     this.isLoadingSeasons.set(true);
     try {
@@ -167,17 +290,33 @@ export class Schedule {
     }
   }
 
+  protected async loadLeagues(seasonId: string): Promise<void> {
+    try {
+      const data = await firstValueFrom(this.leaguesService.findAllForSeason(seasonId));
+      this.leagues.set(data);
+    } catch (err) {
+      console.error('Failed to load leagues', err);
+    }
+  }
+
   protected async loadEvents(
     teamId: string,
     scope: 'upcoming' | 'past',
-    seasonId: string
+    seasonId: string,
+    leagueId?: string
   ): Promise<void> {
     this.isLoading.set(true);
     try {
       const data = await firstValueFrom(
         this.eventsService.getEvents(teamId, scope, seasonId)
       );
-      this.events.set(data);
+      
+      // Filter by league if selected
+      if (leagueId) {
+        this.events.set(data.filter(e => e.leagueId === leagueId));
+      } else {
+        this.events.set(data);
+      }
     } catch (err) {
       console.error('Failed to load events', err);
     } finally {

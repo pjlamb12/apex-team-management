@@ -20,6 +20,11 @@ export default defineConfig(() => ({
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     setupFiles: ['src/test-setup.ts'],
     reporters: ['default'],
+    server: {
+      deps: {
+        inline: [/@ionic\/core/, /@ionic\/angular/, /ionicons/]
+      }
+    },
     coverage: {
       reportsDirectory: '../../../../coverage/libs/client/ui/drill',
       provider: 'v8' as const,

@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { SeasonEntity } from './season.entity';
 import { PracticeDrillEntity } from './practice-drill.entity';
 import { LocationEntity } from './location.entity';
+import { LeagueEntity } from './league.entity';
 
 @Entity('events')
 export class EventEntity {
@@ -14,6 +15,13 @@ export class EventEntity {
 
   @Column({ name: 'season_id' })
   seasonId: string;
+
+  @ManyToOne(() => LeagueEntity, (league) => league.events)
+  @JoinColumn({ name: 'league_id' })
+  league: LeagueEntity | null;
+
+  @Column({ name: 'league_id', nullable: true })
+  leagueId: string | null;
 
   @OneToMany(() => PracticeDrillEntity, (pd) => pd.event)
   practiceDrills: PracticeDrillEntity[];

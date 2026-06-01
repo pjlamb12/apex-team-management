@@ -4,6 +4,7 @@ import { Repository, DataSource, MoreThanOrEqual } from 'typeorm';
 import { SeasonEntity } from '../entities/season.entity';
 import { EventEntity } from '../entities/event.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
+import { LeagueEntity } from '../entities/league.entity';
 import { CreateSeasonDto } from './dto/create-season.dto';
 import { UpdateSeasonDto } from './dto/update-season.dto';
 import { SeasonStats } from './dto/season-stats.dto';
@@ -95,7 +96,18 @@ export class SeasonsService {
         );
       }
       
-      return manager.save(season);
+      const savedSeason = await manager.save(season);
+
+      // Auto-create default "General" league for the new season
+      const league = manager.create(LeagueEntity, {
+        seasonId: savedSeason.id,
+        name: `${savedSeason.name} - General`,
+        type: 'league',
+        isActive: true,
+      });
+      await manager.save(league);
+
+      return savedSeason;
     });
   }
 

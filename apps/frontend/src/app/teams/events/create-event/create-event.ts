@@ -34,9 +34,9 @@ import {
 import { addIcons } from 'ionicons';
 import { addOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { EventsService, LocationEntity, LocationService } from '@apex-team/client/data-access/team';
+import { EventsService, LocationEntity, LocationService, LeaguesService } from '@apex-team/client/data-access/team';
 import { LocationModal } from '@apex-team/client/ui/location-modal';
-import { Season } from '@apex-team/shared/util/models';
+import { Season, League } from '@apex-team/shared/util/models';
 
 function toLocalISOString(date: Date): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().replace('Z', '');
@@ -90,17 +90,20 @@ export class CreateEvent {
   private readonly router = inject(Router);
   private readonly eventsService = inject(EventsService);
   private readonly locationService = inject(LocationService);
+  private readonly leaguesService = inject(LeaguesService);
   private readonly modalCtrl = inject(ModalController);
   protected readonly fb = inject(FormBuilder);
 
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
   protected activeSeason = signal<Season | null>(null);
+  protected leagues = signal<League[]>([]);
   
   protected locations = signal<LocationEntity[]>([]);
 
   protected form = this.fb.group({
     opponent: ['', [Validators.required, Validators.minLength(2)]],
+    leagueId: ['', [Validators.required]],
     scheduledAt: [toLocalISOString(new Date()), [Validators.required]],
     locationId: [''],
     locationName: [''], // Field/Venue name within the location
@@ -124,6 +127,14 @@ export class CreateEvent {
       }
     });
 
+    // Load leagues whenever season changes
+    effect(() => {
+      const season = this.activeSeason();
+      if (season) {
+        void this.loadLeagues(season.id);
+      }
+    });
+
     // Reactively update location and color based on isHomeGame toggle
     this.form.get('isHomeGame')?.valueChanges.subscribe((isHome) => {
       this.applySeasonDefaults(isHome ?? true);
@@ -137,6 +148,18 @@ export class CreateEvent {
       this.applySeasonDefaults(this.form.value.isHomeGame ?? true);
     } catch {
       console.warn('Failed to load active season for defaults');
+    }
+  }
+
+  protected async loadLeagues(seasonId: string): Promise<void> {
+    try {
+      const leagues = await firstValueFrom(this.leaguesService.findAllForSeason(seasonId));
+      this.leagues.set(leagues);
+      if (leagues.length > 0) {
+        this.form.patchValue({ leagueId: leagues[0].id });
+      }
+    } catch {
+      console.error('Failed to load leagues');
     }
   }
 
@@ -199,7 +222,7 @@ export class CreateEvent {
     this.errorMessage.set(null);
     try {
       const { 
-        opponent, scheduledAt, locationId, locationName, uniformColor, 
+        opponent, leagueId, scheduledAt, locationId, locationName, uniformColor, 
         isHomeGame, periodCount, periodLengthMinutes, playersOnField, repeat 
       } = this.form.getRawValue();
 
@@ -219,6 +242,7 @@ export class CreateEvent {
         this.eventsService.createEvent(teamId, {
           type: 'game',
           opponent: opponent!,
+          leagueId: leagueId || undefined,
           scheduledAt: new Date(scheduledAt!).toISOString(),
           location: locationName || undefined,
           locationId: locationId || undefined,

@@ -70,7 +70,9 @@
 		},
 		"test": {
 			"executor": "@angular/build:unit-test",
-			"options": {}
+			"options": {
+				"runnerConfig": "apps/frontend/vitest.config.mts"
+			}
 		},
 		"cap": {
 			"command": "npx cap sync",

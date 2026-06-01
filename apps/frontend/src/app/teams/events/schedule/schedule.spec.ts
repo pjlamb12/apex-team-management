@@ -4,18 +4,43 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { Schedule } from './schedule';
-import { EventsService, SeasonsService } from '@apex-team/client/data-access/team';
+import { EventsService, SeasonsService, LeaguesService } from '@apex-team/client/data-access/team';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
+import { ModalController, ActionSheetController, AlertController } from '@ionic/angular/standalone';
 
 describe('Schedule', () => {
   let component: Schedule;
   let fixture: ComponentFixture<Schedule>;
   let eventsService: EventsService;
   let seasonsService: SeasonsService;
+  let leaguesService: LeaguesService;
 
   beforeEach(async () => {
     const mockRuntimeConfig = {
       getConfigObjectKey: vi.fn().mockReturnValue('http://api.test'),
+    };
+
+    const mockLeaguesService = {
+      findAllForSeason: vi.fn().mockReturnValue(of([])),
+    };
+
+    const mockModalController = {
+      create: vi.fn().mockResolvedValue({
+        present: vi.fn().mockResolvedValue(undefined),
+        onWillDismiss: vi.fn().mockResolvedValue({ data: undefined, role: 'cancel' }),
+      }),
+    };
+
+    const mockActionSheetController = {
+      create: vi.fn().mockResolvedValue({
+        present: vi.fn().mockResolvedValue(undefined),
+      }),
+    };
+
+    const mockAlertController = {
+      create: vi.fn().mockResolvedValue({
+        present: vi.fn().mockResolvedValue(undefined),
+      }),
     };
 
     await TestBed.configureTestingModule({
@@ -25,6 +50,10 @@ describe('Schedule', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: RuntimeConfigLoaderService, useValue: mockRuntimeConfig },
+        { provide: LeaguesService, useValue: mockLeaguesService },
+        { provide: ModalController, useValue: mockModalController },
+        { provide: ActionSheetController, useValue: mockActionSheetController },
+        { provide: AlertController, useValue: mockAlertController },
       ],
     }).compileComponents();
 
@@ -48,6 +77,7 @@ describe('Schedule', () => {
 
     component.id = 't1';
     fixture.detectChanges();
+    component.ionViewWillEnter();
 
     // Wait for effect to run
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -66,6 +96,7 @@ describe('Schedule', () => {
 
     component.id = 't1';
     fixture.detectChanges();
+    component.ionViewWillEnter();
 
     // Wait for effect to run
     await new Promise(resolve => setTimeout(resolve, 100));

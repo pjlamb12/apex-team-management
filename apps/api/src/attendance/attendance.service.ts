@@ -75,7 +75,7 @@ export class AttendanceService {
     }
   }
 
-  async getParticipationStats(teamId: string, seasonId?: string): Promise<any> {
+  async getParticipationStats(teamId: string, seasonId?: string, leagueId?: string): Promise<any> {
     const players = await this.playerRepo.find({ where: { teamId } });
     const stats = [];
 
@@ -85,10 +85,13 @@ export class AttendanceService {
         relations: ['event'],
       });
 
-      // Filter by season if provided
-      const filtered = seasonId 
-        ? attendance.filter(a => a.event.seasonId === seasonId)
-        : attendance;
+      // Filter by season/league if provided
+      let filtered = attendance;
+      if (leagueId) {
+        filtered = attendance.filter(a => a.event.leagueId === leagueId);
+      } else if (seasonId) {
+        filtered = attendance.filter(a => a.event.seasonId === seasonId);
+      }
 
       const totalEvents = filtered.length;
       const present = filtered.filter(a => a.status === 'present' || a.status === 'tardy').length;

@@ -26,6 +26,10 @@ export class ExportOptionsDto {
   seasonId?: string;
 
   @IsOptional()
+  @IsUUID()
+  leagueId?: string;
+
+  @IsOptional()
   @IsEnum(ExportGranularity)
   granularity?: ExportGranularity = ExportGranularity.AGGREGATED;
 

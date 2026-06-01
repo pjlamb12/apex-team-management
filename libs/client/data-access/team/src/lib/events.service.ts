@@ -20,6 +20,7 @@ export interface EventEntity {
   virtualId?: string;
   type: 'game' | 'practice' | 'tryout';
   seasonId: string;
+  leagueId?: string | null;
   opponent?: string;
   scheduledAt: string;
   location: string | null;
@@ -49,6 +50,7 @@ export interface EventEntity {
 
 export interface CreateEventDto {
   type?: 'game' | 'practice' | 'tryout';
+  leagueId?: string;
   opponent?: string;
   scheduledAt?: string;
   location?: string;
@@ -67,6 +69,7 @@ export interface CreateEventDto {
 
 export interface UpdateEventDto {
   type?: 'game' | 'practice' | 'tryout';
+  leagueId?: string;
   opponent?: string;
   scheduledAt?: string;
   location?: string;

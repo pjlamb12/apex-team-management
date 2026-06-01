@@ -67,21 +67,24 @@ export class AnalyticsService {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
-  getPerformanceMetrics(teamId: string, seasonId?: string): Observable<PlayerPerformanceMetrics[]> {
+  getPerformanceMetrics(teamId: string, seasonId?: string, leagueId?: string): Observable<PlayerPerformanceMetrics[]> {
     const params: any = {};
     if (seasonId) params.seasonId = seasonId;
+    if (leagueId) params.leagueId = leagueId;
     return this.http.get<PlayerPerformanceMetrics[]>(`${this.apiUrl}/teams/${teamId}/analytics/performance`, { params });
   }
 
-  getTeamPlayingTime(teamId: string, seasonId?: string): Observable<Record<string, PlayerPlaytime>> {
+  getTeamPlayingTime(teamId: string, seasonId?: string, leagueId?: string): Observable<Record<string, PlayerPlaytime>> {
     const params: any = {};
     if (seasonId) params.seasonId = seasonId;
+    if (leagueId) params.leagueId = leagueId;
     return this.http.get<Record<string, PlayerPlaytime>>(`${this.apiUrl}/teams/${teamId}/analytics/playing-time`, { params });
   }
 
-  getParticipationStats(teamId: string, seasonId?: string): Observable<ParticipationStats[]> {
+  getParticipationStats(teamId: string, seasonId?: string, leagueId?: string): Observable<ParticipationStats[]> {
     const params: any = {};
     if (seasonId) params.seasonId = seasonId;
+    if (leagueId) params.leagueId = leagueId;
     return this.http.get<ParticipationStats[]>(`${this.apiUrl}/teams/${teamId}/participation`, { params });
   }
 

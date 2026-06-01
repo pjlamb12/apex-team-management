@@ -30,16 +30,18 @@ export class AnalyticsController {
   getPerformanceMetrics(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
+    @Query('leagueId') leagueId?: string,
   ) {
-    return this.performanceMetricsService.getTeamMetrics(teamId, seasonId);
+    return this.performanceMetricsService.getTeamMetrics(teamId, seasonId, leagueId);
   }
 
   @Get('analytics/playing-time')
   getTeamPlayingTime(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
+    @Query('leagueId') leagueId?: string,
   ) {
-    return this.playingTimeService.calculateForTeam(teamId, seasonId);
+    return this.playingTimeService.calculateForTeam(teamId, seasonId, leagueId);
   }
 
   @Get('players/:playerId/analytics')

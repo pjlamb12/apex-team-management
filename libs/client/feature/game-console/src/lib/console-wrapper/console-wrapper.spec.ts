@@ -113,9 +113,11 @@ describe('ConsoleWrapper', () => {
     component['handlePlayerSelection']({ player: player1, event: mockEvent });
     expect(component['selectedPlayerId']()).toBe('p1');
 
-    // Deselect if tapping again
+    // Tapping active player again opens actions popover instead of deselecting
     component['handlePlayerSelection']({ player: player1, event: mockEvent });
-    expect(component['selectedPlayerId']()).toBe(null);
+    expect(component['selectedPlayerId']()).toBe('p1');
+    expect(component['actionPlayer']()).toBe(player1);
+    expect(component['popoverEvent']()).toBe(mockEvent);
   });
 
   it('should stage a sub when swapping bench and active player', () => {

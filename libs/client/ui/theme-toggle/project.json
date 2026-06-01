@@ -5,13 +5,6 @@
   "sourceRoot": "libs/client/ui/theme-toggle/src",
   "prefix": "app",
   "targets": {
-    "test": {
-      "executor": "@angular/build:unit-test",
-      "options": {
-        "tsConfig": "libs/client/ui/theme-toggle/tsconfig.spec.json",
-        "polyfills": ["zone.js", "zone.js/testing"]
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
     }

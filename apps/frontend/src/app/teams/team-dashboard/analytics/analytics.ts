@@ -22,6 +22,8 @@ import {
   IonSegmentButton,
   IonProgressBar,
   IonButton,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -34,9 +36,17 @@ import {
   alertCircleOutline,
   downloadOutline,
 } from 'ionicons/icons';
-import { AnalyticsService, PlayerPerformanceMetrics, ParticipationStats, PlayerPlaytime } from '@apex-team/client/data-access/team';
+import { 
+  AnalyticsService, 
+  PlayerPerformanceMetrics, 
+  ParticipationStats, 
+  PlayerPlaytime, 
+  SeasonsService, 
+  LeaguesService 
+} from '@apex-team/client/data-access/team';
 import { ModalController } from '@ionic/angular/standalone';
 import { ExportModalComponent, ExportOptions } from './export-modal/export-modal';
+import { League } from '@apex-team/shared/util/models';
 
 @Component({
   selector: 'app-team-analytics',
@@ -63,6 +73,8 @@ import { ExportModalComponent, ExportOptions } from './export-modal/export-modal
     IonSegmentButton,
     IonProgressBar,
     IonButton,
+    IonSelect,
+    IonSelectOption,
   ],
   templateUrl: './analytics.html',
   styleUrl: './analytics.scss',
@@ -78,6 +90,8 @@ export class TeamAnalytics {
   }
 
   private readonly analyticsService = inject(AnalyticsService);
+  private readonly seasonsService = inject(SeasonsService);
+  private readonly leaguesService = inject(LeaguesService);
   private readonly modalCtrl = inject(ModalController);
 
   protected performanceMetrics = signal<PlayerPerformanceMetrics[]>([]);
@@ -86,6 +100,11 @@ export class TeamAnalytics {
   protected activeSegment = signal<'performance' | 'participation' | 'playtime'>('performance');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
+
+  protected seasons = this.seasonsService.seasons;
+  protected selectedSeasonId = this.seasonsService.selectedSeasonId;
+  protected leagues = signal<League[]>([]);
+  protected selectedLeagueId = signal<string | null>(null);
 
   protected topScorers = computed(() => {
     return [...this.performanceMetrics()]
@@ -131,12 +150,43 @@ export class TeamAnalytics {
       downloadOutline,
     });
 
+    // Load data whenever teamId, selectedSeasonId or selectedLeagueId changes
     effect(() => {
       const id = this._teamId();
-      if (id) {
-        void this.loadData(id);
+      const seasonId = this.selectedSeasonId();
+      const leagueId = this.selectedLeagueId();
+      if (id && seasonId) {
+        void this.loadData(id, seasonId, leagueId ?? undefined);
       }
     });
+
+    // Load leagues whenever season changes
+    effect(() => {
+      const seasonId = this.selectedSeasonId();
+      if (seasonId) {
+        void this.loadLeagues(seasonId);
+      } else {
+        this.leagues.set([]);
+      }
+    });
+  }
+
+  protected async loadLeagues(seasonId: string): Promise<void> {
+    try {
+      const data = await firstValueFrom(this.leaguesService.findAllForSeason(seasonId));
+      this.leagues.set(data);
+    } catch {
+      console.error('Failed to load leagues');
+    }
+  }
+
+  protected onSeasonChange(event: any): void {
+    this.seasonsService.selectedSeasonId.set(event.detail.value);
+    this.selectedLeagueId.set(null);
+  }
+
+  protected onLeagueChange(event: any): void {
+    this.selectedLeagueId.set(event.detail.value);
   }
 
   protected async openExportModal(): Promise<void> {
@@ -144,6 +194,8 @@ export class TeamAnalytics {
       component: ExportModalComponent,
       componentProps: {
         teamId: this.teamId,
+        seasonId: this.selectedSeasonId(),
+        leagueId: this.selectedLeagueId(),
       },
       breakpoints: [0, 0.7, 0.9],
       initialBreakpoint: 0.7,
@@ -155,18 +207,17 @@ export class TeamAnalytics {
     const { data } = await modal.onWillDismiss<ExportOptions>();
     if (data) {
       console.log('Export data:', data);
-      // Implementation of actual export will follow in Task 2
     }
   }
 
-  protected async loadData(teamId: string): Promise<void> {
+  protected async loadData(teamId: string, seasonId: string, leagueId?: string): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
       const [performance, participation, playingTime] = await Promise.all([
-        firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId)),
-        firstValueFrom(this.analyticsService.getParticipationStats(teamId)),
-        firstValueFrom(this.analyticsService.getTeamPlayingTime(teamId))
+        firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId, seasonId, leagueId)),
+        firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId, leagueId)),
+        firstValueFrom(this.analyticsService.getTeamPlayingTime(teamId, seasonId, leagueId))
       ]);
       this.performanceMetrics.set(performance);
       this.participationStats.set(participation);
