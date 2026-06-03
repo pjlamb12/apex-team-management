@@ -1,7 +1,7 @@
 FROM node:22-alpine as api-build
 WORKDIR /usr/src/app
 COPY package.json package-lock.json ./
-RUN npm i
+RUN npm i --legacy-peer-deps
 RUN npm install -g nx
 COPY . .
 RUN nx build api --verbose
