@@ -23,6 +23,7 @@ import { CreateCandidatesAndTryouts1779000000000 } from './1779000000000-CreateC
 import { CreateScoutingAndEvaluations1779100000000 } from './1779100000000-CreateScoutingAndEvaluations';
 import { CreateSeasonPlayers1779200000000 } from './1779200000000-CreateSeasonPlayers';
 import { CreateLeaguesAndLinkEvents1779300000000 } from './1779300000000-CreateLeaguesAndLinkEvents';
+import { AddCalendarSecretToTeams1780609000000 } from './1780609000000-AddCalendarSecretToTeams';
 
 export const ALL_MIGRATIONS = [
   InitialSchema1744934400000,
@@ -50,4 +51,5 @@ export const ALL_MIGRATIONS = [
   CreateScoutingAndEvaluations1779100000000,
   CreateSeasonPlayers1779200000000,
   CreateLeaguesAndLinkEvents1779300000000,
+  AddCalendarSecretToTeams1780609000000,
 ];

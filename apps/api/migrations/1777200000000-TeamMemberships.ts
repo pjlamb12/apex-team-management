@@ -18,11 +18,10 @@ export class TeamMemberships1777200000000 implements MigrationInterface {
       )
     `);
 
-    // 2. Add join_code and calendar_secret columns to teams
+    // 2. Add join_code column to teams
     await queryRunner.query(`
       ALTER TABLE "teams"
-        ADD COLUMN IF NOT EXISTS "join_code" character varying UNIQUE,
-        ADD COLUMN IF NOT EXISTS "calendar_secret" character varying UNIQUE
+        ADD COLUMN IF NOT EXISTS "join_code" character varying UNIQUE
     `);
 
     // 3. Data Migration: Insert into team_members (team_id, user_id, role)
@@ -35,7 +34,6 @@ export class TeamMemberships1777200000000 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP TABLE "team_members"`);
-    await queryRunner.query(`ALTER TABLE "teams" DROP COLUMN IF EXISTS "calendar_secret"`);
     await queryRunner.query(`ALTER TABLE "teams" DROP COLUMN IF EXISTS "join_code"`);
   }
 }
