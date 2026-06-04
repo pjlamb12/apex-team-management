@@ -33,7 +33,7 @@ import { ScoutingModule } from '../scouting/scouting.module';
         autoLoadEntities: true,
         synchronize: false,
         migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
-        migrationsRun: false,
+        migrationsRun: configService.get<string>('DB_MIGRATIONS_RUN') !== 'false',
       }),
       inject: [ConfigService],
     }),
