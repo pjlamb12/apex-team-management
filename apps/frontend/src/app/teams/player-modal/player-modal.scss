@@ -14,7 +14,7 @@ form {
 
 .field-group {
   margin-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid var(--ap-border);
   padding-bottom: 4px;
 
   &.invalid {
@@ -28,7 +28,7 @@ form {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--ap-muted);
   margin-bottom: 8px;
 }
 
@@ -41,7 +41,7 @@ form {
 ion-input {
   --padding-top: 0;
   --padding-bottom: 8px;
-  --color: white;
-  --placeholder-color: rgba(255, 255, 255, 0.3);
+  --color: var(--ap-text);
+  --placeholder-color: var(--ap-muted);
   font-size: 1rem;
 }
