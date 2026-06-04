@@ -7,13 +7,12 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "webpack-cli build",
-        "args": ["--node-env=production"],
+        "command": "webpack-cli build --node-env=production && npx tsc src/migrations/*.ts --outDir ../../dist/apps/api/migrations --target es2021 --module commonjs --esModuleInterop",
         "cwd": "apps/api"
       },
       "configurations": {
         "development": {
-          "args": ["--node-env=development"]
+          "command": "webpack-cli build --node-env=development && npx tsc src/migrations/*.ts --outDir ../../dist/apps/api/migrations --target es2021 --module commonjs --esModuleInterop"
         }
       }
     },
