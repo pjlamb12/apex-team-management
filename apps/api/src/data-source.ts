@@ -23,6 +23,7 @@ import { CandidateAttendanceEntity } from './entities/candidate-attendance.entit
 import { CandidateEvaluationEntity } from './entities/candidate-evaluation.entity';
 import { ScoutingRubricEntity } from './entities/scouting-rubric.entity';
 import { SeasonPlayerEntity } from './entities/season-player.entity';
+import { ALL_MIGRATIONS } from '../migrations';
 
 export default new DataSource({
   type: 'postgres',
@@ -53,7 +54,7 @@ export default new DataSource({
     ScoutingRubricEntity,
     SeasonPlayerEntity,
   ],
-  migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+  migrations: ALL_MIGRATIONS,
   synchronize: false,
   migrationsTableName: 'migrations',
 });

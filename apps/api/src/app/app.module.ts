@@ -15,6 +15,7 @@ import { AnalyticsModule } from '../analytics/analytics.module';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { CandidatesModule } from '../candidates/candidates.module';
 import { ScoutingModule } from '../scouting/scouting.module';
+import { ALL_MIGRATIONS } from '../../migrations';
 
 @Module({
   imports: [
@@ -32,10 +33,7 @@ import { ScoutingModule } from '../scouting/scouting.module';
         database: configService.get('DB_NAME'),
         autoLoadEntities: true,
         synchronize: false,
-        migrations: [
-          __dirname + '/../migrations/**/*{.ts,.js}',
-          __dirname + '/migrations/**/*{.ts,.js}',
-        ],
+        migrations: ALL_MIGRATIONS,
         migrationsRun: configService.get<string>('DB_MIGRATIONS_RUN') !== 'false',
       }),
       inject: [ConfigService],

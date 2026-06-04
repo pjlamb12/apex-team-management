@@ -7,12 +7,13 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "webpack-cli build --node-env=production && npx tsc src/migrations/*.ts --outDir ../../dist/apps/api/migrations --target es2021 --module commonjs --esModuleInterop",
+        "command": "webpack-cli build",
+        "args": ["--node-env=production"],
         "cwd": "apps/api"
       },
       "configurations": {
         "development": {
-          "command": "webpack-cli build --node-env=development && npx tsc src/migrations/*.ts --outDir ../../dist/apps/api/migrations --target es2021 --module commonjs --esModuleInterop"
+          "args": ["--node-env=development"]
         }
       }
     },
@@ -44,7 +45,7 @@
     "migration:generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npm run typeorm migration:generate apps/api/src/migrations/{args.name} -- -d apps/api/src/data-source.ts",
+        "command": "TS_NODE_PROJECT=apps/api/tsconfig.app.json npm run typeorm migration:generate apps/api/migrations/{args.name} -- -d apps/api/src/data-source.ts",
         "cwd": "{workspaceRoot}"
       }
     },
