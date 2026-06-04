@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class DrillLibraryFoundation1777000000000 implements MigrationInterface {
-  name = 'DrillLibraryFoundation1777000000000';
+export class DrillLibraryFoundation1776910000000 implements MigrationInterface {
+  name = 'DrillLibraryFoundation1776910000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

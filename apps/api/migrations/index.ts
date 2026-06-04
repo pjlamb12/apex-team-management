@@ -10,8 +10,8 @@ import { AddPracticeLocationToSeason1776696865998 } from './1776696865998-AddPra
 import { EventsRefactor1776700000000 } from './1776700000000-EventsRefactor';
 import { AddScoreToEvents1776800000000 } from './1776800000000-AddScoreToEvents';
 import { AdvancedGameManagement1776850000000 } from './1776850000000-AdvancedGameManagement';
+import { DrillLibraryFoundation1776910000000 } from './1776910000000-DrillLibraryFoundation';
 import { CreatePracticeDrills1776925799677 } from './1776925799677-CreatePracticeDrills';
-import { DrillLibraryFoundation1777000000000 } from './1777000000000-DrillLibraryFoundation';
 import { AddPlayersOnFieldToEvents1777100000000 } from './1777100000000-AddPlayersOnFieldToEvents';
 import { TeamMemberships1777200000000 } from './1777200000000-TeamMemberships';
 import { AddSchedulingAndWeather1777704365283 } from './1777704365283-AddSchedulingAndWeather';
@@ -37,8 +37,8 @@ export const ALL_MIGRATIONS = [
   EventsRefactor1776700000000,
   AddScoreToEvents1776800000000,
   AdvancedGameManagement1776850000000,
+  DrillLibraryFoundation1776910000000,
   CreatePracticeDrills1776925799677,
-  DrillLibraryFoundation1777000000000,
   AddPlayersOnFieldToEvents1777100000000,
   TeamMemberships1777200000000,
   AddSchedulingAndWeather1777704365283,
