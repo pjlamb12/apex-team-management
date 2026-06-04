@@ -8,14 +8,14 @@ export class AddSchedulingAndWeather1777704365283 implements MigrationInterface 
         await queryRunner.query(`ALTER TABLE "team_members" DROP CONSTRAINT "FK_team_members_teams"`);
         await queryRunner.query(`ALTER TABLE "team_members" DROP CONSTRAINT "FK_team_members_users"`);
         await queryRunner.query(`CREATE TABLE "locations" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "address" character varying, "city" character varying, "state" character varying, "zip_code" character varying, "lat" numeric(10,7), "lon" numeric(10,7), CONSTRAINT "PK_7cc1c9e3853b94816c094825e74" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`ALTER TABLE "teams" DROP COLUMN "location"`);
-        await queryRunner.query(`ALTER TABLE "teams" DROP COLUMN "zip_code"`);
+        await queryRunner.query(`ALTER TABLE "teams" DROP COLUMN IF EXISTS "location"`);
+        await queryRunner.query(`ALTER TABLE "teams" DROP COLUMN IF EXISTS "zip_code"`);
         await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "recurrence_rule" text`);
         await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "parent_event_id" uuid`);
         await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "weather_data" jsonb`);
         await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "weather_last_updated" timestamp`);
-        await queryRunner.query(`ALTER TABLE "events" ADD "location_id" uuid`);
-        await queryRunner.query(`ALTER TABLE "teams" ADD "home_location_id" uuid`);
+        await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "location_id" uuid`);
+        await queryRunner.query(`ALTER TABLE "teams" ADD COLUMN IF NOT EXISTS "home_location_id" uuid`);
         await queryRunner.query(`ALTER TABLE "team_members" DROP COLUMN "role"`);
         await queryRunner.query(`CREATE TYPE "public"."team_members_role_enum" AS ENUM('HEAD_COACH', 'ASSISTANT')`);
         await queryRunner.query(`ALTER TABLE "team_members" ADD "role" "public"."team_members_role_enum" NOT NULL DEFAULT 'ASSISTANT'`);
