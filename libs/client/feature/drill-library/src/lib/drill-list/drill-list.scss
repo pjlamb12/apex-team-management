@@ -47,10 +47,14 @@ ion-card-content {
   color: var(--ion-color-step-600);
 }
 
+ion-col {
+  padding: 8px;
+}
+
 ion-card {
   cursor: pointer;
   height: 100%;
-  margin: 8px;
+  margin: 0;
   transition: transform 0.2s ease-in-out;
 
   &:active {
