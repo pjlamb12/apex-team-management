@@ -1,4 +1,4 @@
-<div class="flex flex-col h-full">
+<div class="flex flex-col">
   <div class="px-4 mb-2 flex items-center gap-2">
     <div class="flex-1">
       @if (seasons().length > 0) {
@@ -43,7 +43,7 @@
         Try Again
       </ion-button>
     </div>
-  } @else if (players().length === 0) {
+  } @else if (sortedPlayers().length === 0) {
     <div class="flex flex-col items-center justify-center py-24 text-center px-6">
       <div class="bg-ap-surface-raised p-6 rounded-full mb-6">
         <ion-icon name="people-outline" class="text-5xl text-ap-muted"></ion-icon>
@@ -68,7 +68,7 @@
     </div>
   } @else {
     <ion-list lines="full" class="bg-transparent px-2 pb-24">
-      @for (player of players(); track player.id) {
+      @for (player of sortedPlayers(); track player.id) {
         <ion-item-sliding class="mb-2">
           <ion-item class="rounded-xl border border-ap-border shadow-none overflow-hidden" lines="none">
             <ion-icon
@@ -82,7 +82,7 @@
                   {{ player.firstName }} {{ player.lastName }}
                 </h2>
                 @if (player.jerseyNumber !== null) {
-                  <span class="text-ap-primary font-black text-xl italic">#{{ player.jerseyNumber }}</span>
+                  <span class="text-ap-primary font-black text-xl italic pr-2">#{{ player.jerseyNumber }}</span>
                 }
               </div>
               

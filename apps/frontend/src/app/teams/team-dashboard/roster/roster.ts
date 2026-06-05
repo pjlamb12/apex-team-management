@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, Input } from '@angular/core';
+import { Component, inject, signal, effect, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -88,6 +88,13 @@ export class Roster {
   private readonly alertCtrl = inject(AlertController);
 
   protected players = signal<PlayerEntity[]>([]);
+  protected sortedPlayers = computed(() => {
+    return [...this.players()].sort((a, b) => {
+      const aNum = a.jerseyNumber !== null && a.jerseyNumber !== undefined ? a.jerseyNumber : Infinity;
+      const bNum = b.jerseyNumber !== null && b.jerseyNumber !== undefined ? b.jerseyNumber : Infinity;
+      return aNum - bNum;
+    });
+  });
   protected seasons = this.seasonsService.seasons;
   protected selectedSeasonId = this.seasonsService.selectedSeasonId;
   protected participationStats = signal<Record<string, ParticipationStats>>({});
@@ -141,7 +148,7 @@ export class Roster {
         playersReq,
         firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId ?? undefined))
       ]);
-      this.players.set([...players].sort((a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity)));
+      this.players.set(players);
       
       const statsMap: Record<string, ParticipationStats> = {};
       stats.forEach(s => statsMap[s.playerId] = s);

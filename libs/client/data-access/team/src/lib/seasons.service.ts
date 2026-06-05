@@ -39,7 +39,7 @@ export class SeasonsService {
   create(teamId: string, data: Partial<Season>): Observable<Season> {
     return this.http.post<Season>(
       `${this.apiUrl}/teams/${teamId}/seasons`,
-      data,
+      { ...data, teamId },
     );
   }
 

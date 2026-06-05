@@ -203,3 +203,10 @@ ion-datetime-button::part(native) {
   padding: 6px 12px;
   font-weight: 500;
 }
+
+// Ensure native date picker calendar icon is visible in dark mode
+html.dark ion-input[type="date"],
+html.dark ion-input[type="date"]::part(native) {
+  color-scheme: dark !important;
+}
+
