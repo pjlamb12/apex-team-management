@@ -25,9 +25,15 @@ export class DrillsController {
   findAll(
     @Request() req: { user: { sub: string } },
     @Query('tags') tags?: string | string[],
+    @Query('tagMode') tagMode?: 'and' | 'or',
   ) {
-    const tagNames = typeof tags === 'string' ? [tags] : tags;
-    return this.drillsService.findAll(req.user.sub, tagNames);
+    let tagNames: string[] | undefined;
+    if (typeof tags === 'string') {
+      tagNames = tags.split(',').map(t => t.trim()).filter(Boolean);
+    } else if (Array.isArray(tags)) {
+      tagNames = tags;
+    }
+    return this.drillsService.findAll(req.user.sub, tagNames, tagMode);
   }
 
   @Get('tags')

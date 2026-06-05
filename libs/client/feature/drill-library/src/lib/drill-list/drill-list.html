@@ -18,22 +18,41 @@
   </ion-toolbar>
 
   <ion-toolbar class="ion-padding-bottom ion-padding-horizontal">
-    <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
-      <ion-select
-        label="Filter by Tags"
-        labelPlacement="floating"
-        [multiple]="true"
-        [value]="selectedTags()"
-        (ionChange)="onTagsChange($event)"
-        interface="action-sheet"
-        placeholder="All Tags"
-        class="w-full"
-      >
-        @for (tag of allTags(); track tag.id) {
-          <ion-select-option [value]="tag.name">{{ tag.name }}</ion-select-option>
-        }
-      </ion-select>
-    </ion-item>
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full">
+      <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5 flex-grow m-0 w-full sm:w-auto">
+        <ion-select
+          label="Filter by Tags"
+          labelPlacement="floating"
+          [multiple]="true"
+          [value]="selectedTags()"
+          (ionChange)="onTagsChange($event)"
+          interface="action-sheet"
+          placeholder="All Tags"
+          class="w-full"
+        >
+          @for (tag of allTags(); track tag.id) {
+            <ion-select-option [value]="tag.name">{{ tag.name }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      @if (selectedTags().length > 1) {
+        <div class="flex items-center justify-end w-full sm:w-auto">
+          <ion-segment
+            [value]="tagMode()"
+            (ionChange)="onTagModeChange($event)"
+            class="w-full sm:w-[150px]"
+          >
+            <ion-segment-button value="or">
+              <ion-label class="text-xs font-semibold">OR</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="and">
+              <ion-label class="text-xs font-semibold">AND</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+      }
+    </div>
   </ion-toolbar>
 </ion-header>
 

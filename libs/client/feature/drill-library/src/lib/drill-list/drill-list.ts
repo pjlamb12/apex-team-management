@@ -26,6 +26,8 @@ import {
   IonItem,
   IonSelect,
   IonSelectOption,
+  IonSegment,
+  IonSegmentButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, searchOutline, filterOutline, cloudUploadOutline } from 'ionicons/icons';
@@ -63,6 +65,8 @@ import { ImportDrillModal } from '../import-drill-modal/import-drill-modal';
     IonItem,
     IonSelect,
     IonSelectOption,
+    IonSegment,
+    IonSegmentButton,
   ],
   templateUrl: './drill-list.html',
   styleUrl: './drill-list.scss',
@@ -77,6 +81,7 @@ export class DrillList {
 
   protected readonly drills = this.drillService.drills;
   protected readonly allTags = this.drillService.tags;
+  protected readonly tagMode = signal<'and' | 'or'>('or');
 
   protected readonly filteredDrills = computed(() => {
     const term = this.searchTerm().toLowerCase();
@@ -98,9 +103,9 @@ export class DrillList {
     // Initial data fetch
     this.drillService.getTags().subscribe();
 
-    // Effect to refetch drills when selected tags change
+    // Effect to refetch drills when selected tags or tagMode change
     effect(() => {
-      this.drillService.getDrills(this.selectedTags()).subscribe();
+      this.drillService.getDrills(this.selectedTags(), this.tagMode()).subscribe();
     });
   }
 
@@ -110,6 +115,10 @@ export class DrillList {
 
   protected onTagsChange(event: any): void {
     this.selectedTags.set(event.detail.value || []);
+  }
+
+  protected onTagModeChange(event: any): void {
+    this.tagMode.set(event.detail.value || 'or');
   }
 
   protected async openImportModal(): Promise<void> {

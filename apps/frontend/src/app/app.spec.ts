@@ -5,11 +5,18 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
+import { SwUpdate } from '@angular/service-worker';
+import { of } from 'rxjs';
 
 describe('App', () => {
 	beforeEach(async () => {
 		const mockRuntimeConfig = {
 			getConfigObjectKey: vi.fn().mockReturnValue('http://api.test'),
+		};
+
+		const mockSwUpdate = {
+			isEnabled: false,
+			versionUpdates: of(),
 		};
 
 		await TestBed.configureTestingModule({
@@ -19,6 +26,7 @@ describe('App', () => {
 				provideHttpClientTesting(),
 				provideRouter([]),
 				{ provide: RuntimeConfigLoaderService, useValue: mockRuntimeConfig },
+				{ provide: SwUpdate, useValue: mockSwUpdate },
 			],
 		}).compileComponents();
 	});

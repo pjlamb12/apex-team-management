@@ -13,16 +13,42 @@ export class DrillsService {
     private readonly tagRepo: Repository<TagEntity>,
   ) {}
 
-  async findAll(coachId: string, tagNames?: string[]): Promise<DrillEntity[]> {
+  async findAll(coachId: string, tagNames?: string[], tagMode: 'and' | 'or' = 'or'): Promise<DrillEntity[]> {
     const query = this.drillRepo
       .createQueryBuilder('drill')
       .leftJoinAndSelect('drill.tags', 'tag')
       .where('drill.coachId = :coachId', { coachId });
 
     if (tagNames && tagNames.length > 0) {
-      // Pitfall 1 Mitigation: Double-join to filter by tags without ghosting other tags
-      query.innerJoin('drill.tags', 'filterTag');
-      query.andWhere('filterTag.name IN (:...tagNames)', { tagNames });
+      const mode = tagMode === 'and' ? 'and' : 'or';
+      
+      if (mode === 'and') {
+        query.andWhere(qb => {
+          const subQuery = qb.subQuery()
+            .select('d.id')
+            .from(DrillEntity, 'd')
+            .innerJoin('d.tags', 't')
+            .where('d.coachId = :coachId')
+            .andWhere('t.name IN (:...tagNames)')
+            .groupBy('d.id')
+            .having('COUNT(DISTINCT t.name) = :tagCount');
+          return 'drill.id IN ' + subQuery.getQuery();
+        });
+        query.setParameter('tagNames', tagNames);
+        query.setParameter('tagCount', tagNames.length);
+      } else {
+        query.andWhere(qb => {
+          const subQuery = qb.subQuery()
+            .select('d.id')
+            .from(DrillEntity, 'd')
+            .innerJoin('d.tags', 't')
+            .where('d.coachId = :coachId')
+            .andWhere('t.name IN (:...tagNames)')
+            .groupBy('d.id');
+          return 'drill.id IN ' + subQuery.getQuery();
+        });
+        query.setParameter('tagNames', tagNames);
+      }
     }
 
     return query.getMany();

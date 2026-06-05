@@ -26,10 +26,11 @@ export class DrillService {
   private _tags = signal<Tag[]>([]);
   tags = this._tags.asReadonly();
 
-  getDrills(tagNames?: string[]): Observable<Drill[]> {
+  getDrills(tagNames?: string[], tagMode: 'and' | 'or' = 'or'): Observable<Drill[]> {
     let params = new HttpParams();
     if (tagNames && tagNames.length > 0) {
       params = params.set('tags', tagNames.join(','));
+      params = params.set('tagMode', tagMode);
     }
     return this.http.get<Drill[]>(this.baseUrl, { params }).pipe(
       tap((drills) => this._drills.set(drills))

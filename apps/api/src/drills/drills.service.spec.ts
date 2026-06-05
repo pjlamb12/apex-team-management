@@ -61,24 +61,89 @@ describe('DrillsService', () => {
       expect(result).toEqual(drills);
     });
 
-    it('should filter by tagNames using double join', async () => {
+    it('should filter by tagNames using subquery in OR mode', async () => {
       const coachId = 'coach-1';
       const tagNames = ['Shooting'];
       const drills = [{ id: 'drill-1', name: 'Drill 1', coachId, tags: [{ id: 'tag-1', name: 'Shooting' }] }];
 
-      const queryBuilder: any = {
-        leftJoinAndSelect: vi.fn().mockReturnThis(),
+      const mockSubQueryBuilder: any = {
+        select: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
         innerJoin: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         andWhere: vi.fn().mockReturnThis(),
+        groupBy: vi.fn().mockReturnThis(),
+        getQuery: vi.fn().mockReturnValue('(SELECT d.id FROM drills)'),
+      };
+
+      const queryBuilder: any = {
+        leftJoinAndSelect: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        andWhere: vi.fn().mockImplementation((cb) => {
+          if (typeof cb === 'function') {
+            cb({
+              subQuery: () => mockSubQueryBuilder,
+            });
+          }
+          return queryBuilder;
+        }),
+        setParameter: vi.fn().mockReturnThis(),
         getMany: vi.fn().mockResolvedValue(drills),
       };
       drillRepo.createQueryBuilder!.mockReturnValue(queryBuilder);
 
-      await service.findAll(coachId, tagNames);
+      const result = await service.findAll(coachId, tagNames, 'or');
 
-      expect(queryBuilder.innerJoin).toHaveBeenCalledWith('drill.tags', 'filterTag');
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith('filterTag.name IN (:...tagNames)', { tagNames });
+      expect(queryBuilder.where).toHaveBeenCalledWith('drill.coachId = :coachId', { coachId });
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith(expect.any(Function));
+      expect(mockSubQueryBuilder.select).toHaveBeenCalledWith('d.id');
+      expect(mockSubQueryBuilder.from).toHaveBeenCalledWith(DrillEntity, 'd');
+      expect(mockSubQueryBuilder.innerJoin).toHaveBeenCalledWith('d.tags', 't');
+      expect(mockSubQueryBuilder.where).toHaveBeenCalledWith('d.coachId = :coachId');
+      expect(mockSubQueryBuilder.andWhere).toHaveBeenCalledWith('t.name IN (:...tagNames)');
+      expect(mockSubQueryBuilder.groupBy).toHaveBeenCalledWith('d.id');
+      expect(queryBuilder.setParameter).toHaveBeenCalledWith('tagNames', tagNames);
+      expect(result).toEqual(drills);
+    });
+
+    it('should filter by tagNames using subquery in AND mode', async () => {
+      const coachId = 'coach-1';
+      const tagNames = ['Shooting', 'Passing'];
+      const drills = [{ id: 'drill-1', name: 'Drill 1', coachId, tags: [] }];
+
+      const mockSubQueryBuilder: any = {
+        select: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
+        innerJoin: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        andWhere: vi.fn().mockReturnThis(),
+        groupBy: vi.fn().mockReturnThis(),
+        having: vi.fn().mockReturnThis(),
+        getQuery: vi.fn().mockReturnValue('(SELECT d.id FROM drills)'),
+      };
+
+      const queryBuilder: any = {
+        leftJoinAndSelect: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        andWhere: vi.fn().mockImplementation((cb) => {
+          if (typeof cb === 'function') {
+            cb({
+              subQuery: () => mockSubQueryBuilder,
+            });
+          }
+          return queryBuilder;
+        }),
+        setParameter: vi.fn().mockReturnThis(),
+        getMany: vi.fn().mockResolvedValue(drills),
+      };
+      drillRepo.createQueryBuilder!.mockReturnValue(queryBuilder);
+
+      const result = await service.findAll(coachId, tagNames, 'and');
+
+      expect(mockSubQueryBuilder.having).toHaveBeenCalledWith('COUNT(DISTINCT t.name) = :tagCount');
+      expect(queryBuilder.setParameter).toHaveBeenCalledWith('tagNames', tagNames);
+      expect(queryBuilder.setParameter).toHaveBeenCalledWith('tagCount', 2);
+      expect(result).toEqual(drills);
     });
   });
 
