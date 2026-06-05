@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
+  IonContent,
   IonList,
   IonItem,
   IonLabel,
@@ -54,6 +55,7 @@ interface GroupedEvents {
   selector: 'app-schedule',
   standalone: true,
   imports: [
+    IonContent,
     CommonModule,
     RouterLink,
     IonList,

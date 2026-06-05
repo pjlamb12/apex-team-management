@@ -1,128 +1,130 @@
-<div class="flex flex-col">
-  <div class="px-4 mb-2 flex items-center gap-2">
-    <div class="flex-1">
-      @if (seasons().length > 0) {
-        <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
-          <ion-select
-            label="Season Roster"
-            labelPlacement="floating"
-            [value]="selectedSeasonId()"
-            (ionChange)="onSeasonChange($event)"
-            interface="action-sheet"
-            class="w-full"
-          >
-            <ion-select-option [value]="null">Team Roster Pool (All)</ion-select-option>
-            @for (season of seasons(); track season.id) {
-              <ion-select-option [value]="season.id">
-                {{ season.name }}{{ season.isActive ? ' (Active)' : '' }}
-              </ion-select-option>
-            }
-          </ion-select>
-        </ion-item>
+<ion-content class="bg-ap-bg">
+  <div class="flex flex-col">
+    <div class="px-4 mb-2 flex items-center gap-2">
+      <div class="flex-1">
+        @if (seasons().length > 0) {
+          <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
+            <ion-select
+              label="Season Roster"
+              labelPlacement="floating"
+              [value]="selectedSeasonId()"
+              (ionChange)="onSeasonChange($event)"
+              interface="action-sheet"
+              class="w-full"
+            >
+              <ion-select-option [value]="null">Team Roster Pool (All)</ion-select-option>
+              @for (season of seasons(); track season.id) {
+                <ion-select-option [value]="season.id">
+                  {{ season.name }}{{ season.isActive ? ' (Active)' : '' }}
+                </ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+        }
+      </div>
+      @if (selectedSeasonId()) {
+        <ion-button fill="clear" color="primary" (click)="manageSeasonRoster()" class="ion-no-margin h-12">
+          <ion-icon name="build-outline" slot="icon-only"></ion-icon>
+        </ion-button>
       }
     </div>
-    @if (selectedSeasonId()) {
-      <ion-button fill="clear" color="primary" (click)="manageSeasonRoster()" class="ion-no-margin h-12">
-        <ion-icon name="build-outline" slot="icon-only"></ion-icon>
-      </ion-button>
+
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-20 gap-4">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p class="text-ap-muted text-sm font-medium italic">Building roster...</p>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="p-6 text-center">
+        <ion-text color="danger">
+          <p class="font-bold mb-2">Error</p>
+          <p class="text-sm italic opacity-80">{{ errorMessage() }}</p>
+        </ion-text>
+        <ion-button fill="outline" color="primary" class="mt-4" (click)="loadPlayers(teamId, selectedSeasonId())">
+          Try Again
+        </ion-button>
+      </div>
+    } @else if (sortedPlayers().length === 0) {
+      <div class="flex flex-col items-center justify-center py-24 text-center px-6">
+        <div class="bg-ap-surface-raised p-6 rounded-full mb-6">
+          <ion-icon name="people-outline" class="text-5xl text-ap-muted"></ion-icon>
+        </div>
+        <h3 class="text-xl font-black text-ap-text mb-2 tracking-tight">Empty Roster</h3>
+        <p class="text-ap-muted max-w-[280px] leading-relaxed mb-8">
+          @if (selectedSeasonId()) {
+            This season's roster is empty. Add existing players or promote tryout candidates to get started.
+          } @else {
+            No players found in the team roster pool.
+          }
+        </p>
+        @if (selectedSeasonId()) {
+          <ion-button color="primary" class="font-black uppercase tracking-widest h-12 px-8" (click)="manageSeasonRoster()">
+            Build Roster
+          </ion-button>
+        } @else {
+          <ion-button color="primary" class="font-black uppercase tracking-widest h-12 px-8" (click)="openPlayerModal()">
+            Add First Player
+          </ion-button>
+        }
+      </div>
+    } @else {
+      <ion-list lines="full" class="bg-transparent px-2 pb-24">
+        @for (player of sortedPlayers(); track player.id) {
+          <ion-item-sliding class="mb-2">
+            <ion-item class="rounded-xl border border-ap-border shadow-none overflow-hidden" lines="none">
+              <ion-icon
+                slot="start"
+                name="person-circle-outline"
+                class="text-4xl text-ap-muted mr-2"
+              ></ion-icon>
+              <ion-label (click)="openPlayerAnalytics(player)" class="cursor-pointer">
+                <div class="flex items-center justify-between mb-1">
+                  <h2 class="text-lg font-black text-ap-text tracking-tight">
+                    {{ player.firstName }} {{ player.lastName }}
+                  </h2>
+                  @if (player.jerseyNumber !== null) {
+                    <span class="text-ap-primary font-black text-xl italic pr-2">#{{ player.jerseyNumber }}</span>
+                  }
+                </div>
+                
+                <div class="flex items-center gap-3">
+                  @if (player.preferredPosition) {
+                    <span class="text-[10px] text-ap-muted font-bold uppercase tracking-widest">{{ player.preferredPosition }}</span>
+                  }
+                  <div class="flex items-center gap-1.5 bg-ap-surface-raised px-2 py-0.5 rounded-full border border-ap-border">
+                    <div 
+                      class="w-2 h-2 rounded-full" 
+                      [class]="'bg-' + getParticipationColor(player.id)"
+                    ></div>
+                    <span class="text-[10px] font-black text-ap-text uppercase tracking-widest">{{ getParticipation(player.id) }}% ATT</span>
+                  </div>
+                </div>
+              </ion-label>
+
+              <ion-buttons slot="end">
+                <ion-button fill="clear" color="medium" (click)="openPlayerAnalytics(player)">
+                  <ion-icon name="stats-chart-outline" slot="icon-only" class="text-lg"></ion-icon>
+                </ion-button>
+              </ion-buttons>
+            </ion-item>
+
+            <ion-item-options side="end">
+              <ion-item-option color="primary" (click)="openPlayerModal(player)">
+                <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+              </ion-item-option>
+              <ion-item-option color="danger" (click)="deletePlayer(player.id)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        }
+      </ion-list>
     }
   </div>
 
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-20 gap-4">
-      <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p class="text-ap-muted text-sm font-medium italic">Building roster...</p>
-    </div>
-  } @else if (errorMessage()) {
-    <div class="p-6 text-center">
-      <ion-text color="danger">
-        <p class="font-bold mb-2">Error</p>
-        <p class="text-sm italic opacity-80">{{ errorMessage() }}</p>
-      </ion-text>
-      <ion-button fill="outline" color="primary" class="mt-4" (click)="loadPlayers(teamId, selectedSeasonId())">
-        Try Again
-      </ion-button>
-    </div>
-  } @else if (sortedPlayers().length === 0) {
-    <div class="flex flex-col items-center justify-center py-24 text-center px-6">
-      <div class="bg-ap-surface-raised p-6 rounded-full mb-6">
-        <ion-icon name="people-outline" class="text-5xl text-ap-muted"></ion-icon>
-      </div>
-      <h3 class="text-xl font-black text-ap-text mb-2 tracking-tight">Empty Roster</h3>
-      <p class="text-ap-muted max-w-[280px] leading-relaxed mb-8">
-        @if (selectedSeasonId()) {
-          This season's roster is empty. Add existing players or promote tryout candidates to get started.
-        } @else {
-          No players found in the team roster pool.
-        }
-      </p>
-      @if (selectedSeasonId()) {
-        <ion-button color="primary" class="font-black uppercase tracking-widest h-12 px-8" (click)="manageSeasonRoster()">
-          Build Roster
-        </ion-button>
-      } @else {
-        <ion-button color="primary" class="font-black uppercase tracking-widest h-12 px-8" (click)="openPlayerModal()">
-          Add First Player
-        </ion-button>
-      }
-    </div>
-  } @else {
-    <ion-list lines="full" class="bg-transparent px-2 pb-24">
-      @for (player of sortedPlayers(); track player.id) {
-        <ion-item-sliding class="mb-2">
-          <ion-item class="rounded-xl border border-ap-border shadow-none overflow-hidden" lines="none">
-            <ion-icon
-              slot="start"
-              name="person-circle-outline"
-              class="text-4xl text-ap-muted mr-2"
-            ></ion-icon>
-            <ion-label (click)="openPlayerAnalytics(player)" class="cursor-pointer">
-              <div class="flex items-center justify-between mb-1">
-                <h2 class="text-lg font-black text-ap-text tracking-tight">
-                  {{ player.firstName }} {{ player.lastName }}
-                </h2>
-                @if (player.jerseyNumber !== null) {
-                  <span class="text-ap-primary font-black text-xl italic pr-2">#{{ player.jerseyNumber }}</span>
-                }
-              </div>
-              
-              <div class="flex items-center gap-3">
-                @if (player.preferredPosition) {
-                  <span class="text-[10px] text-ap-muted font-bold uppercase tracking-widest">{{ player.preferredPosition }}</span>
-                }
-                <div class="flex items-center gap-1.5 bg-ap-surface-raised px-2 py-0.5 rounded-full border border-ap-border">
-                  <div 
-                    class="w-2 h-2 rounded-full" 
-                    [class]="'bg-' + getParticipationColor(player.id)"
-                  ></div>
-                  <span class="text-[10px] font-black text-ap-text uppercase tracking-widest">{{ getParticipation(player.id) }}% ATT</span>
-                </div>
-              </div>
-            </ion-label>
-
-            <ion-buttons slot="end">
-              <ion-button fill="clear" color="medium" (click)="openPlayerAnalytics(player)">
-                <ion-icon name="stats-chart-outline" slot="icon-only" class="text-lg"></ion-icon>
-              </ion-button>
-            </ion-buttons>
-          </ion-item>
-
-          <ion-item-options side="end">
-            <ion-item-option color="primary" (click)="openPlayerModal(player)">
-              <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
-            </ion-item-option>
-            <ion-item-option color="danger" (click)="deletePlayer(player.id)">
-              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-            </ion-item-option>
-          </ion-item-options>
-        </ion-item-sliding>
-      }
-    </ion-list>
-  }
-</div>
-
-<ion-fab vertical="bottom" horizontal="end" slot="fixed" class="mb-4 mr-2">
-  <ion-fab-button color="primary" (click)="openPlayerModal()">
-    <ion-icon name="add-outline"></ion-icon>
-  </ion-fab-button>
-</ion-fab>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="mb-4 mr-2">
+    <ion-fab-button color="primary" (click)="openPlayerModal()">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

@@ -1,186 +1,188 @@
-<div class="flex flex-col">
-  <div class="px-4 mb-2">
-    @if (isLoadingSeasons()) {
-      <div class="flex items-center justify-center py-4">
-        <ion-spinner name="crescent" size="small"></ion-spinner>
-      </div>
-    } @else {
-      <div class="flex flex-col gap-2">
-        <div class="flex items-center gap-2">
-          <div class="flex-1">
-            @if (seasons().length > 0) {
-              <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
-                <ion-select
-                  label="Season"
-                  labelPlacement="floating"
-                  [value]="selectedSeasonId()"
-                  (ionChange)="onSeasonChange($event)"
-                  interface="action-sheet"
-                  class="w-full"
-                >
-                  @for (season of seasons(); track season.id) {
-                    <ion-select-option [value]="season.id">
-                      {{ season.name }}{{ season.isActive ? ' (Active)' : '' }}
-                    </ion-select-option>
-                  }
-                </ion-select>
-              </ion-item>
-            } @else {
-              <p class="text-sm italic text-ap-muted px-2 py-4">
-                No seasons yet — create one to get started.
-              </p>
-            }
-          </div>
-          <ion-button fill="clear" color="primary" (click)="presentSeasonModal()" class="ion-no-margin h-12">
-            <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
-          </ion-button>
+<ion-content class="bg-ap-bg">
+  <div class="flex flex-col">
+    <div class="px-4 mb-2">
+      @if (isLoadingSeasons()) {
+        <div class="flex items-center justify-center py-4">
+          <ion-spinner name="crescent" size="small"></ion-spinner>
         </div>
-
-        @if (selectedSeasonId()) {
+      } @else {
+        <div class="flex flex-col gap-2">
           <div class="flex items-center gap-2">
             <div class="flex-1">
-              <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
-                <ion-select
-                  label="Competition / League"
-                  labelPlacement="floating"
-                  [value]="selectedLeagueId()"
-                  (ionChange)="onLeagueChange($event)"
-                  interface="action-sheet"
-                  placeholder="All Competitions"
-                  class="w-full"
-                >
-                  <ion-select-option [value]="null">All Competitions</ion-select-option>
-                  @for (league of leagues(); track league.id) {
-                    <ion-select-option [value]="league.id">{{ league.name }}</ion-select-option>
-                  }
-                </ion-select>
-              </ion-item>
+              @if (seasons().length > 0) {
+                <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
+                  <ion-select
+                    label="Season"
+                    labelPlacement="floating"
+                    [value]="selectedSeasonId()"
+                    (ionChange)="onSeasonChange($event)"
+                    interface="action-sheet"
+                    class="w-full"
+                  >
+                    @for (season of seasons(); track season.id) {
+                      <ion-select-option [value]="season.id">
+                        {{ season.name }}{{ season.isActive ? ' (Active)' : '' }}
+                      </ion-select-option>
+                    }
+                  </ion-select>
+                </ion-item>
+              } @else {
+                <p class="text-sm italic text-ap-muted px-2 py-4">
+                  No seasons yet — create one to get started.
+                </p>
+              }
             </div>
-            <ion-button fill="clear" color="medium" (click)="manageLeagues()" class="ion-no-margin h-12">
-              <ion-icon name="trophy-outline" slot="icon-only"></ion-icon>
+            <ion-button fill="clear" color="primary" (click)="presentSeasonModal()" class="ion-no-margin h-12">
+              <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
             </ion-button>
           </div>
-        }
+
+          @if (selectedSeasonId()) {
+            <div class="flex items-center gap-2">
+              <div class="flex-1">
+                <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
+                  <ion-select
+                    label="Competition / League"
+                    labelPlacement="floating"
+                    [value]="selectedLeagueId()"
+                    (ionChange)="onLeagueChange($event)"
+                    interface="action-sheet"
+                    placeholder="All Competitions"
+                    class="w-full"
+                  >
+                    <ion-select-option [value]="null">All Competitions</ion-select-option>
+                    @for (league of leagues(); track league.id) {
+                      <ion-select-option [value]="league.id">{{ league.name }}</ion-select-option>
+                    }
+                  </ion-select>
+                </ion-item>
+              </div>
+              <ion-button fill="clear" color="medium" (click)="manageLeagues()" class="ion-no-margin h-12">
+                <ion-icon name="trophy-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <ion-segment [value]="scope()" (ionChange)="onScopeChange($event)" class="mb-2">
+      <ion-segment-button value="upcoming">
+        <ion-label>Upcoming</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="past">
+        <ion-label>Past</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    @if (isLoading()) {
+      <div class="flex items-center justify-center py-8">
+        <ion-spinner name="crescent" />
       </div>
+    } @else {
+      @for (group of groupedEvents(); track group.leagueName) {
+        <ion-list class="bg-transparent mb-4">
+          <ion-list-header class="min-h-[44px]">
+            <ion-label class="text-xs font-black uppercase tracking-widest text-ap-primary opacity-80">{{ group.leagueName }}</ion-label>
+          </ion-list-header>
+
+          @for (event of group.events; track (event.virtualId || event.id)) {
+            <ion-item-sliding>
+              <ion-item-options side="start">
+                <ion-item-option color="medium" (click)="refreshWeather(event)">
+                  <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+                </ion-item-option>
+              </ion-item-options>
+
+              <ion-item 
+                [routerLink]="getEventLink(event)"
+                [button]="true"
+                class="schedule-item"
+              >
+                <ion-icon
+                  slot="start"
+                  [name]="getEventIcon(event)"
+                  [color]="event.type === 'game' ? 'primary' : 'tertiary'"
+                  class="mr-3"
+                ></ion-icon>
+                <ion-label>
+                  <div class="flex items-center gap-2">
+                    <h2 [class.opacity-70]="scope() === 'past'" class="font-bold">{{ getEventTitle(event) }}</h2>
+                    @if (event.recurrenceRule) {
+                      <ion-icon name="refresh-outline" class="text-xs" color="medium"></ion-icon>
+                    }
+                  </div>
+                  <p class="flex items-center gap-2 mt-0.5">
+                    <span class="text-ap-text font-medium">{{ event.scheduledAt | date: 'MMM d, h:mm a' }}</span>
+                    @if (event.durationMinutes) {
+                      <ion-note class="text-[10px] opacity-60">({{ event.durationMinutes }}m)</ion-note>
+                    }
+                  </p>
+                  <div class="flex items-center gap-3 mt-1">
+                    @if (event.location) {
+                      <p class="flex items-center gap-1 text-[11px] text-ap-muted">
+                        <ion-icon name="location-outline" class="text-[10px]"></ion-icon>
+                        {{ event.location }}
+                      </p>
+                    }
+                    
+                    @if (event.weatherData) {
+                      <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
+                        <img [src]="event.weatherData.icon" class="w-3.5 h-3.5" [alt]="event.weatherData.condition" />
+                        <span class="text-[10px] font-bold">{{ event.weatherData.temp_f }}°F</span>
+                        @if (event.weatherData.chance_of_rain > 0) {
+                          <span class="text-[10px] text-blue-400 font-bold">{{ event.weatherData.chance_of_rain }}% ☂</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </ion-label>
+                
+                <div slot="end" class="flex items-center gap-2">
+                  @if (event.type === 'game' && event.uniformColor) {
+                    <div class="w-3 h-3 rounded-full border border-white/10" [style.background]="event.uniformColor" title="Uniform Color"></div>
+                  }
+
+                  <!-- Desktop-only actions -->
+                  <div class="hidden sm:flex items-center gap-1">
+                    <ion-button fill="clear" color="medium" [routerLink]="getEventEditLink(event)" (click)="$event.stopPropagation()" class="h-8 w-8 ion-no-margin">
+                      <ion-icon slot="icon-only" name="pencil-outline" class="text-lg"></ion-icon>
+                    </ion-button>
+                    <ion-button fill="clear" color="danger" (click)="deleteEvent(event); $event.stopPropagation()" class="h-8 w-8 ion-no-margin">
+                      <ion-icon slot="icon-only" name="trash-outline" class="text-lg"></ion-icon>
+                    </ion-button>
+                  </div>
+
+                  <ion-icon name="chevron-forward-outline" color="medium" class="text-xs opacity-30"></ion-icon>
+                </div>
+              </ion-item>
+
+              <ion-item-options side="end">
+                <ion-item-option color="primary" [routerLink]="getEventEditLink(event)">
+                  <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+                </ion-item-option>
+                <ion-item-option color="danger" (click)="deleteEvent(event)">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-item-option>
+              </ion-item-options>
+            </ion-item-sliding>
+          }
+        </ion-list>
+      } @empty {
+        <ion-list>
+          <ion-item>
+            <ion-label class="text-center py-4 italic text-ap-muted">
+              No {{ scope() }} events for this season.
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      }
+
+      <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+        <ion-fab-button (click)="presentAddEventSheet()" aria-label="Add event">
+          <ion-icon name="add-outline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
     }
   </div>
-
-  <ion-segment [value]="scope()" (ionChange)="onScopeChange($event)" class="mb-2">
-    <ion-segment-button value="upcoming">
-      <ion-label>Upcoming</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="past">
-      <ion-label>Past</ion-label>
-    </ion-segment-button>
-  </ion-segment>
-
-  @if (isLoading()) {
-    <div class="flex items-center justify-center py-8">
-      <ion-spinner name="crescent" />
-    </div>
-  } @else {
-    @for (group of groupedEvents(); track group.leagueName) {
-      <ion-list class="bg-transparent mb-4">
-        <ion-list-header class="min-h-[44px]">
-          <ion-label class="text-xs font-black uppercase tracking-widest text-ap-primary opacity-80">{{ group.leagueName }}</ion-label>
-        </ion-list-header>
-
-        @for (event of group.events; track (event.virtualId || event.id)) {
-          <ion-item-sliding>
-            <ion-item-options side="start">
-              <ion-item-option color="medium" (click)="refreshWeather(event)">
-                <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
-              </ion-item-option>
-            </ion-item-options>
-
-            <ion-item 
-              [routerLink]="getEventLink(event)"
-              [button]="true"
-              class="schedule-item"
-            >
-              <ion-icon
-                slot="start"
-                [name]="getEventIcon(event)"
-                [color]="event.type === 'game' ? 'primary' : 'tertiary'"
-                class="mr-3"
-              ></ion-icon>
-              <ion-label>
-                <div class="flex items-center gap-2">
-                  <h2 [class.opacity-70]="scope() === 'past'" class="font-bold">{{ getEventTitle(event) }}</h2>
-                  @if (event.recurrenceRule) {
-                    <ion-icon name="refresh-outline" class="text-xs" color="medium"></ion-icon>
-                  }
-                </div>
-                <p class="flex items-center gap-2 mt-0.5">
-                  <span class="text-ap-text font-medium">{{ event.scheduledAt | date: 'MMM d, h:mm a' }}</span>
-                  @if (event.durationMinutes) {
-                    <ion-note class="text-[10px] opacity-60">({{ event.durationMinutes }}m)</ion-note>
-                  }
-                </p>
-                <div class="flex items-center gap-3 mt-1">
-                  @if (event.location) {
-                    <p class="flex items-center gap-1 text-[11px] text-ap-muted">
-                      <ion-icon name="location-outline" class="text-[10px]"></ion-icon>
-                      {{ event.location }}
-                    </p>
-                  }
-                  
-                  @if (event.weatherData) {
-                    <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
-                      <img [src]="event.weatherData.icon" class="w-3.5 h-3.5" [alt]="event.weatherData.condition" />
-                      <span class="text-[10px] font-bold">{{ event.weatherData.temp_f }}°F</span>
-                      @if (event.weatherData.chance_of_rain > 0) {
-                        <span class="text-[10px] text-blue-400 font-bold">{{ event.weatherData.chance_of_rain }}% ☂</span>
-                      }
-                    </div>
-                  }
-                </div>
-              </ion-label>
-              
-              <div slot="end" class="flex items-center gap-2">
-                @if (event.type === 'game' && event.uniformColor) {
-                  <div class="w-3 h-3 rounded-full border border-white/10" [style.background]="event.uniformColor" title="Uniform Color"></div>
-                }
-
-                <!-- Desktop-only actions -->
-                <div class="hidden sm:flex items-center gap-1">
-                  <ion-button fill="clear" color="medium" [routerLink]="getEventEditLink(event)" (click)="$event.stopPropagation()" class="h-8 w-8 ion-no-margin">
-                    <ion-icon slot="icon-only" name="pencil-outline" class="text-lg"></ion-icon>
-                  </ion-button>
-                  <ion-button fill="clear" color="danger" (click)="deleteEvent(event); $event.stopPropagation()" class="h-8 w-8 ion-no-margin">
-                    <ion-icon slot="icon-only" name="trash-outline" class="text-lg"></ion-icon>
-                  </ion-button>
-                </div>
-
-                <ion-icon name="chevron-forward-outline" color="medium" class="text-xs opacity-30"></ion-icon>
-              </div>
-            </ion-item>
-
-            <ion-item-options side="end">
-              <ion-item-option color="primary" [routerLink]="getEventEditLink(event)">
-                <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
-              </ion-item-option>
-              <ion-item-option color="danger" (click)="deleteEvent(event)">
-                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-              </ion-item-option>
-            </ion-item-options>
-          </ion-item-sliding>
-        }
-      </ion-list>
-    } @empty {
-      <ion-list>
-        <ion-item>
-          <ion-label class="text-center py-4 italic text-ap-muted">
-            No {{ scope() }} events for this season.
-          </ion-label>
-        </ion-item>
-      </ion-list>
-    }
-
-    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-      <ion-fab-button (click)="presentAddEventSheet()" aria-label="Add event">
-        <ion-icon name="add-outline"></ion-icon>
-      </ion-fab-button>
-    </ion-fab>
-  }
-</div>
+</ion-content>

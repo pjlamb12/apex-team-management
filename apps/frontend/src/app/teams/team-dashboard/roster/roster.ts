@@ -2,6 +2,7 @@ import { Component, inject, signal, effect, Input, computed } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import {
+  IonContent,
   IonList,
   IonItem,
   IonLabel,
@@ -51,6 +52,7 @@ import { ManageSeasonRosterModal } from './manage-roster-modal/manage-roster-mod
   standalone: true,
   imports: [
     CommonModule,
+    IonContent,
     IonList,
     IonItem,
     IonLabel,
