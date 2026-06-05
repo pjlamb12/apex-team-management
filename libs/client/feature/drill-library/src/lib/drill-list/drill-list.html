@@ -17,30 +17,24 @@
     ></ion-searchbar>
   </ion-toolbar>
 
-  <div class="tags-container ion-padding-bottom">
-    <div class="tags-scroll">
-      @for (tag of allTags(); track tag.id) {
-        <ion-chip
-          class="m-0 h-8 px-3 transition-all border"
-          [class.bg-blue-100]="isTagSelected(tag.name)"
-          [class.text-blue-800]="isTagSelected(tag.name)"
-          [class.border-blue-300]="isTagSelected(tag.name)"
-          [class.dark:bg-blue-900]="isTagSelected(tag.name)"
-          [class.dark:text-blue-100]="isTagSelected(tag.name)"
-          [class.dark:border-blue-700]="isTagSelected(tag.name)"
-          [class.bg-slate-50]="!isTagSelected(tag.name)"
-          [class.text-slate-600]="!isTagSelected(tag.name)"
-          [class.border-slate-200]="!isTagSelected(tag.name)"
-          [class.dark:bg-slate-900]="!isTagSelected(tag.name)"
-          [class.dark:text-slate-400]="!isTagSelected(tag.name)"
-          [class.dark:border-slate-800]="!isTagSelected(tag.name)"
-          (click)="toggleTag(tag.name)"
-        >
-          <ion-label class="text-xs font-medium">{{ tag.name }}</ion-label>
-        </ion-chip>
-      }
-    </div>
-  </div>
+  <ion-toolbar class="ion-padding-bottom ion-padding-horizontal">
+    <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
+      <ion-select
+        label="Filter by Tags"
+        labelPlacement="floating"
+        [multiple]="true"
+        [value]="selectedTags()"
+        (ionChange)="onTagsChange($event)"
+        interface="action-sheet"
+        placeholder="All Tags"
+        class="w-full"
+      >
+        @for (tag of allTags(); track tag.id) {
+          <ion-select-option [value]="tag.name">{{ tag.name }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">

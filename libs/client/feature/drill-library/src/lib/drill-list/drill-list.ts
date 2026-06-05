@@ -23,6 +23,9 @@ import {
   IonButtons,
   IonButton,
   ModalController,
+  IonItem,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, searchOutline, filterOutline, cloudUploadOutline } from 'ionicons/icons';
@@ -57,6 +60,9 @@ import { ImportDrillModal } from '../import-drill-modal/import-drill-modal';
     IonButtons,
     IonButton,
     ThemeToggle,
+    IonItem,
+    IonSelect,
+    IonSelectOption,
   ],
   templateUrl: './drill-list.html',
   styleUrl: './drill-list.scss',
@@ -102,17 +108,8 @@ export class DrillList {
     this.searchTerm.set(event.detail.value || '');
   }
 
-  protected toggleTag(tagName: string): void {
-    const current = this.selectedTags();
-    if (current.includes(tagName)) {
-      this.selectedTags.set(current.filter((t) => t !== tagName));
-    } else {
-      this.selectedTags.set([...current, tagName]);
-    }
-  }
-
-  protected isTagSelected(tagName: string): boolean {
-    return this.selectedTags().includes(tagName);
+  protected onTagsChange(event: any): void {
+    this.selectedTags.set(event.detail.value || []);
   }
 
   protected async openImportModal(): Promise<void> {

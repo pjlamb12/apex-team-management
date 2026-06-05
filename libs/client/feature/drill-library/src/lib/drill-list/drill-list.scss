@@ -1,22 +1,4 @@
-.tags-container {
-  overflow: hidden;
-  background: var(--ion-toolbar-background, var(--ion-color-step-50, #fff));
-  padding-left: 16px;
-  padding-right: 16px;
-}
 
-.tags-scroll {
-  display: flex;
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
-  gap: 8px;
-  padding-bottom: 4px; /* Space for the scroll indicator if visible */
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
 
 ion-toolbar {
   --padding-start: 16px;
