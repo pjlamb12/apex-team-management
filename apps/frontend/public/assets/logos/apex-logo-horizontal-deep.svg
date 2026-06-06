@@ -1,0 +1,36 @@
+<svg width="280" height="52" viewBox="0 0 280 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="markGrad" x1="0" y1="44" x2="44" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hex mark -->
+  <g transform="translate(4, 4)">
+    <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" stroke="url(#markGrad)" stroke-width="2" fill="none"/>
+    <polyline points="12,30 22,14 32,30" stroke="url(#markGrad)" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+
+  <!-- Wordmark: APEX -->
+  <text
+    x="66"
+    y="38"
+    font-family="Rajdhani, sans-serif"
+    font-weight="700"
+    font-size="38"
+    letter-spacing="5"
+    fill="#ffffff"
+  >APEX</text>
+
+  <!-- Subtext -->
+  <text
+    x="68"
+    y="50"
+    font-family="'Barlow Condensed', sans-serif"
+    font-weight="600"
+    font-size="9"
+    letter-spacing="3.5"
+    fill="#dbeafe"
+  >TEAM MANAGEMENT</text>
+</svg>

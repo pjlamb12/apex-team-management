@@ -1,0 +1,11 @@
+<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="markGrad" x1="0" y1="44" x2="44" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+  </defs>
+
+  <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" stroke="url(#markGrad)" stroke-width="2" fill="none"/>
+  <polyline points="12,30 22,14 32,30" stroke="url(#markGrad)" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

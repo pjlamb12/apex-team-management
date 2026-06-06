@@ -1,6 +1,12 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Teams</ion-title>
+    <ion-title>
+      <div class="flex items-center gap-2">
+        <img src="assets/logos/apex-icon-deep.svg" class="h-5 dark:hidden block" alt="Apex Logo" />
+        <img src="assets/logos/apex-icon-light.svg" class="h-5 hidden dark:block" alt="Apex Logo" />
+        <span class="font-bold text-lg uppercase tracking-wider text-ap-text">Teams</span>
+      </div>
+    </ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="openJoinModal()" aria-label="Join Team" title="Join Team">
         <ion-icon name="person-add-outline" slot="icon-only" />

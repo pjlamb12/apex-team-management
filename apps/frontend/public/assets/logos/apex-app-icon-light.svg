@@ -1,0 +1,17 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="markGrad" x1="18" y1="62" x2="62" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="80" height="80" rx="18" ry="18" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Hex mark, centered in 80x80 -->
+  <g transform="translate(18, 18)">
+    <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" stroke="url(#markGrad)" stroke-width="2" fill="none"/>
+    <polyline points="12,30 22,14 32,30" stroke="url(#markGrad)" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>
