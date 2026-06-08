@@ -2,8 +2,8 @@ import {
   Component,
   inject,
   signal,
-  computed,
   OnInit,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -21,16 +21,18 @@ import {
   IonItem,
   IonIcon,
   IonButton,
+  IonFab,
+  IonFabButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { pencilOutline } from 'ionicons/icons';
+import { pencilOutline, addOutline } from 'ionicons/icons';
 import {
   PracticeDrillsService,
   PracticeDrill,
   PracticePacerService,
 } from '@apex-team/client/data-access/drill';
 import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
-import { toSignal } from '@angular/core/rxjs-interop';
+
 import { PracticePlanTab } from '../practice-plan-tab/practice-plan-tab';
 import { PracticeExecutionTab } from '../practice-execution-tab/practice-execution-tab';
 
@@ -55,6 +57,8 @@ import { AttendanceList } from '@apex-team/client/ui/attendance';
     IonItem,
     IonIcon,
     IonButton,
+    IonFab,
+    IonFabButton,
     PracticePlanTab,
     PracticeExecutionTab,
     AttendanceList,
@@ -63,6 +67,8 @@ import { AttendanceList } from '@apex-team/client/ui/attendance';
   styleUrl: './practice-console-wrapper.scss',
 })
 export class PracticeConsoleWrapper implements OnInit {
+  @ViewChild(PracticePlanTab) planTab?: PracticePlanTab;
+
   private readonly route = inject(ActivatedRoute);
   private readonly eventsService = inject(EventsService);
   private readonly practiceDrillsService = inject(PracticeDrillsService);
@@ -80,7 +86,7 @@ export class PracticeConsoleWrapper implements OnInit {
   protected plan = this._plan.asReadonly();
 
   constructor() {
-    addIcons({ pencilOutline });
+    addIcons({ pencilOutline, addOutline });
   }
 
   ngOnInit() {
@@ -100,5 +106,9 @@ export class PracticeConsoleWrapper implements OnInit {
 
   protected onSegmentChange(event: any) {
     this.selectedSegment.set(event.detail.value);
+  }
+
+  protected addDrills() {
+    this.planTab?.addDrills();
   }
 }

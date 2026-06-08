@@ -18,8 +18,6 @@ import {
   IonButton,
   IonItemOptions,
   IonItemOption,
-  IonFab,
-  IonFabButton,
   ModalController,
   AlertController,
 } from '@ionic/angular/standalone';
@@ -56,8 +54,6 @@ import { DrillSelectorModal } from '../drill-selector-modal/drill-selector-modal
     IonButton,
     IonItemOptions,
     IonItemOption,
-    IonFab,
-    IonFabButton,
   ],
   templateUrl: './practice-plan-tab.html',
   styleUrl: './practice-plan-tab.scss',
@@ -101,7 +97,7 @@ export class PracticePlanTab {
     });
   }
 
-  protected async addDrills() {
+  public async addDrills() {
     const modal = await this.modalCtrl.create({
       component: DrillSelectorModal,
     });
