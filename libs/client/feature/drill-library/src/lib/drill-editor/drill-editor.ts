@@ -21,7 +21,7 @@ import {
   IonBadge,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { addOutline, trashOutline, saveOutline } from 'ionicons/icons';
+import { addOutline, trashOutline, saveOutline, arrowUpOutline, arrowDownOutline } from 'ionicons/icons';
 import { DrillService, Tag } from '@apex-team/client/data-access/drill';
 import { TagInput } from '@apex-team/client/ui/drill';
 import { firstValueFrom } from 'rxjs';
@@ -79,7 +79,7 @@ export class DrillEditor implements OnInit {
   }
 
   constructor() {
-    addIcons({ addOutline, trashOutline, saveOutline });
+    addIcons({ addOutline, trashOutline, saveOutline, arrowUpOutline, arrowDownOutline });
   }
 
   async ngOnInit(): Promise<void> {
@@ -134,6 +134,18 @@ export class DrillEditor implements OnInit {
 
   protected removeInstruction(index: number): void {
     this.instructions.removeAt(index);
+  }
+
+  protected moveInstruction(index: number, direction: number): void {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= this.instructions.length) {
+      return;
+    }
+
+    const currentGroup = this.instructions.at(index);
+    this.instructions.removeAt(index);
+    this.instructions.insert(targetIndex, currentGroup);
+    this.form.markAsDirty();
   }
 
   protected handleTagsChanged(tags: Tag[]): void {

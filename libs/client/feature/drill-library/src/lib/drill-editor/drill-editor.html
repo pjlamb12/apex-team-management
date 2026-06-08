@@ -5,7 +5,7 @@
     </ion-buttons>
     <ion-title>{{ isEditing() ? 'Edit Drill' : 'New Drill' }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="handleSave()" [disabled]="form.invalid">
+      <ion-button (click)="handleSave()">
         <ion-icon slot="start" name="save-outline"></ion-icon>
         Save
       </ion-button>
@@ -74,15 +74,26 @@
         @for (step of instructions.controls; track $index) {
           <div [formGroupName]="$index" class="step-form-group">
             <div class="step-header">
-              <ion-badge color="primary">{{ $index + 1 }}</ion-badge>
-              <ion-button fill="clear" color="danger" (click)="removeInstruction($index)">
-                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-              </ion-button>
+              <ion-badge color="primary">Step {{ $index + 1 }}</ion-badge>
+              <div class="flex items-center">
+                <ion-button fill="clear" color="medium" [disabled]="$index === 0" (click)="moveInstruction($index, -1)">
+                  <ion-icon slot="icon-only" name="arrow-up-outline"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" color="medium" [disabled]="$index === instructions.length - 1" (click)="moveInstruction($index, 1)">
+                  <ion-icon slot="icon-only" name="arrow-down-outline"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" color="danger" (click)="removeInstruction($index)">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
             </div>
             
             <ion-item>
               <ion-label position="stacked">Step Title</ion-label>
               <ion-input formControlName="title" placeholder="e.g., Setup"></ion-input>
+              @if (step.get('title')?.touched && step.get('title')?.invalid) {
+                <ion-note slot="error" color="danger">Step title is required.</ion-note>
+              }
             </ion-item>
             
             <ion-item lines="none">
@@ -92,6 +103,9 @@
                 placeholder="Describe this step..."
                 [autoGrow]="true"
               ></ion-textarea>
+              @if (step.get('description')?.touched && step.get('description')?.invalid) {
+                <ion-note slot="error" color="danger">Step details are required.</ion-note>
+              }
             </ion-item>
           </div>
         }
