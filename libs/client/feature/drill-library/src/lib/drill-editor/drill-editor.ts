@@ -126,7 +126,7 @@ export class DrillEditor implements OnInit {
 
   protected addInstruction(title = '', description = ''): void {
     const step = this.fb.group({
-      title: [title, [Validators.required]],
+      title: [title],
       description: [description, [Validators.required]],
     });
     this.instructions.push(step);

@@ -89,11 +89,8 @@
             </div>
             
             <ion-item>
-              <ion-label position="stacked">Step Title</ion-label>
+              <ion-label position="stacked">Step Title (Optional)</ion-label>
               <ion-input formControlName="title" placeholder="e.g., Setup"></ion-input>
-              @if (step.get('title')?.touched && step.get('title')?.invalid) {
-                <ion-note slot="error" color="danger">Step title is required.</ion-note>
-              }
             </ion-item>
             
             <ion-item lines="none">
