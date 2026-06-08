@@ -253,7 +253,7 @@
 </ion-content>
 
 @if (selectedSegment() === 'attendance') {
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="mb-4 mr-2">
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="mr-2" style="margin-bottom: calc(72px + var(--ion-safe-area-bottom, 0px));">
     <ion-fab-button color="primary" (click)="openNewCandidateModal()">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
