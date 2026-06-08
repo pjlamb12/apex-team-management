@@ -1,17 +1,33 @@
-<div class="flex flex-wrap items-center gap-2 border border-gray-300 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-900 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
-  @for (tag of selectedTags(); track tag.id || tag.name) {
-    <ion-chip class="m-0 px-3 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 border-none flex items-center">
-      <ion-label class="mr-2">{{ tag.name }}</ion-label>
-      <ion-icon name="close-circle" (click)="removeTag(tag)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 cursor-pointer" />
-    </ion-chip>
+<div class="relative w-full">
+  <div class="flex flex-wrap items-center gap-2 border border-gray-300 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-900 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+    @for (tag of selectedTags(); track tag.id || tag.name) {
+      <ion-chip class="m-0 px-3 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 border-none flex items-center">
+        <ion-label class="mr-2">{{ tag.name }}</ion-label>
+        <ion-icon name="close-circle" (click)="removeTag(tag)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 cursor-pointer" />
+      </ion-chip>
+    }
+    <ion-input
+      #tagInput
+      placeholder="Add tag..."
+      fill="none"
+      class="flex-1 min-w-[120px] h-9 text-sm ap-tag-input"
+      [value]="inputValue()"
+      (ionInput)="inputValue.set($any($event.target).value)"
+      (keydown.enter)="handleAddTag($event)"
+      (ionFocus)="isFocused.set(true)"
+      (ionBlur)="handleBlur()"
+    />
+  </div>
+
+  @if (isFocused() && suggestions().length > 0) {
+    <div class="absolute z-[999] left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg">
+      <ion-list class="p-0 bg-transparent">
+        @for (suggestion of suggestions(); track suggestion.id || suggestion.name) {
+          <ion-item button (click)="selectSuggestion(suggestion)" lines="full" class="ion-no-padding cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700" style="--background: transparent;">
+            <ion-label class="px-4 text-sm">{{ suggestion.name }}</ion-label>
+          </ion-item>
+        }
+      </ion-list>
+    </div>
   }
-  <ion-input
-    #tagInput
-    placeholder="Add tag..."
-    fill="none"
-    class="flex-1 min-w-[120px] h-9 text-sm ap-tag-input"
-    [value]="inputValue()"
-    (ionInput)="inputValue.set($any($event.target).value)"
-    (keydown.enter)="handleAddTag($event)"
-  />
 </div>
