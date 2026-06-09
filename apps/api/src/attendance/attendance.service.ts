@@ -93,8 +93,10 @@ export class AttendanceService {
         filtered = attendance.filter(a => a.event.seasonId === seasonId);
       }
 
-      const totalEvents = filtered.length;
-      const present = filtered.filter(a => a.status === 'present' || a.status === 'tardy').length;
+      // Injuries shouldn't count for or against players, exclude them from calculations
+      const nonInjured = filtered.filter(a => a.status !== 'injured');
+      const totalEvents = nonInjured.length;
+      const present = nonInjured.filter(a => a.status === 'present' || a.status === 'tardy').length;
       
       stats.push({
         playerId: player.id,

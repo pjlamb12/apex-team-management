@@ -99,5 +99,20 @@ describe('AttendanceService', () => {
       expect(stats[0].present).toBe(1);
       expect(stats[0].percentage).toBe(50);
     });
+
+    it('should ignore injured status in calculations', async () => {
+      const players = [{ id: 'p1', firstName: 'John', lastName: 'Doe' }];
+      const attendance = [
+        { id: 'a1', status: 'present', event: { seasonId: 's1' } },
+        { id: 'a2', status: 'injured', event: { seasonId: 's1' } },
+      ];
+      vi.spyOn(playerRepo, 'find').mockResolvedValue(players as any);
+      vi.spyOn(attendanceRepo, 'find').mockResolvedValue(attendance as any);
+
+      const stats = await service.getParticipationStats('t1', 's1');
+      expect(stats[0].totalEvents).toBe(1);
+      expect(stats[0].present).toBe(1);
+      expect(stats[0].percentage).toBe(100);
+    });
   });
 });
