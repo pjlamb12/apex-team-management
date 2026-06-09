@@ -126,6 +126,15 @@ export class TeamAnalytics {
       .slice(0, 5);
   });
 
+  protected teamAverage = computed(() => {
+    const stats = this.participationStats();
+    const activePlayers = stats.filter(s => s.totalEvents > 0);
+    if (activePlayers.length === 0) return 100;
+    
+    const sum = activePlayers.reduce((acc, curr) => acc + curr.percentage, 0);
+    return Math.round(sum / activePlayers.length);
+  });
+
   protected topWorkhorses = computed(() => {
     const pt = this.playingTime();
     return Object.values(pt)
@@ -233,7 +242,8 @@ export class TeamAnalytics {
     return `${Math.floor(seconds / 60)}m`;
   }
 
-  protected getParticipationColor(percentage: number): string {
+  protected getParticipationColor(percentage: number, totalEvents: number): string {
+    if (totalEvents === 0) return 'warning';
     if (percentage >= 90) return 'success';
     if (percentage >= 75) return 'primary';
     if (percentage >= 50) return 'warning';

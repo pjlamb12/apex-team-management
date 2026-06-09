@@ -190,7 +190,7 @@
              <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
                 <ion-card-content class="flex flex-col items-center py-8">
                   <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-2">Team Average</div>
-                  <div class="text-4xl font-black text-ap-text">88%</div>
+                  <div class="text-4xl font-black text-ap-text">{{ teamAverage() }}%</div>
                   <ion-icon name="trending-up-outline" color="success" class="text-xl mt-2"></ion-icon>
                 </ion-card-content>
              </ion-card>
@@ -207,10 +207,10 @@
                           <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-ap-text">{{ p.firstName }}</span>
                             <ion-badge 
-                              [color]="getParticipationColor(p.percentage)" 
+                              [color]="getParticipationColor(p.percentage, p.totalEvents)" 
                               mode="ios" 
                               class="participation-badge"
-                              [style.border-color]="'var(--ion-color-' + getParticipationColor(p.percentage) + ')'">
+                              [style.border-color]="'var(--ion-color-' + getParticipationColor(p.percentage, p.totalEvents) + ')'">
                               {{ p.percentage }}%
                             </ion-badge>
                           </div>
@@ -241,12 +241,12 @@
                           </div>
                         </div>
                         <div class="flex items-center gap-4">
-                           <ion-progress-bar [color]="getParticipationColor(p.percentage)" [value]="p.percentage / 100" class="h-2 rounded-full"></ion-progress-bar>
+                           <ion-progress-bar [color]="getParticipationColor(p.percentage, p.totalEvents)" [value]="p.percentage / 100" class="h-2 rounded-full"></ion-progress-bar>
                            <ion-badge 
-                             [color]="getParticipationColor(p.percentage)" 
+                             [color]="getParticipationColor(p.percentage, p.totalEvents)" 
                              mode="ios" 
                              class="participation-badge min-w-[48px] text-center"
-                             [style.border-color]="'var(--ion-color-' + getParticipationColor(p.percentage) + ')'">
+                             [style.border-color]="'var(--ion-color-' + getParticipationColor(p.percentage, p.totalEvents) + ')'">
                              {{ p.percentage }}%
                            </ion-badge>
                         </div>

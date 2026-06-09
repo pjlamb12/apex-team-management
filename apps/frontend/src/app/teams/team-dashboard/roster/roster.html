@@ -94,7 +94,7 @@
                   <div class="flex items-center gap-1.5 bg-ap-surface-raised px-2 py-0.5 rounded-full border border-ap-border">
                     <div 
                       class="w-2 h-2 rounded-full" 
-                      [class]="'bg-' + getParticipationColor(player.id)"
+                      [style.background-color]="'var(--ion-color-' + getParticipationColor(player.id) + ')'"
                     ></div>
                     <span class="text-[10px] font-black text-ap-text uppercase tracking-widest">{{ getParticipation(player.id) }}% ATT</span>
                   </div>

@@ -167,7 +167,11 @@ export class Roster {
   }
 
   protected getParticipationColor(playerId: string): string {
-    const p = this.getParticipation(playerId);
+    const stats = this.participationStats()[playerId];
+    if (!stats || stats.totalEvents === 0) {
+      return 'warning';
+    }
+    const p = stats.percentage;
     if (p >= 90) return 'success';
     if (p >= 75) return 'primary';
     if (p >= 50) return 'warning';
