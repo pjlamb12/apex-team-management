@@ -71,7 +71,7 @@ import { AttendanceService, AttendanceRecord, PlayersService } from '@apex-team/
                 <span class="text-ap-muted font-normal ml-1">#{{ player.jerseyNumber }}</span>
               </div>
             </ion-label>
-            <ion-select [value]="player.status" aria-label="Status" (ionChange)="updateStatus(player.id, $event.detail.value)" interface="popover">
+            <ion-select [value]="player.status" aria-label="Status" (ionChange)="updateStatus(player.id, $event.detail.value)" interface="popover" placeholder="Select Status">
               <ion-select-option value="present">Present</ion-select-option>
               <ion-select-option value="absent">Absent</ion-select-option>
               <ion-select-option value="tardy">Tardy</ion-select-option>
@@ -117,7 +117,7 @@ export class AttendanceList {
       const record = attendance.find(a => a.playerId === p.id);
       return {
         ...p,
-        status: record?.status || 'absent',
+        status: record?.status || null,
       };
     });
   });

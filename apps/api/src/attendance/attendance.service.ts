@@ -50,7 +50,7 @@ export class AttendanceService {
   }
 
   async batchUpdate(eventId: string, dto: BatchUpdateAttendanceDto): Promise<void> {
-    const event = await this.eventRepo.findOne({ where: { id: eventId } });
+    const event = await this.eventRepo.findOne({ where: { id: eventId }, relations: ['season'] });
     if (!event) throw new NotFoundException(`Event ${eventId} not found`);
 
     let playerIds = dto.playerIds;
@@ -77,27 +77,46 @@ export class AttendanceService {
 
   async getParticipationStats(teamId: string, seasonId?: string, leagueId?: string): Promise<any> {
     const players = await this.playerRepo.find({ where: { teamId } });
+    if (players.length === 0) {
+      return [];
+    }
+
+    const playerIds = players.map(p => p.id);
+    const attendance = await this.attendanceRepo.find({
+      where: { playerId: In(playerIds) },
+      relations: ['event'],
+    });
+
+    // Filter by season/league if provided
+    let filtered = attendance;
+    if (leagueId) {
+      filtered = attendance.filter(a => a.event?.leagueId === leagueId);
+    } else if (seasonId) {
+      filtered = attendance.filter(a => a.event?.seasonId === seasonId);
+    }
+
+    // Determine the unique set of tracked event IDs (those that have at least one attendance record)
+    const trackedEventIds = new Set(filtered.map(a => a.eventId));
+
     const stats = [];
-
     for (const player of players) {
-      const attendance = await this.attendanceRepo.find({
-        where: { playerId: player.id },
-        relations: ['event'],
-      });
+      const playerAttendance = filtered.filter(a => a.playerId === player.id);
+      let totalEvents = 0;
+      let present = 0;
 
-      // Filter by season/league if provided
-      let filtered = attendance;
-      if (leagueId) {
-        filtered = attendance.filter(a => a.event.leagueId === leagueId);
-      } else if (seasonId) {
-        filtered = attendance.filter(a => a.event.seasonId === seasonId);
+      for (const eventId of trackedEventIds) {
+        const record = playerAttendance.find(a => a.eventId === eventId);
+        if (record) {
+          const status = record.status;
+          if (status !== 'injured') {
+            totalEvents++;
+            if (status === 'present' || status === 'tardy') {
+              present++;
+            }
+          }
+        }
       }
 
-      // Injuries shouldn't count for or against players, exclude them from calculations
-      const nonInjured = filtered.filter(a => a.status !== 'injured');
-      const totalEvents = nonInjured.length;
-      const present = nonInjured.filter(a => a.status === 'present' || a.status === 'tardy').length;
-      
       stats.push({
         playerId: player.id,
         firstName: player.firstName,

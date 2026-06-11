@@ -88,8 +88,8 @@ describe('AttendanceService', () => {
     it('should calculate percentages correctly', async () => {
       const players = [{ id: 'p1', firstName: 'John', lastName: 'Doe' }];
       const attendance = [
-        { id: 'a1', status: 'present', event: { seasonId: 's1' } },
-        { id: 'a2', status: 'absent', event: { seasonId: 's1' } },
+        { id: 'a1', eventId: 'e1', playerId: 'p1', status: 'present', event: { seasonId: 's1' } },
+        { id: 'a2', eventId: 'e2', playerId: 'p1', status: 'absent', event: { seasonId: 's1' } },
       ];
       vi.spyOn(playerRepo, 'find').mockResolvedValue(players as any);
       vi.spyOn(attendanceRepo, 'find').mockResolvedValue(attendance as any);
@@ -103,8 +103,8 @@ describe('AttendanceService', () => {
     it('should ignore injured status in calculations', async () => {
       const players = [{ id: 'p1', firstName: 'John', lastName: 'Doe' }];
       const attendance = [
-        { id: 'a1', status: 'present', event: { seasonId: 's1' } },
-        { id: 'a2', status: 'injured', event: { seasonId: 's1' } },
+        { id: 'a1', eventId: 'e1', playerId: 'p1', status: 'present', event: { seasonId: 's1' } },
+        { id: 'a2', eventId: 'e2', playerId: 'p1', status: 'injured', event: { seasonId: 's1' } },
       ];
       vi.spyOn(playerRepo, 'find').mockResolvedValue(players as any);
       vi.spyOn(attendanceRepo, 'find').mockResolvedValue(attendance as any);
