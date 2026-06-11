@@ -104,14 +104,18 @@ html {
 // Shell header offset — child route ion-content is outside the shell component's
 // encapsulation scope, so this must live in global styles to reach it.
 // The value matches Ionic's MD toolbar height (56px).
+// We also add padding-bottom (64px) to ensure no content is obscured by the bottom tab bar.
 app-shell ion-content {
   --padding-top: 56px;
+  --padding-bottom: 64px;
 }
 
-// Game console has its own ion-header so Ionic auto-offsets by the header height.
-// Cancel the shell padding-top so no empty gap appears between the score bar and timer.
-app-console-wrapper ion-content {
+// Game and practice consoles have their own headers and full screen layouts,
+// so we cancel the shell-level top and bottom padding.
+app-console-wrapper ion-content,
+app-practice-console-wrapper ion-content {
   --padding-top: 0;
+  --padding-bottom: 0;
 }
 
 // Dark mode card elevation — subtle accent-tinted shadow makes cards float above the deep base
