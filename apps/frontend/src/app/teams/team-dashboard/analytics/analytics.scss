@@ -2,6 +2,10 @@
   display: block;
 }
 
+ion-content {
+  --padding-bottom: 175px;
+}
+
 ion-card {
   --background: var(--ap-surface);
   border-radius: 12px;
