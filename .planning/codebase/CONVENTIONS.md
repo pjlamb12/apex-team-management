@@ -94,6 +94,34 @@ export const appConfig: ApplicationConfig = {
 
 Uses provider functions rather than NgModule imports.
 
+### Ionic Layout Patterns
+
+To prevent content from being clipped or hidden by the bottom tab bar or other toolbars, follow these conventions:
+
+1. **No Nested `<ion-content>`**:
+   - Never nest an `<ion-content>` or `<ion-router-outlet>` inside another `<ion-content>`.
+   - Parent route components (like `team-dashboard.html`) should **not** wrap `<ion-router-outlet>` in `<ion-content>`. Use a non-scrolling flexbox container (e.g. `<div class="flex-1 flex flex-col min-h-0 relative overflow-hidden bg-ap-bg">`) and let the leaf/child page templates define their own `<ion-content>` scroll areas.
+   - Host elements of parent dashboard pages should use:
+     ```scss
+     :host {
+       display: flex;
+       flex-direction: column;
+       height: 100%;
+     }
+     ```
+
+2. **Bottom Tab Bar Padding**:
+   - The shell navigation uses a bottom tab bar. Content in leaf page scroll areas must have enough bottom padding to scroll fully clear of the tab bar.
+   - A global rule is defined in `styles.scss` for `app-shell ion-content` (`--padding-bottom: 64px;`), which is overridden by child views (e.g. `175px` in `analytics.scss`) where extra clearance is needed for floating widgets or complex layouts.
+   - For full-screen immersive console screens (e.g., game console, practice console), cancel the shell-level bottom and top padding using:
+     ```scss
+     app-console-wrapper ion-content,
+     app-practice-console-wrapper ion-content {
+       --padding-top: 0;
+       --padding-bottom: 0;
+     }
+     ```
+
 ## Naming Conventions
 
 | Element             | Convention            | Example                    |
