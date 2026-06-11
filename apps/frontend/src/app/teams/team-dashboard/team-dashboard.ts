@@ -3,7 +3,6 @@ import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { firstValueFrom, filter } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import {
-  IonContent,
   IonHeader,
   IonToolbar,
   IonTitle,
@@ -43,7 +42,6 @@ interface Team {
   imports: [
     CommonModule,
     RouterLink,
-    IonContent,
     IonHeader,
     IonToolbar,
     IonTitle,
