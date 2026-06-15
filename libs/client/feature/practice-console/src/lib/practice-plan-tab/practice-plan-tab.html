@@ -28,7 +28,7 @@
           <ion-icon name="reorder-three-outline"></ion-icon>
         </ion-reorder>
         <ion-label>
-          <h3>{{ pd.drill?.name }}</h3>
+          <h3>{{ pd.drill?.name || pd.customName }}</h3>
           <p>
             <ion-icon name="time-outline" class="v-align"></ion-icon>
             {{ pd.durationMinutes }} min

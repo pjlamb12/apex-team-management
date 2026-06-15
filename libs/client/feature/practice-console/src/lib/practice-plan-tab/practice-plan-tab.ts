@@ -20,6 +20,7 @@ import {
   IonItemOption,
   ModalController,
   AlertController,
+  ActionSheetController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -30,6 +31,8 @@ import {
   createOutline,
   warningOutline,
   starOutline,
+  libraryOutline,
+  documentTextOutline,
 } from 'ionicons/icons';
 import {
   PracticeDrillsService,
@@ -62,6 +65,7 @@ import { DrillSelectorModal } from '../drill-selector-modal/drill-selector-modal
 export class PracticePlanTab {
   private readonly modalCtrl = inject(ModalController);
   private readonly alertCtrl = inject(AlertController);
+  private readonly actionSheetCtrl = inject(ActionSheetController);
   private readonly practiceDrillsService = inject(PracticeDrillsService);
 
   teamId = input.required<string>();
@@ -94,10 +98,39 @@ export class PracticePlanTab {
       createOutline,
       warningOutline,
       starOutline,
+      libraryOutline,
+      documentTextOutline,
     });
   }
 
   public async addDrills() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Add Drill to Plan',
+      buttons: [
+        {
+          text: 'Select from Library',
+          icon: 'library-outline',
+          handler: () => {
+            this.openLibrarySelector();
+          },
+        },
+        {
+          text: 'Create Custom Drill',
+          icon: 'document-text-outline',
+          handler: () => {
+            this.openCustomDrillPrompt();
+          },
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+      ],
+    });
+    await actionSheet.present();
+  }
+
+  protected async openLibrarySelector() {
     const modal = await this.modalCtrl.create({
       component: DrillSelectorModal,
     });
@@ -107,15 +140,58 @@ export class PracticePlanTab {
 
     if (role === 'confirm' && data) {
       const selectedDrills: Drill[] = data;
-      // Add each drill one by one (or implementation bulk if API supports it, but our service currently does one by one)
       for (const drill of selectedDrills) {
         await this.practiceDrillsService.addDrill(this.teamId(), this.eventId(), {
           drillId: drill.id,
-          durationMinutes: 10, // Default duration
+          durationMinutes: 10,
         }).toPromise();
       }
       this.planChanged.emit();
     }
+  }
+
+  protected async openCustomDrillPrompt() {
+    const alert = await this.alertCtrl.create({
+      header: 'New Custom Drill',
+      inputs: [
+        {
+          name: 'customName',
+          type: 'text',
+          placeholder: 'Drill Name (required)',
+        },
+        {
+          name: 'durationMinutes',
+          type: 'number',
+          placeholder: 'Duration (min)',
+          value: 10,
+          min: 1,
+        },
+        {
+          name: 'notes',
+          type: 'textarea',
+          placeholder: 'Notes / Instructions (optional)',
+        },
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Add to Plan',
+          handler: async (data) => {
+            if (!data.customName?.trim()) {
+              return false;
+            }
+            await this.practiceDrillsService.addDrill(this.teamId(), this.eventId(), {
+              customName: data.customName.trim(),
+              durationMinutes: parseInt(data.durationMinutes, 10) || 10,
+              notes: data.notes || '',
+            }).toPromise();
+            this.planChanged.emit();
+            return true;
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   protected async handleReorder(ev: any) {
@@ -170,9 +246,10 @@ export class PracticePlanTab {
   }
 
   protected async deleteDrill(pd: PracticeDrill) {
+    const drillName = pd.drill?.name || pd.customName || 'Custom Drill';
     const alert = await this.alertCtrl.create({
       header: 'Remove Drill',
-      message: `Are you sure you want to remove "${pd.drill?.name}" from the plan?`,
+      message: `Are you sure you want to remove "${drillName}" from the plan?`,
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {

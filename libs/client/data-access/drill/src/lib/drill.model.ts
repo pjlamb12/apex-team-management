@@ -33,16 +33,18 @@ export interface ImportDrillDto extends CreateDrillDto {}
 export interface PracticeDrill {
   id: string;
   eventId: string;
-  drillId: string;
+  drillId: string | null;
   sequence: number;
   durationMinutes: number;
   teamRating: number | null;
   notes: string | null;
-  drill?: Drill;
+  drill?: Drill | null;
+  customName?: string | null;
 }
 
 export interface AddDrillToPlanDto {
-  drillId: string;
+  drillId?: string;
+  customName?: string;
   durationMinutes: number;
   notes?: string;
 }

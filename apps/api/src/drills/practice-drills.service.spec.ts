@@ -128,6 +128,33 @@ describe('PracticeDrillsService', () => {
       const dto = { drillId: 'drill-1', durationMinutes: 15 };
       await expect(service.addDrillToPlan(mockUser.id, mockEvent.id, dto)).rejects.toThrow(NotFoundException);
     });
+
+    it('should add a custom/one-time drill to plan successfully without drillId', async () => {
+      drillRepo.findOne.mockClear();
+      eventRepo.findOne.mockResolvedValue(mockEvent);
+      practiceDrillRepo.maximum.mockResolvedValue(5);
+      practiceDrillRepo.create.mockReturnValue({ id: 'pd-custom' });
+      practiceDrillRepo.save.mockResolvedValue({ id: 'pd-custom', sequence: 6 });
+      practiceDrillRepo.findOne.mockResolvedValue({ id: 'pd-custom', sequence: 6, customName: 'Warmup Run' });
+
+      const dto = { customName: 'Warmup Run', durationMinutes: 15 };
+      const result = await service.addDrillToPlan(mockUser.id, mockEvent.id, dto);
+
+      expect(result.id).toBe('pd-custom');
+      expect(drillRepo.findOne).not.toHaveBeenCalled();
+      expect(practiceDrillRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        sequence: 6,
+        customName: 'Warmup Run',
+        drillId: null,
+      }));
+    });
+
+    it('should throw BadRequestException if neither drillId nor customName is provided', async () => {
+      eventRepo.findOne.mockResolvedValue(mockEvent);
+
+      const dto = { durationMinutes: 15 };
+      await expect(service.addDrillToPlan(mockUser.id, mockEvent.id, dto as any)).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('update', () => {

@@ -44,12 +44,23 @@ export class PracticeDrillsService {
       throw new BadRequestException('Drills can only be added to practice events');
     }
 
-    const drill = await this.drillRepo.findOne({
-      where: { id: dto.drillId, coachId: userId },
-    });
+    let drillId: string | null = null;
+    let customName: string | null = null;
 
-    if (!drill) {
-      throw new NotFoundException('Drill not found or access denied');
+    if (dto.drillId) {
+      const drill = await this.drillRepo.findOne({
+        where: { id: dto.drillId, coachId: userId },
+      });
+
+      if (!drill) {
+        throw new NotFoundException('Drill not found or access denied');
+      }
+      drillId = dto.drillId;
+    } else {
+      if (!dto.customName?.trim()) {
+        throw new BadRequestException('Either drillId or customName must be provided');
+      }
+      customName = dto.customName.trim();
     }
 
     const maxSequence = await this.practiceDrillRepo.maximum('sequence', {
@@ -58,9 +69,12 @@ export class PracticeDrillsService {
     const sequence = (maxSequence || 0) + 1;
 
     const practiceDrill = this.practiceDrillRepo.create({
-      ...dto,
       eventId,
+      drillId,
+      customName,
       sequence,
+      durationMinutes: dto.durationMinutes,
+      notes: dto.notes,
     });
 
     const saved = await this.practiceDrillRepo.save(practiceDrill);

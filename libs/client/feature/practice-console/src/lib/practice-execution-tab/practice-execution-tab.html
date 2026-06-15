@@ -8,10 +8,10 @@
         Drill {{ pacer.activeDrillIndex() + 1 }}
       </p>
       <h2 class="drill-name text-2xl font-bold mt-2 text-ap-text">
-        {{ drill.drill?.name }}
+        {{ drill.drill?.name || drill.customName }}
       </h2>
       <p class="drill-desc text-ap-muted mt-2 max-w-md mx-auto">
-        {{ drill.drill?.description }}
+        {{ drill.drill?.description || drill.notes }}
       </p>
     </div>
 
@@ -33,7 +33,7 @@
       <div class="up-next-section mt-12 p-4 bg-ap-surface-raised rounded-xl border border-white/5">
         <p class="text-xs uppercase tracking-wider text-ap-muted mb-2">Up Next</p>
         <div class="flex justify-between items-center">
-          <h3 class="text-lg font-semibold text-ap-text">{{ next.drill?.name }}</h3>
+          <h3 class="text-lg font-semibold text-ap-text">{{ next.drill?.name || next.customName }}</h3>
           <span class="text-ap-muted">{{ next.durationMinutes }}m</span>
         </div>
       </div>

@@ -22,12 +22,15 @@ export class PracticeDrillEntity {
   @JoinColumn({ name: 'event_id' })
   event: EventEntity;
 
-  @Column({ name: 'drill_id' })
-  drillId: string;
+  @Column({ name: 'drill_id', nullable: true })
+  drillId: string | null;
 
-  @ManyToOne(() => DrillEntity, { onDelete: 'CASCADE' })
+  @ManyToOne(() => DrillEntity, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'drill_id' })
-  drill: DrillEntity;
+  drill: DrillEntity | null;
+
+  @Column({ name: 'custom_name', nullable: true })
+  customName: string | null;
 
   @Column({ type: 'int' })
   sequence: number;
