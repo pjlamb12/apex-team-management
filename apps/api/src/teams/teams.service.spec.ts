@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TeamsService } from './teams.service';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder, DataSource } from 'typeorm';
 import { TeamEntity } from '../entities/team.entity';
 import { TeamMemberEntity } from '../entities/team-member.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -41,6 +41,15 @@ describe('TeamsService', () => {
         { provide: getRepositoryToken(TeamEntity), useValue: teamRepo },
         { provide: getRepositoryToken(TeamMemberEntity), useValue: memberRepo },
         { provide: TeamsJoinCodeService, useValue: joinCodeService },
+        {
+          provide: DataSource,
+          useValue: {
+            getRepository: vi.fn().mockReturnValue({
+              find: vi.fn().mockResolvedValue([]),
+              delete: vi.fn().mockResolvedValue({}),
+            }),
+          },
+        },
       ],
     }).compile();
 
@@ -139,6 +148,22 @@ describe('TeamsService', () => {
     it('should throw ConflictException if it cannot generate a unique code after retries', async () => {
       teamRepo.findOne.mockResolvedValue({ id: 'other-team' }); // Always find an existing team with the code
       await expect(service.regenerateCode('team-1')).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('remove', () => {
+    it('should find the team and clean up dependencies before removing it', async () => {
+      const mockTeam = { id: 'team-1', coachId: 'user-1' };
+      teamRepo.findOne.mockResolvedValue(mockTeam);
+      teamRepo.remove.mockResolvedValue(mockTeam);
+
+      await service.remove('team-1', 'user-1');
+
+      expect(teamRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'team-1' },
+        relations: ['sport', 'members'],
+      });
+      expect(teamRepo.remove).toHaveBeenCalledWith(expect.objectContaining(mockTeam));
     });
   });
 });

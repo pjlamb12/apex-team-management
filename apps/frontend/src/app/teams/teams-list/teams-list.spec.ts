@@ -28,6 +28,7 @@ describe('TeamsList', () => {
     httpMock = {
       get: vi.fn().mockReturnValue({ pipe: vi.fn() }),
       delete: vi.fn().mockReturnValue({ pipe: vi.fn() }),
+      post: vi.fn().mockReturnValue({ pipe: vi.fn() }),
     };
 
     await TestBed.configureTestingModule({
@@ -48,16 +49,62 @@ describe('TeamsList', () => {
   describe('delete team (TEAM-05)', () => {
     it('should call AlertController.create when delete is triggered', async () => {
       const team = { id: 'team-1', name: 'Thunder FC', sport: { name: 'Soccer' } };
-      await (component as unknown as { confirmDelete: (t: unknown) => Promise<void> }).confirmDelete(team);
+      const mockEvent = {
+        stopPropagation: vi.fn(),
+        preventDefault: vi.fn(),
+      } as unknown as Event;
+      await (component as unknown as { confirmDelete: (e: Event, t: unknown) => Promise<void> }).confirmDelete(mockEvent, team);
       expect(alertCtrlMock.create).toHaveBeenCalled();
+      expect(mockEvent.stopPropagation).toHaveBeenCalled();
+      expect(mockEvent.preventDefault).toHaveBeenCalled();
     });
 
     it('should present an alert with header "Delete Team"', async () => {
       const team = { id: 'team-1', name: 'Thunder FC', sport: { name: 'Soccer' } };
-      await (component as unknown as { confirmDelete: (t: unknown) => Promise<void> }).confirmDelete(team);
+      const mockEvent = {
+        stopPropagation: vi.fn(),
+        preventDefault: vi.fn(),
+      } as unknown as Event;
+      await (component as unknown as { confirmDelete: (e: Event, t: unknown) => Promise<void> }).confirmDelete(mockEvent, team);
       expect(alertCtrlMock.create).toHaveBeenCalledWith(
         expect.objectContaining({ header: 'Delete Team' })
       );
+    });
+  });
+
+  describe('Easter Egg - Generate Demo Team', () => {
+    it('should not trigger alert if tapped fewer than 5 times', async () => {
+      await (component as any).onHeaderTap();
+      await (component as any).onHeaderTap();
+      expect(alertCtrlMock.create).not.toHaveBeenCalled();
+    });
+
+    it('should trigger alert if tapped 5 times within 2 seconds', async () => {
+      vi.useFakeTimers();
+      for (let i = 0; i < 5; i++) {
+        await (component as any).onHeaderTap();
+        vi.advanceTimersByTime(100);
+      }
+      expect(alertCtrlMock.create).toHaveBeenCalledWith(
+        expect.objectContaining({ header: 'Generate Demo Team?' })
+      );
+      vi.useRealTimers();
+    });
+
+    it('should not trigger alert if 5 taps take longer than 2 seconds', async () => {
+      vi.useFakeTimers();
+      await (component as any).onHeaderTap();
+      vi.advanceTimersByTime(600);
+      await (component as any).onHeaderTap();
+      vi.advanceTimersByTime(600);
+      await (component as any).onHeaderTap();
+      vi.advanceTimersByTime(600);
+      await (component as any).onHeaderTap();
+      vi.advanceTimersByTime(600);
+      await (component as any).onHeaderTap();
+      
+      expect(alertCtrlMock.create).not.toHaveBeenCalled();
+      vi.useRealTimers();
     });
   });
 });

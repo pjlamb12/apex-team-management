@@ -71,4 +71,10 @@ export class TeamService {
       this.http.delete<void>(`${this.apiUrl}/teams/${id}`)
     );
   }
+
+  async seedDemoTeam(): Promise<any> {
+    return firstValueFrom(
+      this.http.post<any>(`${this.apiUrl}/teams/seed-demo`, {})
+    );
+  }
 }

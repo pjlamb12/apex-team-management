@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 cursor-pointer" (click)="onHeaderTap()">
         <img src="assets/logos/apex-icon-light.svg" class="h-5 dark:hidden block" alt="Apex Logo" />
         <img src="assets/logos/apex-icon-deep.svg" class="h-5 hidden dark:block" alt="Apex Logo" />
         <span class="font-bold text-lg uppercase tracking-wider text-ap-text">Teams</span>
@@ -75,7 +75,7 @@
                     size="small"
                     fill="clear"
                     color="danger"
-                    (click)="confirmDelete(team); $event.stopPropagation()"
+                    (click)="confirmDelete($event, team)"
                     aria-label="Delete Team"
                   >
                     <ion-icon name="trash-outline" slot="icon-only" />
