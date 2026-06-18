@@ -79,11 +79,13 @@ export class SoccerPitchViewComponent {
       if (!inEntry) return null;
 
       const coords = coordsMap[outPlayer.slotIndex];
+      // Shift right slightly to avoid overlap
+      const shiftedX = coords ? coords.x + 5 : 50;
 
       return {
         ...inEntry.player,
         slotIndex: outPlayer.slotIndex,
-        x: coords?.x ?? 50,
+        x: shiftedX,
         y: coords?.y ?? 50,
         isStaged: true
       } as PositionedPlayer;
@@ -93,11 +95,17 @@ export class SoccerPitchViewComponent {
   protected positionedPlayers = computed(() => {
     const players = this.players() as (Player & { slotIndex?: number })[];
     const coordsMap = this.slotCoordinates();
+    const stagedOut = this.stagedOutIds();
     
     return players.map(player => {
       const slotIndex = player.slotIndex;
-      const coords = slotIndex !== undefined ? coordsMap[slotIndex] : { x: 50, y: 50 };
+      let coords = slotIndex !== undefined ? coordsMap[slotIndex] : { x: 50, y: 50 };
       
+      // If player is staged to go out, shift left slightly to avoid overlap
+      if (slotIndex !== undefined && stagedOut.has(player.id)) {
+        coords = { ...coords, x: coords.x - 5 };
+      }
+
       return {
         ...player,
         x: coords?.x ?? 50,

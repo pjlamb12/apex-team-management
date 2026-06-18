@@ -3,6 +3,8 @@ import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonL
 import { addIcons } from 'ionicons';
 import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline } from 'ionicons/icons';
 import { LiveGameStateService } from '../live-game-state.service';
+import { EventsService } from '@apex-team/client/data-access/team';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-event-log',
@@ -13,6 +15,7 @@ import { LiveGameStateService } from '../live-game-state.service';
 export class EventLogViewComponent {
   protected stateService = inject(LiveGameStateService);
   private toastController = inject(ToastController);
+  private eventsService = inject(EventsService);
 
   protected events = computed(() => {
     // Filter out deleted events and reverse to show newest first
@@ -68,6 +71,21 @@ export class EventLogViewComponent {
       const lastEvent = activeEvents[activeEvents.length - 1];
       this.stateService.undo();
       
+      // If we undid a PERIOD_END, sync the reverted period back to the database
+      if (lastEvent.type === 'PERIOD_END') {
+        const teamId = this.stateService.teamId();
+        const eventId = this.stateService.eventId();
+        if (teamId && eventId) {
+          try {
+            await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
+              currentPeriod: this.stateService.currentPeriod()
+            }));
+          } catch (err) {
+            console.error('Failed to sync reverted period to backend', err);
+          }
+        }
+      }
+
       const toast = await this.toastController.create({
         message: `Undone: ${lastEvent.type.replace('_', ' ')}`,
         duration: 2000,

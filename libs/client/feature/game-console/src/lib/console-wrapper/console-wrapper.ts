@@ -295,16 +295,34 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected async endGame(): Promise<void> {
+    const elapsedMs = this.clockService.elapsedMs();
+    const currentMinute = this.clockService.currentMinute();
+
+    // 1. Log a final PERIOD_END event so all active player stints are closed at the correct timestamp
+    this.stateService.pushEvent({
+      type: 'PERIOD_END',
+      timestamp: Date.now(),
+      minuteOccurred: currentMinute,
+      gameTimeMs: elapsedMs,
+    });
+
     await this.clockService.stop();
     this.stateService.endGame();
 
-    // Sync status to backend
+    // 2. Sync final status, score, and actual elapsed duration to the database
     const teamId = this.teamId();
     const eventId = this.eventId();
     if (teamId && eventId) {
+      const score = this.stateService.score();
+      const actualDuration = elapsedMs > 0 ? Math.ceil(elapsedMs / 60000) : undefined;
+
       await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
-        status: 'completed'
+        status: 'completed',
+        goalsFor: score.team,
+        goalsAgainst: score.opponent,
+        ...(actualDuration ? { durationMinutes: actualDuration } : {})
       }));
+      
       // Navigate to summary
       void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary']);
     }

@@ -29,6 +29,7 @@ import { settingsOutline } from 'ionicons/icons';
 import { EventsService, EventEntity, LineupEntry, SaveLineupDto, PlayersService, PlayerEntity } from '@apex-team/client/data-access/team';
 import { SoccerPitchViewComponent } from '@apex-team/client/feature/game-console';
 import { Player } from '@apex-team/shared/util/models';
+import { AttendanceList } from '@apex-team/client/ui/attendance';
 
 interface LineupSlot {
   slotIndex: number;
@@ -79,6 +80,7 @@ function getPositionFromSlot(slot: number): string {
     IonSegmentButton,
     IonIcon,
     SoccerPitchViewComponent,
+    AttendanceList,
   ],
   templateUrl: './lineup-editor.html',
   styleUrl: './lineup-editor.scss',
@@ -111,7 +113,7 @@ export class LineupEditor implements OnInit {
   protected isLoading = signal(true);
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
-  protected viewMode = signal<'list' | 'pitch'>('list');
+  protected viewMode = signal<'list' | 'pitch' | 'attendance'>('list');
   protected selectedPlayerId = signal<string | null>(null);
 
   protected setViewMode(mode: any): void {

@@ -30,7 +30,15 @@
             {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
           </p>
         }
-        @if (event.type !== 'SUB' && event.type !== 'OPPONENT_GOAL') {
+        @if (event.type === 'GOAL') {
+          <p>
+            {{ getPlayerName(event.scorerId || event.playerId) }}
+          </p>
+        } @else if (event.type === 'ASSIST') {
+          <p>
+            {{ getPlayerName(event.assistorId || event.playerId) }}
+          </p>
+        } @else if (event.type !== 'SUB' && event.type !== 'OPPONENT_GOAL') {
           <p>
             {{ getPlayerName(event.playerId) }}
           </p>

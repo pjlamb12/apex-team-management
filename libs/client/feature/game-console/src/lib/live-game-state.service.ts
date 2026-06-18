@@ -259,6 +259,12 @@ export class LiveGameStateService {
       if (activeEvents.length === 0) return prev;
 
       const lastActive = activeEvents[activeEvents.length - 1];
+
+      // If we are undoing a PERIOD_END, revert the period back
+      if (lastActive.type === 'PERIOD_END') {
+        this._currentPeriod.set(lastActive.period || 1);
+      }
+
       return prev.map((e) =>
         e === lastActive ? { ...e, status: 'deleted', synced: false } : e
       );

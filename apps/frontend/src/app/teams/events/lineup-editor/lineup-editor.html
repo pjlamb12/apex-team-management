@@ -46,6 +46,9 @@
       </div>
 
       <ion-segment [value]="viewMode()" (ionChange)="setViewMode($event.detail.value)" class="mb-4">
+        <ion-segment-button value="attendance">
+          <ion-label>Attendance</ion-label>
+        </ion-segment-button>
         <ion-segment-button value="list">
           <ion-label>List View</ion-label>
         </ion-segment-button>
@@ -54,7 +57,15 @@
         </ion-segment-button>
       </ion-segment>
 
-      @if (viewMode() === 'list') {
+      @if (viewMode() === 'attendance') {
+        <div class="bg-ap-bg rounded-lg border border-white/5 overflow-hidden mb-4">
+          <app-attendance-list 
+            [teamId]="teamId" 
+            [eventId]="eventId"
+            [readOnly]="false"
+          ></app-attendance-list>
+        </div>
+      } @else if (viewMode() === 'list') {
         <ion-list>
           <ion-list-header>
             <ion-label>Starting {{ event()?.playersOnField || 11 }}</ion-label>

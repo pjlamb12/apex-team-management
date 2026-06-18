@@ -1,5 +1,7 @@
 .pitch-container {
   background: radial-gradient(circle, #15803d 0%, #166534 100%);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .player-slot {

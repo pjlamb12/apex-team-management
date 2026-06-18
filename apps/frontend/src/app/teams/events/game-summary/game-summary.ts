@@ -112,9 +112,14 @@ export class GameSummary {
   });
 
   protected score = computed(() => {
-    const g = this.goals();
-    const team = g.filter(e => e.eventType === 'GOAL').length;
-    const opponent = g.filter(e => e.eventType === 'OPPONENT_GOAL').length;
+    const g = this.game();
+    if (g && g.status === 'completed' && g.goalsFor !== null && g.goalsAgainst !== null) {
+      return { team: g.goalsFor, opponent: g.goalsAgainst };
+    }
+
+    const events = this.goals();
+    const team = events.filter(e => e.eventType === 'GOAL').length;
+    const opponent = events.filter(e => e.eventType === 'OPPONENT_GOAL').length;
     return { team, opponent };
   });
 

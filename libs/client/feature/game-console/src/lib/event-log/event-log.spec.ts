@@ -2,6 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { EventLogViewComponent } from './event-log';
 import { LiveGameStateService, LineupEntry } from '../live-game-state.service';
 import { signal, NO_ERRORS_SCHEMA } from '@angular/core';
+import { EventsService } from '@apex-team/client/data-access/team';
+import { RuntimeConfigLoaderService } from 'runtime-config-loader';
+import { of } from 'rxjs';
 
 describe('EventLogViewComponent', () => {
   let component: EventLogViewComponent;
@@ -22,7 +25,11 @@ describe('EventLogViewComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [EventLogViewComponent],
-      providers: [LiveGameStateService],
+      providers: [
+        LiveGameStateService,
+        { provide: EventsService, useValue: { updateEvent: () => of({}) } },
+        { provide: RuntimeConfigLoaderService, useValue: { getConfigObjectKey: () => 'http://localhost' } }
+      ],
     })
       .overrideComponent(EventLogViewComponent, {
         set: { schemas: [NO_ERRORS_SCHEMA] },
