@@ -114,7 +114,7 @@ export class GameSummary {
   protected score = computed(() => {
     const g = this.game();
     if (g && g.status === 'completed' && g.goalsFor !== null && g.goalsAgainst !== null) {
-      return { team: g.goalsFor, opponent: g.goalsAgainst };
+      return { team: g.goalsFor ?? 0, opponent: g.goalsAgainst ?? 0 };
     }
 
     const events = this.goals();

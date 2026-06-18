@@ -262,7 +262,7 @@ export class LiveGameStateService {
 
       // If we are undoing a PERIOD_END, revert the period back
       if (lastActive.type === 'PERIOD_END') {
-        this._currentPeriod.set(lastActive.period || 1);
+        this._currentPeriod.set(lastActive['period'] || 1);
       }
 
       return prev.map((e) =>
