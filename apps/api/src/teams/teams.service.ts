@@ -389,26 +389,48 @@ export class TeamsService {
     const seasonPlayerRepo = this.dataSource.getRepository(SeasonPlayerEntity);
     const leagueRepo = this.dataSource.getRepository(LeagueEntity);
 
-    // 1. Fetch seasons and candidate ids to clear their sub-dependencies.
+    // 1. Fetch seasons, candidates, players, and rubrics to clear their sub-dependencies.
     const seasons = await seasonRepo.find({ where: { teamId: id } });
     const seasonIds = seasons.map(s => s.id);
 
     const candidates = await candidateRepo.find({ where: { teamId: id } });
     const candidateIds = candidates.map(c => c.id);
 
-    // 2. Clear candidate sub-dependencies (attendance & evaluations)
+    const players = await playerRepo.find({ where: { teamId: id } });
+    const playerIds = players.map(p => p.id);
+
+    const rubrics = await scoutingRubricRepo.find({ where: { teamId: id } });
+    const rubricIds = rubrics.map(r => r.id);
+
+    // 2. Clear circular dependency on the team itself (homeLocationId references locations we are deleting)
+    await this.teamRepo.update(id, { homeLocation: null, homeLocationId: null });
+
+    // 3. Clear candidate sub-dependencies (attendance & evaluations)
     if (candidateIds.length > 0) {
       await candidateAttendanceRepo.delete({ candidateId: In(candidateIds) });
       await candidateEvaluationRepo.delete({ candidateId: In(candidateIds) });
     }
 
-    // 3. Clear season sub-dependencies (events, leagues, season_players)
+    // 4. Clear rubric sub-dependencies (evaluations)
+    if (rubricIds.length > 0) {
+      await candidateEvaluationRepo.delete({ rubricId: In(rubricIds) });
+    }
+
+    // 5. Clear player sub-dependencies (season_players doesn't have cascade delete configured)
+    if (playerIds.length > 0) {
+      await seasonPlayerRepo.delete({ playerId: In(playerIds) });
+    }
+
+    // 6. Clear season sub-dependencies (events, leagues, season_players)
     if (seasonIds.length > 0) {
       // Find all events belonging to these seasons
       const events = await eventRepo.find({ where: { seasonId: In(seasonIds) } });
       const eventIds = events.map(e => e.id);
 
       if (eventIds.length > 0) {
+        // Clear self-referential parent event IDs to avoid constraint violations during deletion
+        await eventRepo.update({ id: In(eventIds) }, { parentEventId: null });
+
         // Clear event sub-dependencies
         await attendanceRepo.delete({ eventId: In(eventIds) });
         await practiceDrillRepo.delete({ eventId: In(eventIds) });
@@ -429,14 +451,14 @@ export class TeamsService {
       await seasonRepo.delete({ id: In(seasonIds) });
     }
 
-    // 4. Clear other direct dependencies of the team
+    // 7. Clear other direct dependencies of the team
     await playerRepo.delete({ teamId: id });
     await locationRepo.delete({ teamId: id });
     await candidateRepo.delete({ teamId: id });
     await scoutingRubricRepo.delete({ teamId: id });
     await memberRepo.delete({ teamId: id });
 
-    // 5. Finally, remove the team itself
+    // 8. Finally, remove the team itself
     await this.teamRepo.remove(team);
   }
 

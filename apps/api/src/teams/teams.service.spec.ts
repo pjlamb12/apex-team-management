@@ -22,6 +22,7 @@ describe('TeamsService', () => {
       create: vi.fn(),
       save: vi.fn(),
       remove: vi.fn(),
+      update: vi.fn(),
       createQueryBuilder: vi.fn(),
     };
 
