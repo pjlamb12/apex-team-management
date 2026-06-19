@@ -19,6 +19,7 @@ import {
   IonRange,
   IonSelect,
   IonSelectOption,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline } from 'ionicons/icons';
@@ -79,6 +80,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected eventsService = inject(EventsService);
   protected syncService = inject(EventSyncService);
   private socketService = inject(SocketService);
+  private alertCtrl = inject(AlertController);
 
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
@@ -147,6 +149,13 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         const eventId = this.eventId();
         const teamId = this.teamId();
         const eventData = this.event();
+
+        // If the event is already completed, redirect and do not initialize the console
+        if (eventData?.status === 'completed') {
+          void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
+          return;
+        }
+
         if (eventId && teamId) {
           this.stateService.initialize(eventId, lineup, teamId, eventData?.playersOnField || undefined);
           this.clockService.initialize(eventId);
@@ -218,6 +227,18 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
         this.rotationAlertVisible.set(true);
         this.triggerRotationAlert();
+      }
+    });
+
+    effect(() => {
+      const e = this.event();
+      if (e && e.status === 'completed') {
+        const teamId = this.teamId();
+        const eventId = this.eventId();
+        if (teamId && eventId) {
+          this.clockService.stop();
+          void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
+        }
       }
     });
   }
@@ -295,6 +316,27 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected async endGame(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'End Game?',
+      message: 'Are you sure you want to end this game? Once ended, the game cannot be updated.',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'End Game',
+          role: 'confirm',
+          handler: () => {
+            void this.performEndGame();
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async performEndGame(): Promise<void> {
     const elapsedMs = this.clockService.elapsedMs();
     const currentMinute = this.clockService.currentMinute();
 

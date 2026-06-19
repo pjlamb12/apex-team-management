@@ -187,7 +187,7 @@ export class EventsService {
     let goalEventCount: number | undefined = undefined;
     if (event.type === 'game') {
       goalEventCount = await this.gameEventRepo.count({
-        where: { eventId, eventType: 'goal' },
+        where: { eventId, eventType: 'GOAL' },
       });
     }
 
@@ -205,8 +205,8 @@ export class EventsService {
 
     Object.assign(event, dto);
 
-    // Automatically calculate duration for games if period info is provided
-    if (event.type === 'game' && event.periodCount && event.periodLengthMinutes) {
+    // Automatically calculate duration for games if period info is provided and durationMinutes is not explicitly updated
+    if (event.type === 'game' && event.periodCount && event.periodLengthMinutes && dto.durationMinutes === undefined) {
       event.durationMinutes = event.periodCount * event.periodLengthMinutes;
     }
 

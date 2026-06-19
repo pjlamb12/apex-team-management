@@ -293,7 +293,7 @@ describe('EventsService', () => {
       expect(result.id).toBe('event-1');
       expect(result.goalEventCount).toBe(3);
       expect(gameEventRepo.count).toHaveBeenCalledWith({
-        where: { eventId: 'event-1', eventType: 'goal' },
+        where: { eventId: 'event-1', eventType: 'GOAL' },
       });
     });
 

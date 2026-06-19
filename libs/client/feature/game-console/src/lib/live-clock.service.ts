@@ -33,6 +33,16 @@ export class LiveClockService {
    */
   public initialize(gameId: string): void {
     this.gameId = gameId;
+    
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    
+    this.startTime.set(null);
+    this.accumulatedMs.set(0);
+    this.elapsedMs.set(0);
+
     const stored = localStorage.getItem(`apex_clock_${gameId}`);
     if (stored !== null) {
       const parsed = parseInt(stored, 10);

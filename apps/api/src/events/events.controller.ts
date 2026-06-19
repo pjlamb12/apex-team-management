@@ -18,7 +18,7 @@ import { WeatherService } from './weather.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SaveLineupDto } from './dto/save-lineup.dto';
-import { CreateEventDto as CreateGameEventDto } from './dto/create-event.dto';
+import { CreateGameEventDto } from './dto/create-game-event.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('teams/:teamId/events')

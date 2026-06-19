@@ -29,7 +29,7 @@ export class PlayingTimeService {
     const lineup = await this.lineupRepo.find({ where: { eventId } });
     const gameEvents = await this.gameEventRepo.find({
       where: { eventId },
-      order: { minuteOccurred: 'ASC', createdAt: 'ASC' },
+      order: { createdAt: 'ASC' },
     });
 
     const totalsMs: Record<string, number> = {};

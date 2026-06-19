@@ -57,6 +57,13 @@ export class EventSyncService {
     delete payload.status;
     delete payload.id;
 
+    if (event.type === 'SUB') {
+      payload.inPlayerId = event.playerIdIn;
+      payload.outPlayerId = event.playerIdOut;
+      delete payload.playerIdIn;
+      delete payload.playerIdOut;
+    }
+
     const body = {
       eventType: event.type,
       minuteOccurred: event.minuteOccurred,

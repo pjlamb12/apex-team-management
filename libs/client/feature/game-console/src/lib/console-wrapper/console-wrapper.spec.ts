@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService } from '../live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
+import { AlertController } from '@ionic/angular/standalone';
 import { of } from 'rxjs';
 import { signal, NO_ERRORS_SCHEMA } from '@angular/core';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -74,6 +75,12 @@ describe('ConsoleWrapper', () => {
       getConfigObjectKey: vi.fn().mockReturnValue('http://api.test'),
     };
 
+    const alertControllerMock = {
+      create: vi.fn().mockImplementation(() => Promise.resolve({
+        present: vi.fn().mockImplementation(() => Promise.resolve())
+      }))
+    };
+
     await TestBed.configureTestingModule({
       imports: [ConsoleWrapper],
       providers: [
@@ -81,6 +88,7 @@ describe('ConsoleWrapper', () => {
         { provide: HttpClient, useValue: httpMock },
         { provide: LiveClockService, useValue: clockServiceMock },
         { provide: RuntimeConfigLoaderService, useValue: configMock },
+        { provide: AlertController, useValue: alertControllerMock },
         LiveGameStateService,
       ],
     })

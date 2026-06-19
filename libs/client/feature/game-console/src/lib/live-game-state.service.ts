@@ -130,6 +130,18 @@ export class LiveGameStateService {
     this._initialLineup.set(lineup);
     if (playersOnField) this._playersOnField.set(playersOnField);
 
+    // Reset singleton state to defaults before loading stored values
+    this._events.set([]);
+    this._stagedSubs.set([]);
+    this._lastIntervalTriggered.set(0);
+    this._currentPeriod.set(1);
+    this._status.set('in_progress');
+    this._rotationConfig.set({
+      enabled: false,
+      intervalMinutes: 8,
+      mode: 'PURE',
+    });
+
     const storedEvents = localStorage.getItem(this.getStorageKey());
     if (storedEvents) {
       try {
@@ -311,30 +323,69 @@ export class LiveGameStateService {
 
   public handleRemoteEvent(event: any): void {
     this._events.update((prev) => {
-      // Check if event already exists (either by id or local timestamp matching payload)
-      const existingIndex = prev.findIndex(e => e.id === event.id);
-      
+      // Check if event already exists by id
+      let existingIndex = prev.findIndex(e => e.id === event.id);
+
+      // Map backend fields to frontend format
+      const mappedEvent = {
+        ...event,
+        type: event.eventType || event.type,
+        playerId: event.payload?.playerId || event.payload?.scorerId || event.payload?.assistorId || event.playerId,
+        playerIdIn: event.payload?.inPlayerId || event.playerIdIn,
+        playerIdOut: event.payload?.outPlayerId || event.playerIdOut,
+        playerIdA: event.payload?.playerIdA || event.playerIdA,
+        playerIdB: event.payload?.playerIdB || event.playerIdB,
+        slotIndex: event.payload?.slotIndex !== undefined ? event.payload.slotIndex : event.slotIndex,
+        slotIndexA: event.payload?.slotIndexA !== undefined ? event.payload.slotIndexA : event.slotIndexA,
+        slotIndexB: event.payload?.slotIndexB !== undefined ? event.payload.slotIndexB : event.slotIndexB,
+        position: event.payload?.positionName || event.payload?.position || event.position,
+        synced: true,
+        status: 'active' as const
+      };
+
+      // If not found by id, check if there is an unsynced local event of the same type and approximate gameTimeMs or matching payload data
+      if (existingIndex === -1) {
+        existingIndex = prev.findIndex(e => {
+          if (e.synced) return false;
+          if (e.type !== mappedEvent.type) return false;
+          
+          const timeMatches = (e.gameTimeMs !== undefined && mappedEvent.payload?.gameTimeMs !== undefined)
+            ? Math.abs(e.gameTimeMs - (mappedEvent.payload.gameTimeMs as number)) < 1000
+            : e.minuteOccurred === mappedEvent.minuteOccurred;
+
+          if (!timeMatches) return false;
+
+          // Match by specific payload keys
+          if (e.type === 'GOAL') {
+            return (e['scorerId'] === mappedEvent.playerId) || (e.playerId === mappedEvent.playerId);
+          }
+          if (e.type === 'ASSIST') {
+            return (e['assistorId'] === mappedEvent.playerId) || (e.playerId === mappedEvent.playerId);
+          }
+          if (e.type === 'SUB') {
+            return e.playerIdIn === mappedEvent.playerIdIn && e.playerIdOut === mappedEvent.playerIdOut;
+          }
+          if (e.type === 'POSITION_SWAP') {
+            return e.playerIdA === mappedEvent.playerIdA && e.playerIdB === mappedEvent.playerIdB;
+          }
+          return true;
+        });
+      }
+
       if (existingIndex > -1) {
-        // Update existing event
         const newEvents = [...prev];
         newEvents[existingIndex] = {
           ...newEvents[existingIndex],
-          ...event,
-          type: event.eventType || newEvents[existingIndex].type, // Backend uses eventType
-          synced: true,
-          status: 'active'
+          ...mappedEvent,
+          timestamp: newEvents[existingIndex].timestamp // Keep original local timestamp
         };
         return newEvents;
       } else {
-        // Add as new event
         return [
           ...prev,
           {
-            ...event,
-            type: event.eventType,
-            timestamp: Date.now(), // Local arrival time
-            synced: true,
-            status: 'active'
+            ...mappedEvent,
+            timestamp: Date.now()
           }
         ];
       }

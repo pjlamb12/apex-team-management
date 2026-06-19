@@ -41,7 +41,8 @@ import {
   checkmarkCircleOutline,
   closeCircleOutline,
   alertCircleOutline,
-  bandageOutline
+  bandageOutline,
+  chevronBackOutline
 } from 'ionicons/icons';
 import { AttendanceList } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService } from '@apex-team/client/data-access/team';
@@ -108,7 +109,25 @@ export class GameSummary {
   protected errorMessage = signal<string | null>(null);
 
   protected goals = computed(() => {
-    return this.gameEvents().filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_GOAL');
+    const lineup = this.lineup();
+    return this.gameEvents()
+      .filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_GOAL')
+      .map(e => {
+        if (e.eventType === 'GOAL') {
+          const scorerId = e.payload?.scorerId || e.payload?.playerId || e.playerId;
+          const entry = lineup.find(l => l.playerId === scorerId);
+          if (entry) {
+            return {
+              ...e,
+              payload: {
+                ...e.payload,
+                player: entry.player
+              }
+            };
+          }
+        }
+        return e;
+      });
   });
 
   protected score = computed(() => {
@@ -153,7 +172,8 @@ export class GameSummary {
       checkmarkCircleOutline,
       closeCircleOutline,
       alertCircleOutline,
-      bandageOutline
+      bandageOutline,
+      chevronBackOutline
     });
 
     effect(() => {

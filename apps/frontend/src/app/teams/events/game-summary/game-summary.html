@@ -1,7 +1,9 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button [defaultHref]="'/teams/' + teamId + '/schedule'"></ion-back-button>
+      <ion-button [routerLink]="['/teams', teamId, 'schedule']" routerDirection="back">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
     </ion-buttons>
     <ion-title>Game Summary</ion-title>
     <ion-buttons slot="end">

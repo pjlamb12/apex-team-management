@@ -62,8 +62,8 @@ describe('EventSyncService', () => {
         eventType: 'SUB',
         minuteOccurred: 10,
         payload: {
-          playerIdIn: 'p2',
-          playerIdOut: 'p1',
+          inPlayerId: 'p2',
+          outPlayerId: 'p1',
           slotIndex: 0,
           period: 1
         }
