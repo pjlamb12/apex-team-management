@@ -1,7 +1,7 @@
 import { Component, inject, computed } from '@angular/core';
 import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline } from 'ionicons/icons';
+import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline } from 'ionicons/icons';
 import { LiveGameStateService } from '../live-game-state.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { firstValueFrom } from 'rxjs';
@@ -31,7 +31,8 @@ export class EventLogViewComponent {
       starOutline, 
       cardOutline, 
       swapHorizontalOutline,
-      helpOutline
+      helpOutline,
+      shieldOutline
     });
   }
 
@@ -43,6 +44,9 @@ export class EventLogViewComponent {
       case 'YELLOW_CARD':
       case 'RED_CARD': return 'card-outline';
       case 'SUB': return 'swap-horizontal-outline';
+      case 'BLOCKED_SHOT':
+      case 'BLOCKED_PENALTY': return 'shield-outline';
+      case 'SHOOTOUT_KICK': return 'football-outline';
       default: return 'help-outline';
     }
   }
@@ -54,15 +58,18 @@ export class EventLogViewComponent {
       case 'YELLOW_CARD': return 'warning';
       case 'RED_CARD': return 'danger';
       case 'SUB': return 'tertiary';
+      case 'BLOCKED_SHOT': return 'primary';
+      case 'BLOCKED_PENALTY': return 'success';
+      case 'SHOOTOUT_KICK': return 'medium';
       default: return 'medium';
     }
   }
 
   protected getPlayerName(playerId?: string): string {
-    if (!playerId) return 'Unknown';
+    if (!playerId) return '';
     const lineup = this.stateService.initialLineup();
     const entry = lineup.find(e => e.playerId === playerId);
-    return entry ? `${entry.player.firstName} ${entry.player.lastName}` : 'Unknown Player';
+    return entry ? `${entry.player.firstName} ${entry.player.lastName}` : '';
   }
 
   protected async undo(): Promise<void> {

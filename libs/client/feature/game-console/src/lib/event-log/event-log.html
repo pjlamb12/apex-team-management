@@ -38,6 +38,15 @@
           <p>
             {{ getPlayerName(event['assistorId'] || event.playerId) }}
           </p>
+        } @else if (event.type === 'SHOOTOUT_KICK') {
+          <p>
+            @if ((event['team'] || event['payload']?.team) === 'team') {
+              Shooter: {{ getPlayerName(event.playerId || event['playerId'] || event['payload']?.playerId) }}
+            } @else {
+              Keeper: {{ getPlayerName(event['goalkeeperId'] || event['payload']?.goalkeeperId) }}
+            }
+            ({{ event['outcome'] || event['payload']?.outcome }})
+          </p>
         } @else if (event.type !== 'SUB' && event.type !== 'OPPONENT_GOAL') {
           <p>
             {{ getPlayerName(event.playerId) }}

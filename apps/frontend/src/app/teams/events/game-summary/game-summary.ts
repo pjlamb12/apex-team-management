@@ -155,9 +155,9 @@ export class GameSummary {
   });
 
   protected getPlayerName(playerId: string | undefined): string {
-    if (!playerId) return 'Unknown';
+    if (!playerId) return '';
     const entry = this.lineup().find(l => l.playerId === playerId);
-    return entry ? `${entry.player.firstName} ${entry.player.lastName}` : 'Unknown';
+    return entry ? `${entry.player.firstName} ${entry.player.lastName}` : '';
   }
 
   protected openShootoutModal(): void {
