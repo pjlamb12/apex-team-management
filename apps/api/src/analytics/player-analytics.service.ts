@@ -15,6 +15,8 @@ export interface PlayerHistoryEntry {
   status: 'present' | 'absent' | 'tardy' | 'injured' | 'unknown';
   goals: number;
   assists: number;
+  blockedShots: number;
+  blockedPenaltyKicks: number;
   playingTimeSeconds: number;
 }
 
@@ -29,6 +31,8 @@ export interface PlayerProfileAnalytics {
   totalGamesPlayed: number;
   totalGoals: number;
   totalAssists: number;
+  totalBlockedShots: number;
+  totalBlockedPenaltyKicks: number;
   totalMinutes: number;
   positionDistribution: Record<string, number>;
   history: PlayerHistoryEntry[];
@@ -81,6 +85,8 @@ export class PlayerAnalyticsService {
         totalGamesPlayed: 0,
         totalGoals: 0,
         totalAssists: 0,
+        totalBlockedShots: 0,
+        totalBlockedPenaltyKicks: 0,
         totalMinutes: 0,
         positionDistribution: {},
         history: []
@@ -98,6 +104,8 @@ export class PlayerAnalyticsService {
     const history: PlayerHistoryEntry[] = [];
     let totalGoals = 0;
     let totalAssists = 0;
+    let totalBlockedShots = 0;
+    let totalBlockedPenaltyKicks = 0;
     let totalSeconds = 0;
     let gamesPlayed = 0;
     const positionDistribution: Record<string, number> = {};
@@ -108,6 +116,8 @@ export class PlayerAnalyticsService {
       
       let eventGoals = 0;
       let eventAssists = 0;
+      let eventBlockedShots = 0;
+      let eventBlockedPenaltyKicks = 0;
       let playingTime = 0;
 
       if (event.type === 'game') {
@@ -120,6 +130,14 @@ export class PlayerAnalyticsService {
              if (payload.assistorId === playerId) eventAssists++;
           } else if (ge.eventType === 'ASSIST') {
              if (payload.assistorId === playerId || payload.playerId === playerId) eventAssists++;
+          } else if (ge.eventType === 'BLOCKED_SHOT') {
+             if (payload.playerId === playerId) eventBlockedShots++;
+          } else if (ge.eventType === 'BLOCKED_PENALTY') {
+             if (payload.playerId === playerId) eventBlockedPenaltyKicks++;
+          } else if (ge.eventType === 'SHOOTOUT_KICK') {
+             if (payload.team === 'opponent' && payload.outcome === 'save' && payload.goalkeeperId === playerId) {
+               eventBlockedPenaltyKicks++;
+             }
           }
         });
 
@@ -142,6 +160,8 @@ export class PlayerAnalyticsService {
 
       totalGoals += eventGoals;
       totalAssists += eventAssists;
+      totalBlockedShots += eventBlockedShots;
+      totalBlockedPenaltyKicks += eventBlockedPenaltyKicks;
       totalSeconds += playingTime;
 
       history.push({
@@ -152,6 +172,8 @@ export class PlayerAnalyticsService {
         status: attRecord?.status || 'unknown',
         goals: eventGoals,
         assists: eventAssists,
+        blockedShots: eventBlockedShots,
+        blockedPenaltyKicks: eventBlockedPenaltyKicks,
         playingTimeSeconds: playingTime
       });
     }
@@ -167,6 +189,8 @@ export class PlayerAnalyticsService {
       totalGamesPlayed: gamesPlayed,
       totalGoals,
       totalAssists,
+      totalBlockedShots,
+      totalBlockedPenaltyKicks,
       totalMinutes: Math.floor(totalSeconds / 60),
       positionDistribution,
       history

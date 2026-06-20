@@ -154,6 +154,8 @@
                   <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">GP</th>
                   <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-blue-500">G</th>
                   <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-amber-500">A</th>
+                  <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">BS</th>
+                  <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">BPK</th>
                   <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">YC</th>
                   <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">RC</th>
                 </tr>
@@ -161,10 +163,27 @@
               <tbody class="divide-y divide-ap-border">
                 @for (m of performanceMetrics(); track m.playerId) {
                   <tr class="hover:bg-ap-surface-raised transition-colors">
-                    <td class="px-4 py-3 font-bold text-ap-text player-cell">{{ m.firstName }} {{ m.lastName }}</td>
+                    <td class="px-4 py-3 font-bold text-ap-text player-cell">
+                      {{ m.firstName }} {{ m.lastName }}
+                      <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition || 'No Position' }}</span>
+                    </td>
                     <td class="px-4 py-3 text-center text-ap-muted">{{ m.gamesPlayed }}</td>
                     <td class="px-4 py-3 text-center font-black text-blue-500">{{ m.goals }}</td>
                     <td class="px-4 py-3 text-center font-black text-amber-500">{{ m.assists }}</td>
+                    <td class="px-4 py-3 text-center font-black text-emerald-500">
+                      @if (m.preferredPosition === 'Goalkeeper') {
+                        {{ m.blockedShots }}
+                      } @else {
+                        <span class="opacity-10 font-normal">-</span>
+                      }
+                    </td>
+                    <td class="px-4 py-3 text-center font-black text-emerald-500">
+                      @if (m.preferredPosition === 'Goalkeeper') {
+                        {{ m.blockedPenaltyKicks }}
+                      } @else {
+                        <span class="opacity-10 font-normal">-</span>
+                      }
+                    </td>
                     <td class="px-4 py-3 text-center">
                       @if (m.yellowCards > 0) {
                         <span class="px-2 py-0.5 bg-yellow-400 text-black text-[10px] font-black rounded">{{ m.yellowCards }}</span>

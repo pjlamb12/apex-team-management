@@ -24,7 +24,12 @@ import {
   IonSegmentButton,
   IonSelect,
   IonSelectOption,
+  IonModal,
+  IonGrid,
+  IonRow,
+  IonCol,
 } from '@ionic/angular/standalone';
+import { LiveGameStateService, ShootoutScorecardComponent, EventSyncService } from '@apex-team/client/feature/game-console';
 import { addIcons } from 'ionicons';
 import { 
   trophyOutline, 
@@ -75,6 +80,11 @@ import { EventsService, EventEntity, AttendanceService } from '@apex-team/client
     IonSelect,
     IonSelectOption,
     AttendanceList,
+    IonModal,
+    ShootoutScorecardComponent,
+    IonGrid,
+    IonRow,
+    IonCol,
   ],
   templateUrl: './game-summary.html',
   styleUrl: './game-summary.scss',
@@ -107,6 +117,72 @@ export class GameSummary {
   protected activeSegment = signal<'highlights' | 'attendance' | 'playtime'>('highlights');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
+
+  protected stateService = inject(LiveGameStateService);
+  protected syncService = inject(EventSyncService);
+  protected isShootoutModalOpen = signal(false);
+
+  protected hasShootout = computed(() => {
+    return this.gameEvents().some(e => e.eventType === 'SHOOTOUT_KICK');
+  });
+
+  protected shootoutScore = computed(() => {
+    const events = this.gameEvents().filter(e => e.eventType === 'SHOOTOUT_KICK');
+    const team = events.filter(e => e.payload?.team === 'team' && e.payload?.outcome === 'goal').length;
+    const opponent = events.filter(e => e.payload?.team === 'opponent' && e.payload?.outcome === 'goal').length;
+    return { team, opponent };
+  });
+
+  protected shootoutRounds = computed(() => {
+    const events = this.gameEvents().filter(e => e.eventType === 'SHOOTOUT_KICK');
+    const roundsMap = new Map<number, { round: number; teamKick: any; opponentKick: any }>();
+
+    events.forEach(e => {
+      const payload = e.payload || {};
+      const r = (payload.round as number) || 1;
+      if (!roundsMap.has(r)) {
+        roundsMap.set(r, { round: r, teamKick: null, opponentKick: null });
+      }
+      const roundObj = roundsMap.get(r)!;
+      if (payload.team === 'team') {
+        roundObj.teamKick = e;
+      } else {
+        roundObj.opponentKick = e;
+      }
+    });
+
+    return Array.from(roundsMap.values()).sort((a, b) => a.round - b.round);
+  });
+
+  protected getPlayerName(playerId: string | undefined): string {
+    if (!playerId) return 'Unknown';
+    const entry = this.lineup().find(l => l.playerId === playerId);
+    return entry ? `${entry.player.firstName} ${entry.player.lastName}` : 'Unknown';
+  }
+
+  protected openShootoutModal(): void {
+    const gameVal = this.game();
+    if (gameVal) {
+      const mappedEvents = this.gameEvents().map(be => ({
+        id: be.id,
+        type: be.eventType,
+        minuteOccurred: be.minuteOccurred,
+        timestamp: Date.now() + Math.random(),
+        synced: true,
+        status: 'active' as const,
+        ...be.payload
+      }));
+      
+      this.stateService.initialize(this.eventId, this.lineup(), this.teamId, gameVal.playersOnField || undefined);
+      this.stateService.setEvents(mappedEvents);
+      this.isShootoutModalOpen.set(true);
+    }
+  }
+
+  protected async onShootoutModalClose(): Promise<void> {
+    this.isShootoutModalOpen.set(false);
+    await this.loadData(this.teamId, this.eventId);
+  }
 
   protected goals = computed(() => {
     const lineup = this.lineup();

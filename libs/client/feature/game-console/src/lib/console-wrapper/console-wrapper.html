@@ -127,6 +127,13 @@
           Next Period
         </ion-button>
 
+        @if (!isShootoutActive()) {
+          <ion-button color="secondary" fill="solid" (click)="startShootout()">
+            <ion-icon name="football-outline" slot="start"></ion-icon>
+            Shootout
+          </ion-button>
+        }
+
         <ion-button color="danger" fill="solid" (click)="endGame()">
           <ion-icon name="flag-outline" slot="start"></ion-icon>
           End Game
@@ -135,41 +142,49 @@
     </div>
 
     <!-- Main Game Area: pitch left, bench + sub-queue right on desktop; stacked on mobile -->
-    <div class="flex flex-col sm:flex-row">
-      <!-- Pitch View -->
-      <div class="sm:flex-[2] flex min-h-[370px] sm:min-h-[650px]">
-        <app-soccer-pitch-view
-          class="w-full"
-          [players]="stateService.activePlayers()"
-          [initialLineup]="stateService.initialLineup()"
-          [stagedSubs]="stateService.stagedSubs()"
-          [playersOnField]="stateService.playersOnField()"
-          [selectedPlayerId]="selectedPlayerId()"
-          (playerSelected)="handlePlayerSelection($event)"
-          (emptySlotSelected)="handleEmptySlotSelection($event)"
-          (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
-        </app-soccer-pitch-view>
+    @if (isShootoutActive()) {
+      <div class="w-full p-4 bg-ap-bg" style="min-height: 600px;">
+        <app-shootout-scorecard
+          (close)="isShootoutActive.set(false)"
+        ></app-shootout-scorecard>
       </div>
-
-      <!-- Right Column: Bench + Sub-Queue -->
-      <div class="sm:flex-1 flex flex-col border-t sm:border-t-0 sm:border-l border-ap-border bg-ap-surface-raised">
-        <app-bench-view
-          [players]="stateService.benchPlayers()"
-          [stagedInIds]="stagedInIds()"
-          [selectedPlayerId]="selectedPlayerId()"
-          (playerSelected)="handlePlayerSelection($event)">
-        </app-bench-view>
-        <div class="border-t border-ap-border flex-1">
-          <app-sub-queue
-            [stagedSubs]="stateService.stagedSubs()"
+    } @else {
+      <div class="flex flex-col sm:flex-row">
+        <!-- Pitch View -->
+        <div class="sm:flex-[2] flex min-h-[370px] sm:min-h-[650px]">
+          <app-soccer-pitch-view
+            class="w-full"
+            [players]="stateService.activePlayers()"
             [initialLineup]="stateService.initialLineup()"
-            (remove)="handleUnstageSub($event)"
-            (clear)="handleClearSubs()"
-            (apply)="handleApplySubs()">
-          </app-sub-queue>
+            [stagedSubs]="stateService.stagedSubs()"
+            [playersOnField]="stateService.playersOnField()"
+            [selectedPlayerId]="selectedPlayerId()"
+            (playerSelected)="handlePlayerSelection($event)"
+            (emptySlotSelected)="handleEmptySlotSelection($event)"
+            (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
+          </app-soccer-pitch-view>
+        </div>
+
+        <!-- Right Column: Bench + Sub-Queue -->
+        <div class="sm:flex-1 flex flex-col border-t sm:border-t-0 sm:border-l border-ap-border bg-ap-surface-raised">
+          <app-bench-view
+            [players]="stateService.benchPlayers()"
+            [stagedInIds]="stagedInIds()"
+            [selectedPlayerId]="selectedPlayerId()"
+            (playerSelected)="handlePlayerSelection($event)">
+          </app-bench-view>
+          <div class="border-t border-ap-border flex-1">
+            <app-sub-queue
+              [stagedSubs]="stateService.stagedSubs()"
+              [initialLineup]="stateService.initialLineup()"
+              (remove)="handleUnstageSub($event)"
+              (clear)="handleClearSubs()"
+              (apply)="handleApplySubs()">
+            </app-sub-queue>
+          </div>
         </div>
       </div>
-    </div>
+    }
 
     <!-- Event Log: full width at bottom -->
     <div class="border-t border-ap-border">

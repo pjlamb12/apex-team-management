@@ -1,8 +1,8 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonList, IonItem, IonLabel, IonIcon, IonListHeader } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { footballOutline, starOutline, cardOutline } from 'ionicons/icons';
+import { footballOutline, starOutline, cardOutline, shieldOutline, shieldHalfOutline } from 'ionicons/icons';
 import { Player } from '@apex-team/shared/util/models';
 
 @Component({
@@ -20,8 +20,13 @@ export class PlayerActionMenuComponent {
   player = input.required<Player>();
   actionSelected = output<{ type: string; playerId: string }>();
 
+  isGoalkeeper = computed(() => {
+    const p = this.player() as any;
+    return p.preferredPosition === 'Goalkeeper' || p.slotIndex === 0;
+  });
+
   constructor() {
-    addIcons({ footballOutline, starOutline, cardOutline });
+    addIcons({ footballOutline, starOutline, cardOutline, shieldOutline, shieldHalfOutline });
   }
 
   protected selectAction(type: string) {

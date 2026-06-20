@@ -6,6 +6,18 @@
     </ion-label>
   </ion-list-header>
   
+  @if (isGoalkeeper()) {
+    <ion-item button (click)="selectAction('BLOCKED_SHOT')">
+      <ion-icon slot="start" name="shield-half-outline" color="primary"></ion-icon>
+      <ion-label>Block Shot</ion-label>
+    </ion-item>
+    
+    <ion-item button (click)="selectAction('BLOCKED_PENALTY')">
+      <ion-icon slot="start" name="shield-outline" color="primary"></ion-icon>
+      <ion-label>Block Penalty Kick</ion-label>
+    </ion-item>
+  }
+
   <ion-item button (click)="selectAction('GOAL')">
     <ion-icon slot="start" name="football-outline" color="dark"></ion-icon>
     <ion-label>Goal</ion-label>

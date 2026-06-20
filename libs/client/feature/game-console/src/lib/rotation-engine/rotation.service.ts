@@ -106,10 +106,11 @@ export class RotationService {
     const lastSubOutTimeSec: Record<string, number> = {};
     
     events.forEach(e => {
-      if (e.type === 'SUB' && e.playerIdOut) {
-        lastSubOutTimeSec[e.playerIdOut] = (e.gameTimeMs || 0) / 1000;
-      }
-    });
+       const outId = e.playerIdOut || e['outPlayerId'];
+       if (e.type === 'SUB' && outId) {
+         lastSubOutTimeSec[outId] = (e.gameTimeMs || 0) / 1000;
+       }
+     });
 
     const constrainedBench = bench.filter(p => {
       const lastOut = lastSubOutTimeSec[p.id];

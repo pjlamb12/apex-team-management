@@ -49,7 +49,13 @@ export class EventSyncService {
     const tempId = this.getEventTempId(event, index);
     this.syncingIds.add(tempId);
 
-    const payload: any = { ...event };
+    // If event has a nested payload object (like SHOOTOUT_KICK), flatten it into the parent payload first
+    let payload: any = { ...event };
+    if (event['payload']) {
+      payload = { ...event['payload'], ...payload };
+      delete payload.payload;
+    }
+
     delete payload.type;
     delete payload.timestamp;
     delete payload.minuteOccurred;
@@ -58,8 +64,8 @@ export class EventSyncService {
     delete payload.id;
 
     if (event.type === 'SUB') {
-      payload.inPlayerId = event.playerIdIn;
-      payload.outPlayerId = event.playerIdOut;
+      payload.inPlayerId = event.playerIdIn || event['inPlayerId'];
+      payload.outPlayerId = event.playerIdOut || event['outPlayerId'];
       delete payload.playerIdIn;
       delete payload.playerIdOut;
     }

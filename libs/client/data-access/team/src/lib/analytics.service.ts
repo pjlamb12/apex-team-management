@@ -7,11 +7,14 @@ export interface PlayerPerformanceMetrics {
   playerId: string;
   firstName: string;
   lastName: string;
+  preferredPosition: string | null;
   goals: number;
   assists: number;
   yellowCards: number;
   redCards: number;
   gamesPlayed: number;
+  blockedShots: number;
+  blockedPenaltyKicks: number;
 }
 
 export interface PlayerPlaytime {
@@ -37,6 +40,8 @@ export interface PlayerHistoryEntry {
   status: 'present' | 'absent' | 'tardy' | 'injured' | 'unknown';
   goals: number;
   assists: number;
+  blockedShots: number;
+  blockedPenaltyKicks: number;
   playingTimeSeconds: number;
 }
 
@@ -51,6 +56,8 @@ export interface PlayerProfileAnalytics {
   totalGamesPlayed: number;
   totalGoals: number;
   totalAssists: number;
+  totalBlockedShots: number;
+  totalBlockedPenaltyKicks: number;
   totalMinutes: number;
   positionDistribution: Record<string, number>;
   history: PlayerHistoryEntry[];

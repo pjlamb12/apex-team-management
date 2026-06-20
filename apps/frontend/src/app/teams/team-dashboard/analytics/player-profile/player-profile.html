@@ -23,6 +23,20 @@
     } @else if (profile(); as p) {
       <!-- Summary Grid -->
       <div class="grid grid-cols-2 gap-4">
+        @if (p.player.preferredPosition === 'Goalkeeper') {
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocked Shots</div>
+              <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalBlockedShots || 0 }}</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocked PKs</div>
+              <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalBlockedPenaltyKicks || 0 }}</div>
+            </ion-card-content>
+          </ion-card>
+        }
         <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
           <ion-card-content class="flex flex-col items-center py-6">
             <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Goals</div>
@@ -107,6 +121,12 @@
                             }
                             @if (h.assists > 0) {
                               <ion-badge color="warning" mode="ios" class="text-[8px] px-1">{{ h.assists }} A</ion-badge>
+                            }
+                            @if (h.blockedShots > 0) {
+                              <ion-badge color="success" mode="ios" class="text-[8px] px-1">{{ h.blockedShots }} BS</ion-badge>
+                            }
+                            @if (h.blockedPenaltyKicks > 0) {
+                              <ion-badge color="success" mode="ios" class="text-[8px] px-1">{{ h.blockedPenaltyKicks }} BPK</ion-badge>
                             }
                             <span class="text-xs font-black text-ap-text">{{ formatMinutes(h.playingTimeSeconds) }}</span>
                          </div>

@@ -1,0 +1,214 @@
+<ion-card class="m-0 border border-ap-border shadow-none bg-ap-bg overflow-hidden h-full flex flex-col">
+  <ion-card-header class="px-6 pt-6 pb-4 bg-gradient-to-r from-blue-900 to-blue-800 text-white shrink-0">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <ion-button fill="clear" color="light" class="ion-no-margin -ml-3" (click)="close.emit()">
+          <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+        </ion-button>
+        <div>
+          <ion-card-title class="text-white font-black text-xl tracking-wide uppercase">Penalty Shootout</ion-card-title>
+          <div class="text-[10px] uppercase tracking-wider text-blue-300 font-bold">Live scorecard</div>
+        </div>
+      </div>
+      
+      <!-- Shootout Score Display -->
+      <div class="flex items-center gap-4 bg-black/35 px-4 py-2 rounded-xl border border-white/10 shrink-0">
+        <div class="text-center">
+          <div class="text-[8px] uppercase tracking-wider text-blue-200 font-bold">APEX</div>
+          <div class="text-2xl font-black tabular-nums">{{ score().team }}</div>
+        </div>
+        <div class="text-xl font-black text-white/40 shrink-0">-</div>
+        <div class="text-center">
+          <div class="text-[8px] uppercase tracking-wider text-blue-200 font-bold">OPP</div>
+          <div class="text-2xl font-black tabular-nums">{{ score().opponent }}</div>
+        </div>
+      </div>
+    </div>
+  </ion-card-header>
+
+  <ion-card-content class="p-0 overflow-y-auto flex-1 bg-ap-bg">
+    <ion-grid class="ion-no-padding">
+      <!-- Grid Header -->
+      <ion-row class="bg-ap-surface-raised border-b border-ap-border font-bold text-xs text-ap-muted uppercase tracking-wider py-3 px-4">
+        <ion-col size="1" class="flex items-center justify-center font-black">Rnd</ion-col>
+        <ion-col size="5.5" class="px-2">Apex Team Kick</ion-col>
+        <ion-col size="5.5" class="px-2">Opponent Kick</ion-col>
+      </ion-row>
+
+      <!-- Rounds List -->
+      @for (rnd of rounds(); track rnd.round) {
+        <ion-row class="border-b border-ap-border py-4 px-4 items-center bg-ap-surface hover:bg-ap-surface-raised transition-colors">
+          <!-- Round Number -->
+          <ion-col size="1" class="flex items-center justify-center font-mono font-black text-blue-500 text-lg border-r border-ap-border h-full">
+            {{ rnd.round }}
+          </ion-col>
+
+          <!-- Team Kick -->
+          <ion-col size="5.5" class="px-2 flex flex-col gap-2">
+            @if (rnd.teamKick; as kick) {
+              <!-- Logged Kick -->
+              <div class="flex items-center justify-between bg-ap-surface-raised border border-ap-border rounded-xl p-3">
+                <div class="flex items-center gap-3">
+                  @if (kick['payload']?.outcome === 'goal') {
+                    <ion-badge color="success" class="flex items-center justify-center w-8 h-8 rounded-full p-0 shrink-0 shadow-sm">
+                      <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
+                    </ion-badge>
+                  } @else if (kick['payload']?.outcome === 'save') {
+                    <ion-badge color="warning" class="flex items-center justify-center w-8 h-8 rounded-full p-0 shrink-0 shadow-sm">
+                      <ion-icon name="shield-outline" class="text-base"></ion-icon>
+                    </ion-badge>
+                  } @else {
+                    <ion-badge color="danger" class="flex items-center justify-center w-8 h-8 rounded-full p-0 shrink-0 shadow-sm">
+                      <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+                    </ion-badge>
+                  }
+                  <div class="text-sm font-bold text-ap-text truncate max-w-[140px] sm:max-w-none">
+                    {{ getPlayerName(kick['payload']?.playerId) }}
+                  </div>
+                </div>
+                <ion-button fill="clear" color="danger" class="ion-no-margin shrink-0" (click)="deleteKick(kick)">
+                  <ion-icon slot="icon-only" name="trash-outline" class="text-sm"></ion-icon>
+                </ion-button>
+              </div>
+            } @else {
+              <!-- Log Kick Input -->
+              <div class="flex flex-col gap-2 bg-ap-surface-raised/40 border border-dashed border-ap-border/60 rounded-xl p-3">
+                <ion-select 
+                  label="Select Shooter" 
+                  labelPlacement="stacked"
+                  [value]="selectedPlayers()[rnd.round]"
+                  (ionChange)="onPlayerChange(rnd.round, $event)"
+                  placeholder="Select Player"
+                  interface="popover"
+                  class="bg-ap-surface border border-ap-border rounded-lg text-xs"
+                >
+                  @for (p of players(); track p.id) {
+                    <ion-select-option [value]="p.id">#{{ p.jerseyNumber }} {{ p.firstName }} {{ p.lastName }}</ion-select-option>
+                  }
+                </ion-select>
+                
+                <div class="flex gap-1.5 justify-end">
+                  <ion-button 
+                    size="small" 
+                    color="success" 
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    [disabled]="!selectedPlayers()[rnd.round]"
+                    (click)="logKick(rnd.round, 'team', 'goal')"
+                  >
+                    Goal
+                  </ion-button>
+                  <ion-button 
+                    size="small" 
+                    color="warning" 
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    [disabled]="!selectedPlayers()[rnd.round]"
+                    (click)="logKick(rnd.round, 'team', 'save')"
+                  >
+                    Saved
+                  </ion-button>
+                  <ion-button 
+                    size="small" 
+                    color="danger" 
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    [disabled]="!selectedPlayers()[rnd.round]"
+                    (click)="logKick(rnd.round, 'team', 'miss')"
+                  >
+                    Miss
+                  </ion-button>
+                </div>
+              </div>
+            }
+          </ion-col>
+
+          <!-- Opponent Kick -->
+          <ion-col size="5.5" class="px-2 flex flex-col gap-2">
+            @if (rnd.opponentKick; as kick) {
+              <!-- Logged Kick -->
+              <div class="flex items-center justify-between bg-ap-surface-raised border border-ap-border rounded-xl p-3">
+                <div class="flex items-center gap-3">
+                  @if (kick['payload']?.outcome === 'goal') {
+                    <ion-badge color="danger" class="flex items-center justify-center w-8 h-8 rounded-full p-0 shrink-0 shadow-sm">
+                      <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+                    </ion-badge>
+                  } @else if (kick['payload']?.outcome === 'save') {
+                    <ion-badge color="success" class="flex items-center justify-center w-8 h-8 rounded-full p-0 shrink-0 shadow-sm">
+                      <ion-icon name="shield-outline" class="text-base"></ion-icon>
+                    </ion-badge>
+                  } @else {
+                    <ion-badge color="success" class="flex items-center justify-center w-8 h-8 rounded-full p-0 shrink-0 shadow-sm">
+                      <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
+                    </ion-badge>
+                  }
+                  <div class="text-sm font-bold text-ap-text truncate max-w-[140px] sm:max-w-none">
+                    {{ getGoalkeeperName(kick['payload']?.goalkeeperId) }}
+                    <span class="text-[9px] font-black uppercase text-ap-muted block font-normal">
+                      {{ kick['payload']?.outcome === 'save' ? 'Penalty Saved' : (kick['payload']?.outcome === 'miss' ? 'Opponent Missed' : 'Goal Allowed') }}
+                    </span>
+                  </div>
+                </div>
+                <ion-button fill="clear" color="danger" class="ion-no-margin shrink-0" (click)="deleteKick(kick)">
+                  <ion-icon slot="icon-only" name="trash-outline" class="text-sm"></ion-icon>
+                </ion-button>
+              </div>
+            } @else {
+              <!-- Log Kick Input -->
+              <div class="flex flex-col gap-2 bg-ap-surface-raised/40 border border-dashed border-ap-border/60 rounded-xl p-3">
+                <ion-select 
+                  label="Select Goalkeeper" 
+                  labelPlacement="stacked"
+                  [value]="selectedGoalkeepers()[rnd.round]"
+                  (ionChange)="onGoalkeeperChange(rnd.round, $event)"
+                  placeholder="Select Goalkeeper"
+                  interface="popover"
+                  class="bg-ap-surface border border-ap-border rounded-lg text-xs"
+                >
+                  @for (gk of goalkeepers(); track gk.id) {
+                    <ion-select-option [value]="gk.id">#{{ gk.jerseyNumber }} {{ gk.firstName }} {{ gk.lastName }}</ion-select-option>
+                  }
+                </ion-select>
+                
+                <div class="flex gap-1.5 justify-end">
+                  <ion-button 
+                    size="small" 
+                    color="danger" 
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    [disabled]="!selectedGoalkeepers()[rnd.round]"
+                    (click)="logKick(rnd.round, 'opponent', 'goal')"
+                  >
+                    Goal
+                  </ion-button>
+                  <ion-button 
+                    size="small" 
+                    color="success" 
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    [disabled]="!selectedGoalkeepers()[rnd.round]"
+                    (click)="logKick(rnd.round, 'opponent', 'save')"
+                  >
+                    Save
+                  </ion-button>
+                  <ion-button 
+                    size="small" 
+                    color="success" 
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    [disabled]="!selectedGoalkeepers()[rnd.round]"
+                    (click)="logKick(rnd.round, 'opponent', 'miss')"
+                  >
+                    Miss
+                  </ion-button>
+                </div>
+              </div>
+            }
+          </ion-col>
+        </ion-row>
+      }
+
+      <!-- Add Round Button -->
+      <ion-row class="py-6 px-6 justify-center">
+        <ion-button fill="outline" color="primary" class="font-black uppercase tracking-widest text-xs h-10 w-full sm:w-auto" (click)="addRound()">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Add Round
+        </ion-button>
+      </ion-row>
+    </ion-grid>
+  </ion-card-content>
+</ion-card>

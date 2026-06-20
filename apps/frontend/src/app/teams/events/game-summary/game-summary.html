@@ -55,6 +55,37 @@
         </div>
       </ion-card>
 
+      <!-- Shootout Result Banner -->
+      @if (hasShootout()) {
+        <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
+          <div class="bg-gradient-to-r from-blue-950 to-blue-900 p-5 text-white">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-black uppercase tracking-wider text-blue-300">Penalty Shootout Result</span>
+              <ion-button size="small" fill="outline" color="light" class="font-black text-[10px] uppercase h-7" (click)="openShootoutModal()">
+                Edit Scorecard
+              </ion-button>
+            </div>
+            <div class="flex items-center justify-center gap-6">
+              <div class="text-center flex-1">
+                <div class="text-4xl font-black tabular-nums">{{ shootoutScore().team }}</div>
+                <div class="text-[9px] uppercase tracking-wider text-blue-300 font-bold">Apex Team</div>
+              </div>
+              <div class="text-xs font-black text-blue-400 uppercase tracking-widest border border-blue-400/25 px-2 py-1 rounded bg-blue-400/10">PKs</div>
+              <div class="text-center flex-1">
+                <div class="text-4xl font-black tabular-nums">{{ shootoutScore().opponent }}</div>
+                <div class="text-[9px] uppercase tracking-wider text-blue-300 font-bold">{{ g.opponent || 'Opponent' }}</div>
+              </div>
+            </div>
+          </div>
+        </ion-card>
+      } @else {
+        <div class="flex justify-end -mb-2">
+          <ion-button size="small" fill="outline" color="primary" class="font-black text-[10px] uppercase h-7" (click)="openShootoutModal()">
+            + Add Shootout Scorecard
+          </ion-button>
+        </div>
+      }
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Sidebar: Game Info -->
         <div class="md:col-span-1 flex flex-col gap-6">
@@ -119,6 +150,81 @@
           </ion-segment>
 
           @if (activeSegment() === 'highlights') {
+            <!-- Penalty Shootout Details -->
+            @if (hasShootout()) {
+              <ion-card class="m-0 border border-ap-border shadow-none">
+                <ion-card-header class="px-6 pt-6 pb-2">
+                  <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                    <ion-icon name="football-outline" class="text-blue-500"></ion-icon>
+                    Shootout Details
+                  </ion-card-title>
+                </ion-card-header>
+                <ion-card-content class="px-6 pb-6">
+                  <div class="flex flex-col gap-4">
+                    <!-- Header Row -->
+                    <div class="grid grid-cols-12 text-[10px] font-black uppercase tracking-widest text-ap-muted border-b border-ap-border pb-2">
+                      <div class="col-span-2 font-mono">Round</div>
+                      <div class="col-span-5 border-r border-ap-border pr-2">Apex Team (Shooter)</div>
+                      <div class="col-span-5 pl-2">Opponent (Goalkeeper)</div>
+                    </div>
+
+                    <!-- Round Rows -->
+                    @for (r of shootoutRounds(); track r.round) {
+                      <div class="grid grid-cols-12 items-center py-2 border-b border-ap-border/50 last:border-b-0">
+                        <!-- Round number -->
+                        <div class="col-span-2 font-mono font-black text-sm text-ap-text">#{{ r.round }}</div>
+                        
+                        <!-- Team kick details -->
+                        <div class="col-span-5 border-r border-ap-border pr-2 flex items-center justify-between">
+                          <div class="truncate mr-2">
+                            @if (r.teamKick) {
+                              <div class="font-bold text-ap-text truncate text-sm">
+                                {{ getPlayerName(r.teamKick.payload?.playerId) }}
+                              </div>
+                              <div class="text-[9px] uppercase font-bold text-ap-muted">
+                                Shooter
+                              </div>
+                            } @else {
+                              <span class="text-ap-muted italic text-xs">No kick taken</span>
+                            }
+                          </div>
+                          @if (r.teamKick) {
+                            <ion-badge [color]="r.teamKick.payload?.outcome === 'goal' ? 'success' : 'danger'" class="uppercase text-[9px] font-black px-2 py-0.5">
+                              {{ r.teamKick.payload?.outcome }}
+                            </ion-badge>
+                          }
+                        </div>
+
+                        <!-- Opponent kick details -->
+                        <div class="col-span-5 pl-2 flex items-center justify-between">
+                          <div class="truncate mr-2">
+                            @if (r.opponentKick) {
+                              <div class="font-bold text-ap-text truncate text-sm">
+                                {{ getPlayerName(r.opponentKick.payload?.goalkeeperId) }}
+                              </div>
+                              <div class="text-[9px] uppercase font-bold text-ap-muted">
+                                Goalkeeper
+                              </div>
+                            } @else {
+                              <span class="text-ap-muted italic text-xs">No kick taken</span>
+                            }
+                          </div>
+                          @if (r.opponentKick) {
+                            <ion-badge 
+                              [color]="r.opponentKick.payload?.outcome === 'save' ? 'success' : (r.opponentKick.payload?.outcome === 'goal' ? 'danger' : 'medium')" 
+                              class="uppercase text-[9px] font-black px-2 py-0.5"
+                            >
+                              {{ r.opponentKick.payload?.outcome === 'save' ? 'saved' : r.opponentKick.payload?.outcome }}
+                            </ion-badge>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            }
+
             <ion-card class="m-0">
               <ion-card-header class="px-6 pt-6 pb-2">
                 <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
@@ -236,4 +342,10 @@
       </div>
     }
   </div>
+
+  <ion-modal [isOpen]="isShootoutModalOpen()" (didDismiss)="onShootoutModalClose()" class="ap-modal">
+    <ng-template>
+      <app-shootout-scorecard (close)="isShootoutModalOpen.set(false)"></app-shootout-scorecard>
+    </ng-template>
+  </ion-modal>
 </ion-content>

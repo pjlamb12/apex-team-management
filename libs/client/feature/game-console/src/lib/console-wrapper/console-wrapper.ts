@@ -22,7 +22,7 @@ import {
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline } from 'ionicons/icons';
+import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline, footballOutline } from 'ionicons/icons';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
@@ -36,6 +36,7 @@ import { PlayerActionMenuComponent } from '../player-action-menu/player-action-m
 import { EventLogViewComponent } from '../event-log/event-log';
 import { SubQueueComponent } from '../sub-queue/sub-queue';
 import { EventSyncService } from '../event-sync.service';
+import { ShootoutScorecardComponent } from '../shootout-scorecard/shootout-scorecard';
 import { SocketService } from '@apex-team/client/shared/services';
 import { Player, LineupEntry } from '@apex-team/shared/util/models';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
@@ -63,6 +64,7 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
     PlayerActionMenuComponent,
     EventLogViewComponent,
     SubQueueComponent,
+    ShootoutScorecardComponent,
     IonBackButton,
     ThemeToggle,
   ],
@@ -188,6 +190,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
   protected isRunning = this.clockService.isRunning;
 
+  protected isShootoutActive = signal(false);
   protected rotationAlertVisible = signal(false);
   protected selectedPlayerId = signal<string | null>(null);
   protected actionPlayer = signal<Player | null>(null);
@@ -206,6 +209,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       flagOutline,
       settingsOutline,
       alertCircleOutline,
+      footballOutline,
     });
 
     effect(() => {
@@ -263,6 +267,11 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
   protected stopClock(): void {
     this.clockService.stop();
+  }
+
+  protected startShootout(): void {
+    this.clockService.stop();
+    this.isShootoutActive.set(true);
   }
 
   protected addOpponentGoal(): void {

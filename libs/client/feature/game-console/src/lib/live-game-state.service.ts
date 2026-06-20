@@ -75,8 +75,9 @@ export class LiveGameStateService {
       });
 
     events.forEach((event) => {
-      if (event.type === 'SUB' && event.playerIdIn && event.slotIndex !== undefined) {
-        const inEntry = lineup.find((e) => e.playerId === event.playerIdIn);
+      const inId = event.playerIdIn || event['inPlayerId'];
+      if (event.type === 'SUB' && inId && event.slotIndex !== undefined) {
+        const inEntry = lineup.find((e) => e.playerId === inId);
         if (inEntry) {
           const currentInSlot = slotMap.get(event.slotIndex);
           slotMap.set(event.slotIndex, {
@@ -146,10 +147,11 @@ export class LiveGameStateService {
     if (storedEvents) {
       try {
         const events = JSON.parse(storedEvents);
-        this._events.set(events);
+        const mapped = events.map((e: any) => this.mapEvent(e));
+        this._events.set(mapped);
         
         // Recover current period from last event if possible
-        const lastEvent = events.filter((e: any) => e.status !== 'deleted').pop();
+        const lastEvent = mapped.filter((e: any) => e.status !== 'deleted').pop();
         if (lastEvent?.period) {
           this._currentPeriod.set(lastEvent.period);
         }
@@ -197,23 +199,27 @@ export class LiveGameStateService {
   public pushEvent(event: GameEvent): void {
     this._events.update((prev) => [
       ...prev,
-      { ...event, status: 'active', period: this._currentPeriod() },
+      this.mapEvent({ ...event, status: 'active', period: this._currentPeriod() }),
     ]);
     this.save();
   }
 
   public pushEvents(events: GameEvent[]): void {
-    const decoratedEvents = events.map((e) => ({
-      ...e,
-      status: 'active' as const,
-      period: this._currentPeriod(),
-    }));
+    const decoratedEvents = events.map((e, index) => 
+      this.mapEvent({
+        ...e,
+        timestamp: (e.timestamp || Date.now()) + index,
+        status: 'active' as const,
+        period: this._currentPeriod(),
+      })
+    );
     this._events.update((prev) => [...prev, ...decoratedEvents]);
     this.save();
   }
 
   public setEvents(events: GameEvent[]): void {
-    this._events.set(events);
+    const mapped = events.map((e) => this.mapEvent(e));
+    this._events.set(mapped);
     this.save();
   }
 
@@ -327,21 +333,8 @@ export class LiveGameStateService {
       let existingIndex = prev.findIndex(e => e.id === event.id);
 
       // Map backend fields to frontend format
-      const mappedEvent = {
-        ...event,
-        type: event.eventType || event.type,
-        playerId: event.payload?.playerId || event.payload?.scorerId || event.payload?.assistorId || event.playerId,
-        playerIdIn: event.payload?.inPlayerId || event.playerIdIn,
-        playerIdOut: event.payload?.outPlayerId || event.playerIdOut,
-        playerIdA: event.payload?.playerIdA || event.playerIdA,
-        playerIdB: event.payload?.playerIdB || event.playerIdB,
-        slotIndex: event.payload?.slotIndex !== undefined ? event.payload.slotIndex : event.slotIndex,
-        slotIndexA: event.payload?.slotIndexA !== undefined ? event.payload.slotIndexA : event.slotIndexA,
-        slotIndexB: event.payload?.slotIndexB !== undefined ? event.payload.slotIndexB : event.slotIndexB,
-        position: event.payload?.positionName || event.payload?.position || event.position,
-        synced: true,
-        status: 'active' as const
-      };
+      const mappedEvent = this.mapEvent(event);
+      mappedEvent.synced = true;
 
       // If not found by id, check if there is an unsynced local event of the same type and approximate gameTimeMs or matching payload data
       if (existingIndex === -1) {
@@ -349,8 +342,8 @@ export class LiveGameStateService {
           if (e.synced) return false;
           if (e.type !== mappedEvent.type) return false;
           
-          const timeMatches = (e.gameTimeMs !== undefined && mappedEvent.payload?.gameTimeMs !== undefined)
-            ? Math.abs(e.gameTimeMs - (mappedEvent.payload.gameTimeMs as number)) < 1000
+          const timeMatches = (e.gameTimeMs !== undefined && mappedEvent['payload']?.gameTimeMs !== undefined)
+            ? Math.abs(e.gameTimeMs - (mappedEvent['payload'].gameTimeMs as number)) < 1000
             : e.minuteOccurred === mappedEvent.minuteOccurred;
 
           if (!timeMatches) return false;
@@ -408,6 +401,26 @@ export class LiveGameStateService {
       this._currentPeriod.set(event.currentPeriod);
     }
     this.save();
+  }
+
+  private mapEvent(event: any): GameEvent {
+    const type = event.eventType || event.type;
+    const payload = event.payload || {};
+    return {
+      ...event,
+      type,
+      playerId: payload.playerId || payload.scorerId || payload.assistorId || event.playerId,
+      playerIdIn: payload.inPlayerId || event.playerIdIn,
+      playerIdOut: payload.outPlayerId || event.playerIdOut,
+      playerIdA: payload.playerIdA || event.playerIdA,
+      playerIdB: payload.playerIdB || event.playerIdB,
+      slotIndex: payload.slotIndex !== undefined ? payload.slotIndex : event.slotIndex,
+      slotIndexA: payload.slotIndexA !== undefined ? payload.slotIndexA : event.slotIndexA,
+      slotIndexB: payload.slotIndexB !== undefined ? payload.slotIndexB : event.slotIndexB,
+      position: payload.positionName || payload.position || event.position,
+      synced: event.synced !== undefined ? event.synced : !!event.id,
+      status: event.status || 'active',
+    };
   }
 
   private getStorageKey(): string {

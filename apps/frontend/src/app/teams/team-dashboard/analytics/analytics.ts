@@ -138,8 +138,7 @@ export class TeamAnalytics {
   protected topWorkhorses = computed(() => {
     const pt = this.playingTime();
     return Object.values(pt)
-      .sort((a, b) => b.totalSeconds - a.totalSeconds)
-      .slice(0, 5);
+      .sort((a, b) => b.totalSeconds - a.totalSeconds);
   });
 
   protected getPlayerName(playerId: string): string {

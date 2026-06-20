@@ -10,11 +10,14 @@ export interface PlayerPerformanceMetrics {
   playerId: string;
   firstName: string;
   lastName: string;
+  preferredPosition: string | null;
   goals: number;
   assists: number;
   yellowCards: number;
   redCards: number;
   gamesPlayed: number;
+  blockedShots: number;
+  blockedPenaltyKicks: number;
 }
 
 @Injectable()
@@ -117,6 +120,23 @@ export class PerformanceMetricsService {
           if (payload.color === 'yellow') metricsMap[playerId].yellowCards++;
           else if (payload.color === 'red') metricsMap[playerId].redCards++;
         }
+      } else if (ge.eventType === 'BLOCKED_SHOT') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].blockedShots++;
+        }
+      } else if (ge.eventType === 'BLOCKED_PENALTY') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].blockedPenaltyKicks++;
+        }
+      } else if (ge.eventType === 'SHOOTOUT_KICK') {
+        if (payload.team === 'opponent' && payload.outcome === 'save') {
+          const goalkeeperId = payload.goalkeeperId;
+          if (goalkeeperId && metricsMap[goalkeeperId]) {
+            metricsMap[goalkeeperId].blockedPenaltyKicks++;
+          }
+        }
       }
     });
 
@@ -128,11 +148,14 @@ export class PerformanceMetricsService {
       playerId: player.id,
       firstName: player.firstName,
       lastName: player.lastName,
+      preferredPosition: player.preferredPosition,
       goals: 0,
       assists: 0,
       yellowCards: 0,
       redCards: 0,
-      gamesPlayed: 0
+      gamesPlayed: 0,
+      blockedShots: 0,
+      blockedPenaltyKicks: 0
     };
   }
 }

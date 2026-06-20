@@ -55,7 +55,7 @@ describe('CsvExportService', () => {
 
     it('should generate aggregated CSV', async () => {
       vi.spyOn(performanceMetricsService, 'getTeamMetrics').mockResolvedValue([
-        { playerId: 'p1', firstName: 'John', lastName: 'Doe', goals: 1, assists: 1, yellowCards: 0, redCards: 0, gamesPlayed: 1 }
+        { playerId: 'p1', firstName: 'John', lastName: 'Doe', preferredPosition: 'Goalkeeper', goals: 1, assists: 1, blockedShots: 0, blockedPenaltyKicks: 0, yellowCards: 0, redCards: 0, gamesPlayed: 1 }
       ] as any);
       vi.spyOn(playingTimeService, 'calculateForTeam').mockResolvedValue({
         p1: { playerId: 'p1', totalSeconds: 3600, positionSeconds: {} }
@@ -63,15 +63,15 @@ describe('CsvExportService', () => {
 
       const result = await service.generate(teamId, { format: ExportFormat.CSV, granularity: ExportGranularity.AGGREGATED });
       
-      expect(result).toContain('"Player Name","Goals","Assists","Yellow Cards","Red Cards","Games Played","Total Minutes"');
-      expect(result).toContain('"John Doe",1,1,0,0,1,60');
+      expect(result).toContain('"Player Name","Goals","Assists","Blocked Shots","Blocked Penalty Kicks","Yellow Cards","Red Cards","Games Played","Total Minutes"');
+      expect(result).toContain('"John Doe",1,1,0,0,0,0,1,60');
     });
 
     it('should generate per-game CSV', async () => {
       const mockEvent = { id: 'e1', scheduledAt: new Date('2024-01-01'), opponent: 'Rivals' };
       vi.spyOn(eventRepo, 'find').mockResolvedValue([mockEvent]);
       vi.spyOn(performanceMetricsService, 'getEventMetrics').mockResolvedValue([
-        { playerId: 'p1', firstName: 'John', lastName: 'Doe', goals: 1, assists: 0, yellowCards: 0, redCards: 0, gamesPlayed: 1 }
+        { playerId: 'p1', firstName: 'John', lastName: 'Doe', preferredPosition: 'Goalkeeper', goals: 1, assists: 0, blockedShots: 0, blockedPenaltyKicks: 0, yellowCards: 0, redCards: 0, gamesPlayed: 1 }
       ] as any);
       vi.spyOn(playingTimeService, 'calculateForEvent').mockResolvedValue({
         p1: { playerId: 'p1', totalSeconds: 1800, positionSeconds: {} }
@@ -79,8 +79,8 @@ describe('CsvExportService', () => {
 
       const result = await service.generate(teamId, { format: ExportFormat.CSV, granularity: ExportGranularity.PER_GAME });
       
-      expect(result).toContain('"Date","Opponent","Player Name","Goals","Assists","Yellow Cards","Red Cards","Minutes Played"');
-      expect(result).toContain('"2024-01-01","Rivals","John Doe",1,0,0,0,30');
+      expect(result).toContain('"Date","Opponent","Player Name","Goals","Assists","Blocked Shots","Blocked Penalty Kicks","Yellow Cards","Red Cards","Minutes Played"');
+      expect(result).toContain('"2024-01-01","Rivals","John Doe",1,0,0,0,0,0,30');
     });
   });
 });

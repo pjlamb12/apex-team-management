@@ -154,6 +154,14 @@ export class EventsService {
     return this.http.get<any[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events`);
   }
 
+  logGameEvent(teamId: string, eventId: string, data: { eventType: string; minuteOccurred?: number; payload?: any }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events`, data);
+  }
+
+  deleteGameEvent(teamId: string, eventId: string, gameEventId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events/${gameEventId}`);
+  }
+
   getLineup(teamId: string, eventId: string): Observable<LineupEntry[]> {
     return this.http.get<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`);
   }
