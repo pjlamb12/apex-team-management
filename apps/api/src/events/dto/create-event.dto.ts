@@ -9,6 +9,10 @@ export class CreateEventDto {
   @IsOptional()
   opponent?: string;
 
+  @IsString()
+  @IsOptional()
+  leagueId?: string;
+
   @IsDateString()
   @IsOptional()
   scheduledAt?: string;

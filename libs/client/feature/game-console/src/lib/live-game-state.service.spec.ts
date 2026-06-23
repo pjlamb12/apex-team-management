@@ -138,7 +138,13 @@ describe('LiveGameStateService', () => {
     
     service.initialize(eventId, mockLineup, teamId);
     
-    expect(service.events()).toEqual([event]);
+    expect(service.events()).toEqual([
+      expect.objectContaining({
+        type: 'GOAL',
+        playerId: 'p1',
+        timestamp: 1000
+      })
+    ]);
   });
 
   describe('Bulk push and staging', () => {

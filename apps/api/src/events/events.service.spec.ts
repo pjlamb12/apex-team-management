@@ -110,6 +110,15 @@ describe('EventsService', () => {
       expect(eventRepo.save).toHaveBeenCalled();
     });
 
+    it('should save leagueId if provided', async () => {
+      vi.spyOn(teamRepo, 'findOne').mockResolvedValue({ id: teamId, coachId: userId } as any);
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1', teamId, isActive: true } as any);
+
+      const result = await service.create(teamId, { ...dto, leagueId: 'league-1' }, userId);
+
+      expect(result.leagueId).toBe('league-1');
+    });
+
     it('should create a default active season if none exists for the team', async () => {
       vi.spyOn(teamRepo, 'findOne').mockResolvedValue({ id: teamId, coachId: userId } as any);
       vi.spyOn(seasonRepo, 'findOne').mockResolvedValue(null);
@@ -323,6 +332,16 @@ describe('EventsService', () => {
       const result = await service.update('event-1', { opponent: 'New' });
 
       expect(result.opponent).toBe('New');
+      expect(eventRepo.save).toHaveBeenCalled();
+    });
+
+    it('should update leagueId field and return the updated event', async () => {
+      const event = { id: 'event-1', opponent: 'Old', leagueId: 'old-league', season: { teamId: 'team-1' } };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(event as any);
+
+      const result = await service.update('event-1', { leagueId: 'new-league' });
+
+      expect(result.leagueId).toBe('new-league');
       expect(eventRepo.save).toHaveBeenCalled();
     });
 
