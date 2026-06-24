@@ -8,11 +8,11 @@
       <ion-button [routerLink]="['/teams', teamId, 'schedule', eventId, 'edit']" class="mr-2">
         <ion-icon slot="icon-only" name="settings-outline"></ion-icon>
       </ion-button>
-      <ion-button (click)="onSave(false)" [disabled]="isLoading() || isSaving()" class="hidden sm:inline-block">
+      <ion-button (click)="onSave(false)" [disabled]="isLoading() || isSaving()">
         @if (isSaving()) {
           <ion-spinner name="crescent"></ion-spinner>
         } @else {
-          Save & Return
+          Save
         }
       </ion-button>
       <ion-button (click)="onSave(true)" color="success" [strong]="true" [disabled]="isLoading() || isSaving()">
@@ -146,3 +146,10 @@
     </div>
   }
 </ion-content>
+
+<ion-toast
+  [isOpen]="!!toastMessage()"
+  [message]="toastMessage() ?? ''"
+  duration="2000"
+  (didDismiss)="toastMessage.set(null)"
+></ion-toast>

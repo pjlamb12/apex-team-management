@@ -70,4 +70,16 @@ describe('SoccerPitchViewComponent', () => {
     expect(selectedSlot.textContent).toContain('1');
     expect(selectedSlot.textContent).toContain('Doe');
   });
+
+  it('should render jersey number 0 correctly on the pitch', () => {
+    const players = [
+      { id: '3', teamId: 't1', firstName: 'Zero', lastName: 'Hero', jerseyNumber: 0, slotIndex: 1 },
+    ];
+    fixture.componentRef.setInput('players', players);
+    fixture.detectChanges();
+    const playerSlots = fixture.nativeElement.querySelectorAll('.player-slot');
+    expect(playerSlots.length).toBe(1);
+    expect(playerSlots[0].textContent).toContain('0');
+    expect(playerSlots[0].textContent).not.toContain('?');
+  });
 });

@@ -54,7 +54,7 @@
           [class.border-ap-bg]="selectedPlayerId() === player.id"
         >
           <span class="text-white font-bold text-sm" [class.text-ap-bg]="selectedPlayerId() === player.id">
-            {{ player.jerseyNumber || '?' }}
+            {{ player.jerseyNumber ?? '?' }}
           </span>
         </div>
         <span class="player-name text-[10px] font-bold text-ap-text bg-ap-bg/85 px-2 py-0.5 rounded shadow-md mt-1 whitespace-nowrap border border-white/10">
@@ -90,7 +90,7 @@
           [class.border-solid]="selectedPlayerId() === player.id"
         >
           <span class="text-white font-bold text-sm">
-            {{ player.jerseyNumber || '?' }}
+            {{ player.jerseyNumber ?? '?' }}
           </span>
         </div>
         <span class="player-name text-[10px] font-bold text-white bg-green-700 px-2 py-0.5 rounded shadow-md mt-1 whitespace-nowrap border border-green-400">

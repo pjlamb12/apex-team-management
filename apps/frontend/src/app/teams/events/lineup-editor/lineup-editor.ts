@@ -23,6 +23,7 @@ import {
   IonSegment,
   IonSegmentButton,
   IonIcon,
+  IonToast,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { settingsOutline } from 'ionicons/icons';
@@ -79,6 +80,7 @@ function getPositionFromSlot(slot: number): string {
     IonSegment,
     IonSegmentButton,
     IonIcon,
+    IonToast,
     SoccerPitchViewComponent,
     AttendanceList,
   ],
@@ -115,6 +117,7 @@ export class LineupEditor implements OnInit {
   protected errorMessage = signal<string | null>(null);
   protected viewMode = signal<'list' | 'pitch' | 'attendance'>('list');
   protected selectedPlayerId = signal<string | null>(null);
+  protected toastMessage = signal<string | null>(null);
 
   protected setViewMode(mode: any): void {
     this.viewMode.set(mode);
@@ -390,7 +393,7 @@ export class LineupEditor implements OnInit {
       if (goLive) {
         void this.router.navigate(['/teams', teamId, 'events', eventId, 'console']);
       } else {
-        void this.router.navigate(['/teams', teamId, 'schedule']);
+        this.toastMessage.set('Lineup saved successfully');
       }
     } catch (err) {
       console.error('Failed to save lineup', err);
