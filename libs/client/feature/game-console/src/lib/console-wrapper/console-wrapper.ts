@@ -141,6 +141,15 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         this.socketService.onEvent('gameStatusUpdated', (event) => {
           this.stateService.handleRemoteStatusUpdate(event);
         });
+        this.socketService.onEvent('eventUpdated', (updatedEvent: any) => {
+          if (updatedEvent.id === eventId) {
+            this.clockService.syncFromRemote(
+              updatedEvent.clockStartTime,
+              updatedEvent.clockAccumulatedMs || 0
+            );
+            this.stateService.handleRemoteStatusUpdate(updatedEvent);
+          }
+        });
       }),
       switchMap(({ teamId, eventId }) => {
         const url = this.apiUrl;
@@ -160,7 +169,11 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
         if (eventId && teamId) {
           this.stateService.initialize(eventId, lineup, teamId, eventData?.playersOnField || undefined);
-          this.clockService.initialize(eventId);
+          this.clockService.initialize(
+            eventId,
+            eventData?.clockStartTime,
+            eventData?.clockAccumulatedMs || 0
+          );
 
           // If no events in local state, fetch from backend to restore logs
           if (this.stateService.events().length === 0) {
@@ -257,21 +270,51 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       this.socketService.offEvent('gameEventLogged');
       this.socketService.offEvent('gameEventRemoved');
       this.socketService.offEvent('gameStatusUpdated');
+      this.socketService.offEvent('eventUpdated');
       this.socketService.leaveEvent(eventId);
     }
   }
 
   protected startClock(): void {
-    this.clockService.start();
+    void this.clockService.start();
+    const teamId = this.teamId();
+    const eventId = this.eventId();
+    if (teamId && eventId) {
+      void firstValueFrom(
+        this.eventsService.updateEvent(teamId, eventId, {
+          clockStartTime: new Date().toISOString(),
+        })
+      );
+    }
   }
 
   protected stopClock(): void {
-    this.clockService.stop();
+    void this.clockService.stop();
+    const teamId = this.teamId();
+    const eventId = this.eventId();
+    if (teamId && eventId) {
+      void firstValueFrom(
+        this.eventsService.updateEvent(teamId, eventId, {
+          clockStartTime: null,
+          clockAccumulatedMs: this.clockService.elapsedMs(),
+        })
+      );
+    }
   }
 
   protected startShootout(): void {
-    this.clockService.stop();
+    void this.clockService.stop();
     this.isShootoutActive.set(true);
+    const teamId = this.teamId();
+    const eventId = this.eventId();
+    if (teamId && eventId) {
+      void firstValueFrom(
+        this.eventsService.updateEvent(teamId, eventId, {
+          clockStartTime: null,
+          clockAccumulatedMs: this.clockService.elapsedMs(),
+        })
+      );
+    }
   }
 
   protected addOpponentGoal(): void {
@@ -292,12 +335,14 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     this.stateService.nextPeriod();
     this.stateService.setLastIntervalTriggered(0);
     
-    // Sync currentPeriod to backend
+    // Sync currentPeriod and reset clock to backend
     const teamId = this.teamId();
     const eventId = this.eventId();
     if (teamId && eventId) {
       await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
-        currentPeriod: this.stateService.currentPeriod()
+        currentPeriod: this.stateService.currentPeriod(),
+        clockStartTime: null,
+        clockAccumulatedMs: 0
       }));
     }
   }

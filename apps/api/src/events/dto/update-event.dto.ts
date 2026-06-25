@@ -79,4 +79,12 @@ export class UpdateEventDto {
   @IsString()
   @IsOptional()
   recurrenceRule?: string;
+
+  @IsOptional()
+  clockStartTime?: string | null;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  clockAccumulatedMs?: number;
 }

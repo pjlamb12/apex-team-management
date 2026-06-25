@@ -78,6 +78,12 @@ export class EventEntity {
   @Column({ name: 'current_period', type: 'int', default: 1 })
   currentPeriod: number;
 
+  @Column({ name: 'clock_start_time', type: 'timestamp', nullable: true })
+  clockStartTime: Date | null;
+
+  @Column({ name: 'clock_accumulated_ms', type: 'int', default: 0 })
+  clockAccumulatedMs: number;
+
   @Column({ name: 'recurrence_rule', type: 'text', nullable: true })
   recurrenceRule: string | null;
 

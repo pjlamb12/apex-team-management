@@ -1,4 +1,8 @@
 <ion-content class="bg-ap-bg">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
   <div class="flex flex-col">
     <div class="px-4 mb-2">
       @if (isLoadingSeasons()) {

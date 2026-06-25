@@ -218,6 +218,7 @@ export class EventsService {
     }
 
     this.socketGateway.server.to(`team:${event.season.teamId}`).emit('eventUpdated', updated);
+    this.socketGateway.server.to(`event:${eventId}`).emit('eventUpdated', updated);
     return updated;
   }
 

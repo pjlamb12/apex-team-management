@@ -27,7 +27,16 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { settingsOutline } from 'ionicons/icons';
-import { EventsService, EventEntity, LineupEntry, SaveLineupDto, PlayersService, PlayerEntity } from '@apex-team/client/data-access/team';
+import {
+  EventsService,
+  EventEntity,
+  LineupEntry,
+  SaveLineupDto,
+  PlayersService,
+  PlayerEntity,
+  AttendanceService,
+  AttendanceRecord,
+} from '@apex-team/client/data-access/team';
 import { SoccerPitchViewComponent } from '@apex-team/client/feature/game-console';
 import { Player } from '@apex-team/shared/util/models';
 import { AttendanceList } from '@apex-team/client/ui/attendance';
@@ -91,9 +100,6 @@ export class LineupEditor implements OnInit {
   @Input() set id(val: string) {
     this._teamId.set(val);
   }
-  @Input() set eventId(val: string) {
-    this._eventId.set(val);
-  }
 
   private _teamId = signal<string | null>(null);
   private _eventId = signal<string | null>(null);
@@ -101,16 +107,23 @@ export class LineupEditor implements OnInit {
   public get teamId(): string {
     return this._teamId() ?? '';
   }
+
+  @Input() set eventId(val: string) {
+    this._eventId.set(val);
+  }
+
   public get eventId(): string {
     return this._eventId() ?? '';
   }
 
   private readonly eventsService = inject(EventsService);
   private readonly playersService = inject(PlayersService);
+  private readonly attendanceService = inject(AttendanceService);
   private readonly router = inject(Router);
 
   protected event = signal<EventEntity | null>(null);
   protected players = signal<PlayerEntity[]>([]);
+  protected attendance = signal<AttendanceRecord[]>([]);
   protected slots = signal<LineupSlot[]>([]);
   protected isLoading = signal(true);
   protected isSaving = signal(false);
@@ -133,9 +146,18 @@ export class LineupEditor implements OnInit {
     );
   });
 
+  protected absentPlayerIds = computed(() => {
+    return new Set(
+      this.attendance()
+        .filter((a) => a.status === 'absent')
+        .map((a) => a.playerId)
+    );
+  });
+
   protected benchPlayers = computed(() => {
     const assigned = this.assignedPlayerIds();
-    return this.players().filter((p) => !assigned.has(p.id));
+    const absent = this.absentPlayerIds();
+    return this.players().filter((p) => !assigned.has(p.id) && !absent.has(p.id));
   });
 
   protected pitchPlayers = computed(() => {
@@ -178,14 +200,16 @@ export class LineupEditor implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [event, players, lineup] = await Promise.all([
+      const [event, players, lineup, attendance] = await Promise.all([
         firstValueFrom(this.eventsService.getEvent(teamId, eventId)),
         firstValueFrom(this.playersService.getPlayers(teamId)),
         firstValueFrom(this.eventsService.getLineup(teamId, eventId)),
+        firstValueFrom(this.attendanceService.getAttendance(teamId, eventId)),
       ]);
 
       this.event.set(event);
       this.players.set(players);
+      this.attendance.set(attendance);
 
       const fieldCount = event.playersOnField || 11;
       const defaultSlots = getDefaultSlots(fieldCount);
@@ -199,8 +223,14 @@ export class LineupEditor implements OnInit {
         playerId: null,
       }));
 
+      // Filter out absent player IDs
+      const absent = new Set(attendance.filter((a) => a.status === 'absent').map((a) => a.playerId));
+
       // Map the players that are already assigned
       startingLineup.forEach((entry, idx) => {
+        // Skip if marked absent
+        if (absent.has(entry.playerId)) return;
+
         // If they have a valid slotIndex, try to match it, else assign sequentially
         if (entry.slotIndex !== null) {
           const existingSlot = newSlots.find(s => s.slotIndex === entry.slotIndex);
@@ -232,6 +262,25 @@ export class LineupEditor implements OnInit {
     }
   }
 
+  protected async onAttendanceChanged(): Promise<void> {
+    const tId = this.teamId;
+    const eId = this.eventId;
+    if (tId && eId) {
+      try {
+        const attendance = await firstValueFrom(this.attendanceService.getAttendance(tId, eId));
+        this.attendance.set(attendance);
+        
+        // Remove any players who are now absent from slots
+        const absent = new Set(attendance.filter(a => a.status === 'absent').map(a => a.playerId));
+        this.slots.update((current) =>
+          current.map((s) => (s.playerId && absent.has(s.playerId) ? { ...s, playerId: null } : s))
+        );
+      } catch (err) {
+        console.error('Failed to update attendance in editor', err);
+      }
+    }
+  }
+
   protected availablePlayers(currentSlotIndex: number): PlayerEntity[] {
     const otherAssignedIds = new Set(
       this.slots()
@@ -239,7 +288,8 @@ export class LineupEditor implements OnInit {
         .map((s) => s.playerId)
         .filter((id): id is string => !!id)
     );
-    return this.players().filter((p) => !otherAssignedIds.has(p.id));
+    const absent = this.absentPlayerIds();
+    return this.players().filter((p) => !otherAssignedIds.has(p.id) && !absent.has(p.id));
   }
 
   protected updateSlot(

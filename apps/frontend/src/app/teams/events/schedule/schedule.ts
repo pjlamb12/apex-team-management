@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, Input, computed } from '@angular/core';
+import { Component, inject, signal, effect, Input, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -26,6 +26,8 @@ import {
   IonButton,
   ModalController,
   IonListHeader,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -45,6 +47,7 @@ import {
 } from 'ionicons/icons';
 import { EventsService, EventEntity, SeasonsService, LeaguesService } from '@apex-team/client/data-access/team';
 import { Season, League } from '@apex-team/shared/util/models';
+import { SocketService } from '../../../shared/services/socket.service';
 
 interface GroupedEvents {
   leagueName: string;
@@ -77,11 +80,13 @@ interface GroupedEvents {
     IonBadge,
     IonButton,
     IonListHeader,
+    IonRefresher,
+    IonRefresherContent,
   ],
   templateUrl: './schedule.html',
   styleUrl: './schedule.scss',
 })
-export class Schedule {
+export class Schedule implements OnDestroy {
   @Input() set id(val: string) {
     this._teamId.set(val);
   }
@@ -98,6 +103,7 @@ export class Schedule {
   private readonly actionSheetCtrl = inject(ActionSheetController);
   private readonly modalCtrl = inject(ModalController);
   private readonly router = inject(Router);
+  private readonly socketService = inject(SocketService);
 
   protected events = signal<EventEntity[]>([]);
   protected seasons = this.seasonsService.seasons;
@@ -192,12 +198,64 @@ export class Schedule {
         this.leagues.set([]);
       }
     });
+
+    // Listen to real-time events to auto-refresh the schedule
+    const handleRemoteChange = () => {
+      const id = this._teamId();
+      if (id) {
+        void this.loadSeasons(id);
+      }
+      this.refreshTrigger.update(n => n + 1);
+    };
+
+    this.socketService.onEvent('eventCreated', handleRemoteChange);
+    this.socketService.onEvent('eventUpdated', handleRemoteChange);
+    this.socketService.onEvent('eventRemoved', handleRemoteChange);
   }
 
   ionViewWillEnter(): void {
     const id = this._teamId();
     if (id) {
       void this.loadSeasons(id);
+      this.refreshTrigger.update(n => n + 1);
+      this.socketService.joinTeam(id);
+    }
+  }
+
+  ionViewWillLeave(): void {
+    const id = this._teamId();
+    if (id) {
+      this.socketService.leaveTeam(id);
+    }
+  }
+
+  ngOnDestroy(): void {
+    const id = this._teamId();
+    if (id) {
+      this.socketService.leaveTeam(id);
+    }
+    this.socketService.offEvent('eventCreated');
+    this.socketService.offEvent('eventUpdated');
+    this.socketService.offEvent('eventRemoved');
+  }
+
+  protected async handleRefresh(event: any): Promise<void> {
+    const id = this._teamId();
+    if (id) {
+      try {
+        await this.loadSeasons(id);
+        const seasonId = this.selectedSeasonId();
+        const leagueId = this.selectedLeagueId();
+        if (seasonId) {
+          await this.loadEvents(id, this.scope(), seasonId, leagueId ?? undefined);
+        }
+      } catch (err) {
+        console.error('Failed to refresh', err);
+      } finally {
+        event.target.complete();
+      }
+    } else {
+      event.target.complete();
     }
   }
 

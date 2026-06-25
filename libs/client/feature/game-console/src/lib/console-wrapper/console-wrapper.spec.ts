@@ -59,6 +59,7 @@ describe('ConsoleWrapper', () => {
         if (url.endsWith('/lineup')) return of(mockLineup);
         return of({ opponent: 'Test Opponent' });
       }),
+      patch: vi.fn(() => of({})),
     };
 
     routeMock = {

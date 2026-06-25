@@ -62,6 +62,7 @@
           <app-attendance-list 
             [teamId]="teamId" 
             [eventId]="eventId"
+            (attendanceChanged)="onAttendanceChanged()"
           ></app-attendance-list>
         </div>
       } @else if (viewMode() === 'list') {

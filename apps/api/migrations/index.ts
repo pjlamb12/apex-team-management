@@ -27,6 +27,7 @@ import { AddCalendarSecretToTeams1780609000000 } from './1780609000000-AddCalend
 import { SupportCustomPracticeDrills1780700000000 } from './1780700000000-SupportCustomPracticeDrills';
 import { AllowAdditionalPropertiesInSoccerEventDefinitions1780800000000 } from './1780800000000-AllowAdditionalPropertiesInSoccerEventDefinitions';
 import { AddGoalkeeperEventDefinitions1780900000000 } from './1780900000000-AddGoalkeeperEventDefinitions';
+import { AddClockSyncColumns1782356834095 } from './1782356834095-AddClockSyncColumns';
 
 export const ALL_MIGRATIONS = [
   InitialSchema1744934400000,
@@ -58,4 +59,5 @@ export const ALL_MIGRATIONS = [
   SupportCustomPracticeDrills1780700000000,
   AllowAdditionalPropertiesInSoccerEventDefinitions1780800000000,
   AddGoalkeeperEventDefinitions1780900000000,
+  AddClockSyncColumns1782356834095,
 ];

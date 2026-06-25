@@ -38,6 +38,8 @@ export interface EventEntity {
   periodLengthMinutes?: number | null;
   playersOnField?: number | null;
   currentPeriod?: number;
+  clockStartTime?: string | null;
+  clockAccumulatedMs?: number;
   recurrenceRule?: string | null;
   parentEventId?: string | null;
   weatherData?: {
@@ -85,6 +87,8 @@ export interface UpdateEventDto {
   playersOnField?: number;
   currentPeriod?: number;
   status?: 'scheduled' | 'in_progress' | 'completed';
+  clockStartTime?: string | null;
+  clockAccumulatedMs?: number;
   recurrenceRule?: string;
 }
 

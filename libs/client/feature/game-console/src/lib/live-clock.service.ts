@@ -29,9 +29,13 @@ export class LiveClockService {
   public readonly isRunning = computed(() => this.startTime() !== null);
 
   /**
-   * Initializes the clock for a specific game, restoring persisted elapsed time from localStorage.
+   * Initializes the clock for a specific game, restoring persisted elapsed time from backend and localStorage.
    */
-  public initialize(gameId: string): void {
+  public initialize(
+    gameId: string,
+    backendClockStartTime?: string | Date | null,
+    backendClockAccumulatedMs?: number
+  ): void {
     this.gameId = gameId;
     
     if (this.intervalId) {
@@ -43,6 +47,23 @@ export class LiveClockService {
     this.accumulatedMs.set(0);
     this.elapsedMs.set(0);
 
+    // Prioritize backend state if available
+    if (backendClockAccumulatedMs !== undefined || backendClockStartTime) {
+      this.accumulatedMs.set(backendClockAccumulatedMs || 0);
+      if (backendClockStartTime) {
+        const parsedStart = new Date(backendClockStartTime).getTime();
+        this.startTime.set(parsedStart);
+        
+        // Start local interval ticks if clock is running on the backend
+        this.intervalId = setInterval(() => {
+          this.updateElapsed();
+        }, 100);
+      }
+      this.updateElapsed();
+      return;
+    }
+
+    // Fallback to localStorage
     const stored = localStorage.getItem(`apex_clock_${gameId}`);
     if (stored !== null) {
       const parsed = parseInt(stored, 10);
@@ -50,6 +71,38 @@ export class LiveClockService {
         this.accumulatedMs.set(parsed);
         this.updateElapsed();
       }
+    }
+  }
+
+  /**
+   * Synchronizes the local clock from a remote update.
+   */
+  public syncFromRemote(remoteStartTime: string | Date | null, remoteAccumulatedMs: number): void {
+    const parsedStart = remoteStartTime ? new Date(remoteStartTime).getTime() : null;
+    
+    const currentLocalStart = this.startTime();
+    const currentLocalAccumulated = this.accumulatedMs();
+    
+    const startChanged = currentLocalStart !== parsedStart;
+    const accumulatedChanged = Math.abs(currentLocalAccumulated - remoteAccumulatedMs) > 1000;
+
+    if (startChanged || accumulatedChanged) {
+      this.accumulatedMs.set(remoteAccumulatedMs);
+      this.startTime.set(parsedStart);
+
+      if (parsedStart !== null) {
+        if (!this.intervalId) {
+          this.intervalId = setInterval(() => {
+            this.updateElapsed();
+          }, 100);
+        }
+      } else {
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
+      }
+      this.updateElapsed();
     }
   }
 
@@ -98,7 +151,11 @@ export class LiveClockService {
       // Ignore haptic errors on web
     }
 
-    this.accumulatedMs.update((total) => total + (Date.now() - this.startTime()!));
+    const now = Date.now();
+    const currentStint = now - this.startTime()!;
+    const newAccumulated = this.accumulatedMs() + currentStint;
+
+    this.accumulatedMs.set(newAccumulated);
     this.persistClock();
     this.startTime.set(null);
 
@@ -120,7 +177,11 @@ export class LiveClockService {
       // Ignore haptic errors on web
     }
 
-    this.stop();
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.startTime.set(null);
     this.accumulatedMs.set(0);
     this.elapsedMs.set(0);
     this.persistClock();
