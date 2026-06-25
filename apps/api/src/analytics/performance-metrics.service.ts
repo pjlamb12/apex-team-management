@@ -35,7 +35,7 @@ export class PerformanceMetricsService {
 
   async getTeamMetrics(teamId: string, seasonId?: string, leagueId?: string): Promise<PlayerPerformanceMetrics[]> {
     // Find all games for the team/season/league
-    const where: any = { type: 'game' };
+    const where: any = { type: 'game', status: 'completed' };
     if (leagueId) {
       where.leagueId = leagueId;
     } else if (seasonId) {

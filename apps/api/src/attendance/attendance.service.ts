@@ -87,13 +87,24 @@ export class AttendanceService {
       relations: ['event'],
     });
 
-    // Filter by season/league if provided
-    let filtered = attendance;
-    if (leagueId) {
-      filtered = attendance.filter(a => a.event?.leagueId === leagueId);
-    } else if (seasonId) {
-      filtered = attendance.filter(a => a.event?.seasonId === seasonId);
-    }
+    // Filter by completed games and past practices/tryouts, as well as season/league
+    const now = new Date();
+    const filtered = attendance.filter(a => {
+      if (!a.event) return false;
+      
+      // Future/unplayed events filter
+      if (a.event.type === 'game') {
+        if (a.event.status !== 'completed') return false;
+      } else {
+        // practices/tryouts must be in the past
+        if (new Date(a.event.scheduledAt) > now) return false;
+      }
+
+      if (leagueId && a.event.leagueId !== leagueId) return false;
+      if (seasonId && a.event.seasonId !== seasonId) return false;
+      
+      return true;
+    });
 
     // Determine the unique set of tracked event IDs (those that have at least one attendance record)
     const trackedEventIds = new Set(filtered.map(a => a.eventId));

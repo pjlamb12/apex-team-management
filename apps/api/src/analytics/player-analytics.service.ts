@@ -155,7 +155,7 @@ export class PlayerAnalyticsService {
           // Playtime engine might fail if game is misconfigured, skip silently
         }
 
-        if (isPresent) gamesPlayed++;
+        if (isPresent && event.status === 'completed') gamesPlayed++;
       }
 
       totalGoals += eventGoals;
