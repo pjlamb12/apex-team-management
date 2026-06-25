@@ -366,6 +366,7 @@ export class Schedule implements OnDestroy {
     leagueId?: string
   ): Promise<void> {
     this.isLoading.set(true);
+    this.events.set([]);
     try {
       const data = await firstValueFrom(
         this.eventsService.getEvents(teamId, scope, seasonId)

@@ -19,10 +19,13 @@ export class SeasonsService {
   }
 
   async initialize(teamId: string): Promise<void> {
+    this.seasons.set([]);
+    this.selectedSeasonId.set(null);
+
     const seasons = await firstValueFrom(this.findAllForTeam(teamId));
     this.seasons.set(seasons);
     
-    if (seasons.length > 0 && !this.selectedSeasonId()) {
+    if (seasons.length > 0) {
       const active = seasons.find(s => s.isActive);
       this.selectedSeasonId.set(active?.id ?? seasons[0].id);
     }

@@ -138,6 +138,8 @@ export class Roster {
   protected async loadPlayers(teamId: string, seasonId: string | null): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
+    this.players.set([]);
+    this.participationStats.set({});
     try {
       let playersReq;
       if (seasonId) {

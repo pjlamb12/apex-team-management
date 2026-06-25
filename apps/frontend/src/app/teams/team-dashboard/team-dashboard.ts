@@ -109,6 +109,7 @@ export class TeamDashboard {
   protected async loadTeam(teamId: string): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
+    this.team.set(null);
     try {
       const team = await firstValueFrom(this.http.get<Team>(`${this.apiUrl}/teams/${teamId}`));
       this.team.set(team);
