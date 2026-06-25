@@ -141,6 +141,28 @@ export class CreateEvent {
     });
   }
 
+  ionViewWillEnter(): void {
+    this.isSaving.set(false);
+    this.errorMessage.set(null);
+    this.form.reset({
+      opponent: '',
+      leagueId: this.leagues().length > 0 ? this.leagues()[0].id : '',
+      scheduledAt: toLocalISOString(new Date()),
+      locationId: '',
+      locationName: '',
+      uniformColor: '',
+      isHomeGame: true,
+      periodCount: 2,
+      periodLengthMinutes: 45,
+      playersOnField: 11,
+      repeat: 'none',
+    });
+    const id = this._teamId();
+    if (id) {
+      void this.loadSeason(id);
+    }
+  }
+
   protected async loadSeason(teamId: string): Promise<void> {
     try {
       const season = await firstValueFrom(this.eventsService.getActiveSeason(teamId));

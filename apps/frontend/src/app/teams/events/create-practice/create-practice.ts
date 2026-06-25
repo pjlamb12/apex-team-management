@@ -113,6 +113,23 @@ export class CreatePractice {
     });
   }
 
+  ionViewWillEnter(): void {
+    this.isSaving.set(false);
+    this.errorMessage.set(null);
+    this.form.reset({
+      scheduledAt: toLocalISOString(new Date()),
+      locationId: '',
+      locationName: '',
+      durationMinutes: 60,
+      notes: '',
+      repeat: 'none',
+    });
+    const id = this._teamId();
+    if (id) {
+      void this.loadSeasonDefaults(id);
+    }
+  }
+
   private async loadSeasonDefaults(teamId: string): Promise<void> {
     try {
       const season = await firstValueFrom(this.eventsService.getActiveSeason(teamId));

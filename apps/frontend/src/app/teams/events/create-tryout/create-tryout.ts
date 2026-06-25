@@ -115,6 +115,22 @@ export class CreateTryout {
     });
   }
 
+  ionViewWillEnter(): void {
+    this.isSaving.set(false);
+    this.errorMessage.set(null);
+    this.form.reset({
+      scheduledAt: toLocalISOString(new Date()),
+      locationId: '',
+      locationName: '',
+      durationMinutes: 90,
+      notes: '',
+    });
+    const id = this._teamId();
+    if (id) {
+      void this.loadSeason(id);
+    }
+  }
+
   protected async loadSeason(teamId: string): Promise<void> {
     try {
       const season = await firstValueFrom(this.eventsService.getActiveSeason(teamId));
