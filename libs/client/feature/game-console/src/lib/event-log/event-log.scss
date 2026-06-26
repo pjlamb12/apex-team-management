@@ -10,3 +10,13 @@
   padding: 24px;
   text-align: center;
 }
+
+ion-item {
+  ion-badge[slot="start"] {
+    margin-inline-end: 16px;
+  }
+  
+  ion-icon[slot="start"] {
+    margin-inline-end: 16px;
+  }
+}
