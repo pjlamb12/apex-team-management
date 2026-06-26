@@ -32,6 +32,18 @@ export class PlayingTimeService {
       order: { createdAt: 'ASC' },
     });
 
+    if (gameEvents.length === 0) {
+      const result: Record<string, PlayerPlaytime> = {};
+      lineup.forEach((entry) => {
+        result[entry.playerId] = {
+          playerId: entry.playerId,
+          totalSeconds: 0,
+          positionSeconds: {},
+        };
+      });
+      return result;
+    }
+
     const totalsMs: Record<string, number> = {};
     const positionTotalsMs: Record<string, Record<string, number>> = {};
     const stintStartMs: Record<string, number> = {};

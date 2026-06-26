@@ -59,7 +59,7 @@ describe('PlayingTimeService', () => {
       await expect(service.calculateForEvent(eventId)).rejects.toThrow(NotFoundException);
     });
 
-    it('should calculate time for starting players with no events', async () => {
+    it('should return zero playtime for all players if there are no game events', async () => {
       vi.spyOn(eventRepo, 'findOne').mockResolvedValue({ id: eventId, status: 'completed', durationMinutes: 90 } as any);
       vi.spyOn(lineupRepo, 'find').mockResolvedValue([
         { playerId: player1, status: 'starting', positionName: 'GK' },
@@ -67,8 +67,8 @@ describe('PlayingTimeService', () => {
       vi.spyOn(gameEventRepo, 'find').mockResolvedValue([]);
 
       const result = await service.calculateForEvent(eventId);
-      expect(result[player1].totalSeconds).toBe(90 * 60);
-      expect(result[player1].positionSeconds['GK']).toBe(90 * 60);
+      expect(result[player1].totalSeconds).toBe(0);
+      expect(result[player1].positionSeconds['GK']).toBeUndefined();
     });
 
     it('should handle substitutions', async () => {
