@@ -197,5 +197,20 @@ describe('LiveGameStateService', () => {
       service.clearStagedSubs();
       expect(service.stagedSubs()).toEqual([]);
     });
+
+    it('should calculate statsSummary, including goals in the shot count', () => {
+      service.pushEvent({ type: 'SHOT', timestamp: Date.now(), minuteOccurred: 5 });
+      service.pushEvent({ type: 'GOAL', timestamp: Date.now() + 1, minuteOccurred: 10, playerId: 'p1' });
+      service.pushEvent({ type: 'CORNER_KICK', timestamp: Date.now() + 2, minuteOccurred: 12 });
+      service.pushEvent({ type: 'OPPONENT_SHOT', timestamp: Date.now() + 3, minuteOccurred: 15 });
+      service.pushEvent({ type: 'OPPONENT_GOAL', timestamp: Date.now() + 4, minuteOccurred: 20 });
+      service.pushEvent({ type: 'OPPONENT_CORNER_KICK', timestamp: Date.now() + 5, minuteOccurred: 22 });
+
+      const summary = service.statsSummary();
+      expect(summary.teamShots).toBe(2); // 1 SHOT + 1 GOAL
+      expect(summary.opponentShots).toBe(2); // 1 OPPONENT_SHOT + 1 OPPONENT_GOAL
+      expect(summary.teamCorners).toBe(1);
+      expect(summary.opponentCorners).toBe(1);
+    });
   });
 });

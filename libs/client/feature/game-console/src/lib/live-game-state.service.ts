@@ -127,8 +127,8 @@ export class LiveGameStateService {
 
   public readonly statsSummary = computed(() => {
     const events = this._events().filter((e) => e.status !== 'deleted');
-    const teamShots = events.filter((e) => e.type === 'SHOT').length;
-    const opponentShots = events.filter((e) => e.type === 'OPPONENT_SHOT').length;
+    const teamShots = events.filter((e) => e.type === 'SHOT' || e.type === 'GOAL').length;
+    const opponentShots = events.filter((e) => e.type === 'OPPONENT_SHOT' || e.type === 'OPPONENT_GOAL').length;
     const teamCorners = events.filter((e) => e.type === 'CORNER_KICK').length;
     const opponentCorners = events.filter((e) => e.type === 'OPPONENT_CORNER_KICK').length;
     return {
