@@ -20,3 +20,9 @@ ion-item {
     margin-inline-end: 16px;
   }
 }
+
+ion-list-header {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  padding-inline: 16px;
+}
