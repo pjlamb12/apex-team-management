@@ -420,6 +420,8 @@ export class LiveGameStateService {
       position: payload.positionName || payload.position || event.position,
       synced: event.synced !== undefined ? event.synced : !!event.id,
       status: event.status || 'active',
+      gameTimeMs: event.gameTimeMs !== undefined ? event.gameTimeMs : payload.gameTimeMs,
+      period: event.period !== undefined ? event.period : payload.period,
     };
   }
 
