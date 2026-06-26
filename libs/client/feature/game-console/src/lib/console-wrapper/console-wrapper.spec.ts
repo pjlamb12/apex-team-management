@@ -205,4 +205,28 @@ describe('ConsoleWrapper', () => {
     component['stopClock']();
     expect(clockServiceMock.stop).toHaveBeenCalled();
   });
+
+  it('should push SHOT event when addTeamShot is called', () => {
+    component['addTeamShot']();
+    const events = stateService.events();
+    expect(events.find(e => e.type === 'SHOT')).toBeDefined();
+  });
+
+  it('should push CORNER_KICK event when addTeamCorner is called', () => {
+    component['addTeamCorner']();
+    const events = stateService.events();
+    expect(events.find(e => e.type === 'CORNER_KICK')).toBeDefined();
+  });
+
+  it('should push OPPONENT_SHOT event when addOpponentShot is called', () => {
+    component['addOpponentShot']();
+    const events = stateService.events();
+    expect(events.find(e => e.type === 'OPPONENT_SHOT')).toBeDefined();
+  });
+
+  it('should push OPPONENT_CORNER_KICK event when addOpponentCorner is called', () => {
+    component['addOpponentCorner']();
+    const events = stateService.events();
+    expect(events.find(e => e.type === 'OPPONENT_CORNER_KICK')).toBeDefined();
+  });
 });

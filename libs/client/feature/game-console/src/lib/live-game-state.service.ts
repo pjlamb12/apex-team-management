@@ -125,6 +125,20 @@ export class LiveGameStateService {
     return { team, opponent };
   });
 
+  public readonly statsSummary = computed(() => {
+    const events = this._events().filter((e) => e.status !== 'deleted');
+    const teamShots = events.filter((e) => e.type === 'SHOT').length;
+    const opponentShots = events.filter((e) => e.type === 'OPPONENT_SHOT').length;
+    const teamCorners = events.filter((e) => e.type === 'CORNER_KICK').length;
+    const opponentCorners = events.filter((e) => e.type === 'OPPONENT_CORNER_KICK').length;
+    return {
+      teamShots,
+      opponentShots,
+      teamCorners,
+      opponentCorners,
+    };
+  });
+
   public initialize(eventId: string, lineup: LineupEntry[] = [], teamId?: string, playersOnField?: number): void {
     this._eventId.set(eventId);
     if (teamId) this._teamId.set(teamId);

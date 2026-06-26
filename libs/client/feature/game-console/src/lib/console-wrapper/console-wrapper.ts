@@ -310,6 +310,42 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     this.stateService.addOpponentGoal(this.clockService.currentMinute(), this.clockService.elapsedMs());
   }
 
+  protected addTeamShot(): void {
+    this.stateService.pushEvent({
+      type: 'SHOT',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
+  protected addTeamCorner(): void {
+    this.stateService.pushEvent({
+      type: 'CORNER_KICK',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
+  protected addOpponentShot(): void {
+    this.stateService.pushEvent({
+      type: 'OPPONENT_SHOT',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
+  protected addOpponentCorner(): void {
+    this.stateService.pushEvent({
+      type: 'OPPONENT_CORNER_KICK',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
   protected async nextPeriod(): Promise<void> {
     const gameTimeMs = this.clockService.elapsedMs();
     this.stateService.pushEvent({

@@ -97,47 +97,82 @@
 
 <ion-content class="ion-no-padding">
   <div class="flex flex-col bg-ap-bg">
-    <!-- Top Bar: Clock and Quick Actions -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-ap-surface-raised border-b border-ap-border shrink-0">
-      <!-- Clock: centered on mobile, left on desktop -->
-      <div class="flex justify-center sm:justify-start">
-        <app-clock-display></app-clock-display>
+    <!-- Top Bar: Clock and Quick Actions (Two Rows) -->
+    <div class="flex flex-col gap-3 p-4 bg-ap-surface-raised border-b border-ap-border shrink-0">
+      <!-- Row 1: Clock & Control Buttons -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <!-- Clock: centered on mobile, left on desktop -->
+        <div class="flex justify-center sm:justify-start">
+          <app-clock-display></app-clock-display>
+        </div>
+
+        <!-- Buttons: 2-col grid on mobile, single row on desktop -->
+        <div class="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+          @if (isRunning()) {
+            <ion-button color="warning" (click)="stopClock()">
+              <ion-icon name="pause-outline" slot="start"></ion-icon>
+              Pause
+            </ion-button>
+          } @else {
+            <ion-button color="success" (click)="startClock()">
+              <ion-icon name="play-outline" slot="start"></ion-icon>
+              Start
+            </ion-button>
+          }
+
+          <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
+            <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+            Next Period
+          </ion-button>
+
+          @if (!isShootoutActive()) {
+            <ion-button color="secondary" fill="solid" (click)="startShootout()">
+              <ion-icon name="football-outline" slot="start"></ion-icon>
+              Shootout
+            </ion-button>
+          }
+
+          <ion-button color="danger" fill="solid" (click)="endGame()">
+            <ion-icon name="flag-outline" slot="start"></ion-icon>
+            End Game
+          </ion-button>
+        </div>
       </div>
 
-      <!-- Buttons: 2-col grid on mobile, single row on desktop -->
-      <div class="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-        @if (isRunning()) {
-          <ion-button color="warning" (click)="stopClock()">
-            <ion-icon name="pause-outline" slot="start"></ion-icon>
-            Pause
-          </ion-button>
-        } @else {
-          <ion-button color="success" (click)="startClock()">
-            <ion-icon name="play-outline" slot="start"></ion-icon>
-            Start
-          </ion-button>
-        }
+      <!-- Row 2: Team-Wide Stats Groups -->
+      <div class="flex flex-col sm:flex-row items-stretch gap-3 border-t border-ap-border/30 pt-3">
+        <!-- Our Team Stats Group -->
+        <div class="flex-1 flex items-center justify-between sm:justify-start gap-4 p-2 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+          <div class="text-sm font-black text-ap-primary uppercase tracking-wider shrink-0 px-2">
+            {{ team()?.name ?? 'Our Team' }}
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <ion-button size="small" color="primary" fill="solid" (click)="addTeamShot()">
+              + Shot ({{ stateService.statsSummary().teamShots }})
+            </ion-button>
+            <ion-button size="small" color="primary" fill="outline" (click)="addTeamCorner()">
+              + Corner ({{ stateService.statsSummary().teamCorners }})
+            </ion-button>
+          </div>
+        </div>
 
-        <ion-button color="danger" fill="outline" (click)="addOpponentGoal()">
-          + Opponent Goal
-        </ion-button>
-
-        <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
-          <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
-          Next Period
-        </ion-button>
-
-        @if (!isShootoutActive()) {
-          <ion-button color="secondary" fill="solid" (click)="startShootout()">
-            <ion-icon name="football-outline" slot="start"></ion-icon>
-            Shootout
-          </ion-button>
-        }
-
-        <ion-button color="danger" fill="solid" (click)="endGame()">
-          <ion-icon name="flag-outline" slot="start"></ion-icon>
-          End Game
-        </ion-button>
+        <!-- Opponent Stats Group -->
+        <div class="flex-1 flex items-center justify-between sm:justify-start gap-4 p-2 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+          <div class="text-sm font-black text-ap-muted uppercase tracking-wider shrink-0 px-2">
+            {{ event()?.opponent ?? 'Opponent' }}
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <ion-button size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
+              + Goal ({{ stateService.score().opponent }})
+            </ion-button>
+            <ion-button size="small" color="medium" fill="solid" (click)="addOpponentShot()">
+              + Shot ({{ stateService.statsSummary().opponentShots }})
+            </ion-button>
+            <ion-button size="small" color="medium" fill="outline" (click)="addOpponentCorner()">
+              + Corner ({{ stateService.statsSummary().opponentCorners }})
+            </ion-button>
+          </div>
+        </div>
       </div>
     </div>
 
