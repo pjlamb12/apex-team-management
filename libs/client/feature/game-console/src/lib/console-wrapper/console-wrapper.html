@@ -142,33 +142,33 @@
       <!-- Row 2: Team-Wide Stats Groups -->
       <div class="flex flex-col sm:flex-row items-stretch gap-3 border-t border-ap-border/30 pt-3">
         <!-- Our Team Stats Group -->
-        <div class="flex-1 flex items-center justify-between sm:justify-start gap-4 p-2 bg-ap-bg/50 rounded-lg border border-ap-border/40">
-          <div class="text-sm font-black text-ap-primary uppercase tracking-wider shrink-0 px-2">
+        <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+          <div class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">
             {{ team()?.name ?? 'Our Team' }}
           </div>
-          <div class="flex gap-2 flex-wrap">
-            <ion-button size="small" color="primary" fill="solid" (click)="addTeamShot()">
+          <div class="grid grid-cols-2 gap-2 w-full">
+            <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="solid" (click)="addTeamShot()">
               + Shot ({{ stateService.statsSummary().teamShots }})
             </ion-button>
-            <ion-button size="small" color="primary" fill="outline" (click)="addTeamCorner()">
+            <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="outline" (click)="addTeamCorner()">
               + Corner ({{ stateService.statsSummary().teamCorners }})
             </ion-button>
           </div>
         </div>
 
         <!-- Opponent Stats Group -->
-        <div class="flex-1 flex items-center justify-between sm:justify-start gap-4 p-2 bg-ap-bg/50 rounded-lg border border-ap-border/40">
-          <div class="text-sm font-black text-ap-muted uppercase tracking-wider shrink-0 px-2">
+        <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+          <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
             {{ event()?.opponent ?? 'Opponent' }}
           </div>
-          <div class="flex gap-2 flex-wrap">
-            <ion-button size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
+          <div class="grid grid-cols-3 gap-2 w-full">
+            <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
               + Goal ({{ stateService.score().opponent }})
             </ion-button>
-            <ion-button size="small" color="medium" fill="solid" (click)="addOpponentShot()">
+            <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="solid" (click)="addOpponentShot()">
               + Shot ({{ stateService.statsSummary().opponentShots }})
             </ion-button>
-            <ion-button size="small" color="medium" fill="outline" (click)="addOpponentCorner()">
+            <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="outline" (click)="addOpponentCorner()">
               + Corner ({{ stateService.statsSummary().opponentCorners }})
             </ion-button>
           </div>
