@@ -19,8 +19,11 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SaveLineupDto } from './dto/save-lineup.dto';
 import { CreateGameEventDto } from './dto/create-game-event.dto';
+import { TeamRoleGuard } from '../auth/guards/team-role.guard';
+import { TeamRoles } from '../auth/decorators/team-role.decorator';
+import { TeamRole } from '@apex-team/shared/util/models';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId/events')
 export class EventsController {
   constructor(
@@ -30,6 +33,7 @@ export class EventsController {
   ) {}
 
   @Post(':eventId/weather/refresh')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   refreshWeather(
     @Param('eventId', ParseUUIDPipe) eventId: string,
   ) {
@@ -37,6 +41,7 @@ export class EventsController {
   }
 
   @Post()
+  @TeamRoles(TeamRole.HEAD_COACH)
   create(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Body() dto: CreateEventDto,
@@ -46,6 +51,7 @@ export class EventsController {
   }
 
   @Get()
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findAll(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('scope') scope?: 'upcoming' | 'past',
@@ -55,6 +61,7 @@ export class EventsController {
   }
 
   @Get(':eventId')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findOne(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
@@ -63,6 +70,7 @@ export class EventsController {
   }
 
   @Patch(':eventId')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   update(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
@@ -72,6 +80,7 @@ export class EventsController {
   }
 
   @Delete(':eventId')
+  @TeamRoles(TeamRole.HEAD_COACH)
   remove(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
@@ -80,6 +89,7 @@ export class EventsController {
   }
 
   @Get(':eventId/lineup')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   getLineup(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
@@ -88,6 +98,7 @@ export class EventsController {
   }
 
   @Post(':eventId/lineup')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   saveLineup(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
@@ -97,6 +108,7 @@ export class EventsController {
   }
 
   @Get(':eventId/game-events')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   getEvents(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
@@ -105,6 +117,7 @@ export class EventsController {
   }
 
   @Post(':eventId/game-events')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   logEvent(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
@@ -115,6 +128,7 @@ export class EventsController {
   }
 
   @Delete(':eventId/game-events/:gameEventId')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   removeEvent(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,

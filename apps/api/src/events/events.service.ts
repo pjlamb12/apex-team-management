@@ -13,6 +13,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
 import { WeatherService } from './weather.service';
 import { AttendanceService } from '../attendance/attendance.service';
+import { TeamRole } from '@apex-team/shared/util/models';
 
 @Injectable()
 export class EventsService {
@@ -249,14 +250,19 @@ export class EventsService {
   ): Promise<GameEventEntity> {
     const event = await this.eventRepo.findOne({
       where: { id: eventId },
-      relations: ['season', 'season.team', 'season.team.sport'],
+      relations: ['season', 'season.team', 'season.team.sport', 'season.team.members'],
     });
 
     if (!event) {
       throw new NotFoundException(`Event with ID ${eventId} not found`);
     }
 
-    if (event.season.team.coachId !== userId) {
+    const isCoach = event.season.team.coachId === userId;
+    const isMemberCoachOrAssistant = event.season.team.members?.some(
+      (m) => m.userId === userId && (m.role === TeamRole.HEAD_COACH || m.role === TeamRole.ASSISTANT)
+    ) ?? false;
+
+    if (!isCoach && !isMemberCoachOrAssistant) {
       throw new ForbiddenException('Not authorized to log events for this event');
     }
 
@@ -295,14 +301,19 @@ export class EventsService {
   async removeEvent(eventId: string, gameEventId: string, userId: string): Promise<void> {
     const gameEvent = await this.gameEventRepo.findOne({
       where: { id: gameEventId, eventId },
-      relations: ['event', 'event.season', 'event.season.team'],
+      relations: ['event', 'event.season', 'event.season.team', 'event.season.team.members'],
     });
 
     if (!gameEvent) {
       throw new NotFoundException(`Game event ${gameEventId} not found for event ${eventId}`);
     }
 
-    if (gameEvent.event?.season?.team?.coachId !== userId) {
+    const isCoach = gameEvent.event?.season?.team?.coachId === userId;
+    const isMemberCoachOrAssistant = gameEvent.event?.season?.team?.members?.some(
+      (m) => m.userId === userId && (m.role === TeamRole.HEAD_COACH || m.role === TeamRole.ASSISTANT)
+    ) ?? false;
+
+    if (!isCoach && !isMemberCoachOrAssistant) {
       throw new ForbiddenException('Not authorized to remove events for this event');
     }
 

@@ -248,8 +248,8 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     });
 
     effect(() => {
-      const e = this.event();
-      if (e && e.status === 'completed') {
+      const status = this.stateService.status();
+      if (status === 'completed') {
         const teamId = this.teamId();
         const eventId = this.eventId();
         if (teamId && eventId) {

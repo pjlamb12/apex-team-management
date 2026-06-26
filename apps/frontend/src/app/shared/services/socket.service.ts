@@ -13,6 +13,9 @@ export class SocketService {
   private socket: Socket | null = null;
   public readonly isConnected = signal(false);
 
+  private activeEventId: string | null = null;
+  private activeTeamId: string | null = null;
+
   private get socketUrl(): string {
     const url = this.config.getConfigObjectKey('apiBaseUrl') as string;
     // If apiBaseUrl is http://localhost:3000/api, we want http://localhost:3000
@@ -38,6 +41,15 @@ export class SocketService {
     this.socket.on('connect', () => {
       this.isConnected.set(true);
       console.log('Socket connected');
+      
+      if (this.activeEventId) {
+        this.socket?.emit('joinEvent', this.activeEventId);
+        console.log(`Rejoined event room: ${this.activeEventId}`);
+      }
+      if (this.activeTeamId) {
+        this.socket?.emit('joinTeam', this.activeTeamId);
+        console.log(`Rejoined team room: ${this.activeTeamId}`);
+      }
     });
 
     this.socket.on('disconnect', () => {
@@ -56,23 +68,29 @@ export class SocketService {
       this.socket.disconnect();
       this.socket = null;
     }
+    this.activeEventId = null;
+    this.activeTeamId = null;
   }
 
   joinTeam(teamId: string): void {
+    this.activeTeamId = teamId;
     this.ensureConnected();
     this.socket?.emit('joinTeam', teamId);
   }
 
   leaveTeam(teamId: string): void {
+    this.activeTeamId = null;
     this.socket?.emit('leaveTeam', teamId);
   }
 
   joinEvent(eventId: string): void {
+    this.activeEventId = eventId;
     this.ensureConnected();
     this.socket?.emit('joinEvent', eventId);
   }
 
   leaveEvent(eventId: string): void {
+    this.activeEventId = null;
     this.socket?.emit('leaveEvent', eventId);
   }
 

@@ -15,6 +15,7 @@ import { GameEventEntity } from '../entities/game-event.entity';
 import { SocketModule } from '../socket/socket.module';
 import { LocationsModule } from '../locations/locations.module';
 import { AttendanceModule } from '../attendance/attendance.module';
+import { MembershipsModule } from '../memberships/memberships.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AttendanceModule } from '../attendance/attendance.module';
     SocketModule,
     LocationsModule,
     AttendanceModule,
+    MembershipsModule,
   ],
   controllers: [EventsController],
   providers: [EventsService, LineupEntriesService, ICalService, WeatherService],

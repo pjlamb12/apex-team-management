@@ -11,6 +11,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
 import { WeatherService } from './weather.service';
 import { AttendanceService } from '../attendance/attendance.service';
+import { TeamRole } from '@apex-team/shared/util/models';
 import { vi } from 'vitest';
 
 describe('EventsService', () => {
@@ -462,6 +463,119 @@ describe('EventsService', () => {
       };
 
       await expect(service.logEvent(eventId, invalidDto, userId)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should create a game event if logged in user is an assistant coach', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: {
+          team: {
+            coachId: 'other-user',
+            members: [
+              { userId, role: TeamRole.ASSISTANT }
+            ],
+            sport: {
+              eventDefinitions: [
+                {
+                  type: 'GOAL',
+                  payloadSchema: {
+                    type: 'object',
+                    properties: { scorerId: { type: 'string' } },
+                    required: ['scorerId'],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+
+      const result = await service.logEvent(eventId, dto, userId);
+
+      expect(result).toBeDefined();
+      expect(result.eventType).toBe('GOAL');
+      expect(gameEventRepo.save).toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenException if user is on team but not coach/assistant role', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: {
+          team: {
+            coachId: 'other-user',
+            members: [
+              { userId, role: 'PLAYER' }
+            ],
+          },
+        },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+
+      await expect(service.logEvent(eventId, dto, userId)).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('removeEvent', () => {
+    const eventId = 'event-1';
+    const gameEventId = 'game-event-1';
+    const userId = 'user-1';
+
+    it('should successfully remove event if user is the head coach', async () => {
+      const mockGameEvent = {
+        id: gameEventId,
+        eventId,
+        event: {
+          season: {
+            team: {
+              coachId: userId,
+            },
+          },
+        },
+      };
+      vi.spyOn(gameEventRepo, 'findOne').mockResolvedValue(mockGameEvent as any);
+
+      await service.removeEvent(eventId, gameEventId, userId);
+      expect(gameEventRepo.remove).toHaveBeenCalledWith(mockGameEvent);
+    });
+
+    it('should successfully remove event if user is an assistant coach', async () => {
+      const mockGameEvent = {
+        id: gameEventId,
+        eventId,
+        event: {
+          season: {
+            team: {
+              coachId: 'other-coach',
+              members: [
+                { userId, role: TeamRole.ASSISTANT }
+              ],
+            },
+          },
+        },
+      };
+      vi.spyOn(gameEventRepo, 'findOne').mockResolvedValue(mockGameEvent as any);
+
+      await service.removeEvent(eventId, gameEventId, userId);
+      expect(gameEventRepo.remove).toHaveBeenCalledWith(mockGameEvent);
+    });
+
+    it('should throw ForbiddenException if user is not authorized to remove event', async () => {
+      const mockGameEvent = {
+        id: gameEventId,
+        eventId,
+        event: {
+          season: {
+            team: {
+              coachId: 'other-coach',
+              members: [],
+            },
+          },
+        },
+      };
+      vi.spyOn(gameEventRepo, 'findOne').mockResolvedValue(mockGameEvent as any);
+
+      await expect(service.removeEvent(eventId, gameEventId, userId)).rejects.toThrow(ForbiddenException);
     });
   });
 });
