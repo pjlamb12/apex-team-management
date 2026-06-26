@@ -87,11 +87,11 @@
                   }
                 </ion-select>
                 
-                <div class="flex gap-1.5 justify-end">
+                <div class="flex flex-col sm:flex-row gap-1.5 justify-end w-full">
                   <ion-button 
                     size="small" 
                     color="success" 
-                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2 w-full sm:w-auto ion-no-margin"
                     [disabled]="!selectedPlayers()[rnd.round]"
                     (click)="logKick(rnd.round, 'team', 'goal')"
                   >
@@ -100,7 +100,7 @@
                   <ion-button 
                     size="small" 
                     color="warning" 
-                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2 w-full sm:w-auto ion-no-margin"
                     [disabled]="!selectedPlayers()[rnd.round]"
                     (click)="logKick(rnd.round, 'team', 'save')"
                   >
@@ -109,7 +109,7 @@
                   <ion-button 
                     size="small" 
                     color="danger" 
-                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2 w-full sm:w-auto ion-no-margin"
                     [disabled]="!selectedPlayers()[rnd.round]"
                     (click)="logKick(rnd.round, 'team', 'miss')"
                   >
@@ -167,11 +167,11 @@
                   }
                 </ion-select>
                 
-                <div class="flex gap-1.5 justify-end">
+                <div class="flex flex-col sm:flex-row gap-1.5 justify-end w-full">
                   <ion-button 
                     size="small" 
                     color="danger" 
-                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2 w-full sm:w-auto ion-no-margin"
                     [disabled]="!selectedGoalkeepers()[rnd.round]"
                     (click)="logKick(rnd.round, 'opponent', 'goal')"
                   >
@@ -180,7 +180,7 @@
                   <ion-button 
                     size="small" 
                     color="success" 
-                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2 w-full sm:w-auto ion-no-margin"
                     [disabled]="!selectedGoalkeepers()[rnd.round]"
                     (click)="logKick(rnd.round, 'opponent', 'save')"
                   >
@@ -189,7 +189,7 @@
                   <ion-button 
                     size="small" 
                     color="success" 
-                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2"
+                    class="font-black text-[10px] tracking-wider uppercase h-7 px-2 w-full sm:w-auto ion-no-margin"
                     [disabled]="!selectedGoalkeepers()[rnd.round]"
                     (click)="logKick(rnd.round, 'opponent', 'miss')"
                   >
