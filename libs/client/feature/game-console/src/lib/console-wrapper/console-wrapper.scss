@@ -75,3 +75,14 @@ ion-title {
     transform: translateY(0);
   }
 }
+
+.stats-row-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+
+  @media (min-width: 871px) {
+    flex-direction: row;
+  }
+}
