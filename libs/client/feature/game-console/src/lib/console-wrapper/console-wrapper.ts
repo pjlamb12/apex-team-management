@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, switchMap, filter, tap, firstValueFrom } from 'rxjs';
+import { map, switchMap, filter, tap, firstValueFrom, forkJoin, EMPTY, shareReplay } from 'rxjs';
 import {
   IonHeader,
   IonToolbar,
@@ -108,98 +108,87 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     )
   );
 
-  protected event = toSignal(
-    this.route.paramMap.pipe(
-      map((params) => ({
-        teamId: params.get('id'),
-        eventId: params.get('eventId')
-      })),
-      filter((p): p is { teamId: string; eventId: string } => !!p.teamId && !!p.eventId),
-      switchMap(({ teamId, eventId }) => {
-        const url = this.apiUrl;
-        if (!url) return [];
-        return this.http.get<EventEntity>(`${url}/teams/${teamId}/events/${eventId}`);
-      })
-    )
-  );
-
-  protected lineup = toSignal(
-    this.route.paramMap.pipe(
-      map((params) => ({
-        teamId: params.get('id'),
-        eventId: params.get('eventId')
-      })),
-      filter((p): p is { teamId: string; eventId: string } => !!p.teamId && !!p.eventId),
-      tap(({ eventId }) => {
-        this.socketService.joinEvent(eventId);
-        this.socketService.onEvent('gameEventLogged', (event) => {
-          this.stateService.handleRemoteEvent(event);
-        });
-        this.socketService.onEvent('gameEventRemoved', (data: any) => {
-          this.stateService.handleRemoteDeletion(data);
-        });
-        this.socketService.onEvent('gameStatusUpdated', (event) => {
-          this.stateService.handleRemoteStatusUpdate(event);
-        });
-        this.socketService.onEvent('eventUpdated', (updatedEvent: any) => {
-          if (updatedEvent.id === eventId) {
-            this.clockService.syncFromRemote(
-              updatedEvent.clockStartTime,
-              updatedEvent.clockAccumulatedMs || 0
-            );
-            this.stateService.handleRemoteStatusUpdate(updatedEvent);
-          }
-        });
-      }),
-      switchMap(({ teamId, eventId }) => {
-        const url = this.apiUrl;
-        if (!url) return [];
-        return this.http.get<LineupEntry[]>(`${url}/teams/${teamId}/events/${eventId}/lineup`);
-      }),
-      tap(async (lineup) => {
-        const eventId = this.eventId();
-        const teamId = this.teamId();
-        const eventData = this.event();
-
-        // If the event is already completed, redirect and do not initialize the console
-        if (eventData?.status === 'completed') {
-          void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
-          return;
-        }
-
-        if (eventId && teamId) {
-          this.stateService.initialize(eventId, lineup, teamId, eventData?.playersOnField || undefined);
-          this.clockService.initialize(
-            eventId,
-            eventData?.clockStartTime,
-            eventData?.clockAccumulatedMs || 0
+  private combinedData$ = this.route.paramMap.pipe(
+    map((params) => ({
+      teamId: params.get('id'),
+      eventId: params.get('eventId')
+    })),
+    filter((p): p is { teamId: string; eventId: string } => !!p.teamId && !!p.eventId),
+    tap(({ eventId }) => {
+      this.socketService.joinEvent(eventId);
+      this.socketService.onEvent('gameEventLogged', (event) => {
+        this.stateService.handleRemoteEvent(event);
+      });
+      this.socketService.onEvent('gameEventRemoved', (data: any) => {
+        this.stateService.handleRemoteDeletion(data);
+      });
+      this.socketService.onEvent('gameStatusUpdated', (event) => {
+        this.stateService.handleRemoteStatusUpdate(event);
+      });
+      this.socketService.onEvent('eventUpdated', (updatedEvent: any) => {
+        if (updatedEvent.id === eventId) {
+          this.clockService.syncFromRemote(
+            updatedEvent.clockStartTime,
+            updatedEvent.clockAccumulatedMs || 0
           );
+          this.stateService.handleRemoteStatusUpdate(updatedEvent);
+        }
+      });
+    }),
+    switchMap(({ teamId, eventId }) => {
+      const url = this.apiUrl;
+      if (!url) return EMPTY;
+      
+      return forkJoin({
+        event: this.http.get<EventEntity>(`${url}/teams/${teamId}/events/${eventId}`),
+        lineup: this.http.get<LineupEntry[]>(`${url}/teams/${teamId}/events/${eventId}/lineup`)
+      }).pipe(
+        tap(async ({ event, lineup }) => {
+          // If the event is already completed, redirect and do not initialize the console
+          if (event?.status === 'completed') {
+            void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
+            return;
+          }
 
-          // If no events in local state, fetch from backend to restore logs
-          if (this.stateService.events().length === 0) {
-            try {
-              const backendEvents = await firstValueFrom(this.eventsService.getGameEvents(teamId, eventId));
-              if (backendEvents && backendEvents.length > 0) {
-                // Map backend events to frontend GameEvent format
-                const mappedEvents = backendEvents.map(be => ({
-                  id: be.id,
-                  type: be.eventType,
-                  minuteOccurred: be.minuteOccurred,
-                  timestamp: Date.now(), // Use current time since backend doesn't store original local timestamp
-                  synced: true,
-                  status: 'active' as const,
-                  ...be.payload
-                }));
-                this.stateService.setEvents(mappedEvents);
+          if (eventId && teamId) {
+            this.stateService.initialize(eventId, lineup, teamId, event?.playersOnField || undefined);
+            this.clockService.initialize(
+              eventId,
+              event?.clockStartTime,
+              event?.clockAccumulatedMs || 0
+            );
+
+            // If no events in local state, fetch from backend to restore logs
+            if (this.stateService.events().length === 0) {
+              try {
+                const backendEvents = await firstValueFrom(this.eventsService.getGameEvents(teamId, eventId));
+                if (backendEvents && backendEvents.length > 0) {
+                  // Map backend events to frontend GameEvent format
+                  const mappedEvents = backendEvents.map(be => ({
+                    id: be.id,
+                    type: be.eventType,
+                    minuteOccurred: be.minuteOccurred,
+                    timestamp: Date.now(), // Use current time since backend doesn't store original local timestamp
+                    synced: true,
+                    status: 'active' as const,
+                    ...be.payload
+                  }));
+                  this.stateService.setEvents(mappedEvents);
+                }
+              } catch (err) {
+                console.error('Failed to restore event logs from backend', err);
               }
-            } catch (err) {
-              console.error('Failed to restore event logs from backend', err);
             }
           }
-        }
-      })
-    )
+        }),
+        map(({ event, lineup }) => ({ event, lineup }))
+      );
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
+
+  protected event = toSignal(this.combinedData$.pipe(map(d => d.event)));
+  protected lineup = toSignal(this.combinedData$.pipe(map(d => d.lineup)));
 
   protected isRunning = this.clockService.isRunning;
 
