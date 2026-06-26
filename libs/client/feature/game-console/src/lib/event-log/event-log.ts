@@ -1,7 +1,7 @@
 import { Component, inject, computed } from '@angular/core';
 import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline } from 'ionicons/icons';
+import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline } from 'ionicons/icons';
 import { LiveGameStateService } from '../live-game-state.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { firstValueFrom } from 'rxjs';
@@ -32,7 +32,9 @@ export class EventLogViewComponent {
       cardOutline, 
       swapHorizontalOutline,
       helpOutline,
-      shieldOutline
+      shieldOutline,
+      flagOutline,
+      timeOutline
     });
   }
 
@@ -47,6 +49,12 @@ export class EventLogViewComponent {
       case 'BLOCKED_SHOT':
       case 'BLOCKED_PENALTY': return 'shield-outline';
       case 'SHOOTOUT_KICK': return 'football-outline';
+      case 'SHOT':
+      case 'OPPONENT_SHOT': return 'football-outline';
+      case 'CORNER_KICK':
+      case 'OPPONENT_CORNER_KICK': return 'flag-outline';
+      case 'PERIOD_START':
+      case 'PERIOD_END': return 'time-outline';
       default: return 'help-outline';
     }
   }
@@ -61,6 +69,12 @@ export class EventLogViewComponent {
       case 'BLOCKED_SHOT': return 'primary';
       case 'BLOCKED_PENALTY': return 'success';
       case 'SHOOTOUT_KICK': return 'medium';
+      case 'SHOT': return 'primary';
+      case 'OPPONENT_SHOT': return 'medium';
+      case 'CORNER_KICK': return 'secondary';
+      case 'OPPONENT_CORNER_KICK': return 'medium';
+      case 'PERIOD_START':
+      case 'PERIOD_END': return 'medium';
       default: return 'medium';
     }
   }

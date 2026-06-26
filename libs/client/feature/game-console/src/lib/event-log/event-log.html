@@ -47,7 +47,7 @@
             }
             ({{ event['outcome'] || event['payload']?.outcome }})
           </p>
-        } @else if (event.type !== 'SUB' && event.type !== 'OPPONENT_GOAL') {
+        } @else if (event.playerId) {
           <p>
             {{ getPlayerName(event.playerId) }}
           </p>
