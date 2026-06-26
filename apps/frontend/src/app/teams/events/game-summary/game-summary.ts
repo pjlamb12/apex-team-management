@@ -47,7 +47,8 @@ import {
   closeCircleOutline,
   alertCircleOutline,
   bandageOutline,
-  chevronBackOutline
+  chevronBackOutline,
+  flagOutline
 } from 'ionicons/icons';
 import { AttendanceList } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService } from '@apex-team/client/data-access/team';
@@ -131,6 +132,20 @@ export class GameSummary {
     const team = events.filter(e => e.payload?.team === 'team' && e.payload?.outcome === 'goal').length;
     const opponent = events.filter(e => e.payload?.team === 'opponent' && e.payload?.outcome === 'goal').length;
     return { team, opponent };
+  });
+
+  protected statsSummary = computed(() => {
+    const events = this.gameEvents();
+    const teamShots = events.filter(e => e.eventType === 'SHOT' || e.eventType === 'GOAL').length;
+    const opponentShots = events.filter(e => e.eventType === 'OPPONENT_SHOT' || e.eventType === 'OPPONENT_GOAL').length;
+    const teamCorners = events.filter(e => e.eventType === 'CORNER_KICK').length;
+    const opponentCorners = events.filter(e => e.eventType === 'OPPONENT_CORNER_KICK').length;
+    return {
+      teamShots,
+      opponentShots,
+      teamCorners,
+      opponentCorners,
+    };
   });
 
   protected shootoutRounds = computed(() => {
@@ -249,7 +264,8 @@ export class GameSummary {
       closeCircleOutline,
       alertCircleOutline,
       bandageOutline,
-      chevronBackOutline
+      chevronBackOutline,
+      flagOutline
     });
 
     effect(() => {

@@ -89,7 +89,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Sidebar: Game Info -->
         <div class="md:col-span-1 flex flex-col gap-6">
-          <ion-card class="m-0 h-full">
+          <ion-card class="m-0">
             <ion-card-header class="px-6 pt-6 pb-2">
               <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted">Match Details</ion-card-title>
             </ion-card-header>
@@ -131,6 +131,61 @@
                   Resume Live Console
                 </ion-button>
               }
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Team Stats Card -->
+          <ion-card class="m-0 border border-ap-border shadow-none">
+            <ion-card-header class="px-6 pt-6 pb-2">
+              <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                <ion-icon name="stats-chart-outline" class="text-blue-500"></ion-icon>
+                Team Stats
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content class="px-6 pb-6 flex flex-col gap-6">
+              <!-- Shots Row -->
+              <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center text-[10px] font-black text-ap-muted uppercase tracking-widest">
+                  <span>Shots</span>
+                </div>
+                <div class="flex justify-between items-end">
+                  <span class="text-2xl font-black text-blue-500">{{ statsSummary().teamShots }}</span>
+                  <span class="text-xs font-bold text-ap-muted pb-1">VS</span>
+                  <span class="text-2xl font-black text-ap-text">{{ statsSummary().opponentShots }}</span>
+                </div>
+                <!-- Visual comparison bar -->
+                <div class="h-2 bg-ap-surface-raised rounded-full overflow-hidden flex">
+                  @if (statsSummary().teamShots + statsSummary().opponentShots > 0) {
+                    <div class="bg-blue-500 h-full transition-all duration-300" 
+                         [style.width.%]="(statsSummary().teamShots / (statsSummary().teamShots + statsSummary().opponentShots)) * 100"></div>
+                    <div class="bg-ap-muted h-full transition-all duration-300 flex-1"></div>
+                  } @else {
+                    <div class="bg-ap-muted/20 w-full h-full"></div>
+                  }
+                </div>
+              </div>
+
+              <!-- Corners Row -->
+              <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center text-[10px] font-black text-ap-muted uppercase tracking-widest">
+                  <span>Corner Kicks</span>
+                </div>
+                <div class="flex justify-between items-end">
+                  <span class="text-2xl font-black text-blue-500">{{ statsSummary().teamCorners }}</span>
+                  <span class="text-xs font-bold text-ap-muted pb-1">VS</span>
+                  <span class="text-2xl font-black text-ap-text">{{ statsSummary().opponentCorners }}</span>
+                </div>
+                <!-- Visual comparison bar -->
+                <div class="h-2 bg-ap-surface-raised rounded-full overflow-hidden flex">
+                  @if (statsSummary().teamCorners + statsSummary().opponentCorners > 0) {
+                    <div class="bg-blue-500 h-full transition-all duration-300" 
+                         [style.width.%]="(statsSummary().teamCorners / (statsSummary().teamCorners + statsSummary().opponentCorners)) * 100"></div>
+                    <div class="bg-ap-muted h-full transition-all duration-300 flex-1"></div>
+                  } @else {
+                    <div class="bg-ap-muted/20 w-full h-full"></div>
+                  }
+                </div>
+              </div>
             </ion-card-content>
           </ion-card>
         </div>
