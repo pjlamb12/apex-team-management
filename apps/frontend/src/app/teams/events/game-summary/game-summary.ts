@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, Input, computed } from '@angular/core';
+import { Component, inject, signal, effect, Input, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -52,6 +52,7 @@ import {
 } from 'ionicons/icons';
 import { AttendanceList } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService } from '@apex-team/client/data-access/team';
+import { SocketService } from '@apex-team/client/shared/services';
 
 @Component({
   selector: 'app-game-summary',
@@ -90,7 +91,7 @@ import { EventsService, EventEntity, AttendanceService } from '@apex-team/client
   templateUrl: './game-summary.html',
   styleUrl: './game-summary.scss',
 })
-export class GameSummary {
+export class GameSummary implements OnDestroy {
   @Input() set id(val: string) {
     this._teamId.set(val);
   }
@@ -110,6 +111,7 @@ export class GameSummary {
 
   private readonly eventsService = inject(EventsService);
   private readonly router = inject(Router);
+  private readonly socketService = inject(SocketService);
 
   protected game = signal<EventEntity | null>(null);
   protected gameEvents = signal<any[]>([]);
@@ -272,6 +274,26 @@ export class GameSummary {
       const tId = this._teamId();
       const eId = this._eventId();
       if (tId && eId) {
+        // Clean up previous event subscription if any
+        this.socketService.offEvent('gameEventLogged');
+        this.socketService.offEvent('gameEventRemoved');
+        
+        // Join new event room
+        this.socketService.joinEvent(eId);
+        
+        this.socketService.onEvent('gameEventLogged', (event: any) => {
+          this.stateService.handleRemoteEvent(event);
+          this.gameEvents.update(events => {
+            if (events.some(e => e.id === event.id)) return events;
+            return [...events, event];
+          });
+        });
+        
+        this.socketService.onEvent('gameEventRemoved', (data: any) => {
+          this.stateService.handleRemoteDeletion(data);
+          this.gameEvents.update(events => events.filter(e => e.id !== data.id));
+        });
+
         void this.loadData(tId, eId);
       }
     });
@@ -322,5 +344,14 @@ export class GameSummary {
     if (res === 'WIN') return 'success';
     if (res === 'LOSS') return 'danger';
     return 'medium';
+  }
+
+  ngOnDestroy(): void {
+    const eId = this._eventId();
+    if (eId) {
+      this.socketService.offEvent('gameEventLogged');
+      this.socketService.offEvent('gameEventRemoved');
+      this.socketService.leaveEvent(eId);
+    }
   }
 }
