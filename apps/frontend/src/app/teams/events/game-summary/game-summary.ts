@@ -191,6 +191,7 @@ export class GameSummary implements OnDestroy {
         timestamp: Date.now() + Math.random(),
         synced: true,
         status: 'active' as const,
+        payload: be.payload,
         ...be.payload
       }));
       

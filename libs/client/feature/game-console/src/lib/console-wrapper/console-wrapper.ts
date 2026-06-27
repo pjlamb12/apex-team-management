@@ -171,6 +171,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
                     timestamp: Date.now(), // Use current time since backend doesn't store original local timestamp
                     synced: true,
                     status: 'active' as const,
+                    payload: be.payload,
                     ...be.payload
                   }));
                   this.stateService.setEvents(mappedEvents);
