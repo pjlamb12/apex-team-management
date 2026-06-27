@@ -142,5 +142,42 @@ describe('PlayingTimeService', () => {
       expect(result[p2].positionSeconds['MID']).toBe(20 * 60);
       expect(result[p2].positionSeconds['DEF']).toBe(70 * 60);
     });
+
+    it('should handle duplicate sub ins without losing playing time', async () => {
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue({ id: eventId, status: 'completed', durationMinutes: 90 } as any);
+      vi.spyOn(lineupRepo, 'find').mockResolvedValue([
+        { playerId: player1, status: 'starting', positionName: 'MID' },
+      ] as any);
+
+      // player 1 starts (0), subbed out at 10.
+      // player 1 subbed back in at 20.
+      // player 1 subbed in again at 30 (without an explicit sub out in between).
+      // player 1 plays to end (90).
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([
+        {
+          eventType: 'SUB',
+          minuteOccurred: 11,
+          payload: { outPlayerId: player1, inPlayerId: 'p2', positionName: 'MID', gameTimeMs: 10 * 60 * 1000 },
+        },
+        {
+          eventType: 'SUB',
+          minuteOccurred: 21,
+          payload: { outPlayerId: 'p2', inPlayerId: player1, positionName: 'MID', gameTimeMs: 20 * 60 * 1000 },
+        },
+        {
+          eventType: 'SUB',
+          minuteOccurred: 31,
+          payload: { outPlayerId: 'p3', inPlayerId: player1, positionName: 'MID', gameTimeMs: 30 * 60 * 1000 },
+        },
+      ] as any);
+
+      const result = await service.calculateForEvent(eventId);
+      // player 1 should get:
+      // stint 1: 0 to 10 (10 mins)
+      // stint 2: 20 to 30 (10 mins)
+      // stint 3: 30 to 90 (60 mins)
+      // total = 80 mins
+      expect(result[player1].totalSeconds).toBe(80 * 60);
+    });
   });
 });

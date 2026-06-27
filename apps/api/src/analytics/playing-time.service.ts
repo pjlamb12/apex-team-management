@@ -96,6 +96,9 @@ export class PlayingTimeService {
         }
 
         if (inId) {
+          if (onField.has(inId)) {
+            closeStint(inId, eventTimeMs);
+          }
           stintStartMs[inId] = eventTimeMs;
           stintPosition[inId] = posName;
           onField.add(inId);
