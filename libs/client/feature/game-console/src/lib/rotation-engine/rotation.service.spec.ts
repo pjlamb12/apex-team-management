@@ -25,6 +25,7 @@ describe('RotationService', () => {
       activePlayers: signal([player1, player2, player3, player4]),
       benchPlayers: signal([player5, player6, player7]),
       events: signal([]),
+      ejectedPlayerIds: signal(new Set<string>()),
     };
 
     mockPlaytimeService = {
@@ -59,16 +60,17 @@ describe('RotationService', () => {
   });
 
   describe('PURE mode', () => {
-    it('should suggest least-played bench for most-played active, protecting GK', () => {
+    it('should suggest least-played bench for most-played active, including GK', () => {
       const config: any = { mode: 'PURE' };
       const suggestions = service.generateSuggestions(config);
 
-      // Active candidates sorted by playtime (desc): p2 (600), p3 (300), p4 (300). p1 is GK (slot 0) so excluded.
+      // Active candidates sorted by playtime (desc): p1 (600), p2 (600), p3 (300), p4 (300).
       // Bench candidates sorted by playtime (asc): p5 (0), p6 (0), p7 (300).
       
       expect(suggestions.length).toBe(3);
-      expect(suggestions[0]).toEqual({ inPlayerId: 'p5', outPlayerId: 'p2' });
-      expect(suggestions[1].outPlayerId).not.toBe('p1'); // GK Protection
+      const outIds = suggestions.map(s => s.outPlayerId);
+      expect(outIds).toContain('p1'); // GK is included now
+      expect(outIds).toContain('p2');
     });
   });
 
@@ -77,12 +79,12 @@ describe('RotationService', () => {
       const config: any = { mode: 'POSITION' };
       const suggestions = service.generateSuggestions(config);
 
-      // Forward: active p2 (600), bench p5 (0) -> suggestion
+      // Forward: active p1/p2 (600), bench p5 (0) -> suggestion (p1 is GK but now rotated)
       // Midfield: active p3 (300), bench p6 (0) -> suggestion
       // Defense: active p4 (300), bench p7 (300) -> suggestion
       
       expect(suggestions.length).toBe(3);
-      expect(suggestions).toContainEqual({ inPlayerId: 'p5', outPlayerId: 'p2' });
+      expect(suggestions).toContainEqual({ inPlayerId: 'p5', outPlayerId: 'p1' });
       expect(suggestions).toContainEqual({ inPlayerId: 'p6', outPlayerId: 'p3' });
       expect(suggestions).toContainEqual({ inPlayerId: 'p7', outPlayerId: 'p4' });
     });
@@ -90,13 +92,15 @@ describe('RotationService', () => {
 
   describe('CONSTRAINT mode', () => {
     it('should respect maxFieldMinutes limit', () => {
-      // p2 has 600s (10 mins), p3 and p4 have 300s (5 mins)
-      // If maxFieldMinutes is 8, only p2 should be suggested for sub out if possible.
+      // p1 and p2 have 600s (10 mins), p3 and p4 have 300s (5 mins)
+      // If maxFieldMinutes is 8, only p1 and p2 should be suggested for sub out if possible.
       const config: any = { mode: 'CONSTRAINT', maxFieldMinutes: 8 };
       const suggestions = service.generateSuggestions(config);
 
-      expect(suggestions.length).toBe(1);
-      expect(suggestions[0]).toEqual({ inPlayerId: 'p5', outPlayerId: 'p2' });
+      expect(suggestions.length).toBe(2);
+      const outIds = suggestions.map(s => s.outPlayerId);
+      expect(outIds).toContain('p1');
+      expect(outIds).toContain('p2');
     });
 
     it('should respect minBenchMinutes limit', () => {
@@ -125,8 +129,8 @@ describe('RotationService', () => {
     });
   });
 
-  describe('Goalkeeper Protection', () => {
-    it('should never suggest swapping out the player in slot 0', () => {
+  describe('Goalkeeper Rotation', () => {
+    it('should suggest swapping out the player in slot 0 if they have high playtime', () => {
       const config: any = { mode: 'PURE' };
       // Give player 1 (GK) the most playtime
       mockPlaytimeService.playtimeMap.set({
@@ -142,7 +146,31 @@ describe('RotationService', () => {
       const suggestions = service.generateSuggestions(config);
       
       const outIds = suggestions.map(s => s.outPlayerId);
-      expect(outIds).not.toContain('p1');
+      expect(outIds).toContain('p1');
+    });
+  });
+
+  describe('Ejected Player Exclusion', () => {
+    it('should never suggest swapping in an ejected player from the bench', () => {
+      const config: any = { mode: 'PURE' };
+      // Make player 5 the least played bench player (candidate for sub in)
+      mockPlaytimeService.playtimeMap.set({
+        p1: 100,
+        p2: 500,
+        p3: 500,
+        p4: 500,
+        p5: 0, // Least played bench
+        p6: 100,
+        p7: 100,
+      });
+
+      // Mark p5 as ejected
+      mockStateService.ejectedPlayerIds.set(new Set(['p5']));
+
+      const suggestions = service.generateSuggestions(config);
+      
+      const inIds = suggestions.map(s => s.inPlayerId);
+      expect(inIds).not.toContain('p5'); // p5 is ejected and should not be suggested
     });
   });
 });

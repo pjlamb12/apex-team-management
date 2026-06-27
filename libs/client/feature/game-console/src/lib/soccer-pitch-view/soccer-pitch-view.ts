@@ -26,6 +26,7 @@ export class SoccerPitchViewComponent {
   stagedSubs = input<StagedSub[]>([]);
   playersOnField = input<number>(11);
   selectedPlayerId = input<string | null>(null);
+  playerCardCounts = input<Record<string, { yellow: number; red: boolean }>>({});
   playerSelected = output<{ player: Player; event: Event }>();
   emptySlotSelected = output<number>();
   backgroundClicked = output<void>();

@@ -37,7 +37,7 @@ import {
   closeCircleOutline,
   bandageOutline,
   shirtOutline,
-  helpCircleOutline
+  calendarOutline
 } from 'ionicons/icons';
 import { AnalyticsService, PlayerProfileAnalytics } from '@apex-team/client/data-access/team';
 import { ModalController } from '@ionic/angular/standalone';
@@ -96,7 +96,7 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
       closeCircleOutline,
       bandageOutline,
       shirtOutline,
-      helpCircleOutline
+      calendarOutline
     });
   }
 
@@ -131,7 +131,8 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
       case 'absent': return 'close-circle-outline';
       case 'tardy': return 'alert-circle-outline';
       case 'injured': return 'bandage-outline';
-      default: return 'help-circle-outline';
+      case 'scheduled': return 'calendar-outline';
+      default: return 'calendar-outline';
     }
   }
 
@@ -141,7 +142,8 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
       case 'absent': return 'danger';
       case 'tardy': return 'warning';
       case 'injured': return 'medium';
-      default: return 'light';
+      case 'scheduled': return 'medium';
+      default: return 'medium';
     }
   }
 

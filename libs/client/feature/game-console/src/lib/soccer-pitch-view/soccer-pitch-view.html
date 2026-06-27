@@ -70,6 +70,13 @@
             OUT
           </div>
         }
+
+        <!-- Yellow Card Badge -->
+        @if (playerCardCounts()[player.id]?.yellow === 1) {
+          <div class="absolute -top-1 -left-1 bg-yellow-400 border border-white rounded-[2px] w-3.5 h-4.5 shadow-md z-30 flex items-center justify-center text-[7px] font-black text-black" title="1 Yellow Card">
+            Y
+          </div>
+        }
       </div>
     </div>
   }
@@ -104,6 +111,13 @@
         <div class="absolute -top-1 -right-1 bg-green-500 text-white text-[8px] font-black rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-md z-30">
           IN
         </div>
+
+        <!-- Yellow Card Badge -->
+        @if (playerCardCounts()[player.id]?.yellow === 1) {
+          <div class="absolute -top-1 -left-1 bg-yellow-400 border border-white rounded-[2px] w-3.5 h-4.5 shadow-md z-30 flex items-center justify-center text-[7px] font-black text-black" title="1 Yellow Card">
+            Y
+          </div>
+        }
       </div>
     </div>
   }

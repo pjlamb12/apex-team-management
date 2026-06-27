@@ -194,6 +194,7 @@
             [stagedSubs]="stateService.stagedSubs()"
             [playersOnField]="stateService.playersOnField()"
             [selectedPlayerId]="selectedPlayerId()"
+            [playerCardCounts]="stateService.playerCardCounts()"
             (playerSelected)="handlePlayerSelection($event)"
             (emptySlotSelected)="handleEmptySlotSelection($event)"
             (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
@@ -206,6 +207,7 @@
             [players]="stateService.benchPlayers()"
             [stagedInIds]="stagedInIds()"
             [selectedPlayerId]="selectedPlayerId()"
+            [ejectedPlayerIds]="stateService.ejectedPlayerIds()"
             (playerSelected)="handlePlayerSelection($event)">
           </app-bench-view>
           <div class="border-t border-ap-border flex-1">

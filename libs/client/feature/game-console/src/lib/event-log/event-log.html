@@ -34,6 +34,10 @@
           <p>
             {{ getPlayerName(event['scorerId'] || event.playerId) }}
           </p>
+        } @else if (event.type === 'OWN_GOAL') {
+          <p>
+            {{ getPlayerName(event.playerId) }} (OG)
+          </p>
         } @else if (event.type === 'ASSIST') {
           <p>
             {{ getPlayerName(event['assistorId'] || event.playerId) }}

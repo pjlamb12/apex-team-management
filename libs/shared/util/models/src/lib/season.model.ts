@@ -9,6 +9,7 @@ export interface Season {
   defaultHomeVenue?: string;
   defaultHomeColor?: string;
   defaultAwayColor?: string;
+  homeLocationId?: string;
   defaultPracticeLocation?: string;
   periodCount?: number;
   periodLengthMinutes?: number;

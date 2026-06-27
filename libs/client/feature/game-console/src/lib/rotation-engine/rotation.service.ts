@@ -21,12 +21,13 @@ export class RotationService {
     // activePlayers: All players currently on field, excluding Goalkeeper (slot index 0), 
     // sorted by playtimeMap (descending - most played first).
     const activeCandidates = activePlayers
-      .filter((p) => p.slotIndex !== 0) // Protect Goalkeeper
       .sort((a, b) => (playtimeMap[b.id] || 0) - (playtimeMap[a.id] || 0));
 
     // benchPlayers: All players currently on bench, 
-    // sorted by playtimeMap (ascending - least played first).
+    // sorted by playtimeMap (ascending - least played first), excluding ejected.
+    const ejected = this.stateService.ejectedPlayerIds();
     const benchCandidates = benchPlayers
+      .filter((p) => !ejected.has(p.id))
       .sort((a, b) => (playtimeMap[a.id] || 0) - (playtimeMap[b.id] || 0));
 
     if (config.mode === 'PURE') {

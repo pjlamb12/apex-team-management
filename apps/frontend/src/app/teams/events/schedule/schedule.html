@@ -181,12 +181,12 @@
           </ion-item>
         </ion-list>
       }
-
-      <ion-fab slot="fixed" vertical="bottom" horizontal="end" style="margin-bottom: calc(96px + var(--ion-safe-area-bottom, 0px));">
-        <ion-fab-button (click)="presentAddEventSheet()" aria-label="Add event">
-          <ion-icon name="add-outline"></ion-icon>
-        </ion-fab-button>
-      </ion-fab>
     }
   </div>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end" class="mr-2" style="margin-bottom: calc(96px + var(--ion-safe-area-bottom, 0px));">
+    <ion-fab-button (click)="presentAddEventSheet()" aria-label="Add event">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>

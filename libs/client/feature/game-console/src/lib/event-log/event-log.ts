@@ -41,7 +41,8 @@ export class EventLogViewComponent {
   protected getEventIcon(type: string): string {
     switch (type) {
       case 'GOAL':
-      case 'OPPONENT_GOAL': return 'football-outline';
+      case 'OPPONENT_GOAL':
+      case 'OWN_GOAL': return 'football-outline';
       case 'ASSIST': return 'star-outline';
       case 'YELLOW_CARD':
       case 'RED_CARD': return 'card-outline';
@@ -62,7 +63,8 @@ export class EventLogViewComponent {
   protected getEventColor(type: string): string {
     switch (type) {
       case 'GOAL': return 'success';
-      case 'OPPONENT_GOAL': return 'danger';
+      case 'OPPONENT_GOAL':
+      case 'OWN_GOAL': return 'danger';
       case 'YELLOW_CARD': return 'warning';
       case 'RED_CARD': return 'danger';
       case 'SUB': return 'tertiary';

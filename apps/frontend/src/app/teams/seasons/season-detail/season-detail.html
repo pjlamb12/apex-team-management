@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button [defaultHref]="'/teams/' + teamId + '/settings/seasons'"></ion-back-button>
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/seasons'"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ isEdit() ? 'Edit Season' : 'New Season' }}</ion-title>
     <ion-buttons slot="end">
@@ -19,7 +19,7 @@
 
 <ion-content class="ion-padding">
   <div class="flex flex-col lg:flex-row items-start justify-center gap-6 min-h-full pt-4 px-4 pb-8">
-    <ion-card class="w-full max-w-md m-0">
+    <ion-card class="w-full lg:max-w-md m-0">
       <ion-card-header class="pb-2 pt-6 px-6">
         <ion-card-title class="text-2xl font-bold">
           {{ isEdit() ? 'Edit Season' : 'New Season' }}
@@ -101,6 +101,27 @@
                   type="text"
                 ></ion-input>
               </ion-item>
+
+              <ngx-control-errors-display>
+                <ion-item>
+                  <ion-select label="Home Field (for Weather)" label-placement="stacked" formControlName="homeLocationId" interface="action-sheet">
+                    <ion-select-option value="">Select a location...</ion-select-option>
+                    @for (loc of locations(); track loc.id) {
+                      <ion-select-option [value]="loc.id">{{ loc.name }}</ion-select-option>
+                    }
+                  </ion-select>
+                </ion-item>
+              </ngx-control-errors-display>
+
+              <div class="px-4 mt-2 mb-4">
+                <ion-button (click)="presentLocationModal()" fill="outline" expand="block" size="small" type="button">
+                  <ion-icon name="add-outline" slot="start"></ion-icon>
+                  Add New Location
+                </ion-button>
+                <p class="text-[10px] text-ap-muted mt-2 italic px-1">
+                  Weather forecasts for game events are based on the coordinates of this selected home field.
+                </p>
+              </div>
 
               <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
                 Default Jersey Colors
@@ -201,7 +222,7 @@
     </ion-card>
 
     @if (isEdit() && !isLoading()) {
-      <ion-card class="w-full max-w-md m-0">
+      <ion-card class="w-full lg:max-w-md m-0">
         <ion-card-header class="pb-2 pt-6 px-6">
           <ion-card-title class="text-xl font-bold flex items-center gap-2">
             <ion-icon name="bar-chart-outline" class="text-blue-600"></ion-icon>

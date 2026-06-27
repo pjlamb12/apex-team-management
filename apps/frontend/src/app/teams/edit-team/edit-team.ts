@@ -43,8 +43,7 @@ import {
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { CommonModule } from '@angular/common';
-import { TeamService, LocationService, LocationEntity, ScoutingService, ScoutingRubricEntity } from '@apex-team/client/data-access/team';
-import { LocationModal } from '@apex-team/client/ui/location-modal';
+import { TeamService, ScoutingService, ScoutingRubricEntity } from '@apex-team/client/data-access/team';
 
 interface Sport {
   id: string;
@@ -89,8 +88,6 @@ interface Team {
     IonList,
     IonListHeader,
     IonToast,
-    IonSelect,
-    IonSelectOption,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './edit-team.html',
@@ -107,7 +104,6 @@ export class EditTeam {
   }
 
   private readonly teamService = inject(TeamService);
-  private readonly locationService = inject(LocationService);
   private readonly scoutingService = inject(ScoutingService);
   private readonly config = inject(RuntimeConfigLoaderService);
   private readonly router = inject(Router);
@@ -122,12 +118,10 @@ export class EditTeam {
   protected successMessage = signal<string | null>(null);
   protected toastMessage = signal<string | null>(null);
 
-  protected locations = signal<LocationEntity[]>([]);
   protected rubrics = signal<ScoutingRubricEntity[]>([]);
 
   protected form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
-    homeLocationId: [''],
   });
 
   protected get apiUrl(): string {
@@ -151,7 +145,6 @@ export class EditTeam {
       const teamId = this._teamId();
       if (teamId) {
         void this.loadTeam(teamId);
-        void this.loadLocations();
         void this.loadRubrics();
       }
     });
@@ -165,24 +158,11 @@ export class EditTeam {
       this.team.set(team);
       this.form.patchValue({
         name: team.name,
-        homeLocationId: team.homeLocationId ?? '',
       });
     } catch {
       this.errorMessage.set('Failed to load team. Please try again.');
     } finally {
       this.isLoading.set(false);
-    }
-  }
-
-  protected async loadLocations(): Promise<void> {
-    const teamId = this.teamId;
-    if (!teamId) return;
-
-    try {
-      const locs = await firstValueFrom(this.locationService.getLocations(teamId));
-      this.locations.set(locs);
-    } catch {
-      console.error('Failed to load locations');
     }
   }
 
@@ -229,27 +209,6 @@ export class EditTeam {
       this.toastMessage.set('Rubric removed');
     } catch {
       this.errorMessage.set('Failed to delete rubric');
-    }
-  }
-
-  protected async presentLocationModal(): Promise<void> {
-    const teamId = this.teamId;
-    if (!teamId) return;
-
-    const modal = await this.modalCtrl.create({
-      component: LocationModal,
-      componentProps: {
-        teamId: teamId
-      }
-    });
-    await modal.present();
-
-    const { data } = await modal.onWillDismiss();
-    if (data) {
-      const newLoc = data as LocationEntity;
-      this.locations.update(prev => [...prev, newLoc]);
-      this.form.patchValue({ homeLocationId: newLoc.id });
-      this.toastMessage.set('Location added and selected');
     }
   }
 
@@ -363,12 +322,11 @@ export class EditTeam {
     this.errorMessage.set(null);
     this.successMessage.set(null);
     try {
-      const { name, homeLocationId } = this.form.getRawValue();
+      const { name } = this.form.getRawValue();
       if (!name) return;
 
       await this.teamService.updateTeam(teamId, { 
         name, 
-        homeLocationId: homeLocationId || undefined 
       });
       await this.router.navigate(['/teams', teamId, 'roster']);
     } catch {

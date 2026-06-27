@@ -180,7 +180,7 @@ export class EventsService {
   async findOne(eventId: string): Promise<EventEntity & { goalEventCount?: number }> {
     const event = await this.eventRepo.findOne({ 
       where: { id: eventId },
-      relations: ['locationRef', 'season', 'season.team', 'season.team.homeLocation'] 
+      relations: ['locationRef', 'season', 'season.team', 'season.homeLocation'] 
     });
     if (!event) {
       throw new NotFoundException(`Event with ID ${eventId} not found`);

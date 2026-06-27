@@ -15,6 +15,7 @@ export class BenchViewComponent {
   players = input.required<Player[]>();
   stagedInIds = input<Set<string>>(new Set());
   selectedPlayerId = input<string | null>(null);
+  ejectedPlayerIds = input<Set<string>>(new Set());
   playerSelected = output<{ player: Player; event: Event }>();
 
   protected selectPlayer(player: Player, event: Event) {

@@ -24,6 +24,10 @@ export class CreateSeasonDto {
   @IsOptional()
   defaultAwayColor?: string;
 
+  @IsUUID()
+  @IsOptional()
+  homeLocationId?: string;
+
   @IsString()
   @IsOptional()
   defaultPracticeLocation?: string;

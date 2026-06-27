@@ -29,7 +29,7 @@ export class WeatherService {
 
     const event = await this.eventRepo.findOne({
       where: { id: eventId },
-      relations: ['locationRef', 'season', 'season.team', 'season.team.homeLocation'],
+      relations: ['locationRef', 'season', 'season.team', 'season.homeLocation'],
     });
 
     if (!event) return null;
@@ -59,11 +59,11 @@ export class WeatherService {
     }
 
     // Determine lat/lon
-    const location = event.locationRef || event.season?.team?.homeLocation;
+    const location = event.locationRef || event.season?.homeLocation;
     
     this.logger.debug(`Location resolution for event ${eventId}:`);
     this.logger.debug(`-- locationRef: ${event.locationId} (lat: ${event.locationRef?.lat}, lon: ${event.locationRef?.lon})`);
-    this.logger.debug(`-- homeLocation: ${event.season?.team?.homeLocationId} (lat: ${event.season?.team?.homeLocation?.lat}, lon: ${event.season?.team?.homeLocation?.lon})`);
+    this.logger.debug(`-- homeLocation: ${event.season?.homeLocationId} (lat: ${event.season?.homeLocation?.lat}, lon: ${event.season?.homeLocation?.lon})`);
 
     if (!location || !location.lat || !location.lon) {
       this.logger.warn(`No coordinates found for event ${eventId} or team home field. Weather skipped.`);

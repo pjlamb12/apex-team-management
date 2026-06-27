@@ -182,8 +182,31 @@
                 <div class="h-2 bg-ap-surface-raised rounded-full overflow-hidden flex">
                   @if (statsSummary().teamCorners + statsSummary().opponentCorners > 0) {
                     <div class="bg-blue-500 h-full transition-all duration-300" 
-                         [style.width.%]="(statsSummary().teamCorners / (statsSummary().teamCorners + statsSummary().opponentCorners)) * 100"></div>
+                          [style.width.%]="(statsSummary().teamCorners / (statsSummary().teamCorners + statsSummary().opponentCorners)) * 100"></div>
                     <div class="bg-ap-muted h-full transition-all duration-300 flex-1"></div>
+                  } @else {
+                    <div class="bg-ap-muted/20 w-full h-full"></div>
+                  }
+                </div>
+              </div>
+
+              <!-- Divider Line -->
+              <div class="h-px bg-ap-border/60 my-2"></div>
+
+              <!-- Saves Row -->
+              <div class="flex flex-col gap-2 pt-2">
+                <div class="flex justify-between items-center text-[10px] font-black text-ap-muted uppercase tracking-widest">
+                  <span>Goalkeeper Saves</span>
+                </div>
+                <div class="flex justify-between items-end">
+                  <span class="text-2xl font-black text-blue-500">{{ statsSummary().teamSaves }}</span>
+                  <span class="text-xs font-bold text-ap-muted pb-1">VS</span>
+                  <span class="text-2xl font-black text-ap-text">—</span>
+                </div>
+                <!-- Visual comparison bar -->
+                <div class="h-2 bg-ap-surface-raised rounded-full overflow-hidden flex">
+                  @if (statsSummary().teamSaves > 0) {
+                    <div class="bg-blue-500 w-full h-full transition-all duration-300"></div>
                   } @else {
                     <div class="bg-ap-muted/20 w-full h-full"></div>
                   }
@@ -314,6 +337,11 @@
                                   Team Goal
                                   @if (goal.payload?.player; as p) {
                                     <span class="text-blue-400 font-normal block text-xs mt-0.5">Scored by {{ p.firstName }} {{ p.lastName }}</span>
+                                  }
+                                } @else if (goal.eventType === 'OWN_GOAL') {
+                                  Own Goal
+                                  @if (goal.payload?.player; as p) {
+                                    <span class="text-red-400 font-normal block text-xs mt-0.5">By {{ p.firstName }} {{ p.lastName }}</span>
                                   }
                                 } @else {
                                   Opponent Goal

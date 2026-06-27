@@ -134,10 +134,6 @@ export class TeamsService {
       });
       const savedLocation = await manager.save(LocationEntity, location);
 
-      // Link home location back to team
-      savedTeam.homeLocationId = savedLocation.id;
-      await manager.save(TeamEntity, savedTeam);
-
       // 5. Create a season
       const season = manager.create(SeasonEntity, {
         teamId: savedTeam.id,
@@ -152,6 +148,7 @@ export class TeamsService {
         defaultHomeColor: 'Red',
         defaultAwayColor: 'White',
         defaultPracticeLocation: 'Apex Sports Complex - Pitch 1',
+        homeLocationId: savedLocation.id,
       });
       const savedSeason = await manager.save(SeasonEntity, season);
 
@@ -402,10 +399,7 @@ export class TeamsService {
     const rubrics = await scoutingRubricRepo.find({ where: { teamId: id } });
     const rubricIds = rubrics.map(r => r.id);
 
-    // 2. Clear circular dependency on the team itself (homeLocationId references locations we are deleting)
-    await this.teamRepo.update(id, { homeLocation: null, homeLocationId: null });
-
-    // 3. Clear candidate sub-dependencies (attendance & evaluations)
+    // 2. Clear candidate sub-dependencies (attendance & evaluations)
     if (candidateIds.length > 0) {
       await candidateAttendanceRepo.delete({ candidateId: In(candidateIds) });
       await candidateEvaluationRepo.delete({ candidateId: In(candidateIds) });

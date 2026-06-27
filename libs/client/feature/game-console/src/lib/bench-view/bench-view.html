@@ -3,17 +3,24 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4">
     @for (player of players(); track player.id) {
       <ion-card
-        (click)="selectPlayer(player, $event)"
+        (click)="!ejectedPlayerIds().has(player.id) && selectPlayer(player, $event)"
         [class.selected]="selectedPlayerId() === player.id"
         [class.border-2]="stagedInIds().has(player.id)"
         [class.border-green-500]="stagedInIds().has(player.id)"
+        [class.opacity-40]="ejectedPlayerIds().has(player.id)"
+        [class.pointer-events-none]="ejectedPlayerIds().has(player.id)"
         class="m-0 cursor-pointer transition-all duration-200"
       >
         <ion-card-header>
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
               <div class="jersey-number">#{{ player.jerseyNumber }}</div>
-              <div class="player-name">{{ player.firstName }} {{ player.lastName }}</div>
+              <div class="player-name flex items-center gap-2">
+                {{ player.firstName }} {{ player.lastName }}
+                @if (ejectedPlayerIds().has(player.id)) {
+                  <div class="w-3.5 h-4.5 bg-red-600 rounded-[2px] border border-white flex items-center justify-center text-[7px] text-white font-black shadow-sm" title="Ejected (Red Card)">R</div>
+                }
+              </div>
             </div>
             <div class="flex flex-col items-end">
               <div class="text-[10px] font-mono text-ap-muted font-bold">{{ formatPlaytime(player.id) }}</div>

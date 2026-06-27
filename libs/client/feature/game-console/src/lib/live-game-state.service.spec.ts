@@ -205,12 +205,44 @@ describe('LiveGameStateService', () => {
       service.pushEvent({ type: 'OPPONENT_SHOT', timestamp: Date.now() + 3, minuteOccurred: 15 });
       service.pushEvent({ type: 'OPPONENT_GOAL', timestamp: Date.now() + 4, minuteOccurred: 20 });
       service.pushEvent({ type: 'OPPONENT_CORNER_KICK', timestamp: Date.now() + 5, minuteOccurred: 22 });
+      service.pushEvent({ type: 'BLOCKED_SHOT', timestamp: Date.now() + 6, minuteOccurred: 25, playerId: 'p1' });
+      service.pushEvent({ type: 'BLOCKED_PENALTY', timestamp: Date.now() + 7, minuteOccurred: 26, playerId: 'p1' });
 
       const summary = service.statsSummary();
       expect(summary.teamShots).toBe(2); // 1 SHOT + 1 GOAL
       expect(summary.opponentShots).toBe(2); // 1 OPPONENT_SHOT + 1 OPPONENT_GOAL
       expect(summary.teamCorners).toBe(1);
       expect(summary.opponentCorners).toBe(1);
+      expect(summary.teamSaves).toBe(2); // 1 BLOCKED_SHOT + 1 BLOCKED_PENALTY
+    });
+
+    it('should calculate playerCardCounts and ejectedPlayerIds correctly and remove them from activePlayers', () => {
+      // Setup lineup: player 1 and player 2 are starting
+      const lineup: any[] = [
+        { playerId: 'p1', player: { id: 'p1', firstName: 'P1', lastName: 'L1' }, status: 'starting', slotIndex: 1 },
+        { playerId: 'p2', player: { id: 'p2', firstName: 'P2', lastName: 'L2' }, status: 'starting', slotIndex: 2 }
+      ];
+      service.initialize('event-123', lineup, 'team-123', 2);
+      
+      expect(service.activePlayers().length).toBe(2);
+      
+      // Push 1 yellow card for p1
+      service.pushEvent({ type: 'YELLOW_CARD', timestamp: Date.now(), minuteOccurred: 5, playerId: 'p1' });
+      expect(service.playerCardCounts()['p1'].yellow).toBe(1);
+      expect(service.playerCardCounts()['p1'].red).toBe(false);
+      expect(service.ejectedPlayerIds().has('p1')).toBe(false);
+      expect(service.activePlayers().length).toBe(2);
+
+      // Push 2nd yellow card for p1 -> ejected!
+      service.pushEvent({ type: 'YELLOW_CARD', timestamp: Date.now() + 10, minuteOccurred: 10, playerId: 'p1' });
+      expect(service.playerCardCounts()['p1'].yellow).toBe(2);
+      expect(service.playerCardCounts()['p1'].red).toBe(true);
+      expect(service.ejectedPlayerIds().has('p1')).toBe(true);
+      
+      // p1 should be removed from activePlayers automatically
+      expect(service.activePlayers().map(p => p.id)).not.toContain('p1');
+      expect(service.activePlayers().length).toBe(1);
+      expect(service.benchPlayers().map(p => p.id)).toContain('p1');
     });
   });
 });

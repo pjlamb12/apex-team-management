@@ -29,12 +29,16 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonSelect,
+  IonSelectOption,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { saveOutline, calendarOutline, barChartOutline } from 'ionicons/icons';
+import { saveOutline, calendarOutline, barChartOutline, addOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { SeasonsService } from '@apex-team/client/data-access/team';
+import { SeasonsService, LocationService, LocationEntity } from '@apex-team/client/data-access/team';
 import { Season, SeasonStats } from '@apex-team/shared/util/models';
+import { LocationModal } from '@apex-team/client/ui/location-modal';
 
 @Component({
   selector: 'app-season-detail',
@@ -67,6 +71,8 @@ import { Season, SeasonStats } from '@apex-team/shared/util/models';
     IonGrid,
     IonRow,
     IonCol,
+    IonSelect,
+    IonSelectOption,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './season-detail.html',
@@ -92,6 +98,8 @@ export class SeasonDetail {
 
   private readonly router = inject(Router);
   private readonly seasonsService = inject(SeasonsService);
+  private readonly locationService = inject(LocationService);
+  private readonly modalCtrl = inject(ModalController);
   protected readonly fb = inject(FormBuilder);
 
   protected isEdit = signal(false);
@@ -102,6 +110,8 @@ export class SeasonDetail {
   protected stats = signal<SeasonStats | null>(null);
   protected isLoadingStats = signal(false);
   protected statsError = signal(false);
+
+  protected locations = signal<LocationEntity[]>([]);
 
   protected statCards = computed(() => {
     const s = this.stats();
@@ -124,6 +134,7 @@ export class SeasonDetail {
     isActive: [false],
     defaultPracticeLocation: [''],
     defaultHomeVenue: [''],
+    homeLocationId: [''],
     defaultHomeColor: [''],
     defaultAwayColor: [''],
     periodCount: [2, [Validators.required, Validators.min(1)]],
@@ -132,12 +143,15 @@ export class SeasonDetail {
   });
 
   constructor() {
-    addIcons({ saveOutline, calendarOutline, barChartOutline });
+    addIcons({ saveOutline, calendarOutline, barChartOutline, addOutline });
 
-    // Load season whenever seasonId changes
+    // Load season and locations whenever seasonId/teamId changes
     effect(() => {
       const sId = this._seasonId();
       const tId = this._teamId();
+      if (tId) {
+        void this.loadLocations();
+      }
       if (sId && sId !== 'new') {
         this.isEdit.set(true);
         void this.loadSeason(sId);
@@ -154,6 +168,7 @@ export class SeasonDetail {
           isActive: false,
           defaultPracticeLocation: '',
           defaultHomeVenue: '',
+          homeLocationId: '',
           defaultHomeColor: '',
           defaultAwayColor: '',
           periodCount: 2,
@@ -176,6 +191,7 @@ export class SeasonDetail {
         isActive: season.isActive,
         defaultPracticeLocation: season.defaultPracticeLocation || '',
         defaultHomeVenue: season.defaultHomeVenue || '',
+        homeLocationId: season.homeLocationId || '',
         defaultHomeColor: season.defaultHomeColor || '',
         defaultAwayColor: season.defaultAwayColor || '',
         periodCount: season.periodCount || 2,
@@ -215,7 +231,11 @@ export class SeasonDetail {
     this.errorMessage.set(null);
 
     try {
-      const data = this.form.getRawValue();
+      const rawData = this.form.getRawValue();
+      const data = {
+        ...rawData,
+        homeLocationId: rawData.homeLocationId || null,
+      };
       const seasonId = this.seasonId;
 
       if (this.isEdit() && seasonId) {
@@ -224,12 +244,44 @@ export class SeasonDetail {
         await firstValueFrom(this.seasonsService.create(teamId, data as Partial<Season>));
       }
 
-      await this.router.navigate(['/teams', teamId, 'settings', 'seasons']);
+      await this.router.navigate(['/teams', teamId, 'seasons']);
     } catch (error: any) {
       const msg = error?.error?.message || 'Failed to save season. Please try again.';
       this.errorMessage.set(msg);
     } finally {
       this.isSaving.set(false);
+    }
+  }
+
+  protected async loadLocations(): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    try {
+      const locs = await firstValueFrom(this.locationService.getLocations(teamId));
+      this.locations.set(locs);
+    } catch {
+      console.error('Failed to load locations');
+    }
+  }
+
+  protected async presentLocationModal(): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    const modal = await this.modalCtrl.create({
+      component: LocationModal,
+      componentProps: {
+        teamId: teamId
+      }
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data) {
+      const newLoc = data as LocationEntity;
+      this.locations.update(prev => [...prev, newLoc]);
+      this.form.patchValue({ homeLocationId: newLoc.id });
     }
   }
 }

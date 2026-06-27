@@ -30,6 +30,8 @@ import { AddGoalkeeperEventDefinitions1780900000000 } from './1780900000000-AddG
 import { AddClockSyncColumns1782356834095 } from './1782356834095-AddClockSyncColumns';
 import { AddShotsAndCornerKicks1782357000000 } from './1782357000000-AddShotsAndCornerKicks';
 import { CreateEventNotes1782532847433 } from './1782532847433-CreateEventNotes';
+import { AddOwnGoalEventDefinition1782600000000 } from './1782600000000-AddOwnGoalEventDefinition';
+import { MoveHomeLocationToSeasons1782700000000 } from './1782700000000-MoveHomeLocationToSeasons';
 
 
 export const ALL_MIGRATIONS = [
@@ -65,5 +67,7 @@ export const ALL_MIGRATIONS = [
   AddClockSyncColumns1782356834095,
   AddShotsAndCornerKicks1782357000000,
   CreateEventNotes1782532847433,
+  AddOwnGoalEventDefinition1782600000000,
+  MoveHomeLocationToSeasons1782700000000,
 ];
 

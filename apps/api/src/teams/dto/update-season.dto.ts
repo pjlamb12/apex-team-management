@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsInt, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsInt, Min, IsUUID } from 'class-validator';
 
 export class UpdateSeasonDto {
   @IsString()
@@ -21,6 +21,10 @@ export class UpdateSeasonDto {
   @IsString()
   @IsOptional()
   defaultAwayColor?: string;
+
+  @IsUUID()
+  @IsOptional()
+  homeLocationId?: string;
 
   @IsString()
   @IsOptional()

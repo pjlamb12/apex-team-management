@@ -144,11 +144,13 @@ export class GameSummary implements OnDestroy {
     const opponentShots = events.filter(e => e.eventType === 'OPPONENT_SHOT' || e.eventType === 'OPPONENT_GOAL').length;
     const teamCorners = events.filter(e => e.eventType === 'CORNER_KICK').length;
     const opponentCorners = events.filter(e => e.eventType === 'OPPONENT_CORNER_KICK').length;
+    const teamSaves = events.filter(e => e.eventType === 'BLOCKED_SHOT' || e.eventType === 'BLOCKED_PENALTY').length;
     return {
       teamShots,
       opponentShots,
       teamCorners,
       opponentCorners,
+      teamSaves,
     };
   });
 
@@ -206,9 +208,9 @@ export class GameSummary implements OnDestroy {
   protected goals = computed(() => {
     const lineup = this.lineup();
     return this.gameEvents()
-      .filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_GOAL')
+      .filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_GOAL' || e.eventType === 'OWN_GOAL')
       .map(e => {
-        if (e.eventType === 'GOAL') {
+        if (e.eventType === 'GOAL' || e.eventType === 'OWN_GOAL') {
           const scorerId = e.payload?.scorerId || e.payload?.playerId || e.playerId;
           const entry = lineup.find(l => l.playerId === scorerId);
           if (entry) {

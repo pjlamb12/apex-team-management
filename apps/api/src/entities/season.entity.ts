@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { TeamEntity } from './team.entity';
 import { EventEntity } from './event.entity';
+import { LocationEntity } from './location.entity';
 
 @Entity('seasons')
 export class SeasonEntity {
@@ -43,6 +44,13 @@ export class SeasonEntity {
 
   @Column({ name: 'default_away_color', nullable: true })
   defaultAwayColor: string | null;
+
+  @ManyToOne(() => LocationEntity)
+  @JoinColumn({ name: 'home_location_id' })
+  homeLocation: LocationEntity | null;
+
+  @Column({ name: 'home_location_id', nullable: true })
+  homeLocationId: string | null;
 
   @Column({ name: 'default_practice_location', nullable: true })
   defaultPracticeLocation: string | null;

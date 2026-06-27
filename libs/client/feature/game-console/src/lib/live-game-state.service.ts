@@ -59,6 +59,41 @@ export class LiveGameStateService {
   public readonly lastIntervalTriggered = this._lastIntervalTriggered.asReadonly();
   public readonly rotationConfig = this._rotationConfig.asReadonly();
 
+  public readonly playerCardCounts = computed(() => {
+    const events = this._events().filter((e) => e.status !== 'deleted');
+    const cards: Record<string, { yellow: number; red: boolean }> = {};
+
+    events.forEach((e) => {
+      const pid = e.playerId;
+      if (!pid) return;
+      if (!cards[pid]) {
+        cards[pid] = { yellow: 0, red: false };
+      }
+
+      if (e.type === 'RED_CARD') {
+        cards[pid].red = true;
+      } else if (e.type === 'YELLOW_CARD') {
+        cards[pid].yellow++;
+        if (cards[pid].yellow >= 2) {
+          cards[pid].red = true;
+        }
+      }
+    });
+
+    return cards;
+  });
+
+  public readonly ejectedPlayerIds = computed(() => {
+    const counts = this.playerCardCounts();
+    const ejected = new Set<string>();
+    Object.entries(counts).forEach(([pid, info]) => {
+      if (info.red) {
+        ejected.add(pid);
+      }
+    });
+    return ejected;
+  });
+
   public readonly activePlayers = computed(() => {
     const lineup = this._initialLineup();
     const events = this._events().filter((e) => e.status !== 'deleted');
@@ -101,6 +136,14 @@ export class LiveGameStateService {
       }
     });
 
+    // Remove any active player that is ejected
+    const ejected = this.ejectedPlayerIds();
+    for (const [slotIndex, data] of slotMap.entries()) {
+      if (ejected.has(data.player.id)) {
+        slotMap.delete(slotIndex);
+      }
+    }
+
     return Array.from(slotMap.entries()).map(([slotIndex, data]) => ({
       ...data.player,
       preferredPosition: data.position,
@@ -121,7 +164,7 @@ export class LiveGameStateService {
   public readonly score = computed(() => {
     const events = this._events().filter((e) => e.status !== 'deleted');
     const team = events.filter((e) => e.type === 'GOAL').length;
-    const opponent = events.filter((e) => e.type === 'OPPONENT_GOAL').length;
+    const opponent = events.filter((e) => e.type === 'OPPONENT_GOAL' || e.type === 'OWN_GOAL').length;
     return { team, opponent };
   });
 
@@ -131,11 +174,13 @@ export class LiveGameStateService {
     const opponentShots = events.filter((e) => e.type === 'OPPONENT_SHOT' || e.type === 'OPPONENT_GOAL').length;
     const teamCorners = events.filter((e) => e.type === 'CORNER_KICK').length;
     const opponentCorners = events.filter((e) => e.type === 'OPPONENT_CORNER_KICK').length;
+    const teamSaves = events.filter((e) => e.type === 'BLOCKED_SHOT' || e.type === 'BLOCKED_PENALTY').length;
     return {
       teamShots,
       opponentShots,
       teamCorners,
       opponentCorners,
+      teamSaves,
     };
   });
 
@@ -198,6 +243,7 @@ export class LiveGameStateService {
         console.error('Failed to parse stored rotation state', e);
       }
     }
+    this.cleanStagedSubsForEjected();
   }
 
   public updateRotationConfig(config: Partial<RotationConfig>): void {
@@ -216,6 +262,7 @@ export class LiveGameStateService {
       this.mapEvent({ ...event, status: 'active', period: this._currentPeriod() }),
     ]);
     this.save();
+    this.cleanStagedSubsForEjected();
   }
 
   public pushEvents(events: GameEvent[]): void {
@@ -229,12 +276,22 @@ export class LiveGameStateService {
     );
     this._events.update((prev) => [...prev, ...decoratedEvents]);
     this.save();
+    this.cleanStagedSubsForEjected();
   }
 
   public setEvents(events: GameEvent[]): void {
     const mapped = events.map((e) => this.mapEvent(e));
     this._events.set(mapped);
     this.save();
+    this.cleanStagedSubsForEjected();
+  }
+
+  private cleanStagedSubsForEjected(): void {
+    const ejected = this.ejectedPlayerIds();
+    if (ejected.size === 0) return;
+    this._stagedSubs.update((subs) =>
+      subs.filter((s) => !ejected.has(s.inPlayerId) && !ejected.has(s.outPlayerId))
+    );
   }
 
   public stageSub(inPlayerId: string, outPlayerId: string): void {

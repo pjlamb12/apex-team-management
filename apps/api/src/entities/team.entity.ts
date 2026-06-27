@@ -3,7 +3,6 @@ import { SportEntity } from './sport.entity';
 import { SeasonEntity } from './season.entity';
 import { UserEntity } from './user.entity';
 import { TeamMemberEntity } from './team-member.entity';
-import { LocationEntity } from './location.entity';
 
 @Entity('teams')
 export class TeamEntity {
@@ -32,13 +31,6 @@ export class TeamEntity {
 
   @Column({ name: 'calendar_secret', unique: true, nullable: true })
   calendarSecret: string;
-
-  @ManyToOne(() => LocationEntity)
-  @JoinColumn({ name: 'home_location_id' })
-  homeLocation: LocationEntity | null;
-
-  @Column({ name: 'home_location_id', nullable: true })
-  homeLocationId: string | null;
 
   @OneToMany(() => SeasonEntity, (season) => season.team)
   seasons: SeasonEntity[];
