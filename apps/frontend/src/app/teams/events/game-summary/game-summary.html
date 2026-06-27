@@ -327,8 +327,8 @@
                         <div class="flex items-center justify-between">
                           <div class="flex items-center gap-3">
                             <ion-icon 
-                              [name]="goal.eventType === 'GOAL' ? 'arrow-up-circle' : 'arrow-down-circle'" 
-                              [color]="goal.eventType === 'GOAL' ? 'success' : 'danger'"
+                              [name]="goal.eventType === 'GOAL' ? 'arrow-up-circle' : (goal.eventType === 'ASSIST' ? 'people-outline' : 'arrow-down-circle')" 
+                              [color]="goal.eventType === 'GOAL' ? 'success' : (goal.eventType === 'ASSIST' ? 'primary' : 'danger')"
                               class="text-xl"
                             ></ion-icon>
                             <div>
@@ -337,6 +337,14 @@
                                   Team Goal
                                   @if (goal.payload?.player; as p) {
                                     <span class="text-blue-400 font-normal block text-xs mt-0.5">Scored by {{ p.firstName }} {{ p.lastName }}</span>
+                                  }
+                                  @if (goal.payload?.assistorPlayer; as ap) {
+                                    <span class="text-emerald-400 font-normal block text-[11px] mt-0.5">Assisted by {{ ap.firstName }} {{ ap.lastName }}</span>
+                                  }
+                                } @else if (goal.eventType === 'ASSIST') {
+                                  Team Assist
+                                  @if (goal.payload?.player; as p) {
+                                    <span class="text-emerald-400 font-normal block text-xs mt-0.5">Assisted by {{ p.firstName }} {{ p.lastName }}</span>
                                   }
                                 } @else if (goal.eventType === 'OWN_GOAL') {
                                   Own Goal

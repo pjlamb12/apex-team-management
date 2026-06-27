@@ -209,11 +209,28 @@ export class GameSummary implements OnDestroy {
   protected goals = computed(() => {
     const lineup = this.lineup();
     return this.gameEvents()
-      .filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_GOAL' || e.eventType === 'OWN_GOAL')
+      .filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_GOAL' || e.eventType === 'OWN_GOAL' || e.eventType === 'ASSIST')
       .map(e => {
         if (e.eventType === 'GOAL' || e.eventType === 'OWN_GOAL') {
           const scorerId = e.payload?.scorerId || e.payload?.playerId || e.playerId;
           const entry = lineup.find(l => l.playerId === scorerId);
+          
+          const assistorId = e.payload?.assistorId;
+          const assistorEntry = assistorId ? lineup.find(l => l.playerId === assistorId) : null;
+
+          if (entry) {
+            return {
+              ...e,
+              payload: {
+                ...e.payload,
+                player: entry.player,
+                assistorPlayer: assistorEntry ? assistorEntry.player : null
+              }
+            };
+          }
+        } else if (e.eventType === 'ASSIST') {
+          const assistorId = e.payload?.assistorId || e.payload?.playerId || e.playerId;
+          const entry = lineup.find(l => l.playerId === assistorId);
           if (entry) {
             return {
               ...e,
@@ -225,7 +242,8 @@ export class GameSummary implements OnDestroy {
           }
         }
         return e;
-      });
+      })
+      .sort((a, b) => a.minuteOccurred - b.minuteOccurred);
   });
 
   protected score = computed(() => {
