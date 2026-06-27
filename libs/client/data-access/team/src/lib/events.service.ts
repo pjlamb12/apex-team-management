@@ -48,6 +48,15 @@ export interface EventEntity {
     icon: string;
     chance_of_rain: number;
   } | null;
+  season?: {
+    id: string;
+    teamId: string;
+    name: string;
+    team?: {
+      id: string;
+      name: string;
+    };
+  } | null;
 }
 
 export interface CreateEventDto {

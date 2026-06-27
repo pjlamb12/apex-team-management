@@ -36,6 +36,7 @@ export class LiveGameStateService {
   private _events = signal<GameEvent[]>([]);
   private _eventId = signal<string | null>(null);
   private _teamId = signal<string | null>(null);
+  private _teamName = signal<string>('Apex Team');
   private _initialLineup = signal<LineupEntry[]>([]);
   private _playersOnField = signal<number>(11);
   private _currentPeriod = signal<number>(1);
@@ -51,6 +52,7 @@ export class LiveGameStateService {
   public readonly events = this._events.asReadonly();
   public readonly eventId = this._eventId.asReadonly();
   public readonly teamId = this._teamId.asReadonly();
+  public readonly teamName = this._teamName.asReadonly();
   public readonly initialLineup = this._initialLineup.asReadonly();
   public readonly playersOnField = this._playersOnField.asReadonly();
   public readonly currentPeriod = this._currentPeriod.asReadonly();
@@ -184,11 +186,12 @@ export class LiveGameStateService {
     };
   });
 
-  public initialize(eventId: string, lineup: LineupEntry[] = [], teamId?: string, playersOnField?: number): void {
+  public initialize(eventId: string, lineup: LineupEntry[] = [], teamId?: string, playersOnField?: number, teamName?: string): void {
     this._eventId.set(eventId);
     if (teamId) this._teamId.set(teamId);
     this._initialLineup.set(lineup);
     if (playersOnField) this._playersOnField.set(playersOnField);
+    if (teamName) this._teamName.set(teamName);
 
     // Reset singleton state to defaults before loading stored values
     this._events.set([]);

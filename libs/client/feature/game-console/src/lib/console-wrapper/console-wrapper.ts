@@ -151,7 +151,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
           }
 
           if (eventId && teamId) {
-            this.stateService.initialize(eventId, lineup, teamId, event?.playersOnField || undefined);
+            this.stateService.initialize(eventId, lineup, teamId, event?.playersOnField || undefined, event?.season?.team?.name);
             this.clockService.initialize(
               eventId,
               event?.clockStartTime,

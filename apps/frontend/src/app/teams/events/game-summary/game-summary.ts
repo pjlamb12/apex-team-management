@@ -195,7 +195,7 @@ export class GameSummary implements OnDestroy {
         ...be.payload
       }));
       
-      this.stateService.initialize(this.eventId, this.lineup(), this.teamId, gameVal.playersOnField || undefined);
+      this.stateService.initialize(this.eventId, this.lineup(), this.teamId, gameVal.playersOnField || undefined, gameVal.season?.team?.name);
       this.stateService.setEvents(mappedEvents);
       this.isShootoutModalOpen.set(true);
     }

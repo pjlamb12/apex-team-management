@@ -28,7 +28,7 @@
             <!-- Home/Our Team -->
             <div class="flex-1 text-center">
               <div class="text-xs uppercase tracking-widest text-blue-300 font-bold mb-2">Our Team</div>
-              <div class="text-xl font-black truncate">APEX TEAM</div>
+              <div class="text-xl font-black truncate">{{ (game()?.season?.team?.name || 'APEX TEAM') | uppercase }}</div>
               <div class="text-5xl font-black mt-2 tabular-nums">{{ score().team }}</div>
             </div>
 
@@ -68,7 +68,7 @@
             <div class="flex items-center justify-center gap-6">
               <div class="text-center flex-1">
                 <div class="text-4xl font-black tabular-nums">{{ shootoutScore().team }}</div>
-                <div class="text-[9px] uppercase tracking-wider text-blue-300 font-bold">Apex Team</div>
+                <div class="text-[9px] uppercase tracking-wider text-blue-300 font-bold">{{ game()?.season?.team?.name || 'Apex Team' }}</div>
               </div>
               <div class="text-xs font-black text-blue-400 uppercase tracking-widest border border-blue-400/25 px-2 py-1 rounded bg-blue-400/10">PKs</div>
               <div class="text-center flex-1">
@@ -248,7 +248,7 @@
                     <!-- Header Row -->
                     <div class="grid grid-cols-12 text-[10px] font-black uppercase tracking-widest text-ap-muted border-b border-ap-border pb-2">
                       <div class="col-span-2 font-mono">Round</div>
-                      <div class="col-span-5 border-r border-ap-border pr-2">Apex Team (Shooter)</div>
+                      <div class="col-span-5 border-r border-ap-border pr-2">{{ game()?.season?.team?.name || 'Apex Team' }} (Shooter)</div>
                       <div class="col-span-5 pl-2">Opponent (Goalkeeper)</div>
                     </div>
 
