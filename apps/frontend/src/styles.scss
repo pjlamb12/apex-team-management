@@ -214,3 +214,17 @@ html.dark ion-input[type="date"]::part(native) {
   color-scheme: dark !important;
 }
 
+// Responsive layout & wrapping for segment buttons on mobile
+ion-segment-button ion-label {
+  white-space: normal !important;
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  padding: 0 4px;
+
+  @media (min-width: 640px) {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+}
+
+
