@@ -55,6 +55,9 @@
         <ion-segment-button value="pitch">
           <ion-label>Pitch View</ion-label>
         </ion-segment-button>
+        <ion-segment-button value="notes">
+          <ion-label>Notes</ion-label>
+        </ion-segment-button>
       </ion-segment>
 
       @if (viewMode() === 'attendance') {
@@ -106,7 +109,7 @@
             </ion-item>
           }
         </ion-list>
-      } @else {
+      } @else if (viewMode() === 'pitch') {
         <div class="h-[450px] mb-4">
           <app-soccer-pitch-view
             [players]="pitchPlayers()"
@@ -118,32 +121,36 @@
           >
           </app-soccer-pitch-view>
         </div>
+      } @else if (viewMode() === 'notes') {
+        <app-coaching-notes [teamId]="teamId" [eventId]="eventId"></app-coaching-notes>
       }
 
-      <ion-list class="mt-4">
-        <ion-list-header>
-          <ion-label>Bench</ion-label>
-          <ion-note slot="end">{{ benchPlayers().length }} players</ion-note>
-        </ion-list-header>
+      @if (viewMode() !== 'notes') {
+        <ion-list class="mt-4">
+          <ion-list-header>
+            <ion-label>Bench</ion-label>
+            <ion-note slot="end">{{ benchPlayers().length }} players</ion-note>
+          </ion-list-header>
 
-        @for (player of benchPlayers(); track player.id) {
-          <ion-item button (click)="handleBenchPlayerClick(player)" [detail]="false" [class.selected-player]="selectedPlayerId() === player.id">
-            <ion-label>
-              <h2>{{ player.firstName }} {{ player.lastName }}</h2>
-              <p>#{{ player.jerseyNumber }}</p>
-            </ion-label>
-            <ion-badge slot="end" [color]="selectedPlayerId() === player.id ? 'primary' : 'medium'">
-              {{ selectedPlayerId() === player.id ? 'SELECTED' : 'Bench' }}
-            </ion-badge>
-          </ion-item>
-        } @empty {
-          <ion-item>
-            <ion-label class="text-center text-ap-muted italic">
-              No players on bench
-            </ion-label>
-          </ion-item>
-        }
-      </ion-list>
+          @for (player of benchPlayers(); track player.id) {
+            <ion-item button (click)="handleBenchPlayerClick(player)" [detail]="false" [class.selected-player]="selectedPlayerId() === player.id">
+              <ion-label>
+                <h2>{{ player.firstName }} {{ player.lastName }}</h2>
+                <p>#{{ player.jerseyNumber }}</p>
+              </ion-label>
+              <ion-badge slot="end" [color]="selectedPlayerId() === player.id ? 'primary' : 'medium'">
+                {{ selectedPlayerId() === player.id ? 'SELECTED' : 'Bench' }}
+              </ion-badge>
+            </ion-item>
+          } @empty {
+            <ion-item>
+              <ion-label class="text-center text-ap-muted italic">
+                No players on bench
+              </ion-label>
+            </ion-item>
+          }
+        </ion-list>
+      }
     </div>
   }
 </ion-content>

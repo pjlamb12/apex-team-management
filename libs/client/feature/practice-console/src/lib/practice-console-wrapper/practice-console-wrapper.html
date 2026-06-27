@@ -30,6 +30,9 @@
       <ion-segment-button value="attendance">
         <ion-label>Attendance</ion-label>
       </ion-segment-button>
+      <ion-segment-button value="notes">
+        <ion-label>Notes</ion-label>
+      </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
 </ion-header>
@@ -69,6 +72,8 @@
     <app-practice-execution-tab></app-practice-execution-tab>
   } @else if (selectedSegment() === 'attendance') {
     <app-attendance-list [teamId]="teamId" [eventId]="eventId"></app-attendance-list>
+  } @else if (selectedSegment() === 'notes') {
+    <app-coaching-notes [teamId]="teamId" [eventId]="eventId"></app-coaching-notes>
   }
 
   @if (selectedSegment() === 'plan' && plan().length > 0) {

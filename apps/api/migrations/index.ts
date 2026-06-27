@@ -29,6 +29,8 @@ import { AllowAdditionalPropertiesInSoccerEventDefinitions1780800000000 } from '
 import { AddGoalkeeperEventDefinitions1780900000000 } from './1780900000000-AddGoalkeeperEventDefinitions';
 import { AddClockSyncColumns1782356834095 } from './1782356834095-AddClockSyncColumns';
 import { AddShotsAndCornerKicks1782357000000 } from './1782357000000-AddShotsAndCornerKicks';
+import { CreateEventNotes1782532847433 } from './1782532847433-CreateEventNotes';
+
 
 export const ALL_MIGRATIONS = [
   InitialSchema1744934400000,
@@ -62,4 +64,6 @@ export const ALL_MIGRATIONS = [
   AddGoalkeeperEventDefinitions1780900000000,
   AddClockSyncColumns1782356834095,
   AddShotsAndCornerKicks1782357000000,
+  CreateEventNotes1782532847433,
 ];
+

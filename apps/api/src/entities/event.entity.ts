@@ -3,6 +3,8 @@ import { SeasonEntity } from './season.entity';
 import { PracticeDrillEntity } from './practice-drill.entity';
 import { LocationEntity } from './location.entity';
 import { LeagueEntity } from './league.entity';
+import { EventNoteEntity } from './event-note.entity';
+
 
 @Entity('events')
 export class EventEntity {
@@ -99,4 +101,7 @@ export class EventEntity {
 
   @Column({ name: 'weather_last_updated', type: 'timestamp', nullable: true })
   weatherLastUpdated: Date | null;
+
+  @OneToMany(() => EventNoteEntity, (note) => note.event)
+  notesList: EventNoteEntity[];
 }

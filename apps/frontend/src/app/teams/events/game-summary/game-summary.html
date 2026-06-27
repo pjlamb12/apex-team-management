@@ -205,6 +205,9 @@
             <ion-segment-button value="playtime">
               <ion-label class="text-xs font-bold">Playing Time</ion-label>
             </ion-segment-button>
+            <ion-segment-button value="notes">
+              <ion-label class="text-xs font-bold">Coaching Notes</ion-label>
+            </ion-segment-button>
           </ion-segment>
 
           @if (activeSegment() === 'highlights') {
@@ -391,6 +394,10 @@
                 </ion-list>
               </ion-card-content>
             </ion-card>
+          }
+
+          @if (activeSegment() === 'notes') {
+            <app-coaching-notes [teamId]="teamId" [eventId]="eventId"></app-coaching-notes>
           }
         </div>
       </div>

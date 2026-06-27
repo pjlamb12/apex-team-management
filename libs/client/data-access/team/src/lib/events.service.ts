@@ -113,6 +113,21 @@ export interface SaveLineupDto {
   entries: SaveLineupEntryDto[];
 }
 
+export interface EventNote {
+  id: string;
+  eventId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    displayName: string;
+    email: string;
+  };
+}
+
+
 @Injectable({
   providedIn: 'root',
 })
@@ -180,5 +195,21 @@ export class EventsService {
 
   refreshWeather(teamId: string, eventId: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/weather/refresh`, {});
+  }
+
+  getEventNotes(teamId: string, eventId: string): Observable<EventNote[]> {
+    return this.http.get<EventNote[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/notes`);
+  }
+
+  createEventNote(teamId: string, eventId: string, content: string): Observable<EventNote> {
+    return this.http.post<EventNote>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/notes`, { content });
+  }
+
+  updateEventNote(teamId: string, eventId: string, noteId: string, content: string): Observable<EventNote> {
+    return this.http.patch<EventNote>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/notes/${noteId}`, { content });
+  }
+
+  deleteEventNote(teamId: string, eventId: string, noteId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/notes/${noteId}`);
   }
 }

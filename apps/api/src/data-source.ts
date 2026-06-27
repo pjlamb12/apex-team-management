@@ -23,6 +23,8 @@ import { CandidateAttendanceEntity } from './entities/candidate-attendance.entit
 import { CandidateEvaluationEntity } from './entities/candidate-evaluation.entity';
 import { ScoutingRubricEntity } from './entities/scouting-rubric.entity';
 import { SeasonPlayerEntity } from './entities/season-player.entity';
+import { EventNoteEntity } from './entities/event-note.entity';
+
 import { ALL_MIGRATIONS } from '../migrations';
 
 export default new DataSource({
@@ -53,6 +55,7 @@ export default new DataSource({
     CandidateEvaluationEntity,
     ScoutingRubricEntity,
     SeasonPlayerEntity,
+    EventNoteEntity,
   ],
   migrations: ALL_MIGRATIONS,
   synchronize: false,

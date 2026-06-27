@@ -137,4 +137,44 @@ export class EventsController {
   ) {
     return this.eventsService.removeEvent(eventId, gameEventId, req.user.sub);
   }
+
+  @Get(':eventId/notes')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  findNotes(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Request() req: { user: { sub: string } },
+  ) {
+    return this.eventsService.findNotes(eventId, req.user.sub);
+  }
+
+  @Post(':eventId/notes')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  createNote(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Body('content') content: string,
+    @Request() req: { user: { sub: string } },
+  ) {
+    return this.eventsService.createNote(eventId, content, req.user.sub);
+  }
+
+  @Patch(':eventId/notes/:noteId')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  updateNote(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Param('noteId', ParseUUIDPipe) noteId: string,
+    @Body('content') content: string,
+    @Request() req: { user: { sub: string } },
+  ) {
+    return this.eventsService.updateNote(eventId, noteId, content, req.user.sub);
+  }
+
+  @Delete(':eventId/notes/:noteId')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  deleteNote(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Param('noteId', ParseUUIDPipe) noteId: string,
+    @Request() req: { user: { sub: string } },
+  ) {
+    return this.eventsService.deleteNote(eventId, noteId, req.user.sub);
+  }
 }

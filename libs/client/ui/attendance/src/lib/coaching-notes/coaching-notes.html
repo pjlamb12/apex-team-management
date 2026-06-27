@@ -1,0 +1,130 @@
+<div class="flex flex-col gap-6">
+  <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+    <ion-card-header class="px-6 pt-6 pb-2">
+      <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center justify-between">
+        <span class="flex items-center gap-2">
+          <ion-icon name="document-text-outline" class="text-blue-500 text-base"></ion-icon>
+          Coaching Notes
+        </span>
+        <ion-badge color="primary" class="font-bold font-mono px-2 py-0.5 rounded text-[10px]">{{ notes().length }}</ion-badge>
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content class="px-6 pb-6">
+      @if (isLoading()) {
+        <div class="flex justify-center items-center py-12">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+        </div>
+      } @else {
+        <!-- List of notes -->
+        <div class="flex flex-col gap-4">
+          @for (note of notes(); track note.id) {
+            <div class="border-b border-ap-border/50 pb-4 last:border-b-0 last:pb-0 flex justify-between items-start gap-4">
+              <div class="flex-grow">
+                @if (editingNoteId() === note.id) {
+                  <!-- Edit form inline -->
+                  <div class="flex flex-col gap-2 mt-1">
+                    <ion-textarea
+                      [ngModel]="editingContent()"
+                      (ngModelChange)="editingContent.set($event)"
+                      placeholder="Edit note..."
+                      class="bg-ap-bg/50 rounded border border-ap-border text-sm text-ap-text p-2"
+                      rows="3"
+                      [autoGrow]="true"
+                    ></ion-textarea>
+                    <div class="flex justify-end gap-2">
+                      <ion-button
+                        fill="clear"
+                        size="small"
+                        color="medium"
+                        (click)="cancelEdit()"
+                        class="text-xs font-bold uppercase tracking-wider h-8"
+                      >
+                        <ion-icon name="close-outline" slot="start"></ion-icon>
+                        Cancel
+                      </ion-button>
+                      <ion-button
+                        size="small"
+                        color="success"
+                        (click)="saveEdit(note.id)"
+                        [disabled]="!editingContent().trim()"
+                        class="text-xs font-bold uppercase tracking-wider h-8"
+                      >
+                        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+                        Save
+                      </ion-button>
+                    </div>
+                  </div>
+                } @else {
+                  <!-- Standard Display -->
+                  <div class="text-ap-text text-sm whitespace-pre-wrap leading-relaxed">{{ note.content }}</div>
+                  <div class="text-[10px] text-ap-muted mt-1.5 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                    <span class="text-ap-text">{{ note.user?.displayName || 'Unknown Coach' }}</span>
+                    <span class="text-ap-border">•</span>
+                    <span>{{ note.createdAt | date:'short' }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Action buttons -->
+              @if (editingNoteId() !== note.id) {
+                <div class="flex gap-1 items-center">
+                  @if (canEdit(note)) {
+                    <ion-button
+                      fill="clear"
+                      color="medium"
+                      (click)="startEdit(note)"
+                      class="h-7 w-7 ion-no-margin"
+                      aria-label="Edit note"
+                    >
+                      <ion-icon name="pencil-outline" slot="icon-only" class="text-sm"></ion-icon>
+                    </ion-button>
+                  }
+                  @if (canDelete(note)) {
+                    <ion-button
+                      fill="clear"
+                      color="danger"
+                      (click)="confirmDelete(note.id)"
+                      class="h-7 w-7 ion-no-margin"
+                      aria-label="Delete note"
+                    >
+                      <ion-icon name="trash-outline" slot="icon-only" class="text-sm"></ion-icon>
+                    </ion-button>
+                  }
+                </div>
+              }
+            </div>
+          } @empty {
+            <div class="text-center py-12 text-ap-muted italic text-sm">
+              No coaching notes recorded yet.
+            </div>
+          }
+        </div>
+
+        <!-- Add note input -->
+        <div class="mt-6 pt-6 border-t border-ap-border flex flex-col gap-2">
+          <ion-textarea
+            [ngModel]="newNoteContent()"
+            (ngModelChange)="newNoteContent.set($event)"
+            placeholder="Add a coaching note (e.g. need to practice transition defense, spacing was great...)"
+            class="bg-ap-bg/50 rounded border border-ap-border text-sm text-ap-text p-2"
+            rows="2.5"
+            [autoGrow]="true"
+          ></ion-textarea>
+          <div class="flex justify-end">
+            <ion-button
+              (click)="addNote()"
+              [disabled]="!newNoteContent().trim() || isSubmitting()"
+              class="h-9 text-xs font-bold uppercase tracking-wider"
+            >
+              @if (isSubmitting()) {
+                <ion-spinner name="crescent" size="small"></ion-spinner>
+              } @else {
+                Add Note
+              }
+            </ion-button>
+          </div>
+        </div>
+      }
+    </ion-card-content>
+  </ion-card>
+</div>

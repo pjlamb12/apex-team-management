@@ -18,7 +18,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly config = inject(RuntimeConfigLoaderService);
 
-  protected readonly currentUser = signal<AuthUser | null>(this.loadUserFromStorage());
+  readonly currentUser = signal<AuthUser | null>(this.loadUserFromStorage());
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
 
   get apiUrl(): string {

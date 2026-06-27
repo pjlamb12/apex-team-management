@@ -50,9 +50,10 @@ import {
   chevronBackOutline,
   flagOutline
 } from 'ionicons/icons';
-import { AttendanceList } from '@apex-team/client/ui/attendance';
+import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService } from '@apex-team/client/data-access/team';
 import { SocketService } from '@apex-team/client/shared/services';
+
 
 @Component({
   selector: 'app-game-summary',
@@ -87,6 +88,7 @@ import { SocketService } from '@apex-team/client/shared/services';
     IonGrid,
     IonRow,
     IonCol,
+    CoachingNotes,
   ],
   templateUrl: './game-summary.html',
   styleUrl: './game-summary.scss',
@@ -117,7 +119,7 @@ export class GameSummary implements OnDestroy {
   protected gameEvents = signal<any[]>([]);
   protected playingTime = signal<Record<string, any>>({});
   protected lineup = signal<any[]>([]);
-  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime'>('highlights');
+  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime' | 'notes'>('highlights');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
 

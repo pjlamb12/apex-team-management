@@ -7,6 +7,8 @@ import { EventEntity } from '../entities/event.entity';
 import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
+import { EventNoteEntity } from '../entities/event-note.entity';
+
 import { CreateEventDto } from './dto/create-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
 import { WeatherService } from './weather.service';
@@ -20,6 +22,8 @@ describe('EventsService', () => {
   let seasonRepo: Repository<SeasonEntity>;
   let teamRepo: Repository<TeamEntity>;
   let gameEventRepo: Repository<GameEventEntity>;
+  let eventNoteRepo: Repository<EventNoteEntity>;
+
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -61,6 +65,16 @@ describe('EventsService', () => {
           },
         },
         {
+          provide: getRepositoryToken(EventNoteEntity),
+          useValue: {
+            create: vi.fn().mockImplementation((dto) => dto),
+            save: vi.fn().mockImplementation((note) => Promise.resolve({ id: 'note-1', ...note })),
+            find: vi.fn(),
+            findOne: vi.fn(),
+            remove: vi.fn(),
+          },
+        },
+        {
           provide: SocketGateway,
           useValue: {
             server: {
@@ -89,6 +103,7 @@ describe('EventsService', () => {
     seasonRepo = module.get<Repository<SeasonEntity>>(getRepositoryToken(SeasonEntity));
     teamRepo = module.get<Repository<TeamEntity>>(getRepositoryToken(TeamEntity));
     gameEventRepo = module.get<Repository<GameEventEntity>>(getRepositoryToken(GameEventEntity));
+    eventNoteRepo = module.get<Repository<EventNoteEntity>>(getRepositoryToken(EventNoteEntity));
   });
 
   describe('create', () => {
@@ -578,4 +593,86 @@ describe('EventsService', () => {
       await expect(service.removeEvent(eventId, gameEventId, userId)).rejects.toThrow(ForbiddenException);
     });
   });
+
+  describe('notes management', () => {
+    const eventId = 'event-1';
+    const userId = 'user-1';
+
+    it('should find notes for authorized user', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: {
+          team: {
+            coachId: userId,
+            members: [],
+          },
+        },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+      vi.spyOn(eventNoteRepo, 'find').mockResolvedValue([{ id: 'note-1', content: 'test note' }] as any);
+
+      const result = await service.findNotes(eventId, userId);
+      expect(result).toHaveLength(1);
+      expect(result[0].content).toBe('test note');
+    });
+
+    it('should create note for authorized user', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: {
+          team: {
+            coachId: userId,
+            members: [],
+          },
+        },
+      };
+      const mockNote = { id: 'note-1', eventId, userId, content: 'test note' };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+      vi.spyOn(eventNoteRepo, 'create').mockReturnValue(mockNote as any);
+      vi.spyOn(eventNoteRepo, 'save').mockResolvedValue(mockNote as any);
+      vi.spyOn(eventNoteRepo, 'findOne').mockResolvedValue(mockNote as any);
+
+      const result = await service.createNote(eventId, 'test note', userId);
+      expect(result.content).toBe('test note');
+    });
+
+    it('should update note if user is the author', async () => {
+      const mockNote = { id: 'note-1', eventId, userId, content: 'original content' };
+      vi.spyOn(eventNoteRepo, 'findOne').mockResolvedValueOnce(mockNote as any);
+      vi.spyOn(eventNoteRepo, 'save').mockImplementation(async (n: any) => n);
+      vi.spyOn(eventNoteRepo, 'findOne').mockResolvedValueOnce({ ...mockNote, content: 'updated content' } as any);
+
+      const result = await service.updateNote(eventId, 'note-1', 'updated content', userId);
+      expect(result.content).toBe('updated content');
+    });
+
+    it('should throw ForbiddenException if user tries to update another user\'s note', async () => {
+      const mockNote = { id: 'note-1', eventId, userId: 'other-user', content: 'original content' };
+      vi.spyOn(eventNoteRepo, 'findOne').mockResolvedValue(mockNote as any);
+
+      await expect(service.updateNote(eventId, 'note-1', 'updated content', userId)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should delete note if user is the author or head coach', async () => {
+      const mockNote = {
+        id: 'note-1',
+        eventId,
+        userId,
+        event: {
+          season: {
+            team: {
+              coachId: 'head-coach',
+              members: [],
+            },
+          },
+        },
+      };
+      vi.spyOn(eventNoteRepo, 'findOne').mockResolvedValue(mockNote as any);
+      vi.spyOn(eventNoteRepo, 'remove').mockResolvedValue({} as any);
+
+      await service.deleteNote(eventId, 'note-1', userId);
+      expect(eventNoteRepo.remove).toHaveBeenCalledWith(mockNote);
+    });
+  });
 });
+

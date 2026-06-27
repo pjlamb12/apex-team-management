@@ -6,6 +6,8 @@ import { ICalService } from './ical.service';
 import { WeatherService } from './weather.service';
 import { EventsController } from './events.controller';
 import { EventEntity } from '../entities/event.entity';
+import { EventNoteEntity } from '../entities/event-note.entity';
+
 import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
 import { LocationEntity } from '../entities/location.entity';
@@ -27,6 +29,7 @@ import { MembershipsModule } from '../memberships/memberships.module';
       LineupEntryEntity,
       PlayerEntity,
       GameEventEntity,
+      EventNoteEntity,
     ]),
     SocketModule,
     LocationsModule,

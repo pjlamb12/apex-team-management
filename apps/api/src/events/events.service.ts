@@ -8,6 +8,7 @@ import { EventEntity } from '../entities/event.entity';
 import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
+import { EventNoteEntity } from '../entities/event-note.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
@@ -28,6 +29,8 @@ export class EventsService {
     private readonly teamRepo: Repository<TeamEntity>,
     @InjectRepository(GameEventEntity)
     private readonly gameEventRepo: Repository<GameEventEntity>,
+    @InjectRepository(EventNoteEntity)
+    private readonly eventNoteRepo: Repository<EventNoteEntity>,
     private readonly socketGateway: SocketGateway,
     private readonly weatherService: WeatherService,
     private readonly attendanceService: AttendanceService,
@@ -336,5 +339,96 @@ export class EventsService {
     return allEvents.sort((a, b) => 
       (a.scheduledAt?.getTime() || 0) - (b.scheduledAt?.getTime() || 0)
     );
+  }
+
+  async findNotes(eventId: string, userId: string): Promise<EventNoteEntity[]> {
+    const event = await this.eventRepo.findOne({
+      where: { id: eventId },
+      relations: ['season', 'season.team', 'season.team.members'],
+    });
+    if (!event) throw new NotFoundException('Event not found');
+
+    const isCoach = event.season?.team?.coachId === userId;
+    const isMemberCoachOrAssistant = event.season?.team?.members?.some(
+      (m) => m.userId === userId && (m.role === TeamRole.HEAD_COACH || m.role === TeamRole.ASSISTANT)
+    ) ?? false;
+
+    if (!isCoach && !isMemberCoachOrAssistant) {
+      throw new ForbiddenException('Not authorized to view notes for this event');
+    }
+
+    return this.eventNoteRepo.find({
+      where: { eventId },
+      relations: ['user'],
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async createNote(eventId: string, content: string, userId: string): Promise<EventNoteEntity> {
+    const event = await this.eventRepo.findOne({
+      where: { id: eventId },
+      relations: ['season', 'season.team', 'season.team.members'],
+    });
+    if (!event) throw new NotFoundException('Event not found');
+
+    const isCoach = event.season?.team?.coachId === userId;
+    const isMemberCoachOrAssistant = event.season?.team?.members?.some(
+      (m) => m.userId === userId && (m.role === TeamRole.HEAD_COACH || m.role === TeamRole.ASSISTANT)
+    ) ?? false;
+
+    if (!isCoach && !isMemberCoachOrAssistant) {
+      throw new ForbiddenException('Not authorized to add notes for this event');
+    }
+
+    const note = this.eventNoteRepo.create({
+      eventId,
+      userId,
+      content,
+    });
+
+    const savedNote = await this.eventNoteRepo.save(note);
+    return this.eventNoteRepo.findOne({
+      where: { id: savedNote.id },
+      relations: ['user'],
+    }) as Promise<EventNoteEntity>;
+  }
+
+  async updateNote(eventId: string, noteId: string, content: string, userId: string): Promise<EventNoteEntity> {
+    const note = await this.eventNoteRepo.findOne({
+      where: { id: noteId, eventId },
+      relations: ['event', 'event.season', 'event.season.team'],
+    });
+    if (!note) throw new NotFoundException('Note not found');
+
+    if (note.userId !== userId) {
+      throw new ForbiddenException('Only the author can update this note');
+    }
+
+    note.content = content;
+    const savedNote = await this.eventNoteRepo.save(note);
+    return this.eventNoteRepo.findOne({
+      where: { id: savedNote.id },
+      relations: ['user'],
+    }) as Promise<EventNoteEntity>;
+  }
+
+  async deleteNote(eventId: string, noteId: string, userId: string): Promise<void> {
+    const note = await this.eventNoteRepo.findOne({
+      where: { id: noteId, eventId },
+      relations: ['event', 'event.season', 'event.season.team', 'event.season.team.members'],
+    });
+    if (!note) throw new NotFoundException('Note not found');
+
+    const isCoach = note.event?.season?.team?.coachId === userId;
+    const isNoteAuthor = note.userId === userId;
+    const isHeadCoachMember = note.event?.season?.team?.members?.some(
+      (m) => m.userId === userId && m.role === TeamRole.HEAD_COACH
+    ) ?? false;
+
+    if (!isNoteAuthor && !isCoach && !isHeadCoachMember) {
+      throw new ForbiddenException('Not authorized to delete this note');
+    }
+
+    await this.eventNoteRepo.remove(note);
   }
 }
