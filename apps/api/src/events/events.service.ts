@@ -9,6 +9,7 @@ import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
 import { EventNoteEntity } from '../entities/event-note.entity';
+import { LeagueEntity } from '../entities/league.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
@@ -31,6 +32,8 @@ export class EventsService {
     private readonly gameEventRepo: Repository<GameEventEntity>,
     @InjectRepository(EventNoteEntity)
     private readonly eventNoteRepo: Repository<EventNoteEntity>,
+    @InjectRepository(LeagueEntity)
+    private readonly leagueRepo: Repository<LeagueEntity>,
     private readonly socketGateway: SocketGateway,
     private readonly weatherService: WeatherService,
     private readonly attendanceService: AttendanceService,
@@ -65,13 +68,26 @@ export class EventsService {
       recurrenceRule: dto.recurrenceRule,
     });
 
-    // Inherit defaults from season if not provided
+    // Inherit defaults from competition/league/season if not provided
+    let defaultPeriodCount: number | null = null;
+    let defaultPeriodLengthMinutes: number | null = null;
+    let defaultPlayersOnField: number | null = null;
+
+    if (dto.leagueId) {
+      const league = await this.leagueRepo.findOne({ where: { id: dto.leagueId } });
+      if (league) {
+        defaultPeriodCount = league.periodCount;
+        defaultPeriodLengthMinutes = league.periodLengthMinutes;
+        defaultPlayersOnField = league.playersOnField;
+      }
+    }
+
     if (event.type === 'practice') {
       event.location = dto.location ?? activeSeason.defaultPracticeLocation;
     } else if (event.type === 'game') {
-      event.periodCount = dto.periodCount ?? activeSeason.periodCount;
-      event.periodLengthMinutes = dto.periodLengthMinutes ?? activeSeason.periodLengthMinutes;
-      event.playersOnField = dto.playersOnField ?? activeSeason.playersOnField;
+      event.periodCount = dto.periodCount ?? defaultPeriodCount;
+      event.periodLengthMinutes = dto.periodLengthMinutes ?? defaultPeriodLengthMinutes;
+      event.playersOnField = dto.playersOnField ?? defaultPlayersOnField;
     }
 
     // Automatically calculate duration for games
@@ -180,7 +196,7 @@ export class EventsService {
   async findOne(eventId: string): Promise<EventEntity & { goalEventCount?: number }> {
     const event = await this.eventRepo.findOne({ 
       where: { id: eventId },
-      relations: ['locationRef', 'season', 'season.team', 'season.homeLocation'] 
+      relations: ['locationRef', 'season', 'season.team', 'league', 'league.homeLocation'] 
     });
     if (!event) {
       throw new NotFoundException(`Event with ID ${eventId} not found`);

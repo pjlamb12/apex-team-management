@@ -82,112 +82,22 @@
                 </ion-modal>
               </ion-item>
 
-              <ion-item>
-                <ion-input
-                  label="Practice Location"
-                  labelPlacement="stacked"
-                  formControlName="defaultPracticeLocation"
-                  placeholder="e.g. Riverside Park Field 3"
-                  type="text"
-                ></ion-input>
-              </ion-item>
-
-              <ion-item>
-                <ion-input
-                  label="Default Home Venue"
-                  labelPlacement="stacked"
-                  formControlName="defaultHomeVenue"
-                  placeholder="e.g. Apex Stadium"
-                  type="text"
-                ></ion-input>
-              </ion-item>
-
               <ngx-control-errors-display>
                 <ion-item>
-                  <ion-select label="Home Field (for Weather)" label-placement="stacked" formControlName="homeLocationId" interface="action-sheet">
-                    <ion-select-option value="">Select a location...</ion-select-option>
-                    @for (loc of locations(); track loc.id) {
-                      <ion-select-option [value]="loc.id">{{ loc.name }}</ion-select-option>
-                    }
-                  </ion-select>
+                  <ion-input
+                    label="Default Practice Location"
+                    labelPlacement="floating"
+                    formControlName="defaultPracticeLocation"
+                    placeholder="e.g. Riverside Park Field 3"
+                    type="text"
+                  ></ion-input>
                 </ion-item>
               </ngx-control-errors-display>
-
-              <div class="px-4 mt-2 mb-4">
-                <ion-button (click)="presentLocationModal()" fill="outline" expand="block" size="small" type="button">
-                  <ion-icon name="add-outline" slot="start"></ion-icon>
-                  Add New Location
-                </ion-button>
-                <p class="text-[10px] text-ap-muted mt-2 italic px-1">
-                  Weather forecasts for game events are based on the coordinates of this selected home field.
-                </p>
-              </div>
-
-              <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
-                Default Jersey Colors
-              </div>
-
-              <ion-item>
-                <ion-input
-                  label="Home Jersey"
-                  labelPlacement="stacked"
-                  formControlName="defaultHomeColor"
-                  placeholder="e.g. Blue"
-                  type="text"
-                ></ion-input>
-              </ion-item>
-
-              <ion-item>
-                <ion-input
-                  label="Away Jersey"
-                  labelPlacement="stacked"
-                  formControlName="defaultAwayColor"
-                  placeholder="e.g. White"
-                  type="text"
-                ></ion-input>
-              </ion-item>
 
               <ion-item>
                 <ion-label>Active Season</ion-label>
                 <ion-toggle formControlName="isActive" slot="end"></ion-toggle>
               </ion-item>
-
-              <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
-                Default Game Format
-              </div>
-
-              <ngx-control-errors-display>
-                <ion-item>
-                  <ion-input
-                    label="Number of Periods"
-                    labelPlacement="floating"
-                    formControlName="periodCount"
-                    type="number"
-                  ></ion-input>
-                </ion-item>
-              </ngx-control-errors-display>
-
-              <ngx-control-errors-display>
-                <ion-item>
-                  <ion-input
-                    label="Period Length (minutes)"
-                    labelPlacement="floating"
-                    formControlName="periodLengthMinutes"
-                    type="number"
-                  ></ion-input>
-                </ion-item>
-              </ngx-control-errors-display>
-
-              <ngx-control-errors-display>
-                <ion-item>
-                  <ion-input
-                    label="Number of Players on Field"
-                    labelPlacement="floating"
-                    formControlName="playersOnField"
-                    type="number"
-                  ></ion-input>
-                </ion-item>
-              </ngx-control-errors-display>
             </ion-list>
 
             @if (form.get('isActive')?.value) {

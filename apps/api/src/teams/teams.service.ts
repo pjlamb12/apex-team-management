@@ -141,14 +141,7 @@ export class TeamsService {
         startDate: '2026-08-01',
         endDate: '2026-11-30',
         isActive: true,
-        playersOnField: 9,
-        periodCount: 2,
-        periodLengthMinutes: 30,
-        defaultHomeVenue: 'Apex Sports Complex - Pitch 1',
-        defaultHomeColor: 'Red',
-        defaultAwayColor: 'White',
         defaultPracticeLocation: 'Apex Sports Complex - Pitch 1',
-        homeLocationId: savedLocation.id,
       });
       const savedSeason = await manager.save(SeasonEntity, season);
 
@@ -158,6 +151,13 @@ export class TeamsService {
         name: 'Utah Metro Soccer League - U12',
         type: 'league',
         isActive: true,
+        playersOnField: 9,
+        periodCount: 2,
+        periodLengthMinutes: 30,
+        defaultHomeVenue: 'Apex Sports Complex - Pitch 1',
+        defaultHomeColor: 'Red',
+        defaultAwayColor: 'White',
+        homeLocationId: savedLocation.id,
       });
       const savedLeague = await manager.save(LeagueEntity, league);
 

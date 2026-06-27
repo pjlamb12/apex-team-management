@@ -135,9 +135,12 @@ export class CreateEvent {
       }
     });
 
-    // Reactively update location and color based on isHomeGame toggle
+    // Reactively update location and color based on isHomeGame toggle and leagueId selection
     this.form.get('isHomeGame')?.valueChanges.subscribe((isHome) => {
-      this.applySeasonDefaults(isHome ?? true);
+      this.applyLeagueDefaults(isHome ?? true, this.form.value.leagueId ?? '');
+    });
+    this.form.get('leagueId')?.valueChanges.subscribe((leagueId) => {
+      this.applyLeagueDefaults(this.form.value.isHomeGame ?? true, leagueId ?? '');
     });
   }
 
@@ -167,7 +170,6 @@ export class CreateEvent {
     try {
       const season = await firstValueFrom(this.eventsService.getActiveSeason(teamId));
       this.activeSeason.set(season);
-      this.applySeasonDefaults(this.form.value.isHomeGame ?? true);
     } catch {
       console.warn('Failed to load active season for defaults');
     }
@@ -178,7 +180,9 @@ export class CreateEvent {
       const leagues = await firstValueFrom(this.leaguesService.findAllForSeason(seasonId));
       this.leagues.set(leagues);
       if (leagues.length > 0) {
-        this.form.patchValue({ leagueId: leagues[0].id });
+        const defaultLeagueId = leagues[0].id;
+        this.form.patchValue({ leagueId: defaultLeagueId });
+        this.applyLeagueDefaults(this.form.value.isHomeGame ?? true, defaultLeagueId);
       }
     } catch {
       console.error('Failed to load leagues');
@@ -212,20 +216,25 @@ export class CreateEvent {
     }
   }
 
-  private applySeasonDefaults(isHome: boolean): void {
-    const season = this.activeSeason();
-    if (!season) return;
+  private applyLeagueDefaults(isHome: boolean, leagueId: string): void {
+    if (!leagueId) return;
+    const league = this.leagues().find((l) => l.id === leagueId);
+    if (!league) return;
 
     const patches: any = {
-      periodCount: season.periodCount || 2,
-      periodLengthMinutes: season.periodLengthMinutes || 45,
-      playersOnField: season.playersOnField || 11,
+      periodCount: league.periodCount || 2,
+      periodLengthMinutes: league.periodLengthMinutes || 45,
+      playersOnField: league.playersOnField || 11,
     };
 
     if (isHome) {
-      patches.uniformColor = season.defaultHomeColor ?? '';
+      patches.uniformColor = league.defaultHomeColor ?? '';
+      patches.locationId = league.homeLocationId ?? '';
+      patches.locationName = league.defaultHomeVenue ?? '';
     } else {
-      patches.uniformColor = season.defaultAwayColor ?? '';
+      patches.uniformColor = league.defaultAwayColor ?? '';
+      patches.locationId = '';
+      patches.locationName = '';
     }
 
     this.form.patchValue(patches);

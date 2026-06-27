@@ -6,14 +6,7 @@ export interface Season {
   startDate: string;   // ISO date string
   endDate: string;     // ISO date string
   isActive: boolean;
-  defaultHomeVenue?: string;
-  defaultHomeColor?: string;
-  defaultAwayColor?: string;
-  homeLocationId?: string;
-  defaultPracticeLocation?: string;
-  periodCount?: number;
-  periodLengthMinutes?: number;
-  playersOnField?: number;
+  defaultPracticeLocation?: string | null;
 }
 
 export interface SeasonStats {

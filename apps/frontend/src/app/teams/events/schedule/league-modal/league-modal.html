@@ -10,32 +10,112 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <form [formGroup]="form">
-    <ion-list class="space-y-4">
-      <ion-item class="rounded-xl border border-ap-border" lines="none">
-        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Name</ion-label>
-        <ion-input formControlName="name" placeholder="e.g. Fall League, Mayor's Cup"></ion-input>
-      </ion-item>
+<ion-content class="bg-ap-bg">
+  <div class="px-4 py-4">
+    <form [formGroup]="form">
+      <ion-list class="space-y-4 bg-transparent m-0 p-0" style="--background: transparent;">
+        <ion-item class="rounded-xl border border-ap-border" lines="none">
+          <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Name</ion-label>
+          <ion-input formControlName="name" placeholder="e.g. Fall League, Mayor's Cup"></ion-input>
+        </ion-item>
 
-      <ion-item class="rounded-xl border border-ap-border" lines="none">
-        <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Type</ion-label>
-        <ion-select formControlName="type" interface="popover" placeholder="Select Type">
-          <ion-select-option value="league">League / Session</ion-select-option>
-          <ion-select-option value="tournament">Tournament</ion-select-option>
-          <ion-select-option value="cup">Cup / Playoff</ion-select-option>
-          <ion-select-option value="other">Other</ion-select-option>
-        </ion-select>
-      </ion-item>
+        <ion-item class="rounded-xl border border-ap-border" lines="none">
+          <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Type</ion-label>
+          <ion-select formControlName="type" interface="popover" placeholder="Select Type">
+            <ion-select-option value="league">League / Session</ion-select-option>
+            <ion-select-option value="tournament">Tournament</ion-select-option>
+            <ion-select-option value="cup">Cup / Playoff</ion-select-option>
+            <ion-select-option value="other">Other</ion-select-option>
+          </ion-select>
+        </ion-item>
 
-      <ion-item class="rounded-xl border border-ap-border" lines="none">
-        <ion-toggle formControlName="isActive" justify="space-between">
-          <ion-label>
-            <h2 class="font-bold">Active Competition</h2>
-            <p class="text-xs text-ap-muted">Show games for this competition by default.</p>
-          </ion-label>
-        </ion-toggle>
-      </ion-item>
-    </ion-list>
-  </form>
+        <ion-item class="rounded-xl border border-ap-border" lines="none">
+          <ion-toggle formControlName="isActive" justify="space-between">
+            <ion-label>
+              <h2 class="font-bold">Active Competition</h2>
+              <p class="text-xs text-ap-muted">Show games for this competition by default.</p>
+            </ion-label>
+          </ion-toggle>
+        </ion-item>
+
+        <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
+          Default Venue & Locations
+        </div>
+
+        <ion-item class="rounded-xl border border-ap-border" lines="none">
+          <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Default Home Venue</ion-label>
+          <ion-input formControlName="defaultHomeVenue" placeholder="e.g. Apex Stadium"></ion-input>
+        </ion-item>
+
+        <div>
+          <ngx-control-errors-display>
+            <ion-item class="rounded-xl border border-ap-border" lines="none">
+              <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Home Field (for Weather)</ion-label>
+              <ion-select formControlName="homeLocationId" interface="action-sheet" placeholder="Select Location">
+                <ion-select-option value="">Select a location...</ion-select-option>
+                @for (loc of locations(); track loc.id) {
+                  <ion-select-option [value]="loc.id">{{ loc.name }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          </ngx-control-errors-display>
+        </div>
+
+        <div class="px-2 mt-2">
+          <ion-button (click)="presentLocationModal()" fill="outline" expand="block" size="small" type="button">
+            <ion-icon name="add-outline" slot="start"></ion-icon>
+            Add New Location
+          </ion-button>
+          <p class="text-[10px] text-ap-muted mt-2 italic px-1">
+            Weather forecasts for game events are based on the coordinates of this selected home field.
+          </p>
+        </div>
+
+        <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
+          Default Jersey Colors
+        </div>
+
+        <ion-item class="rounded-xl border border-ap-border" lines="none">
+          <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Home Jersey</ion-label>
+          <ion-input formControlName="defaultHomeColor" placeholder="e.g. Blue"></ion-input>
+        </ion-item>
+
+        <ion-item class="rounded-xl border border-ap-border" lines="none">
+          <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Away Jersey</ion-label>
+          <ion-input formControlName="defaultAwayColor" placeholder="e.g. White"></ion-input>
+        </ion-item>
+
+        <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
+          Default Game Format
+        </div>
+
+        <div>
+          <ngx-control-errors-display>
+            <ion-item class="rounded-xl border border-ap-border" lines="none">
+              <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Number of Periods</ion-label>
+              <ion-input formControlName="periodCount" type="number"></ion-input>
+            </ion-item>
+          </ngx-control-errors-display>
+        </div>
+
+        <div>
+          <ngx-control-errors-display>
+            <ion-item class="rounded-xl border border-ap-border" lines="none">
+              <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Period Length (minutes)</ion-label>
+              <ion-input formControlName="periodLengthMinutes" type="number"></ion-input>
+            </ion-item>
+          </ngx-control-errors-display>
+        </div>
+
+        <div>
+          <ngx-control-errors-display>
+            <ion-item class="rounded-xl border border-ap-border" lines="none">
+              <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Number of Players on Field</ion-label>
+              <ion-input formControlName="playersOnField" type="number"></ion-input>
+            </ion-item>
+          </ngx-control-errors-display>
+        </div>
+      </ion-list>
+    </form>
+  </div>
 </ion-content>

@@ -14,6 +14,7 @@ import { LocationEntity } from '../entities/location.entity';
 import { LineupEntryEntity } from '../entities/lineup-entry.entity';
 import { PlayerEntity } from '../entities/player.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
+import { LeagueEntity } from '../entities/league.entity';
 import { SocketModule } from '../socket/socket.module';
 import { LocationsModule } from '../locations/locations.module';
 import { AttendanceModule } from '../attendance/attendance.module';
@@ -30,6 +31,7 @@ import { MembershipsModule } from '../memberships/memberships.module';
       PlayerEntity,
       GameEventEntity,
       EventNoteEntity,
+      LeagueEntity,
     ]),
     SocketModule,
     LocationsModule,

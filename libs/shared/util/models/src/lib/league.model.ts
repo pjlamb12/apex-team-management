@@ -8,6 +8,13 @@ export interface League {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  playersOnField?: number;
+  periodCount?: number;
+  periodLengthMinutes?: number;
+  defaultHomeVenue?: string;
+  defaultHomeColor?: string;
+  defaultAwayColor?: string;
+  homeLocationId?: string;
 }
 
 export interface LeagueStats {

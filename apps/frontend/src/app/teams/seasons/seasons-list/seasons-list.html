@@ -1,7 +1,7 @@
 <ion-content class="bg-ap-bg ion-padding">
   @if (errorMessage()) {
     <ion-text color="danger">
-      <p>{{ errorMessage() }}</p>
+      <p class="px-2">{{ errorMessage() }}</p>
     </ion-text>
   }
 
@@ -10,32 +10,95 @@
       <ion-spinner></ion-spinner>
     </div>
   } @else {
-    <ion-list>
+    <div class="max-w-4xl mx-auto space-y-6 pb-12 px-4">
       @for (season of seasons(); track season.id) {
-        <ion-item>
-          <ion-icon slot="start" name="calendar-outline" color="primary" style="margin-inline-end: 12px; align-self: center;"></ion-icon>
-          <ion-label>
-            <h2>{{ season.name }}</h2>
-            <p>{{ season.startDate | date:'MMM d, yyyy' }} - {{ season.endDate | date:'MMM d, yyyy' }}</p>
-          </ion-label>
-          @if (season.isActive) {
-            <ion-badge slot="end" color="success">Active</ion-badge>
+        <div class="bg-card rounded-2xl border border-ap-border overflow-hidden">
+          <!-- Season Header Row -->
+          <div class="flex items-center justify-between p-4 bg-ap-muted/5 border-b border-ap-border">
+            <div class="flex items-center gap-3">
+              <ion-icon name="calendar-outline" class="text-xl text-primary"></ion-icon>
+              <div>
+                <h2 class="text-lg font-bold flex items-center gap-2 m-0">
+                  {{ season.name }}
+                  @if (season.isActive) {
+                    <span class="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-bold text-green-500">
+                      Active
+                    </span>
+                  }
+                </h2>
+                <p class="text-xs text-ap-muted m-0 mt-0.5">
+                  {{ season.startDate | date:'MMM d, yyyy' }} - {{ season.endDate | date:'MMM d, yyyy' }}
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <ion-button fill="clear" color="primary" [routerLink]="['/teams', teamId, 'seasons', season.id]" size="small">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" color="danger" (click)="confirmDelete(season)" size="small">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" size="small" (click)="season.isExpanded = !season.isExpanded">
+                <ion-icon slot="icon-only" [name]="season.isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+
+          <!-- Competitions / Leagues Sub-List -->
+          @if (season.isExpanded) {
+            <div class="p-4 space-y-3 bg-ap-bg/50">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-ap-muted m-0">Competitions</h3>
+                <ion-button fill="outline" size="small" (click)="addCompetition(season)" class="m-0">
+                  <ion-icon slot="start" name="add-outline"></ion-icon>
+                  Add Competition
+                </ion-button>
+              </div>
+
+              <div class="px-2">
+                <ion-list lines="none" class="space-y-2 p-0" style="background: transparent;">
+                  @for (league of season.leagues; track league.id) {
+                    <ion-item class="rounded-xl border border-ap-border overflow-hidden" style="--background: var(--ap-surface); --min-height: 56px;">
+                      <ion-icon slot="start" name="trophy-outline" color="warning" class="text-lg mr-2"></ion-icon>
+                      <ion-label>
+                        <h4 class="font-bold flex items-center gap-2 m-0">
+                          {{ league.name }}
+                          @if (league.isActive) {
+                            <span class="inline-flex items-center rounded-full bg-blue-500/10 px-1.5 py-0.2 text-[10px] font-bold text-blue-500">
+                              Active
+                            </span>
+                          }
+                        </h4>
+                        <p class="text-[10px] uppercase font-semibold text-ap-muted tracking-wider m-0 mt-0.5">
+                          {{ league.type }} • Format: {{ league.playersOnField || 'N/A' }}v{{ league.playersOnField || 'N/A' }}
+                        </p>
+                      </ion-label>
+                      <ion-buttons slot="end">
+                        <ion-button fill="clear" color="primary" (click)="editCompetition(season, league)" size="small">
+                          <ion-icon slot="icon-only" name="create-outline" class="text-sm"></ion-icon>
+                        </ion-button>
+                        <ion-button fill="clear" color="danger" (click)="confirmDeleteCompetition(league)" size="small">
+                          <ion-icon slot="icon-only" name="trash-outline" class="text-sm"></ion-icon>
+                        </ion-button>
+                      </ion-buttons>
+                    </ion-item>
+                  } @empty {
+                    <div class="text-center py-4 text-xs text-ap-muted italic bg-transparent">
+                      No competitions defined for this season yet.
+                    </div>
+                  }
+                </ion-list>
+              </div>
+            </div>
           }
-          <ion-buttons slot="end">
-            <ion-button [routerLink]="['/teams', teamId, 'seasons', season.id]">
-              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-            </ion-button>
-            <ion-button color="danger" (click)="confirmDelete(season)">
-              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-item>
+        </div>
       } @empty {
-        <div class="ion-text-center ion-padding">
-          <p>No seasons found for this team.</p>
+        <div class="ion-text-center ion-padding py-12">
+          <p class="text-ap-muted mb-4">No seasons found for this team.</p>
         </div>
       }
-    </ion-list>
+    </div>
   }
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: calc(96px + var(--ion-safe-area-bottom, 0px));">
