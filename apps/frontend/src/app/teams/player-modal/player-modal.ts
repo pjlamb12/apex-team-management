@@ -46,7 +46,7 @@ export class PlayerModal implements OnInit {
     lastName: ['', [Validators.required]],
     jerseyNumber: [null as number | null, [Validators.required, Validators.min(0), Validators.max(999)]],
     preferredPosition: [''],
-    parentEmail: ['', [Validators.required, Validators.email]],
+    parentEmail: ['', [Validators.email]],
   });
 
   ngOnInit(): void {
@@ -81,7 +81,7 @@ export class PlayerModal implements OnInit {
         lastName: value.lastName!,
         jerseyNumber: value.jerseyNumber ?? undefined,
         preferredPosition: value.preferredPosition || undefined,
-        parentEmail: value.parentEmail ?? undefined,
+        parentEmail: value.parentEmail || undefined,
       },
       'confirm'
     );

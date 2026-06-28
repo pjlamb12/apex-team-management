@@ -18,6 +18,6 @@ export class CreatePlayerDto {
   preferredPosition?: string;
 
   @IsEmail()
-  @IsNotEmpty()
-  parentEmail: string;
+  @IsOptional()
+  parentEmail?: string;
 }

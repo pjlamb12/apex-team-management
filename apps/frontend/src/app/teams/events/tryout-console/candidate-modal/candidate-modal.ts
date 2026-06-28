@@ -50,7 +50,7 @@ export class CandidateModal implements OnInit {
     lastName: ['', [Validators.required]],
     dateOfBirth: [''],
     parentName: [''],
-    parentEmail: ['', [Validators.required, Validators.email]],
+    parentEmail: ['', [Validators.email]],
     parentPhone: [''],
     preferredPosition: [''],
     notes: [''],
