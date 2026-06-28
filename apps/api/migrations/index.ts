@@ -33,6 +33,7 @@ import { CreateEventNotes1782532847433 } from './1782532847433-CreateEventNotes'
 import { AddOwnGoalEventDefinition1782600000000 } from './1782600000000-AddOwnGoalEventDefinition';
 import { MoveHomeLocationToSeasons1782700000000 } from './1782700000000-MoveHomeLocationToSeasons';
 import { MoveDefaultsToCompetitions1782800000000 } from './1782800000000-MoveDefaultsToCompetitions';
+import { SeedVolleyballSport1782900000000 } from './1782900000000-SeedVolleyballSport';
 
 
 export const ALL_MIGRATIONS = [
@@ -71,5 +72,6 @@ export const ALL_MIGRATIONS = [
   AddOwnGoalEventDefinition1782600000000,
   MoveHomeLocationToSeasons1782700000000,
   MoveDefaultsToCompetitions1782800000000,
+  SeedVolleyballSport1782900000000,
 ];
 

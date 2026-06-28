@@ -16,6 +16,10 @@ export class UpdatePlayerDto {
   @IsOptional()
   jerseyNumber?: number;
 
+  @IsString()
+  @IsOptional()
+  preferredPosition?: string;
+
   @IsEmail()
   @IsNotEmpty()
   @IsOptional()

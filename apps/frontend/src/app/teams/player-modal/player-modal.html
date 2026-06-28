@@ -56,6 +56,18 @@
       }
     </div>
 
+    <div class="field-group">
+      <label class="field-label">Preferred Position</label>
+      <ion-item>
+        <ion-select formControlName="preferredPosition" placeholder="Select Position">
+          <ion-select-option value="">No Position</ion-select-option>
+          @for (pos of positions; track pos) {
+            <ion-select-option [value]="pos">{{ pos }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+    </div>
+
     <div class="field-group" [class.invalid]="form.get('parentEmail')?.invalid && form.get('parentEmail')?.touched">
       <label class="field-label">Parent / Guardian Email *</label>
       <ion-item>

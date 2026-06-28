@@ -86,6 +86,7 @@ export class CandidatesService {
       lastName: candidate.lastName,
       parentEmail: candidate.parentEmail,
       jerseyNumber: 0,
+      preferredPosition: candidate.preferredPosition || undefined,
       seasonId, // Automatically add to season if provided
     });
 
