@@ -41,7 +41,8 @@ import {
   UpdatePlayerDto,
   SeasonsService,
   CandidatesService,
-  CandidateEntity
+  CandidateEntity,
+  TeamService
 } from '@apex-team/client/data-access/team';
 import { PlayerModal } from '../../player-modal/player-modal';
 import { PlayerProfileAnalyticsComponent } from '../analytics/player-profile/player-profile';
@@ -86,10 +87,12 @@ export class Roster {
   private readonly analyticsService = inject(AnalyticsService);
   private readonly seasonsService = inject(SeasonsService);
   private readonly candidatesService = inject(CandidatesService);
+  private readonly teamService = inject(TeamService);
   private readonly modalCtrl = inject(ModalController);
   private readonly alertCtrl = inject(AlertController);
 
   protected players = signal<PlayerEntity[]>([]);
+  protected positions = signal<string[]>([]);
   protected sortedPlayers = computed(() => {
     return [...this.players()].sort((a, b) => {
       const aNum = a.jerseyNumber !== null && a.jerseyNumber !== undefined ? a.jerseyNumber : Infinity;
@@ -148,11 +151,13 @@ export class Roster {
         playersReq = firstValueFrom(this.playersService.getPlayers(teamId));
       }
 
-      const [players, stats] = await Promise.all([
+      const [players, stats, team] = await Promise.all([
         playersReq,
-        firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId ?? undefined))
+        firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId ?? undefined)),
+        this.teamService.getTeam(teamId)
       ]);
       this.players.set(players);
+      this.positions.set(team.sport?.positionTypes || []);
       
       const statsMap: Record<string, ParticipationStats> = {};
       stats.forEach(s => statsMap[s.playerId] = s);
@@ -217,7 +222,9 @@ export class Roster {
   protected async openPlayerModal(player?: PlayerEntity): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: PlayerModal,
-      componentProps: player ? { player } : {},
+      componentProps: player 
+        ? { player, positions: this.positions() } 
+        : { positions: this.positions() },
     });
     await modal.present();
     const { data, role } = await modal.onWillDismiss<CreatePlayerDto>();

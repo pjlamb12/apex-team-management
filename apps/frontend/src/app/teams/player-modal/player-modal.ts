@@ -10,6 +10,8 @@ import {
   IonContent,
   IonItem,
   IonInput,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
 import { PlayerEntity } from '@apex-team/client/data-access/team';
 
@@ -26,12 +28,15 @@ import { PlayerEntity } from '@apex-team/client/data-access/team';
     IonContent,
     IonItem,
     IonInput,
+    IonSelect,
+    IonSelectOption,
   ],
   templateUrl: './player-modal.html',
   styleUrl: './player-modal.scss',
 })
 export class PlayerModal implements OnInit {
   @Input() player?: PlayerEntity;
+  @Input() positions: string[] = [];
 
   private readonly fb = inject(FormBuilder);
   private readonly modalCtrl = inject(ModalController);
@@ -40,7 +45,8 @@ export class PlayerModal implements OnInit {
     firstName: ['', [Validators.required]],
     lastName: ['', [Validators.required]],
     jerseyNumber: [null as number | null, [Validators.required, Validators.min(0), Validators.max(999)]],
-    parentEmail: ['', [Validators.required, Validators.email]],
+    preferredPosition: [''],
+    parentEmail: ['', [Validators.email]],
   });
 
   ngOnInit(): void {
@@ -49,6 +55,7 @@ export class PlayerModal implements OnInit {
         firstName: this.player.firstName,
         lastName: this.player.lastName,
         jerseyNumber: this.player.jerseyNumber,
+        preferredPosition: this.player.preferredPosition ?? '',
         parentEmail: this.player.parentEmail ?? '',
       });
     }
@@ -73,7 +80,8 @@ export class PlayerModal implements OnInit {
         firstName: value.firstName!,
         lastName: value.lastName!,
         jerseyNumber: value.jerseyNumber ?? undefined,
-        parentEmail: value.parentEmail ?? undefined,
+        preferredPosition: value.preferredPosition || undefined,
+        parentEmail: value.parentEmail || undefined,
       },
       'confirm'
     );

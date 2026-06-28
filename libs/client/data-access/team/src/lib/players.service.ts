@@ -9,7 +9,7 @@ export interface PlayerEntity {
   lastName: string;
   jerseyNumber?: number;
   preferredPosition?: string;
-  parentEmail: string;
+  parentEmail?: string;
   teamId: string;
 }
 
@@ -17,7 +17,7 @@ export interface CreatePlayerDto {
   firstName: string;
   lastName: string;
   jerseyNumber?: number;
-  parentEmail: string;
+  parentEmail?: string;
   seasonId?: string; // Optional: add to season roster immediately
 }
 

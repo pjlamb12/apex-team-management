@@ -56,8 +56,20 @@
       }
     </div>
 
+    <div class="field-group">
+      <label class="field-label">Preferred Position</label>
+      <ion-item>
+        <ion-select formControlName="preferredPosition" placeholder="Select Position">
+          <ion-select-option value="">No Position</ion-select-option>
+          @for (pos of positions; track pos) {
+            <ion-select-option [value]="pos">{{ pos }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+    </div>
+
     <div class="field-group" [class.invalid]="form.get('parentEmail')?.invalid && form.get('parentEmail')?.touched">
-      <label class="field-label">Parent / Guardian Email *</label>
+      <label class="field-label">Parent / Guardian Email</label>
       <ion-item>
         <ion-input
           formControlName="parentEmail"
@@ -66,7 +78,7 @@
         ></ion-input>
       </ion-item>
       @if (form.get('parentEmail')?.invalid && form.get('parentEmail')?.touched) {
-        <p class="error-text">A valid email address is required.</p>
+        <p class="error-text">Please enter a valid email address.</p>
       }
     </div>
   </form>

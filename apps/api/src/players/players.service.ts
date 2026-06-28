@@ -36,6 +36,7 @@ export class PlayersService {
       lastName: data.lastName,
       jerseyNumber: data.jerseyNumber,
       parentEmail: data.parentEmail,
+      preferredPosition: data.preferredPosition,
       teamId 
     });
     const savedPlayer = await this.playerRepo.save(player);
