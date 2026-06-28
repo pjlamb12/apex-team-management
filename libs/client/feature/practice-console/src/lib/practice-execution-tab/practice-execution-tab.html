@@ -16,7 +16,7 @@
     </div>
 
     <div class="controls-section flex justify-center items-center gap-6 mt-12">
-      <ion-button fill="clear" color="medium" (click)="pacer.previous()" [disabled]="pacer.activeDrillIndex() === 0">
+      <ion-button fill="clear" color="medium" (click)="previous()" [disabled]="pacer.activeDrillIndex() === 0">
         <ion-icon name="play-skip-back-outline" slot="icon-only"></ion-icon>
       </ion-button>
 
@@ -24,7 +24,7 @@
         <ion-icon [name]="pacer.isRunning() ? 'pause-outline' : 'play-outline'" slot="icon-only"></ion-icon>
       </ion-button>
 
-      <ion-button fill="clear" color="medium" (click)="pacer.next()">
+      <ion-button fill="clear" color="medium" (click)="next()">
         <ion-icon name="play-skip-forward-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </div>
@@ -40,7 +40,7 @@
     }
 
     <div class="reset-section text-center mt-8">
-      <ion-button fill="clear" size="small" color="medium" (click)="pacer.reset()">
+      <ion-button fill="clear" size="small" color="medium" (click)="reset()">
         <ion-icon name="refresh-outline" slot="start"></ion-icon>
         Reset Practice
       </ion-button>
@@ -50,7 +50,7 @@
       <ion-icon name="checkmark-circle-outline" color="success" class="text-6xl"></ion-icon>
       <h2 class="text-2xl font-bold mt-4 text-ap-text">Practice Complete!</h2>
       <p class="text-ap-muted mt-2">You've covered all the drills in your plan.</p>
-      <ion-button class="mt-8" (click)="pacer.reset()">
+      <ion-button class="mt-8" (click)="reset()">
         <ion-icon name="refresh-outline" slot="start"></ion-icon>
         Start Over
       </ion-button>

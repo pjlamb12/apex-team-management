@@ -3,6 +3,7 @@ import {
   inject,
   signal,
   OnInit,
+  OnDestroy,
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -32,6 +33,8 @@ import {
   PracticePacerService,
 } from '@apex-team/client/data-access/drill';
 import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
+import { SocketService } from '@apex-team/client/shared/services';
+import { forkJoin } from 'rxjs';
 
 import { PracticePlanTab } from '../practice-plan-tab/practice-plan-tab';
 import { PracticeExecutionTab } from '../practice-execution-tab/practice-execution-tab';
@@ -68,13 +71,14 @@ import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
   templateUrl: './practice-console-wrapper.html',
   styleUrl: './practice-console-wrapper.scss',
 })
-export class PracticeConsoleWrapper implements OnInit {
+export class PracticeConsoleWrapper implements OnInit, OnDestroy {
   @ViewChild(PracticePlanTab) planTab?: PracticePlanTab;
 
   private readonly route = inject(ActivatedRoute);
   private readonly eventsService = inject(EventsService);
   private readonly practiceDrillsService = inject(PracticeDrillsService);
   private readonly pacerService = inject(PracticePacerService);
+  private readonly socketService = inject(SocketService);
 
   protected teamId = this.route.snapshot.params['id'];
   protected eventId = this.route.snapshot.params['eventId'];
@@ -93,16 +97,38 @@ export class PracticeConsoleWrapper implements OnInit {
 
   ngOnInit() {
     this.loadData();
+    this.socketService.joinEvent(this.eventId);
+    this.socketService.onEvent('eventUpdated', (updatedEvent: any) => {
+      if (updatedEvent.id === this.eventId) {
+        this.pacerService.syncFromRemote(
+          updatedEvent.clockStartTime,
+          updatedEvent.clockAccumulatedMs || 0,
+          updatedEvent.currentPeriod
+        );
+        this._event.set(updatedEvent);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.socketService.offEvent('eventUpdated');
+    this.socketService.leaveEvent(this.eventId);
   }
 
   protected loadData() {
-    this.eventsService.getEvent(this.teamId, this.eventId).subscribe((event) => {
+    forkJoin({
+      event: this.eventsService.getEvent(this.teamId, this.eventId),
+      plan: this.practiceDrillsService.getPlan(this.teamId, this.eventId)
+    }).subscribe(({ event, plan }) => {
       this._event.set(event);
-    });
-
-    this.practiceDrillsService.getPlan(this.teamId, this.eventId).subscribe((plan) => {
       this._plan.set(plan);
-      this.pacerService.initialize(this.eventId, plan);
+      this.pacerService.initialize(
+        this.eventId,
+        plan,
+        event?.clockStartTime,
+        event?.clockAccumulatedMs || 0,
+        event?.currentPeriod
+      );
     });
   }
 

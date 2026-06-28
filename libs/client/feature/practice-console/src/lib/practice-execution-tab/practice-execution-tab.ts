@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonIcon, IonButton } from '@ionic/angular/standalone';
+import { ActivatedRoute } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
   playOutline,
@@ -17,6 +18,8 @@ import {
   alertCircleOutline,
 } from 'ionicons/icons';
 import { PracticePacerService } from '@apex-team/client/data-access/drill';
+import { EventsService } from '@apex-team/client/data-access/team';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-practice-execution-tab',
@@ -28,6 +31,11 @@ import { PracticePacerService } from '@apex-team/client/data-access/drill';
 })
 export class PracticeExecutionTab {
   protected readonly pacer = inject(PracticePacerService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly eventsService = inject(EventsService);
+
+  protected teamId = this.route.snapshot.params['id'] || this.route.parent?.snapshot.params['id'];
+  protected eventId = this.route.snapshot.params['eventId'] || this.route.parent?.snapshot.params['eventId'];
 
   protected readonly formattedTime = computed(() => {
     const totalSeconds = this.pacer.remainingSeconds();
@@ -57,11 +65,39 @@ export class PracticeExecutionTab {
     });
   }
 
-  protected togglePlay() {
+  protected async togglePlay() {
     if (this.pacer.isRunning()) {
-      void this.pacer.pause();
+      await this.pacer.pause();
     } else {
-      void this.pacer.start();
+      await this.pacer.start();
+    }
+    await this.updateBackend();
+  }
+
+  protected async previous() {
+    this.pacer.previous();
+    await this.updateBackend();
+  }
+
+  protected async next() {
+    this.pacer.next();
+    await this.updateBackend();
+  }
+
+  protected async reset() {
+    this.pacer.reset();
+    await this.updateBackend();
+  }
+
+  private async updateBackend() {
+    if (this.teamId && this.eventId) {
+      await firstValueFrom(
+        this.eventsService.updateEvent(this.teamId, this.eventId, {
+          clockStartTime: this.pacer.startTime() ? new Date(this.pacer.startTime()!).toISOString() : null,
+          clockAccumulatedMs: this.pacer.accumulatedMs(),
+          currentPeriod: this.pacer.activeDrillIndex() + 1, // 1-indexed for DB
+        })
+      );
     }
   }
 }

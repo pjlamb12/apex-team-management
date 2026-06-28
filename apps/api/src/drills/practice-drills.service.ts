@@ -12,6 +12,7 @@ import { DrillEntity } from '../entities/drill.entity';
 import { AddDrillToPlanDto } from './dto/add-drill-to-plan.dto';
 import { UpdatePracticeDrillDto } from './dto/update-practice-drill.dto';
 import { ReorderPracticeDrillsDto } from './dto/reorder-practice-drills.dto';
+import { TeamRole } from '@apex-team/shared/util/models';
 
 @Injectable()
 export class PracticeDrillsService {
@@ -157,14 +158,19 @@ export class PracticeDrillsService {
   private async getEventWithOwnerCheck(userId: string, eventId: string): Promise<EventEntity> {
     const event = await this.eventRepo.findOne({
       where: { id: eventId },
-      relations: ['season', 'season.team'],
+      relations: ['season', 'season.team', 'season.team.members'],
     });
 
     if (!event) {
       throw new NotFoundException('Event not found');
     }
 
-    if (event.season.team.coachId !== userId) {
+    const isCoach = event.season.team.coachId === userId;
+    const isMemberCoachOrAssistant = event.season.team.members?.some(
+      (m) => m.userId === userId && (m.role === TeamRole.HEAD_COACH || m.role === TeamRole.ASSISTANT)
+    ) ?? false;
+
+    if (!isCoach && !isMemberCoachOrAssistant) {
       throw new ForbiddenException('Access denied to this event');
     }
 
