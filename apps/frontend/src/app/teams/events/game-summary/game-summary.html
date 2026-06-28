@@ -86,9 +86,9 @@
         </div>
       }
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Sidebar: Game Info -->
-        <div class="md:col-span-1 flex flex-col gap-6">
+        <div class="lg:col-span-1 flex flex-col gap-6">
           <ion-card class="m-0">
             <ion-card-header class="px-6 pt-6 pb-2">
               <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted">Match Details</ion-card-title>
@@ -217,8 +217,8 @@
         </div>
 
         <!-- Main Content: Goal Log / Attendance / Playtime -->
-        <div class="md:col-span-2 flex flex-col gap-6">
-          <ion-segment [value]="activeSegment()" (ionChange)="activeSegment.set($any($event).detail.value)" class="bg-ap-surface rounded-lg p-1">
+        <div class="lg:col-span-2 flex flex-col gap-6">
+          <ion-segment [scrollable]="true" [value]="activeSegment()" (ionChange)="activeSegment.set($any($event).detail.value)" class="bg-ap-surface rounded-lg p-1">
             <ion-segment-button value="highlights">
               <ion-label class="text-xs font-bold">Highlights</ion-label>
             </ion-segment-button>
@@ -230,6 +230,9 @@
             </ion-segment-button>
             <ion-segment-button value="notes">
               <ion-label class="text-xs font-bold">Coaching Notes</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="event-log">
+              <ion-label class="text-xs font-bold">Event<br>Log</ion-label>
             </ion-segment-button>
           </ion-segment>
 
@@ -435,6 +438,85 @@
           @if (activeSegment() === 'notes') {
             <app-coaching-notes [teamId]="teamId" [eventId]="eventId"></app-coaching-notes>
           }
+
+          @if (activeSegment() === 'event-log') {
+            <ion-card class="m-0 border border-ap-border shadow-none">
+              <ion-card-header class="px-6 pt-6 pb-2 flex justify-between items-center">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="list-outline" class="text-blue-500"></ion-icon>
+                  Complete Game Event Log
+                </ion-card-title>
+                <ion-button size="small" fill="outline" color="primary" class="font-black text-[10px] uppercase h-7 m-0" (click)="openCreateModal()">
+                  + Add Event
+                </ion-button>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (event of sortedGameEvents(); track event.id) {
+                    <ion-item class="event-log-item">
+                      <div slot="start" class="w-12 text-center font-mono font-bold text-blue-400 border-r border-ap-border/60 h-full flex items-center justify-center">
+                        {{ event.minuteOccurred }}'
+                      </div>
+                      <ion-label class="pl-4">
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <div class="font-bold text-ap-text leading-tight">
+                              {{ event.eventType.replace('_', ' ') }}
+                              @if (event.eventType === 'SUB') {
+                                <span class="text-blue-400 font-normal block text-xs mt-0.5">
+                                  In: {{ getPlayerName(event.payload?.inPlayerId) }} | Out: {{ getPlayerName(event.payload?.outPlayerId) }}
+                                  <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 ml-1">{{ event.payload?.positionName }}</ion-badge>
+                                </span>
+                              } @else if (event.eventType === 'GOAL') {
+                                <span class="text-emerald-400 font-normal block text-xs mt-0.5">
+                                  By: {{ getPlayerName(event.payload?.scorerId || event.payload?.playerId || event.playerId) }}
+                                  @if (event.payload?.assistorId) {
+                                    (Assisted by: {{ getPlayerName(event.payload?.assistorId) }})
+                                  }
+                                </span>
+                              } @else if (event.eventType === 'OWN_GOAL') {
+                                <span class="text-red-400 font-normal block text-xs mt-0.5">
+                                  By: {{ getPlayerName(event.payload?.scorerId || event.payload?.playerId || event.playerId) }} (OG)
+                                </span>
+                              } @else if (event.eventType === 'ASSIST') {
+                                <span class="text-blue-400 font-normal block text-xs mt-0.5">
+                                  Assisted by: {{ getPlayerName(event.payload?.assistorId) }}
+                                </span>
+                              } @else if (event.payload?.playerId || event.playerId) {
+                                <span class="text-ap-muted font-normal block text-xs mt-0.5">
+                                  Player: {{ getPlayerName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              }
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            @if (canMoveUp(event) || canMoveDown(event)) {
+                              <ion-button size="small" fill="clear" color="medium" [disabled]="!canMoveUp(event)" (click)="moveEventUp(event)" class="m-0 h-8">
+                                <ion-icon slot="icon-only" name="chevron-up-outline"></ion-icon>
+                              </ion-button>
+                              <ion-button size="small" fill="clear" color="medium" [disabled]="!canMoveDown(event)" (click)="moveEventDown(event)" class="m-0 h-8">
+                                <ion-icon slot="icon-only" name="chevron-down-outline"></ion-icon>
+                              </ion-button>
+                            }
+                            <ion-button size="small" fill="clear" color="primary" (click)="openEditModal(event)" class="m-0 h-8">
+                              <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+                            </ion-button>
+                            <ion-button size="small" fill="clear" color="danger" (click)="confirmDelete(event)" class="m-0 h-8">
+                              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                            </ion-button>
+                          </div>
+                        </div>
+                      </ion-label>
+                    </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic">
+                      No events logged for this game.
+                    </div>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+          }
         </div>
       </div>
     } @else {
@@ -447,6 +529,123 @@
   <ion-modal [isOpen]="isShootoutModalOpen()" (didDismiss)="onShootoutModalClose()" class="ap-modal">
     <ng-template>
       <app-shootout-scorecard (close)="isShootoutModalOpen.set(false)"></app-shootout-scorecard>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isEditModalOpen()" (didDismiss)="closeEditModal()" class="ap-modal">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ isCreateMode() ? 'Add Game Event' : 'Edit Game Event' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeEditModal()">Cancel</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding bg-ap-bg">
+        <div class="flex flex-col gap-4 max-w-md mx-auto pt-4 pb-12">
+          @if (isCreateMode()) {
+            <!-- Event Type Select (Only for Creating) -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Event Type</ion-label>
+              <ion-select [value]="createEventType()" (ionChange)="createEventType.set($event.detail.value)" class="text-ap-text">
+                <ion-select-option value="SUB">Substitution (SUB)</ion-select-option>
+                <ion-select-option value="GOAL">Goal (GOAL)</ion-select-option>
+                <ion-select-option value="ASSIST">Assist (ASSIST)</ion-select-option>
+                <ion-select-option value="OWN_GOAL">Own Goal (OWN_GOAL)</ion-select-option>
+                <ion-select-option value="SHOT">Shot (SHOT)</ion-select-option>
+                <ion-select-option value="OPPONENT_SHOT">Opponent Shot (OPP_SHOT)</ion-select-option>
+                <ion-select-option value="CORNER_KICK">Corner Kick</ion-select-option>
+                <ion-select-option value="OPPONENT_CORNER_KICK">Opponent Corner Kick</ion-select-option>
+              </ion-select>
+            </ion-item>
+          }
+
+          <!-- Minute Occurred -->
+          <ion-item class="bg-ap-surface rounded-lg">
+            <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Minute Occurred</ion-label>
+            <ion-input type="number" [value]="editMinute()" (ionInput)="onEditMinuteChange($event)" class="text-ap-text font-mono"></ion-input>
+          </ion-item>
+
+          @if ((!isCreateMode() && editEvent()?.eventType === 'SUB') || (isCreateMode() && createEventType() === 'SUB')) {
+            <!-- Player In -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Player In</ion-label>
+              <ion-select [value]="editPlayerIn()" (ionChange)="editPlayerIn.set($event.detail.value)" class="text-ap-text">
+                @for (p of lineup(); track p.playerId) {
+                  <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+
+            <!-- Player Out -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Player Out</ion-label>
+              <ion-select [value]="editPlayerOut()" (ionChange)="editPlayerOut.set($event.detail.value)" class="text-ap-text">
+                @for (p of lineup(); track p.playerId) {
+                  <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+
+            <!-- Position -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Position</ion-label>
+              <ion-select [value]="editPosition()" (ionChange)="editPosition.set($event.detail.value)" class="text-ap-text">
+                <ion-select-option value="GK">Goalkeeper</ion-select-option>
+                <ion-select-option value="DEF">Defender</ion-select-option>
+                <ion-select-option value="MID">Midfielder</ion-select-option>
+                <ion-select-option value="FWD">Forward</ion-select-option>
+              </ion-select>
+            </ion-item>
+          } @else if ((!isCreateMode() && isGoalEvent(editEvent()?.eventType)) || (isCreateMode() && createEventType() === 'GOAL')) {
+            <!-- Scorer -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Scorer</ion-label>
+              <ion-select [value]="editScorerId()" (ionChange)="editScorerId.set($event.detail.value)" class="text-ap-text">
+                @for (p of lineup(); track p.playerId) {
+                  <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+
+            <!-- Assistor -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Assistor (Optional)</ion-label>
+              <ion-select [value]="editAssistorId()" (ionChange)="editAssistorId.set($event.detail.value)" class="text-ap-text">
+                <ion-select-option [value]="null">None</ion-select-option>
+                @for (p of lineup(); track p.playerId) {
+                  <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          } @else if ((!isCreateMode() && isOwnGoalEvent(editEvent()?.eventType)) || (isCreateMode() && createEventType() === 'OWN_GOAL')) {
+            <!-- Own Goal Player -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Player (Own Goal Scored By)</ion-label>
+              <ion-select [value]="editPlayerId()" (ionChange)="editPlayerId.set($event.detail.value)" class="text-ap-text">
+                @for (p of lineup(); track p.playerId) {
+                  <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          } @else if ((!isCreateMode() && (editEvent()?.playerId || editEvent()?.payload?.playerId || editEvent()?.payload?.assistorId || editEvent()?.eventType === 'ASSIST')) || (isCreateMode() && ['ASSIST', 'SHOT', 'YELLOW_CARD', 'RED_CARD'].includes(createEventType()))) {
+            <!-- General Player -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Player</ion-label>
+              <ion-select [value]="editPlayerId()" (ionChange)="editPlayerId.set($event.detail.value)" class="text-ap-text">
+                @for (p of lineup(); track p.playerId) {
+                  <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+          }
+
+          <ion-button expand="block" color="primary" class="mt-6 font-black uppercase tracking-wider" (click)="confirmSaveEdit()">
+            {{ isCreateMode() ? 'Add Event' : 'Save Changes' }}
+          </ion-button>
+        </div>
+      </ion-content>
     </ng-template>
   </ion-modal>
 </ion-content>

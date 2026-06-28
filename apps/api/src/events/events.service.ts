@@ -12,6 +12,7 @@ import { EventNoteEntity } from '../entities/event-note.entity';
 import { LeagueEntity } from '../entities/league.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { UpdateGameEventDto } from './dto/update-game-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
 import { WeatherService } from './weather.service';
 import { AttendanceService } from '../attendance/attendance.service';
@@ -446,5 +447,63 @@ export class EventsService {
     }
 
     await this.eventNoteRepo.remove(note);
+  }
+
+  async updateEvent(
+    eventId: string,
+    gameEventId: string,
+    dto: UpdateGameEventDto,
+    userId: string,
+  ): Promise<GameEventEntity> {
+    const gameEvent = await this.gameEventRepo.findOne({
+      where: { id: gameEventId, eventId },
+      relations: ['event', 'event.season', 'event.season.team', 'event.season.team.sport', 'event.season.team.members'],
+    });
+
+    if (!gameEvent) {
+      throw new NotFoundException(`Game event ${gameEventId} not found for event ${eventId}`);
+    }
+
+    const isCoach = gameEvent.event?.season?.team?.coachId === userId;
+    const isMemberCoachOrAssistant = gameEvent.event?.season?.team?.members?.some(
+      (m) => m.userId === userId && (m.role === TeamRole.HEAD_COACH || m.role === TeamRole.ASSISTANT)
+    ) ?? false;
+
+    if (!isCoach && !isMemberCoachOrAssistant) {
+      throw new ForbiddenException('Not authorized to update events for this event');
+    }
+
+    if (dto.eventType !== undefined) {
+      gameEvent.eventType = dto.eventType;
+    }
+    if (dto.minuteOccurred !== undefined) {
+      gameEvent.minuteOccurred = dto.minuteOccurred;
+    }
+    if (dto.payload !== undefined) {
+      gameEvent.payload = {
+        ...gameEvent.payload,
+        ...dto.payload,
+      };
+    }
+
+    const eventDefinitions = gameEvent.event?.season?.team?.sport?.eventDefinitions || [];
+    const definition = eventDefinitions.find((d: any) => d.type === gameEvent.eventType);
+
+    if (definition && definition.payloadSchema) {
+      const payloadToValidate = gameEvent.payload ?? {};
+      const validate = this.ajv.compile(definition.payloadSchema);
+      const valid = validate(payloadToValidate);
+      if (!valid) {
+        throw new BadRequestException(
+          `Invalid payload for event type ${gameEvent.eventType}: ${this.ajv.errorsText(
+            validate.errors,
+          )}`,
+        );
+      }
+    }
+
+    const saved = await this.gameEventRepo.save(gameEvent);
+    this.socketGateway.server.to(`event:${eventId}`).emit('gameEventUpdated', saved);
+    return saved;
   }
 }

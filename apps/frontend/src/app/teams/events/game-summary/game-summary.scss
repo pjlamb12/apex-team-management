@@ -12,3 +12,16 @@ ion-card {
   --background: var(--ap-surface-raised);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+ion-segment {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none;
+}
+
+ion-segment-button {
+  min-width: 90px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+}

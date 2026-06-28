@@ -28,6 +28,9 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonInput,
+  AlertController,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { LiveGameStateService, ShootoutScorecardComponent, EventSyncService } from '@apex-team/client/feature/game-console';
 import { addIcons } from 'ionicons';
@@ -48,7 +51,12 @@ import {
   alertCircleOutline,
   bandageOutline,
   chevronBackOutline,
-  flagOutline
+  flagOutline,
+  pencilOutline,
+  trashOutline,
+  listOutline,
+  chevronUpOutline,
+  chevronDownOutline
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService } from '@apex-team/client/data-access/team';
@@ -82,6 +90,7 @@ import { SocketService } from '@apex-team/client/shared/services';
     IonSegmentButton,
     IonSelect,
     IonSelectOption,
+    IonInput,
     AttendanceList,
     IonModal,
     ShootoutScorecardComponent,
@@ -114,18 +123,48 @@ export class GameSummary implements OnDestroy {
   private readonly eventsService = inject(EventsService);
   private readonly router = inject(Router);
   private readonly socketService = inject(SocketService);
+  private readonly alertController = inject(AlertController);
+  private readonly toastController = inject(ToastController);
 
   protected game = signal<EventEntity | null>(null);
   protected gameEvents = signal<any[]>([]);
+  protected sortedGameEvents = computed(() => {
+    return [...this.gameEvents()].sort((a, b) => {
+      if (a.minuteOccurred !== b.minuteOccurred) {
+        return a.minuteOccurred - b.minuteOccurred;
+      }
+      const seqA = a.payload?.['sequence'] ?? a.payload?.['order'] ?? 999;
+      const seqB = b.payload?.['sequence'] ?? b.payload?.['order'] ?? 999;
+      if (seqA !== seqB) {
+        return seqA - seqB;
+      }
+      return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+    });
+  });
   protected playingTime = signal<Record<string, any>>({});
   protected lineup = signal<any[]>([]);
-  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime' | 'notes'>('highlights');
+  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime' | 'notes' | 'event-log'>('highlights');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
 
   protected stateService = inject(LiveGameStateService);
   protected syncService = inject(EventSyncService);
   protected isShootoutModalOpen = signal(false);
+
+  // Edit event state signals
+  protected isEditModalOpen = signal(false);
+  protected editEvent = signal<any | null>(null);
+  protected editMinute = signal<number>(0);
+  protected editPlayerIn = signal<string | null>(null);
+  protected editPlayerOut = signal<string | null>(null);
+  protected editPosition = signal<string | null>(null);
+  protected editScorerId = signal<string | null>(null);
+  protected editAssistorId = signal<string | null>(null);
+  protected editPlayerId = signal<string | null>(null);
+
+  // Create event state signals
+  protected isCreateMode = signal(false);
+  protected createEventType = signal<string>('SUB');
 
   protected hasShootout = computed(() => {
     return this.gameEvents().some(e => e.eventType === 'SHOOTOUT_KICK');
@@ -203,7 +242,7 @@ export class GameSummary implements OnDestroy {
 
   protected async onShootoutModalClose(): Promise<void> {
     this.isShootoutModalOpen.set(false);
-    await this.loadData(this.teamId, this.eventId);
+    await this.loadData(this.teamId, this.eventId, true);
   }
 
   protected goals = computed(() => {
@@ -243,7 +282,17 @@ export class GameSummary implements OnDestroy {
         }
         return e;
       })
-      .sort((a, b) => a.minuteOccurred - b.minuteOccurred);
+      .sort((a, b) => {
+        if (a.minuteOccurred !== b.minuteOccurred) {
+          return a.minuteOccurred - b.minuteOccurred;
+        }
+        const seqA = a.payload?.['sequence'] ?? a.payload?.['order'] ?? 999;
+        const seqB = b.payload?.['sequence'] ?? b.payload?.['order'] ?? 999;
+        if (seqA !== seqB) {
+          return seqA - seqB;
+        }
+        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+      });
   });
 
   protected score = computed(() => {
@@ -290,7 +339,12 @@ export class GameSummary implements OnDestroy {
       alertCircleOutline,
       bandageOutline,
       chevronBackOutline,
-      flagOutline
+      flagOutline,
+      pencilOutline,
+      trashOutline,
+      listOutline,
+      chevronUpOutline,
+      chevronDownOutline
     });
 
     effect(() => {
@@ -300,6 +354,7 @@ export class GameSummary implements OnDestroy {
         // Clean up previous event subscription if any
         this.socketService.offEvent('gameEventLogged');
         this.socketService.offEvent('gameEventRemoved');
+        this.socketService.offEvent('gameEventUpdated');
         
         // Join new event room
         this.socketService.joinEvent(eId);
@@ -310,6 +365,11 @@ export class GameSummary implements OnDestroy {
             if (events.some(e => e.id === event.id)) return events;
             return [...events, event];
           });
+        });
+
+        this.socketService.onEvent('gameEventUpdated', (event: any) => {
+          this.gameEvents.update(events => events.map(e => e.id === event.id ? event : e));
+          void this.loadData(tId, eId, true);
         });
         
         this.socketService.onEvent('gameEventRemoved', (data: any) => {
@@ -322,8 +382,10 @@ export class GameSummary implements OnDestroy {
     });
   }
 
-  protected async loadData(teamId: string, eventId: string): Promise<void> {
-    this.isLoading.set(true);
+  protected async loadData(teamId: string, eventId: string, silent = false): Promise<void> {
+    if (!silent) {
+      this.isLoading.set(true);
+    }
     this.errorMessage.set(null);
     try {
       const [game, events, playingTime, lineup] = await Promise.all([
@@ -339,7 +401,9 @@ export class GameSummary implements OnDestroy {
     } catch {
       this.errorMessage.set('Failed to load game summary.');
     } finally {
-      this.isLoading.set(false);
+      if (!silent) {
+        this.isLoading.set(false);
+      }
     }
   }
 
@@ -374,7 +438,360 @@ export class GameSummary implements OnDestroy {
     if (eId) {
       this.socketService.offEvent('gameEventLogged');
       this.socketService.offEvent('gameEventRemoved');
+      this.socketService.offEvent('gameEventUpdated');
       this.socketService.leaveEvent(eId);
     }
+  }
+
+  protected isGoalEvent(type?: string): boolean {
+    return type === 'GOAL';
+  }
+
+  protected isOwnGoalEvent(type?: string): boolean {
+    return type === 'OWN_GOAL';
+  }
+
+  protected openCreateModal(): void {
+    this.isCreateMode.set(true);
+    this.createEventType.set('SUB');
+    this.editEvent.set(null);
+    this.editMinute.set(0);
+    this.editPlayerIn.set(null);
+    this.editPlayerOut.set(null);
+    this.editPosition.set('MID');
+    this.editScorerId.set(null);
+    this.editAssistorId.set(null);
+    this.editPlayerId.set(null);
+    this.isEditModalOpen.set(true);
+  }
+
+  protected openEditModal(event: any): void {
+    this.isCreateMode.set(false);
+    this.editEvent.set(event);
+    this.editMinute.set(event.minuteOccurred ?? 0);
+    const payload = event.payload || {};
+    this.editPlayerIn.set(payload.inPlayerId || null);
+    this.editPlayerOut.set(payload.outPlayerId || null);
+    this.editPosition.set(payload.positionName || null);
+    this.editScorerId.set(payload.scorerId || event.playerId || null);
+    this.editAssistorId.set(payload.assistorId || null);
+    this.editPlayerId.set(payload.playerId || payload.assistorId || event.playerId || null);
+    this.isEditModalOpen.set(true);
+  }
+
+  protected closeEditModal(): void {
+    this.isEditModalOpen.set(false);
+    this.editEvent.set(null);
+    this.isCreateMode.set(false);
+  }
+
+  protected onEditMinuteChange(event: any): void {
+    const val = parseInt(event.detail.value, 10);
+    if (!isNaN(val)) {
+      this.editMinute.set(val);
+    }
+  }
+
+  protected async confirmSaveEdit(): Promise<void> {
+    const alert = await this.alertController.create({
+      header: this.isCreateMode() ? 'Confirm Add Event' : 'Confirm Edit',
+      message: this.isCreateMode()
+        ? 'Are you sure you want to add this event? This will update the playing stats.'
+        : 'Are you sure you want to save these changes? This will recalculate playing time stats.',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: this.isCreateMode() ? 'Add' : 'Save',
+          handler: () => {
+            if (this.isCreateMode()) {
+              void this.saveCreate();
+            } else {
+              void this.saveEdit();
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  protected async saveCreate(): Promise<void> {
+    const type = this.createEventType();
+    const payload: Record<string, any> = {
+      period: 1 // default to period 1 for post-game logged events
+    };
+
+    if (type === 'SUB') {
+      payload['inPlayerId'] = this.editPlayerIn();
+      payload['outPlayerId'] = this.editPlayerOut();
+      payload['positionName'] = this.editPosition();
+    } else if (type === 'GOAL') {
+      payload['scorerId'] = this.editScorerId();
+      payload['assistorId'] = this.editAssistorId() || undefined;
+    } else if (type === 'OWN_GOAL') {
+      payload['playerId'] = this.editPlayerId();
+    } else if (type === 'ASSIST') {
+      payload['assistorId'] = this.editPlayerId() || undefined;
+    } else {
+      payload['playerId'] = this.editPlayerId() || undefined;
+    }
+
+    try {
+      // 1. Log the main event
+      await firstValueFrom(this.eventsService.logGameEvent(this.teamId, this.eventId, {
+        eventType: type,
+        minuteOccurred: this.editMinute(),
+        payload
+      }));
+
+      // 2. If it's a GOAL and has an assistor, also log the ASSIST event
+      if (type === 'GOAL' && this.editAssistorId()) {
+        await firstValueFrom(this.eventsService.logGameEvent(this.teamId, this.eventId, {
+          eventType: 'ASSIST',
+          minuteOccurred: this.editMinute(),
+          payload: {
+            period: 1,
+            assistorId: this.editAssistorId()
+          }
+        }));
+      }
+
+      const toast = await this.toastController.create({
+        message: 'Event created successfully.',
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+      this.closeEditModal();
+      await this.loadData(this.teamId, this.eventId, true);
+    } catch (err) {
+      console.error('Failed to create event:', err);
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: 'Failed to create the event. Please check inputs and try again.',
+        buttons: ['OK']
+      });
+      await alert.present();
+    }
+  }
+
+  protected async saveEdit(): Promise<void> {
+    const event = this.editEvent();
+    if (!event) return;
+
+    const payload: Record<string, any> = {
+      ...event.payload
+    };
+
+    if (event.eventType === 'SUB') {
+      payload['inPlayerId'] = this.editPlayerIn();
+      payload['outPlayerId'] = this.editPlayerOut();
+      payload['positionName'] = this.editPosition();
+    } else if (event.eventType === 'GOAL') {
+      payload['scorerId'] = this.editScorerId();
+      payload['assistorId'] = this.editAssistorId() || undefined;
+    } else if (event.eventType === 'OWN_GOAL') {
+      payload['playerId'] = this.editPlayerId();
+    } else if (event.eventType === 'ASSIST') {
+      payload['assistorId'] = this.editPlayerId();
+    } else {
+      payload['playerId'] = this.editPlayerId();
+    }
+
+    const updateData = {
+      minuteOccurred: this.editMinute(),
+      payload
+    };
+
+    try {
+      // Update main event
+      await firstValueFrom(this.eventsService.updateGameEvent(this.teamId, this.eventId, event.id, updateData));
+
+      // Manage assistor sync logic
+      if (event.eventType === 'GOAL') {
+        const existingAssist = this.gameEvents().find(ge => 
+          ge.eventType === 'ASSIST' && 
+          ge.minuteOccurred === event.minuteOccurred
+        );
+
+        if (this.editAssistorId()) {
+          if (existingAssist) {
+            await firstValueFrom(this.eventsService.updateGameEvent(this.teamId, this.eventId, existingAssist.id, {
+              minuteOccurred: this.editMinute(),
+              payload: {
+                ...existingAssist.payload,
+                assistorId: this.editAssistorId()
+              }
+            }));
+          } else {
+            await firstValueFrom(this.eventsService.logGameEvent(this.teamId, this.eventId, {
+              eventType: 'ASSIST',
+              minuteOccurred: this.editMinute(),
+              payload: {
+                period: event.payload?.period || 1,
+                assistorId: this.editAssistorId()
+              }
+            }));
+          }
+        } else {
+          if (existingAssist) {
+            await firstValueFrom(this.eventsService.deleteGameEvent(this.teamId, this.eventId, existingAssist.id));
+          }
+        }
+      }
+      
+      const toast = await this.toastController.create({
+        message: 'Event updated successfully.',
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+      this.closeEditModal();
+      await this.loadData(this.teamId, this.eventId, true);
+    } catch (err) {
+      console.error('Failed to update event:', err);
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: 'Failed to update the event. Please check inputs and try again.',
+        buttons: ['OK']
+      });
+      await alert.present();
+    }
+  }
+
+  protected async confirmDelete(event: any): Promise<void> {
+    const alert = await this.alertController.create({
+      header: 'Confirm Delete',
+      message: 'Are you sure you want to delete this event? This will permanently remove it from the game history.',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: () => {
+            void this.deleteEvent(event);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  protected async deleteEvent(event: any): Promise<void> {
+    try {
+      await firstValueFrom(this.eventsService.deleteGameEvent(this.teamId, this.eventId, event.id));
+      const toast = await this.toastController.create({
+        message: 'Event deleted successfully.',
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+      await this.loadData(this.teamId, this.eventId, true);
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: 'Failed to delete the event. Please try again.',
+        buttons: ['OK']
+      });
+      await alert.present();
+    }
+  }
+
+  protected canMoveUp(event: any): boolean {
+    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === event.minuteOccurred);
+    const index = sameMinute.findIndex(e => e.id === event.id);
+    return index > 0;
+  }
+
+  protected canMoveDown(event: any): boolean {
+    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === event.minuteOccurred);
+    const index = sameMinute.findIndex(e => e.id === event.id);
+    return index >= 0 && index < sameMinute.length - 1;
+  }
+
+  protected async moveEventUp(event: any): Promise<void> {
+    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === event.minuteOccurred);
+    const index = sameMinute.findIndex(e => e.id === event.id);
+    if (index <= 0) return;
+
+    const otherEvent = sameMinute[index - 1];
+    await this.swapEventOrder(event, otherEvent);
+  }
+
+  protected async moveEventDown(event: any): Promise<void> {
+    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === event.minuteOccurred);
+    const index = sameMinute.findIndex(e => e.id === event.id);
+    if (index < 0 || index >= sameMinute.length - 1) return;
+
+    const otherEvent = sameMinute[index + 1];
+    await this.swapEventOrder(event, otherEvent);
+  }
+
+  private reorderTimeout: any = null;
+  private pendingSequenceUpdates = new Map<string, any>();
+
+  private async swapEventOrder(eventA: any, eventB: any): Promise<void> {
+    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === eventA.minuteOccurred);
+    const idxA = sameMinute.findIndex(item => item.id === eventA.id);
+    const idxB = sameMinute.findIndex(item => item.id === eventB.id);
+    if (idxA < 0 || idxB < 0) return;
+
+    const newSeqA = idxB;
+    const newSeqB = idxA;
+
+    const payloadA = { ...(eventA.payload || {}), sequence: newSeqA };
+    const payloadB = { ...(eventB.payload || {}), sequence: newSeqB };
+
+    this.gameEvents.update(events => 
+      events.map(e => {
+        if (e.id === eventA.id) return { ...e, payload: payloadA };
+        if (e.id === eventB.id) return { ...e, payload: payloadB };
+        return e;
+      })
+    );
+
+    this.pendingSequenceUpdates.set(eventA.id, payloadA);
+    this.pendingSequenceUpdates.set(eventB.id, payloadB);
+
+    if (this.reorderTimeout) {
+      clearTimeout(this.reorderTimeout);
+    }
+
+    this.reorderTimeout = setTimeout(async () => {
+      const updates = Array.from(this.pendingSequenceUpdates.entries());
+      this.pendingSequenceUpdates.clear();
+      this.reorderTimeout = null;
+
+      try {
+        for (const [id, payload] of updates) {
+          await firstValueFrom(this.eventsService.updateGameEvent(this.teamId, this.eventId, id, {
+            payload
+          }));
+        }
+        
+        const toast = await this.toastController.create({
+          message: 'Event order saved.',
+          duration: 1500,
+          color: 'success'
+        });
+        await toast.present();
+        await this.loadData(this.teamId, this.eventId, true);
+      } catch (err) {
+        console.error('Failed to swap event order:', err);
+        const alert = await this.alertController.create({
+          header: 'Error',
+          message: 'Failed to save event order to server. Please reload.',
+          buttons: ['OK']
+        });
+        await alert.present();
+      }
+    }, 500);
   }
 }

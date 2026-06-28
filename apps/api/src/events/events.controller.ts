@@ -19,6 +19,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SaveLineupDto } from './dto/save-lineup.dto';
 import { CreateGameEventDto } from './dto/create-game-event.dto';
+import { UpdateGameEventDto } from './dto/update-game-event.dto';
 import { TeamRoleGuard } from '../auth/guards/team-role.guard';
 import { TeamRoles } from '../auth/decorators/team-role.decorator';
 import { TeamRole } from '@apex-team/shared/util/models';
@@ -125,6 +126,18 @@ export class EventsController {
     @Request() req: { user: { sub: string } },
   ) {
     return this.eventsService.logEvent(eventId, dto, req.user.sub);
+  }
+
+  @Patch(':eventId/game-events/:gameEventId')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  updateEvent(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Param('gameEventId', ParseUUIDPipe) gameEventId: string,
+    @Body() dto: UpdateGameEventDto,
+    @Request() req: { user: { sub: string } },
+  ) {
+    return this.eventsService.updateEvent(eventId, gameEventId, dto, req.user.sub);
   }
 
   @Delete(':eventId/game-events/:gameEventId')

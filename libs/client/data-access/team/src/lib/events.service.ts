@@ -190,6 +190,10 @@ export class EventsService {
     return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events/${gameEventId}`);
   }
 
+  updateGameEvent(teamId: string, eventId: string, gameEventId: string, data: { eventType?: string; minuteOccurred?: number; payload?: any }): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events/${gameEventId}`, data);
+  }
+
   getLineup(teamId: string, eventId: string): Observable<LineupEntry[]> {
     return this.http.get<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`);
   }
