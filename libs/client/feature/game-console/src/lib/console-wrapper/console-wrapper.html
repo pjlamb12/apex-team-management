@@ -11,11 +11,24 @@
         </div>
 
         <!-- Score -->
-        <div class="scoreboard-container flex items-center gap-4 shrink-0">
-          <span class="score-value tabular-nums">{{ stateService.score().team }}</span>
-          <span class="text-xl text-ap-border font-black">-</span>
-          <span class="score-value tabular-nums">{{ stateService.score().opponent }}</span>
-        </div>
+        @if (stateService.sportName() === 'Volleyball') {
+          <div class="flex flex-col items-center shrink-0">
+            <div class="scoreboard-container flex items-center gap-4">
+              <span class="score-value tabular-nums">{{ stateService.score().team }}</span>
+              <span class="text-xl text-ap-border font-black">-</span>
+              <span class="score-value tabular-nums">{{ stateService.score().opponent }}</span>
+            </div>
+            <div class="text-[10px] font-black text-amber-500 uppercase tracking-widest mt-0.5">
+              Sets: {{ stateService.setsWon().team }} - {{ stateService.setsWon().opponent }} (Set {{ stateService.currentPeriod() }})
+            </div>
+          </div>
+        } @else {
+          <div class="scoreboard-container flex items-center gap-4 shrink-0">
+            <span class="score-value tabular-nums">{{ stateService.score().team }}</span>
+            <span class="text-xl text-ap-border font-black">-</span>
+            <span class="score-value tabular-nums">{{ stateService.score().opponent }}</span>
+          </div>
+        }
 
         <!-- Away Team -->
         <div class="flex-1 min-w-0 text-left">
@@ -97,82 +110,201 @@
 
 <ion-content class="ion-no-padding">
   <div class="flex flex-col bg-ap-bg">
+    <!-- Set/Match Complete Warning Overlay Banner -->
+    @if (stateService.sportName() === 'Volleyball' && stateService.currentSetResult(); as setResult) {
+      <div class="m-4 p-4 bg-amber-500/10 border-2 border-amber-500/80 rounded-xl shadow-xl flex flex-col items-center text-center gap-3">
+        <div class="flex items-center gap-2 text-amber-500">
+          <ion-icon name="trophy-outline" class="text-2xl"></ion-icon>
+          <span class="text-base font-black uppercase tracking-wider">
+            @if (stateService.matchResult()) {
+              Match Completed!
+            } @else {
+              Set {{ stateService.currentPeriod() }} Completed!
+            }
+          </span>
+        </div>
+        
+        <p class="text-sm font-bold text-ap-text">
+          @if (stateService.matchResult(); as matchResult) {
+            <strong>{{ matchResult.winner === 'team' ? (team()?.name ?? 'Our Team') : (event()?.opponent ?? 'Opponent') }}</strong> won the match ({{ stateService.setsWon().team }} - {{ stateService.setsWon().opponent }} sets)!
+          } @else {
+            <strong>{{ setResult.winner === 'team' ? (team()?.name ?? 'Our Team') : (event()?.opponent ?? 'Opponent') }}</strong> won Set {{ stateService.currentPeriod() }} ({{ setResult.score.team }} - {{ setResult.score.opponent }})!
+          }
+        </p>
+        @if (!stateService.matchResult()) {
+          <div class="flex items-center gap-2 mt-1 mb-2 bg-ap-surface border border-ap-border/60 rounded-xl px-4 py-2 text-left">
+            <span class="text-xs font-bold text-ap-muted uppercase tracking-wider whitespace-nowrap">Set Libero:</span>
+            <ion-select 
+              [value]="stateService.liberoId()" 
+              (ionChange)="handleLiberoChange($event)"
+              interface="popover"
+              toggle-icon="chevron-down-outline"
+              class="text-sm font-bold min-h-0 py-0 text-ap-text"
+            >
+              <ion-select-option [value]="null">None</ion-select-option>
+              @for (entry of stateService.initialLineup(); track entry.playerId) {
+                <ion-select-option [value]="entry.playerId">
+                  #{{ entry.player.jerseyNumber }} {{ entry.player.firstName }} {{ entry.player.lastName }}
+                </ion-select-option>
+              }
+            </ion-select>
+          </div>
+        }
+ 
+        <div class="flex gap-3 mt-1">
+          @if (stateService.matchResult()) {
+            <ion-button size="small" color="danger" fill="solid" (click)="endGame()">
+              <ion-icon name="stop-circle-outline" slot="start"></ion-icon>
+              End Game
+            </ion-button>
+          } @else {
+            <ion-button size="small" color="warning" fill="solid" (click)="nextPeriod()">
+              <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+              Start Next Set
+            </ion-button>
+          }
+        </div>
+      </div>
+    }
+
     <!-- Top Bar: Clock and Quick Actions (Two Rows) -->
     <div class="flex flex-col gap-3 p-4 bg-ap-surface-raised border-b border-ap-border shrink-0">
       <!-- Row 1: Clock & Control Buttons -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <!-- Clock: centered on mobile, left on desktop -->
         <div class="flex justify-center sm:justify-start">
-          <app-clock-display></app-clock-display>
+          @if (stateService.sportName() === 'Volleyball') {
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold uppercase tracking-wider bg-amber-500/20 text-amber-500 px-3 py-1 rounded">Volleyball Mode</span>
+            </div>
+          } @else {
+            <app-clock-display></app-clock-display>
+          }
         </div>
 
         <!-- Buttons: 2-col grid on mobile, single row on desktop -->
         <div class="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-          @if (isRunning()) {
-            <ion-button color="warning" (click)="stopClock()">
-              <ion-icon name="pause-outline" slot="start"></ion-icon>
-              Pause
+          @if (stateService.sportName() === 'Volleyball') {
+            <ion-button color="warning" (click)="rotateActivePlayers()">
+              <ion-icon name="refresh-outline" slot="start"></ion-icon>
+              Rotate
+            </ion-button>
+
+            @if (!stateService.currentSetResult()) {
+              <ion-button color="warning" fill="outline" (click)="confirmEndSetEarly()">
+                <ion-icon name="stop-circle-outline" slot="start"></ion-icon>
+                End Set
+              </ion-button>
+            }
+
+            <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
+              <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+              Next Set
+            </ion-button>
+
+            <ion-button color="danger" fill="solid" (click)="endGame()">
+              <ion-icon name="flag-outline" slot="start"></ion-icon>
+              End Match
             </ion-button>
           } @else {
-            <ion-button color="success" (click)="startClock()">
-              <ion-icon name="play-outline" slot="start"></ion-icon>
-              Start
+            @if (isRunning()) {
+              <ion-button color="warning" (click)="stopClock()">
+                <ion-icon name="pause-outline" slot="start"></ion-icon>
+                Pause
+              </ion-button>
+            } @else {
+              <ion-button color="success" (click)="startClock()">
+                <ion-icon name="play-outline" slot="start"></ion-icon>
+                Start
+              </ion-button>
+            }
+
+            <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
+              <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+              Next Period
+            </ion-button>
+
+            @if (!isShootoutActive()) {
+              <ion-button color="secondary" fill="solid" (click)="startShootout()">
+                <ion-icon name="football-outline" slot="start"></ion-icon>
+                Shootout
+              </ion-button>
+            }
+
+            <ion-button color="danger" fill="solid" (click)="endGame()">
+              <ion-icon name="flag-outline" slot="start"></ion-icon>
+              End Game
             </ion-button>
           }
-
-          <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
-            <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
-            Next Period
-          </ion-button>
-
-          @if (!isShootoutActive()) {
-            <ion-button color="secondary" fill="solid" (click)="startShootout()">
-              <ion-icon name="football-outline" slot="start"></ion-icon>
-              Shootout
-            </ion-button>
-          }
-
-          <ion-button color="danger" fill="solid" (click)="endGame()">
-            <ion-icon name="flag-outline" slot="start"></ion-icon>
-            End Game
-          </ion-button>
         </div>
       </div>
 
       <!-- Row 2: Team-Wide Stats Groups -->
       <div class="stats-row-container border-t border-ap-border/30 pt-3">
-        <!-- Our Team Stats Group -->
-        <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
-          <div class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">
-            {{ team()?.name ?? 'Our Team' }}
+        @if (stateService.sportName() === 'Volleyball') {
+          <!-- Our Team Stats Group -->
+          <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+            <div class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">
+              {{ team()?.name ?? 'Our Team' }}
+            </div>
+            <div class="grid grid-cols-2 gap-2 w-full">
+              <ion-button class="ion-no-margin w-full" size="small" color="success" fill="solid" (click)="addTeamPoint()">
+                + Point ({{ stateService.score().team }})
+              </ion-button>
+              <div class="flex items-center justify-center text-[10px] text-ap-primary font-bold px-2">
+                Sets won: {{ stateService.setsWon().team }}
+              </div>
+            </div>
           </div>
-          <div class="grid grid-cols-2 gap-2 w-full">
-            <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="solid" (click)="addTeamShot()">
-              + Shot ({{ stateService.statsSummary().teamShots }})
-            </ion-button>
-            <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="outline" (click)="addTeamCorner()">
-              + Corner ({{ stateService.statsSummary().teamCorners }})
-            </ion-button>
-          </div>
-        </div>
 
-        <!-- Opponent Stats Group -->
-        <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
-          <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
-            {{ event()?.opponent ?? 'Opponent' }}
+          <!-- Opponent Stats Group -->
+          <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+            <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
+              {{ event()?.opponent ?? 'Opponent' }}
+            </div>
+            <div class="grid grid-cols-2 gap-2 w-full">
+              <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentPoint()">
+                + Point ({{ stateService.score().opponent }})
+              </ion-button>
+              <div class="flex items-center justify-center text-[10px] text-ap-muted font-bold px-2">
+                Sets won: {{ stateService.setsWon().opponent }}
+              </div>
+            </div>
           </div>
-          <div class="grid grid-cols-3 gap-2 w-full">
-            <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
-              + Goal ({{ stateService.score().opponent }})
-            </ion-button>
-            <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="solid" (click)="addOpponentShot()">
-              + Shot ({{ stateService.statsSummary().opponentShots }})
-            </ion-button>
-            <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="outline" (click)="addOpponentCorner()">
-              + Corner ({{ stateService.statsSummary().opponentCorners }})
-            </ion-button>
+        } @else {
+          <!-- Our Team Stats Group -->
+          <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+            <div class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">
+              {{ team()?.name ?? 'Our Team' }}
+            </div>
+            <div class="grid grid-cols-2 gap-2 w-full">
+              <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="solid" (click)="addTeamShot()">
+                + Shot ({{ stateService.statsSummary().teamShots }})
+              </ion-button>
+              <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="outline" (click)="addTeamCorner()">
+                + Corner ({{ stateService.statsSummary().teamCorners }})
+              </ion-button>
+            </div>
           </div>
-        </div>
+
+          <!-- Opponent Stats Group -->
+          <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+            <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
+              {{ event()?.opponent ?? 'Opponent' }}
+            </div>
+            <div class="grid grid-cols-3 gap-2 w-full">
+              <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
+                + Goal ({{ stateService.score().opponent }})
+              </ion-button>
+              <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="solid" (click)="addOpponentShot()">
+                + Shot ({{ stateService.statsSummary().opponentShots }})
+              </ion-button>
+              <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="outline" (click)="addOpponentCorner()">
+                + Corner ({{ stateService.statsSummary().opponentCorners }})
+              </ion-button>
+            </div>
+          </div>
+        }
       </div>
     </div>
 
@@ -185,20 +317,36 @@
       </div>
     } @else {
       <div class="flex flex-col sm:flex-row">
-        <!-- Pitch View -->
+        <!-- Field / Court View -->
         <div class="sm:flex-[2] flex min-h-[370px] sm:min-h-[650px]">
-          <app-soccer-pitch-view
-            class="w-full"
-            [players]="stateService.activePlayers()"
-            [initialLineup]="stateService.initialLineup()"
-            [stagedSubs]="stateService.stagedSubs()"
-            [playersOnField]="stateService.playersOnField()"
-            [selectedPlayerId]="selectedPlayerId()"
-            [playerCardCounts]="stateService.playerCardCounts()"
-            (playerSelected)="handlePlayerSelection($event)"
-            (emptySlotSelected)="handleEmptySlotSelection($event)"
-            (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
-          </app-soccer-pitch-view>
+          @if (stateService.sportName() === 'Volleyball') {
+            <app-volleyball-court-view
+              class="w-full"
+              [players]="stateService.activePlayers()"
+              [initialLineup]="stateService.initialLineup()"
+              [stagedSubs]="stateService.stagedSubs()"
+              [playersOnField]="stateService.playersOnField()"
+              [selectedPlayerId]="selectedPlayerId()"
+              [playerStats]="stateService.playerStats()"
+              [liberoDesignation]="stateService.liberoDesignation()"
+              (playerSelected)="handlePlayerSelection($event)"
+              (emptySlotSelected)="handleEmptySlotSelection($event)"
+              (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
+            </app-volleyball-court-view>
+          } @else {
+            <app-soccer-pitch-view
+              class="w-full"
+              [players]="stateService.activePlayers()"
+              [initialLineup]="stateService.initialLineup()"
+              [stagedSubs]="stateService.stagedSubs()"
+              [playersOnField]="stateService.playersOnField()"
+              [selectedPlayerId]="selectedPlayerId()"
+              [playerCardCounts]="stateService.playerCardCounts()"
+              (playerSelected)="handlePlayerSelection($event)"
+              (emptySlotSelected)="handleEmptySlotSelection($event)"
+              (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
+            </app-soccer-pitch-view>
+          }
         </div>
 
         <!-- Right Column: Bench + Sub-Queue -->
@@ -208,6 +356,7 @@
             [stagedInIds]="stagedInIds()"
             [selectedPlayerId]="selectedPlayerId()"
             [ejectedPlayerIds]="stateService.ejectedPlayerIds()"
+            [liberoDesignation]="stateService.liberoDesignation()"
             (playerSelected)="handlePlayerSelection($event)">
           </app-bench-view>
           <div class="border-t border-ap-border flex-1">
@@ -237,6 +386,7 @@
       @if (actionPlayer()) {
         <app-player-action-menu 
           [player]="actionPlayer()!"
+          [sportName]="stateService.sportName()"
           (actionSelected)="handleAction($event)">
         </app-player-action-menu>
       }

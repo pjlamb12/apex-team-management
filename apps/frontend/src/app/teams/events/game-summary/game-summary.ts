@@ -59,7 +59,7 @@ import {
   chevronDownOutline
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
-import { EventsService, EventEntity, AttendanceService } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, AttendanceService, TeamService } from '@apex-team/client/data-access/team';
 import { SocketService } from '@apex-team/client/shared/services';
 
 
@@ -121,15 +121,18 @@ export class GameSummary implements OnDestroy {
   }
 
   private readonly eventsService = inject(EventsService);
+  private readonly teamService = inject(TeamService);
   private readonly router = inject(Router);
   private readonly socketService = inject(SocketService);
   private readonly alertController = inject(AlertController);
   private readonly toastController = inject(ToastController);
 
+  protected sportName = signal<string>('Soccer');
   protected game = signal<EventEntity | null>(null);
   protected gameEvents = signal<any[]>([]);
   protected sortedGameEvents = computed(() => {
-    return [...this.gameEvents()].sort((a, b) => {
+    // 1. Sort the raw events first
+    const sorted = [...this.gameEvents()].sort((a, b) => {
       if (a.minuteOccurred !== b.minuteOccurred) {
         return a.minuteOccurred - b.minuteOccurred;
       }
@@ -140,10 +143,56 @@ export class GameSummary implements OnDestroy {
       }
       return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
     });
+
+    // 2. Filter hideFromLog and group swaps
+    const processed: any[] = [];
+    for (let i = 0; i < sorted.length; i++) {
+      const e = sorted[i];
+      const type = e.eventType || e.type;
+      const payload = e.payload || {};
+      
+      if (type === 'POSITION_SWAP' && payload.hideFromLog) {
+        continue;
+      }
+
+      if (type === 'LIBERO_CHANGED') {
+        continue;
+      }
+
+      if (type === 'POSITION_SWAP') {
+        const group = [e];
+        const gameTime = payload.gameTimeMs;
+        while (
+          i + 1 < sorted.length &&
+          (sorted[i + 1].eventType || sorted[i + 1].type) === 'POSITION_SWAP' &&
+          (sorted[i + 1].payload?.gameTimeMs === gameTime || sorted[i + 1].payload?.['gameTimeMs'] === gameTime)
+        ) {
+          group.push(sorted[i + 1]);
+          i++;
+        }
+
+        if (group.length >= 4) {
+          processed.push({
+            id: group[0].id || `rot-${group[0].createdAt || Date.now()}`,
+            eventType: 'COURT_ROTATE',
+            type: 'COURT_ROTATE',
+            minuteOccurred: group[0].minuteOccurred,
+            payload: group[0].payload,
+            createdAt: group[0].createdAt
+          });
+        } else {
+          processed.push(...group);
+        }
+      } else {
+        processed.push(e);
+      }
+    }
+
+    return processed;
   });
   protected playingTime = signal<Record<string, any>>({});
   protected lineup = signal<any[]>([]);
-  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime' | 'notes' | 'event-log'>('highlights');
+  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime' | 'notes' | 'event-log' | 'boxscore'>('highlights');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
 
@@ -166,6 +215,44 @@ export class GameSummary implements OnDestroy {
   protected isCreateMode = signal(false);
   protected createEventType = signal<string>('SUB');
 
+
+
+  protected setResults = computed(() => {
+    const events = this.gameEvents();
+    
+    // Find all unique periods that have events
+    const periods = Array.from(new Set(events.map(e => e.period || e.payload?.period).filter(p => p !== undefined && p !== null))) as number[];
+    
+    const results = periods.map(p => {
+      const setEvents = events.filter(e => (e.period === p || e.payload?.period === p) && e.status !== 'deleted');
+      const teamScore = setEvents.filter(
+        (e) => e.eventType === 'KILL' || e.eventType === 'ACE' || e.eventType === 'BLOCK' || e.eventType === 'POINT_WON'
+      ).length;
+      const opponentScore = setEvents.filter(
+        (e) =>
+          e.eventType === 'SERVICE_ERROR' ||
+          e.eventType === 'HITTING_ERROR' ||
+          e.eventType === 'POINT_LOST' ||
+          e.eventType === 'OPPONENT_GOAL'
+      ).length;
+
+      // Only include the set if there are actually points scored in it
+      if (teamScore === 0 && opponentScore === 0) return null;
+
+      const winner = teamScore > opponentScore ? 'team' : 'opponent';
+
+      return {
+        id: `set-${p}`,
+        setNumber: p,
+        teamScore,
+        opponentScore,
+        winner
+      };
+    }).filter((r): r is NonNullable<typeof r> => r !== null);
+
+    return results.sort((a, b) => a.setNumber - b.setNumber);
+  });
+
   protected hasShootout = computed(() => {
     return this.gameEvents().some(e => e.eventType === 'SHOOTOUT_KICK');
   });
@@ -179,6 +266,28 @@ export class GameSummary implements OnDestroy {
 
   protected statsSummary = computed(() => {
     const events = this.gameEvents();
+    const isVb = this.sportName() === 'Volleyball';
+    
+    if (isVb) {
+      const kills = events.filter(e => e.eventType === 'KILL').length;
+      const aces = events.filter(e => e.eventType === 'ACE').length;
+      const blocks = events.filter(e => e.eventType === 'BLOCK').length;
+      const digs = events.filter(e => e.eventType === 'DIG').length;
+      const errors = events.filter(e => e.eventType === 'SERVICE_ERROR' || e.eventType === 'HITTING_ERROR').length;
+      return {
+        kills,
+        aces,
+        blocks,
+        digs,
+        errors,
+        teamShots: 0,
+        opponentShots: 0,
+        teamCorners: 0,
+        opponentCorners: 0,
+        teamSaves: 0
+      };
+    }
+
     const teamShots = events.filter(e => e.eventType === 'SHOT' || e.eventType === 'GOAL').length;
     const opponentShots = events.filter(e => e.eventType === 'OPPONENT_SHOT' || e.eventType === 'OPPONENT_GOAL').length;
     const teamCorners = events.filter(e => e.eventType === 'CORNER_KICK').length;
@@ -190,6 +299,11 @@ export class GameSummary implements OnDestroy {
       teamCorners,
       opponentCorners,
       teamSaves,
+      kills: 0,
+      aces: 0,
+      blocks: 0,
+      digs: 0,
+      errors: 0
     };
   });
 
@@ -212,6 +326,60 @@ export class GameSummary implements OnDestroy {
     });
 
     return Array.from(roundsMap.values()).sort((a, b) => a.round - b.round);
+  });
+
+  protected volleyballBoxScore = computed(() => {
+    const players = this.lineup();
+    const events = this.gameEvents();
+
+    return players.map(p => {
+      const playerId = p.playerId;
+      const playerEvents = events.filter(e => {
+        const payload = e.payload || {};
+        return (
+          e.playerId === playerId ||
+          payload.playerId === playerId ||
+          payload.scorerId === playerId ||
+          payload.assistorId === playerId
+        );
+      });
+
+      const kills = playerEvents.filter(e => e.eventType === 'KILL').length;
+      const aces = playerEvents.filter(e => e.eventType === 'ACE').length;
+      const blocks = playerEvents.filter(e => e.eventType === 'BLOCK').length;
+      const digs = playerEvents.filter(e => e.eventType === 'DIG').length;
+      const assists = playerEvents.filter(e => e.eventType === 'ASSIST').length;
+      const serviceErrors = playerEvents.filter(e => e.eventType === 'SERVICE_ERROR').length;
+      const hittingErrors = playerEvents.filter(e => e.eventType === 'HITTING_ERROR').length;
+      const hits = playerEvents.filter(e => e.eventType === 'HIT').length;
+
+      const totalAttempts = kills + hittingErrors + hits;
+      const hittingPercentage = totalAttempts > 0 ? (kills - hittingErrors) / totalAttempts : 0;
+
+      const passesEvents = playerEvents.filter(e => e.eventType === 'SERVE_RECEIVE');
+      const passes = passesEvents.length;
+      const totalPassScore = passesEvents.reduce((sum, e) => {
+        const payload = e.payload || {};
+        const score = payload.score ?? e['score'] ?? 0;
+        return sum + score;
+      }, 0);
+      const averagePassRating = passes > 0 ? totalPassScore / passes : 0;
+
+      return {
+        player: p.player,
+        kills,
+        aces,
+        blocks,
+        digs,
+        assists,
+        serviceErrors,
+        hittingErrors,
+        hittingPercentage,
+        passes,
+        averagePassRating,
+        hits
+      };
+    });
   });
 
   protected getPlayerName(playerId: string | undefined): string {
@@ -296,7 +464,23 @@ export class GameSummary implements OnDestroy {
   });
 
   protected score = computed(() => {
+    const isVB = this.sportName() === 'Volleyball';
     const g = this.game();
+
+    if (isVB) {
+      const results = this.setResults();
+      let teamSets = 0;
+      let opponentSets = 0;
+      results.forEach(r => {
+        if (r.winner === 'team') {
+          teamSets++;
+        } else {
+          opponentSets++;
+        }
+      });
+      return { team: teamSets, opponent: opponentSets };
+    }
+
     if (g && g.status === 'completed' && g.goalsFor !== null && g.goalsAgainst !== null) {
       return { team: g.goalsFor ?? 0, opponent: g.goalsAgainst ?? 0 };
     }
@@ -394,10 +578,12 @@ export class GameSummary implements OnDestroy {
         firstValueFrom(this.eventsService.getPlayingTime(teamId, eventId)),
         firstValueFrom(this.eventsService.getLineup(teamId, eventId))
       ]);
+      const team = await this.teamService.getTeam(teamId);
       this.game.set(game);
       this.gameEvents.set(events);
       this.playingTime.set(playingTime);
       this.lineup.set(lineup);
+      this.sportName.set(team.sport?.name || 'Soccer');
     } catch {
       this.errorMessage.set('Failed to load game summary.');
     } finally {
@@ -450,7 +636,6 @@ export class GameSummary implements OnDestroy {
   protected isOwnGoalEvent(type?: string): boolean {
     return type === 'OWN_GOAL';
   }
-
   protected openCreateModal(): void {
     this.isCreateMode.set(true);
     this.createEventType.set('SUB');
@@ -458,7 +643,7 @@ export class GameSummary implements OnDestroy {
     this.editMinute.set(0);
     this.editPlayerIn.set(null);
     this.editPlayerOut.set(null);
-    this.editPosition.set('MID');
+    this.editPosition.set(this.sportName() === 'Volleyball' ? 'Setter' : 'MID');
     this.editScorerId.set(null);
     this.editAssistorId.set(null);
     this.editPlayerId.set(null);

@@ -34,6 +34,12 @@ import { AddOwnGoalEventDefinition1782600000000 } from './1782600000000-AddOwnGo
 import { MoveHomeLocationToSeasons1782700000000 } from './1782700000000-MoveHomeLocationToSeasons';
 import { MoveDefaultsToCompetitions1782800000000 } from './1782800000000-MoveDefaultsToCompetitions';
 import { SeedVolleyballSport1782900000000 } from './1782900000000-SeedVolleyballSport';
+import { SeedVolleyballEventDefinitions1783000000000 } from './1783000000000-SeedVolleyballEventDefinitions';
+import { AddScoreWinningRulesToSeason1783100000000 } from './1783100000000-AddScoreWinningRulesToSeason';
+import { MoveScoreWinningRulesToLeagues1783200000000 } from './1783200000000-MoveScoreWinningRulesToLeagues';
+import { AddDecidingSetScoreRules1783300000000 } from './1783300000000-AddDecidingSetScoreRules';
+import { AddServeReceiveEventDefinition1783400000000 } from './1783400000000-AddServeReceiveEventDefinition';
+import { AddHitEventDefinition1783500000000 } from './1783500000000-AddHitEventDefinition';
 
 
 export const ALL_MIGRATIONS = [
@@ -73,5 +79,11 @@ export const ALL_MIGRATIONS = [
   MoveHomeLocationToSeasons1782700000000,
   MoveDefaultsToCompetitions1782800000000,
   SeedVolleyballSport1782900000000,
+  SeedVolleyballEventDefinitions1783000000000,
+  AddScoreWinningRulesToSeason1783100000000,
+  MoveScoreWinningRulesToLeagues1783200000000,
+  AddDecidingSetScoreRules1783300000000,
+  AddServeReceiveEventDefinition1783400000000,
+  AddHitEventDefinition1783500000000,
 ];
 

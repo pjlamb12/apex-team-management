@@ -15,6 +15,12 @@ export interface PlayerPerformanceMetrics {
   gamesPlayed: number;
   blockedShots: number;
   blockedPenaltyKicks: number;
+  kills?: number;
+  aces?: number;
+  blocks?: number;
+  digs?: number;
+  serviceErrors?: number;
+  hittingErrors?: number;
 }
 
 export interface PlayerPlaytime {
@@ -43,6 +49,12 @@ export interface PlayerHistoryEntry {
   blockedShots: number;
   blockedPenaltyKicks: number;
   playingTimeSeconds: number;
+  kills?: number;
+  aces?: number;
+  blocks?: number;
+  digs?: number;
+  serviceErrors?: number;
+  hittingErrors?: number;
 }
 
 export interface PlayerProfileAnalytics {
@@ -61,6 +73,12 @@ export interface PlayerProfileAnalytics {
   totalMinutes: number;
   positionDistribution: Record<string, number>;
   history: PlayerHistoryEntry[];
+  totalKills?: number;
+  totalAces?: number;
+  totalBlocks?: number;
+  totalDigs?: number;
+  totalServiceErrors?: number;
+  totalHittingErrors?: number;
 }
 
 @Injectable({

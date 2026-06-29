@@ -5,8 +5,9 @@
       <ion-card
         (click)="!ejectedPlayerIds().has(player.id) && selectPlayer(player, $event)"
         [class.selected]="selectedPlayerId() === player.id"
-        [class.border-2]="stagedInIds().has(player.id)"
+        [class.border-2]="stagedInIds().has(player.id) || (liberoDesignation()?.replacedId === player.id)"
         [class.border-green-500]="stagedInIds().has(player.id)"
+        [class.border-amber-500]="(liberoDesignation()?.replacedId === player.id) && !stagedInIds().has(player.id)"
         [class.opacity-40]="ejectedPlayerIds().has(player.id)"
         [class.pointer-events-none]="ejectedPlayerIds().has(player.id)"
         class="m-0 cursor-pointer transition-all duration-200"
@@ -27,6 +28,16 @@
               @if (stagedInIds().has(player.id)) {
                 <div class="staged-badge mt-1 bg-green-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full animate-pulse border border-white/20">
                   STAGED
+                </div>
+              }
+              @if (liberoDesignation()?.replacedId === player.id) {
+                <div class="mt-1 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[8px] font-black px-2.5 py-1 rounded border border-amber-500/30 whitespace-nowrap uppercase tracking-wider">
+                  Replaced by Libero
+                </div>
+              }
+              @if (liberoDesignation()?.liberoId === player.id) {
+                <div class="mt-1 bg-slate-500/20 text-slate-700 dark:text-slate-300 text-[8px] font-black px-2.5 py-1 rounded border border-slate-500/30 whitespace-nowrap uppercase tracking-wider">
+                  Libero
                 </div>
               }
             </div>

@@ -44,4 +44,28 @@ export class CreateLeagueDto {
   @IsUUID()
   @IsOptional()
   homeLocationId?: string;
+
+  @IsInt()
+  @IsOptional()
+  bestOfSets?: number;
+
+  @IsInt()
+  @IsOptional()
+  setScoreGoal?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  winByTwo?: boolean;
+
+  @IsInt()
+  @IsOptional()
+  pointCap?: number | null;
+
+  @IsInt()
+  @IsOptional()
+  decidingSetScoreGoal?: number;
+
+  @IsInt()
+  @IsOptional()
+  decidingSetPointCap?: number | null;
 }

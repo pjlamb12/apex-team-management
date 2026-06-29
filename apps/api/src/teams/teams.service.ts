@@ -93,19 +93,21 @@ export class TeamsService {
     return this.teamRepo.save(team);
   }
 
-  async seedDemo(userId: string): Promise<TeamEntity> {
+  async seedDemo(userId: string, sportName: string = 'Soccer'): Promise<TeamEntity> {
     return this.dataSource.transaction(async (manager) => {
-      // 1. Find the sport "Soccer"
+      // 1. Find the sport
       const sport = await manager.findOne(SportEntity, {
-        where: { name: 'Soccer' },
+        where: { name: sportName },
       });
       if (!sport) {
-        throw new NotFoundException('Soccer sport not found');
+        throw new NotFoundException(`${sportName} sport not found`);
       }
+
+      const isVolleyball = sportName === 'Volleyball';
 
       // 2. Create the team
       const team = manager.create(TeamEntity, {
-        name: 'Apex Rangers FC (Demo)',
+        name: isVolleyball ? 'Apex Spikers VB (Demo)' : 'Apex Rangers FC (Demo)',
         sportId: sport.id,
         coachId: userId,
         joinCode: this.joinCodeService.generate(),
@@ -124,7 +126,7 @@ export class TeamsService {
       // 4. Create a location
       const location = manager.create(LocationEntity, {
         teamId: savedTeam.id,
-        name: 'Apex Sports Complex - Pitch 1',
+        name: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
         address: '123 Apex Way',
         city: 'Salt Lake City',
         state: 'UT',
@@ -141,28 +143,28 @@ export class TeamsService {
         startDate: '2026-08-01',
         endDate: '2026-11-30',
         isActive: true,
-        defaultPracticeLocation: 'Apex Sports Complex - Pitch 1',
+        defaultPracticeLocation: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
       });
       const savedSeason = await manager.save(SeasonEntity, season);
 
       // 6. Create a league
       const league = manager.create(LeagueEntity, {
         seasonId: savedSeason.id,
-        name: 'Utah Metro Soccer League - U12',
+        name: isVolleyball ? 'Utah Metro Volleyball League - U14' : 'Utah Metro Soccer League - U12',
         type: 'league',
         isActive: true,
-        playersOnField: 9,
-        periodCount: 2,
-        periodLengthMinutes: 30,
-        defaultHomeVenue: 'Apex Sports Complex - Pitch 1',
-        defaultHomeColor: 'Red',
+        playersOnField: isVolleyball ? 6 : 9,
+        periodCount: isVolleyball ? 3 : 2,
+        periodLengthMinutes: isVolleyball ? 20 : 30,
+        defaultHomeVenue: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
+        defaultHomeColor: isVolleyball ? 'Blue' : 'Red',
         defaultAwayColor: 'White',
         homeLocationId: savedLocation.id,
       });
       const savedLeague = await manager.save(LeagueEntity, league);
 
       // 7. Create players
-      const playerSpecs = [
+      const soccerPlayerSpecs = [
         { firstName: 'Leo', lastName: 'Messi', jerseyNumber: 10, preferredPosition: 'Forward' },
         { firstName: 'Cristiano', lastName: 'Ronaldo', jerseyNumber: 7, preferredPosition: 'Forward' },
         { firstName: 'Kevin', lastName: 'De Bruyne', jerseyNumber: 17, preferredPosition: 'Midfielder' },
@@ -176,6 +178,23 @@ export class TeamsService {
         { firstName: 'Ben', lastName: 'White', jerseyNumber: 4, preferredPosition: 'Defender' },
         { firstName: 'Erling', lastName: 'Haaland', jerseyNumber: 9, preferredPosition: 'Forward' },
       ];
+
+      const volleyballPlayerSpecs = [
+        { firstName: 'Jordyn', lastName: 'Poulter', jerseyNumber: 1, preferredPosition: 'Setter' },
+        { firstName: 'Dani', lastName: 'Drews', jerseyNumber: 9, preferredPosition: 'Outside Hitter' },
+        { firstName: 'Haleigh', lastName: 'Washington', jerseyNumber: 15, preferredPosition: 'Middle Blocker' },
+        { firstName: 'Skylar', lastName: 'Fields', jerseyNumber: 5, preferredPosition: 'Opposite Hitter' },
+        { firstName: 'Alexa', lastName: 'Gray', jerseyNumber: 10, preferredPosition: 'Outside Hitter' },
+        { firstName: 'Tori', lastName: 'Dixon', jerseyNumber: 6, preferredPosition: 'Middle Blocker' },
+        { firstName: 'Madi', lastName: 'Bugg', jerseyNumber: 8, preferredPosition: 'Setter' },
+        { firstName: 'Manami', lastName: 'Kojima', jerseyNumber: 16, preferredPosition: 'Libero' },
+        { firstName: 'Roni', lastName: 'Jones-Perry', jerseyNumber: 12, preferredPosition: 'Outside Hitter' },
+        { firstName: 'Heidy', lastName: 'Casanova', jerseyNumber: 14, preferredPosition: 'Opposite Hitter' },
+        { firstName: 'Serena', lastName: 'Gray', jerseyNumber: 11, preferredPosition: 'Middle Blocker' },
+        { firstName: 'Mary', lastName: 'Lake', jerseyNumber: 17, preferredPosition: 'Libero' },
+      ];
+
+      const playerSpecs = isVolleyball ? volleyballPlayerSpecs : soccerPlayerSpecs;
 
       const savedPlayers: PlayerEntity[] = [];
       for (const spec of playerSpecs) {
@@ -203,24 +222,24 @@ export class TeamsService {
         seasonId: savedSeason.id,
         leagueId: savedLeague.id,
         type: 'game',
-        opponent: 'Thunder FC',
+        opponent: isVolleyball ? 'Thunder VB' : 'Thunder FC',
         scheduledAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
         durationMinutes: 60,
-        location: 'Thunder FC Field',
+        location: isVolleyball ? 'Thunder VB Arena' : 'Thunder FC Field',
         isHomeGame: false,
         status: 'completed',
-        goalsFor: 3,
+        goalsFor: isVolleyball ? 2 : 3, // Sets won for Volleyball, Goals for Soccer
         goalsAgainst: 1,
-        periodCount: 2,
-        periodLengthMinutes: 30,
-        playersOnField: 9,
-        currentPeriod: 2,
+        periodCount: isVolleyball ? 3 : 2,
+        periodLengthMinutes: isVolleyball ? 20 : 30,
+        playersOnField: isVolleyball ? 6 : 9,
+        currentPeriod: isVolleyball ? 3 : 2,
       });
       const savedPastGame = await manager.save(EventEntity, pastGame);
 
       // Attendance for past game
       for (const player of savedPlayers) {
-        const isInjured = player.firstName === 'Cristiano' && player.lastName === 'Ronaldo';
+        const isInjured = !isVolleyball && player.firstName === 'Cristiano' && player.lastName === 'Ronaldo';
         const attendance = manager.create(AttendanceEntity, {
           eventId: savedPastGame.id,
           playerId: player.id,
@@ -231,7 +250,7 @@ export class TeamsService {
       }
 
       // Lineup entries for past game
-      const startingLineup = [
+      const soccerStartingLineup = [
         { first: 'Alisson', pos: 'GK', slot: 0 },
         { first: 'Ben', pos: 'RB', slot: 1 },
         { first: 'Virgil', pos: 'CB', slot: 2 },
@@ -242,6 +261,17 @@ export class TeamsService {
         { first: 'Leo', pos: 'ST', slot: 7 },
         { first: 'Erling', pos: 'ST', slot: 8 },
       ];
+
+      const volleyballStartingLineup = [
+        { first: 'Jordyn', pos: 'Setter', slot: 0 },
+        { first: 'Dani', pos: 'Outside Hitter', slot: 1 },
+        { first: 'Haleigh', pos: 'Middle Blocker', slot: 2 },
+        { first: 'Skylar', pos: 'Opposite Hitter', slot: 3 },
+        { first: 'Alexa', pos: 'Outside Hitter', slot: 4 },
+        { first: 'Tori', pos: 'Middle Blocker', slot: 5 },
+      ];
+
+      const startingLineup = isVolleyball ? volleyballStartingLineup : soccerStartingLineup;
 
       for (const player of savedPlayers) {
         const starter = startingLineup.find((s) => s.first === player.firstName);
@@ -256,66 +286,205 @@ export class TeamsService {
       }
 
       // Game events for past game
-      // Goal 1: Erling assisted by Kevin at minute 12
-      const gameEvent1 = manager.create(GameEventEntity, {
-        eventId: savedPastGame.id,
-        eventType: 'GOAL',
-        minuteOccurred: 12,
-        payload: {
-          scorerId: pMap('Erling').id,
-          assistorId: pMap('Kevin').id,
-        },
-      });
-      await manager.save(GameEventEntity, gameEvent1);
+      if (isVolleyball) {
+        // Set 1 (Period 1): 25-23 (Team wins)
+        for (let i = 0; i < 21; i++) {
+          await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+            eventId: savedPastGame.id,
+            eventType: 'POINT_WON',
+            period: 1,
+            minuteOccurred: 0,
+            payload: {}
+          }));
+        }
+        for (let i = 0; i < 22; i++) {
+          await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+            eventId: savedPastGame.id,
+            eventType: 'POINT_LOST',
+            period: 1,
+            minuteOccurred: 0,
+            payload: {}
+          }));
+        }
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'ACE',
+          period: 1,
+          minuteOccurred: 0,
+          payload: { scorerId: pMap('Jordyn').id }
+        }));
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'KILL',
+          period: 1,
+          minuteOccurred: 0,
+          payload: { scorerId: pMap('Dani').id }
+        }));
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'BLOCK',
+          period: 1,
+          minuteOccurred: 0,
+          payload: { playerId: pMap('Haleigh').id }
+        }));
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'KILL',
+          period: 1,
+          minuteOccurred: 0,
+          payload: { scorerId: pMap('Dani').id }
+        }));
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'SERVICE_ERROR',
+          period: 1,
+          minuteOccurred: 0,
+          payload: { playerId: pMap('Skylar').id }
+        }));
 
-      // Opponent Goal at minute 24
-      const gameEvent2 = manager.create(GameEventEntity, {
-        eventId: savedPastGame.id,
-        eventType: 'OPPONENT_GOAL',
-        minuteOccurred: 24,
-        payload: {},
-      });
-      await manager.save(GameEventEntity, gameEvent2);
+        // Set 2 (Period 2): 18-25 (Opponent wins)
+        for (let i = 0; i < 17; i++) {
+          await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+            eventId: savedPastGame.id,
+            eventType: 'POINT_WON',
+            period: 2,
+            minuteOccurred: 0,
+            payload: {}
+          }));
+        }
+        for (let i = 0; i < 23; i++) {
+          await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+            eventId: savedPastGame.id,
+            eventType: 'POINT_LOST',
+            period: 2,
+            minuteOccurred: 0,
+            payload: {}
+          }));
+        }
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'KILL',
+          period: 2,
+          minuteOccurred: 0,
+          payload: { scorerId: pMap('Skylar').id }
+        }));
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'SERVICE_ERROR',
+          period: 2,
+          minuteOccurred: 0,
+          payload: { playerId: pMap('Jordyn').id }
+        }));
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'HITTING_ERROR',
+          period: 2,
+          minuteOccurred: 0,
+          payload: { playerId: pMap('Dani').id }
+        }));
 
-      // Goal 2: Leo Messi at minute 45
-      const gameEvent3 = manager.create(GameEventEntity, {
-        eventId: savedPastGame.id,
-        eventType: 'GOAL',
-        minuteOccurred: 45,
-        payload: {
-          scorerId: pMap('Leo').id,
-        },
-      });
-      await manager.save(GameEventEntity, gameEvent3);
+        // Set 3 (Period 3): 15-13 (Team wins)
+        for (let i = 0; i < 12; i++) {
+          await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+            eventId: savedPastGame.id,
+            eventType: 'POINT_WON',
+            period: 3,
+            minuteOccurred: 0,
+            payload: {}
+          }));
+        }
+        for (let i = 0; i < 13; i++) {
+          await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+            eventId: savedPastGame.id,
+            eventType: 'POINT_LOST',
+            period: 3,
+            minuteOccurred: 0,
+            payload: {}
+          }));
+        }
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'KILL',
+          period: 3,
+          minuteOccurred: 0,
+          payload: { scorerId: pMap('Dani').id }
+        }));
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'BLOCK',
+          period: 3,
+          minuteOccurred: 0,
+          payload: { playerId: pMap('Haleigh').id }
+        }));
+        await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'ACE',
+          period: 3,
+          minuteOccurred: 0,
+          payload: { scorerId: pMap('Madi').id }
+        }));
+      } else {
+        // Soccer Game events
+        // Goal 1: Erling assisted by Kevin at minute 12
+        const gameEvent1 = manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'GOAL',
+          minuteOccurred: 12,
+          payload: {
+            scorerId: pMap('Erling').id,
+            assistorId: pMap('Kevin').id,
+          },
+        });
+        await manager.save(GameEventEntity, gameEvent1);
 
-      // Goal 3: Erling assisted by Leo at minute 58
-      const gameEvent4 = manager.create(GameEventEntity, {
-        eventId: savedPastGame.id,
-        eventType: 'GOAL',
-        minuteOccurred: 58,
-        payload: {
-          scorerId: pMap('Erling').id,
-          assistorId: pMap('Leo').id,
-        },
-      });
-      await manager.save(GameEventEntity, gameEvent4);
+        // Opponent Goal at minute 24
+        const gameEvent2 = manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'OPPONENT_GOAL',
+          minuteOccurred: 24,
+          payload: {},
+        });
+        await manager.save(GameEventEntity, gameEvent2);
 
+        // Goal 2: Leo Messi at minute 45
+        const gameEvent3 = manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'GOAL',
+          minuteOccurred: 45,
+          payload: {
+            scorerId: pMap('Leo').id,
+          },
+        });
+        await manager.save(GameEventEntity, gameEvent3);
+
+        // Goal 3: Erling assisted by Leo at minute 58
+        const gameEvent4 = manager.create(GameEventEntity, {
+          eventId: savedPastGame.id,
+          eventType: 'GOAL',
+          minuteOccurred: 58,
+          payload: {
+            scorerId: pMap('Erling').id,
+            assistorId: pMap('Leo').id,
+          },
+        });
+        await manager.save(GameEventEntity, gameEvent4);
+      }
 
       // 8.2 Scheduled Game (4 days in future)
       const futureGame = manager.create(EventEntity, {
         seasonId: savedSeason.id,
         leagueId: savedLeague.id,
         type: 'game',
-        opponent: 'Lightning SC',
+        opponent: isVolleyball ? 'Lightning VB' : 'Lightning SC',
         scheduledAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
         durationMinutes: 60,
-        location: 'Apex Sports Complex - Pitch 1',
+        location: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
         locationId: savedLocation.id,
         isHomeGame: true,
         status: 'scheduled',
-        periodCount: 2,
-        periodLengthMinutes: 30,
-        playersOnField: 9,
+        periodCount: isVolleyball ? 3 : 2,
+        periodLengthMinutes: isVolleyball ? 20 : 30,
+        playersOnField: isVolleyball ? 6 : 9,
         currentPeriod: 1,
       });
       const savedFutureGame = await manager.save(EventEntity, futureGame);
@@ -336,7 +505,7 @@ export class TeamsService {
         type: 'practice',
         scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
         durationMinutes: 90,
-        location: 'Apex Sports Complex - Pitch 1',
+        location: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
         locationId: savedLocation.id,
         status: 'scheduled',
       });
@@ -346,20 +515,20 @@ export class TeamsService {
       const practiceDrill1 = manager.create(PracticeDrillEntity, {
         eventId: savedFuturePractice.id,
         drillId: null,
-        customName: 'Rondo (5v2 Warmup)',
+        customName: isVolleyball ? 'Serve & Receive Warmup' : 'Rondo (5v2 Warmup)',
         sequence: 1,
         durationMinutes: 15,
-        notes: 'Focus on quick, 1-touch passing and moving to open space.',
+        notes: isVolleyball ? 'Focus on clean underhand/overhead passing and target areas.' : 'Focus on quick, 1-touch passing and moving to open space.',
       });
       await manager.save(PracticeDrillEntity, practiceDrill1);
 
       const practiceDrill2 = manager.create(PracticeDrillEntity, {
         eventId: savedFuturePractice.id,
         drillId: null,
-        customName: 'Shooting on Crosses',
+        customName: isVolleyball ? '6v6 Transition Play' : 'Shooting on Crosses',
         sequence: 2,
         durationMinutes: 25,
-        notes: 'Winger crosses from deep, attacking midfielders and strikers timing their runs into the box.',
+        notes: isVolleyball ? 'Simulated match play focusing on free ball and down ball transition attacking.' : 'Winger crosses from deep, attacking midfielders and strikers timing their runs into the box.',
       });
       await manager.save(PracticeDrillEntity, practiceDrill2);
 

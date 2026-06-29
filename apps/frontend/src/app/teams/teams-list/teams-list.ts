@@ -144,13 +144,26 @@ export class TeamsList implements OnDestroy {
   private async showSeedDemoAlert(): Promise<void> {
     const alert = await this.alertCtrl.create({
       header: 'Generate Demo Team?',
-      message: 'This will seed a new demo team "Apex Rangers FC (Demo)" with a complete season, league, players, lineups, and past/future events. Proceed?',
+      message: 'Select the sport format you would like to seed for the demo team:',
+      inputs: [
+        {
+          type: 'radio',
+          label: 'Soccer (Apex Rangers FC)',
+          value: 'Soccer',
+          checked: true,
+        },
+        {
+          type: 'radio',
+          label: 'Volleyball (Apex Spikers VB)',
+          value: 'Volleyball',
+        },
+      ],
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
           text: 'Generate',
-          handler: () => {
-            void this.generateDemoTeam();
+          handler: (sport: string) => {
+            void this.generateDemoTeam(sport);
           },
         },
       ],
@@ -158,11 +171,11 @@ export class TeamsList implements OnDestroy {
     await alert.present();
   }
 
-  private async generateDemoTeam(): Promise<void> {
+  private async generateDemoTeam(sport: string): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      await this.teamService.seedDemoTeam();
+      await this.teamService.seedDemoTeam(sport);
       await this.loadTeams();
     } catch {
       this.errorMessage.set('Failed to generate demo team. Please try again.');

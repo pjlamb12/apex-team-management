@@ -8,6 +8,7 @@ import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
 import { EventNoteEntity } from '../entities/event-note.entity';
+import { LeagueEntity } from '../entities/league.entity';
 
 import { CreateEventDto } from './dto/create-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
@@ -72,6 +73,15 @@ describe('EventsService', () => {
             find: vi.fn(),
             findOne: vi.fn(),
             remove: vi.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(LeagueEntity),
+          useValue: {
+            create: vi.fn().mockImplementation((dto) => dto),
+            save: vi.fn().mockImplementation((league) => Promise.resolve({ id: 'league-1', ...league })),
+            find: vi.fn(),
+            findOne: vi.fn(),
           },
         },
         {

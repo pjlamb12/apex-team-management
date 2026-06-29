@@ -48,18 +48,101 @@ export class LiveGameStateService {
     intervalMinutes: 8,
     mode: 'PURE',
   });
+  private _sportName = signal<string>('Soccer');
+  private _bestOfSets = signal<number>(5);
+  private _setScoreGoal = signal<number>(25);
+  private _winByTwo = signal<boolean>(true);
+  private _pointCap = signal<number | null>(null);
+  private _decidingSetScoreGoal = signal<number>(15);
+  private _decidingSetPointCap = signal<number | null>(null);
+
+  public readonly bestOfSets = this._bestOfSets.asReadonly();
+  public readonly setScoreGoal = this._setScoreGoal.asReadonly();
+  public readonly winByTwo = this._winByTwo.asReadonly();
+  public readonly pointCap = this._pointCap.asReadonly();
+  public readonly decidingSetScoreGoal = this._decidingSetScoreGoal.asReadonly();
+  public readonly decidingSetPointCap = this._decidingSetPointCap.asReadonly();
 
   public readonly events = this._events.asReadonly();
   public readonly eventId = this._eventId.asReadonly();
   public readonly teamId = this._teamId.asReadonly();
   public readonly teamName = this._teamName.asReadonly();
   public readonly initialLineup = this._initialLineup.asReadonly();
+  public readonly players = computed(() => this._initialLineup().map((e) => e.player));
   public readonly playersOnField = this._playersOnField.asReadonly();
   public readonly currentPeriod = this._currentPeriod.asReadonly();
   public readonly status = this._status.asReadonly();
   public readonly stagedSubs = this._stagedSubs.asReadonly();
   public readonly lastIntervalTriggered = this._lastIntervalTriggered.asReadonly();
   public readonly rotationConfig = this._rotationConfig.asReadonly();
+  public readonly sportName = this._sportName.asReadonly();
+
+  private _forceSetCompleted = signal<boolean>(false);
+  public readonly forceSetCompletedSignal = this._forceSetCompleted.asReadonly();
+
+  public readonly currentSetResult = computed(() => {
+    if (this._sportName() !== 'Volleyball') return null;
+
+    const score = this.score();
+    
+    if (this._forceSetCompleted()) {
+      const winner = score.team >= score.opponent ? ('team' as const) : ('opponent' as const);
+      return { winner, score, forced: true };
+    }
+
+    const isDecidingSet = this._currentPeriod() === this._bestOfSets();
+    const goal = isDecidingSet ? this._decidingSetScoreGoal() : this._setScoreGoal();
+    const cap = isDecidingSet ? this._decidingSetPointCap() : this._pointCap();
+    const winBy2 = this._winByTwo();
+
+    const isTeamSetWon = (sTeam: number, sOpp: number) => {
+      if (sTeam < goal) return false;
+      if (cap !== null && cap > 0 && sTeam >= cap) return true;
+      if (winBy2) return sTeam - sOpp >= 2;
+      return true;
+    };
+
+    if (isTeamSetWon(score.team, score.opponent)) {
+      return { winner: 'team' as const, score };
+    }
+    if (isTeamSetWon(score.opponent, score.team)) {
+      return { winner: 'opponent' as const, score };
+    }
+
+    return null;
+  });
+
+  public forceSetCompleted(completed: boolean): void {
+    this._forceSetCompleted.set(completed);
+    if (this._eventId()) {
+      localStorage.setItem(this.getForceCompletedStorageKey(), JSON.stringify(completed));
+    }
+  }
+
+  public clearForceCompleted(): void {
+    this.forceSetCompleted(false);
+  }
+
+  private getForceCompletedStorageKey(): string {
+    return `${this._eventId()}_force_completed`;
+  }
+
+  public readonly matchResult = computed(() => {
+    if (this._sportName() !== 'Volleyball') return null;
+
+    const sets = this.setsWon();
+    const bestOf = this._bestOfSets();
+    const setsToWin = Math.ceil(bestOf / 2);
+
+    if (sets.team >= setsToWin) {
+      return { winner: 'team' as const, sets };
+    }
+    if (sets.opponent >= setsToWin) {
+      return { winner: 'opponent' as const, sets };
+    }
+
+    return null;
+  });
 
   public readonly playerCardCounts = computed(() => {
     const events = this._events().filter((e) => e.status !== 'deleted');
@@ -132,8 +215,13 @@ export class LiveGameStateService {
 
         if (playerA && playerB) {
           const temp = { ...playerA };
-          slotMap.set(event.slotIndexA, { ...playerB, position: playerA.position });
-          slotMap.set(event.slotIndexB, { ...temp, position: playerB.position });
+          if (this._sportName() === 'Volleyball') {
+            slotMap.set(event.slotIndexA, { ...playerB });
+            slotMap.set(event.slotIndexB, { ...temp });
+          } else {
+            slotMap.set(event.slotIndexA, { ...playerB, position: playerA.position });
+            slotMap.set(event.slotIndexB, { ...temp, position: playerB.position });
+          }
         }
       }
     });
@@ -165,33 +253,261 @@ export class LiveGameStateService {
 
   public readonly score = computed(() => {
     const events = this._events().filter((e) => e.status !== 'deleted');
-    const team = events.filter((e) => e.type === 'GOAL').length;
-    const opponent = events.filter((e) => e.type === 'OPPONENT_GOAL' || e.type === 'OWN_GOAL').length;
-    return { team, opponent };
+    const isVolleyball = this._sportName() === 'Volleyball';
+
+    if (isVolleyball) {
+      const currentPeriod = this._currentPeriod();
+      const setEvents = events.filter((e) => e['period'] === currentPeriod);
+      
+      const team = setEvents.filter(
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
+      ).length;
+
+      const opponent = setEvents.filter(
+        (e) =>
+          e.type === 'SERVICE_ERROR' ||
+          e.type === 'HITTING_ERROR' ||
+          e.type === 'POINT_LOST' ||
+          e.type === 'OPPONENT_GOAL'
+      ).length;
+
+      return { team, opponent };
+    } else {
+      const team = events.filter((e) => e.type === 'GOAL').length;
+      const opponent = events.filter((e) => e.type === 'OPPONENT_GOAL' || e.type === 'OWN_GOAL').length;
+      return { team, opponent };
+    }
+  });
+
+  public readonly setsWon = computed(() => {
+    const events = this._events().filter((e) => e.status !== 'deleted');
+    const isVolleyball = this._sportName() === 'Volleyball';
+
+    if (!isVolleyball) {
+      return { team: 0, opponent: 0 };
+    }
+
+    let teamSets = 0;
+    let opponentSets = 0;
+
+    for (let p = 1; p < this._currentPeriod(); p++) {
+      const setEvents = events.filter((e) => e['period'] === p);
+      const teamPoints = setEvents.filter(
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
+      ).length;
+      const opponentPoints = setEvents.filter(
+        (e) =>
+          e.type === 'SERVICE_ERROR' ||
+          e.type === 'HITTING_ERROR' ||
+          e.type === 'POINT_LOST' ||
+          e.type === 'OPPONENT_GOAL'
+      ).length;
+
+      if (teamPoints > opponentPoints) {
+        teamSets++;
+      } else if (opponentPoints > teamPoints) {
+        opponentSets++;
+      }
+    }
+
+    // Include current set if completed
+    const currentRes = this.currentSetResult();
+    if (currentRes) {
+      if (currentRes.winner === 'team') {
+        teamSets++;
+      } else if (currentRes.winner === 'opponent') {
+        opponentSets++;
+      }
+    }
+
+    return { team: teamSets, opponent: opponentSets };
   });
 
   public readonly statsSummary = computed(() => {
     const events = this._events().filter((e) => e.status !== 'deleted');
-    const teamShots = events.filter((e) => e.type === 'SHOT' || e.type === 'GOAL').length;
-    const opponentShots = events.filter((e) => e.type === 'OPPONENT_SHOT' || e.type === 'OPPONENT_GOAL').length;
-    const teamCorners = events.filter((e) => e.type === 'CORNER_KICK').length;
-    const opponentCorners = events.filter((e) => e.type === 'OPPONENT_CORNER_KICK').length;
-    const teamSaves = events.filter((e) => e.type === 'BLOCKED_SHOT' || e.type === 'BLOCKED_PENALTY').length;
+    const isVolleyball = this._sportName() === 'Volleyball';
+
+    if (isVolleyball) {
+      const kills = events.filter((e) => e.type === 'KILL').length;
+      const aces = events.filter((e) => e.type === 'ACE').length;
+      const blocks = events.filter((e) => e.type === 'BLOCK').length;
+      const digs = events.filter((e) => e.type === 'DIG').length;
+      const assists = events.filter((e) => e.type === 'ASSIST').length;
+      const serviceErrors = events.filter((e) => e.type === 'SERVICE_ERROR').length;
+      const hittingErrors = events.filter((e) => e.type === 'HITTING_ERROR').length;
+
+      return {
+        kills,
+        aces,
+        blocks,
+        digs,
+        assists,
+        serviceErrors,
+        hittingErrors,
+        teamShots: 0,
+        opponentShots: 0,
+        teamCorners: 0,
+        opponentCorners: 0,
+        teamSaves: 0,
+      };
+    } else {
+      const teamShots = events.filter((e) => e.type === 'SHOT' || e.type === 'GOAL').length;
+      const opponentShots = events.filter((e) => e.type === 'OPPONENT_SHOT' || e.type === 'OPPONENT_GOAL').length;
+      const teamCorners = events.filter((e) => e.type === 'CORNER_KICK').length;
+      const opponentCorners = events.filter((e) => e.type === 'OPPONENT_CORNER_KICK').length;
+      const teamSaves = events.filter((e) => e.type === 'BLOCKED_SHOT' || e.type === 'BLOCKED_PENALTY').length;
+
+      return {
+        kills: 0,
+        aces: 0,
+        blocks: 0,
+        digs: 0,
+        assists: 0,
+        serviceErrors: 0,
+        hittingErrors: 0,
+        teamShots,
+        opponentShots,
+        teamCorners,
+        opponentCorners,
+        teamSaves,
+      };
+    }
+  });
+
+  public readonly playerStats = computed(() => {
+    const events = this._events().filter((e) => e.status !== 'deleted');
+    const stats: Record<string, { kills: number; aces: number; blocks: number; digs: number; assists: number; serviceErrors: number; hittingErrors: number }> = {};
+
+    events.forEach((e) => {
+      const pid = e.playerId || e['scorerId'] || e['payload']?.scorerId || e['payload']?.playerId;
+      if (!pid) return;
+
+      if (!stats[pid]) {
+        stats[pid] = { kills: 0, aces: 0, blocks: 0, digs: 0, assists: 0, serviceErrors: 0, hittingErrors: 0 };
+      }
+
+      if (e.type === 'KILL') {
+        stats[pid].kills++;
+      } else if (e.type === 'ACE') {
+        stats[pid].aces++;
+      } else if (e.type === 'BLOCK') {
+        stats[pid].blocks++;
+      } else if (e.type === 'DIG') {
+        stats[pid].digs++;
+      } else if (e.type === 'ASSIST') {
+        stats[pid].assists++;
+      } else if (e.type === 'SERVICE_ERROR') {
+        stats[pid].serviceErrors++;
+      } else if (e.type === 'HITTING_ERROR') {
+        stats[pid].hittingErrors++;
+      }
+    });
+
+    return stats;
+  });
+
+  private _liberoId = signal<string | null>(null);
+  public readonly liberoId = this._liberoId.asReadonly();
+
+  public readonly liberoDesignation = computed(() => {
+    const liberoId = this._liberoId();
+    if (!liberoId) return null;
+
+    // Check if the libero is currently on the court
+    const active = this.activePlayers();
+    const isLiberoOnCourt = active.some(p => p.id === liberoId);
+
+    let replacedId = '';
+    if (isLiberoOnCourt) {
+      // Find the most recent active SUB event where the libero entered the court
+      const events = this._events().filter(e => e.status !== 'deleted');
+      const lastLiberoInEvent = [...events]
+        .reverse()
+        .find(e => e.type === 'SUB' && e.playerIdIn === liberoId);
+      if (lastLiberoInEvent) {
+        replacedId = lastLiberoInEvent.playerIdOut || '';
+      }
+    }
+
     return {
-      teamShots,
-      opponentShots,
-      teamCorners,
-      opponentCorners,
-      teamSaves,
+      liberoId,
+      replacedId
     };
   });
 
-  public initialize(eventId: string, lineup: LineupEntry[] = [], teamId?: string, playersOnField?: number, teamName?: string): void {
+  public setLiberoId(playerId: string | null): void {
+    this._liberoId.set(playerId);
+    if (this._eventId()) {
+      localStorage.setItem(this.getLiberoStorageKey(), JSON.stringify(playerId));
+    }
+  }
+
+  private getLiberoStorageKey(): string {
+    return `${this._eventId()}_libero_id`;
+  }
+
+  public initialize(
+    eventId: string,
+    lineup: LineupEntry[] = [],
+    teamId?: string,
+    playersOnField?: number,
+    teamName?: string,
+    sportName?: string,
+    winningRules?: {
+      bestOfSets?: number;
+      setScoreGoal?: number;
+      winByTwo?: boolean;
+      pointCap?: number | null;
+      decidingSetScoreGoal?: number;
+      decidingSetPointCap?: number | null;
+    }
+  ): void {
     this._eventId.set(eventId);
     if (teamId) this._teamId.set(teamId);
     this._initialLineup.set(lineup);
     if (playersOnField) this._playersOnField.set(playersOnField);
     if (teamName) this._teamName.set(teamName);
+    if (sportName) this._sportName.set(sportName);
+    else this._sportName.set('Soccer');
+
+    if (winningRules) {
+      this._bestOfSets.set(winningRules.bestOfSets ?? 5);
+      this._setScoreGoal.set(winningRules.setScoreGoal ?? 25);
+      this._winByTwo.set(winningRules.winByTwo ?? true);
+      this._pointCap.set(winningRules.pointCap ?? null);
+      this._decidingSetScoreGoal.set(winningRules.decidingSetScoreGoal ?? 15);
+      this._decidingSetPointCap.set(winningRules.decidingSetPointCap ?? null);
+    } else {
+      this._bestOfSets.set(5);
+      this._setScoreGoal.set(25);
+      this._winByTwo.set(true);
+      this._pointCap.set(null);
+      this._decidingSetScoreGoal.set(15);
+      this._decidingSetPointCap.set(null);
+    }
+
+    const savedLibero = localStorage.getItem(this.getLiberoStorageKey());
+    if (savedLibero !== null) {
+      try {
+        this._liberoId.set(JSON.parse(savedLibero));
+      } catch (e) {
+        this._liberoId.set(null);
+      }
+    } else {
+      const initialLibero = lineup.find(e => e.positionName === 'Libero' || e.slotIndex === 99);
+      this._liberoId.set(initialLibero ? initialLibero.playerId : null);
+    }
+
+    const savedForce = localStorage.getItem(this.getForceCompletedStorageKey());
+    if (savedForce !== null) {
+      try {
+        this._forceSetCompleted.set(JSON.parse(savedForce));
+      } catch (e) {
+        this._forceSetCompleted.set(false);
+      }
+    } else {
+      this._forceSetCompleted.set(false);
+    }
 
     // Reset singleton state to defaults before loading stored values
     this._events.set([]);
@@ -210,6 +526,23 @@ export class LiveGameStateService {
       try {
         const events = JSON.parse(storedEvents);
         const mapped = events.map((e: any) => this.mapEvent(e));
+        mapped.sort((a: any, b: any) => {
+          const timeA = a.timestamp;
+          const timeB = b.timestamp;
+          if (Math.abs(timeA - timeB) > 10) {
+            return timeA - timeB;
+          }
+          if (
+            a.type === 'POSITION_SWAP' &&
+            b.type === 'POSITION_SWAP' &&
+            a['gameTimeMs'] === b['gameTimeMs']
+          ) {
+            return (a['slotIndexA'] ?? 0) - (b['slotIndexA'] ?? 0);
+          }
+          const dateA = a['createdAt'] ? new Date(a['createdAt']).getTime() : 0;
+          const dateB = b['createdAt'] ? new Date(b['createdAt']).getTime() : 0;
+          return dateA - dateB;
+        });
         this._events.set(mapped);
         
         // Recover current period from last event if possible
@@ -284,7 +617,41 @@ export class LiveGameStateService {
 
   public setEvents(events: GameEvent[]): void {
     const mapped = events.map((e) => this.mapEvent(e));
+    mapped.sort((a, b) => {
+      const timeA = a.timestamp;
+      const timeB = b.timestamp;
+      if (Math.abs(timeA - timeB) > 10) {
+        return timeA - timeB;
+      }
+      if (
+        a.type === 'POSITION_SWAP' &&
+        b.type === 'POSITION_SWAP' &&
+        a['gameTimeMs'] === b['gameTimeMs']
+      ) {
+        return (a['slotIndexA'] ?? 0) - (b['slotIndexA'] ?? 0);
+      }
+      const dateA = a['createdAt'] ? new Date(a['createdAt']).getTime() : 0;
+      const dateB = b['createdAt'] ? new Date(b['createdAt']).getTime() : 0;
+      return dateA - dateB;
+    });
     this._events.set(mapped);
+    
+    // Recover current period from last active event if possible
+    const lastEvent = mapped.filter((e) => e.status !== 'deleted').pop();
+    if (lastEvent && lastEvent['period']) {
+      this._currentPeriod.set(lastEvent['period']);
+    }
+
+    // Recover liberoId from last active LIBERO_CHANGED event if possible
+    const lastLiberoEvent = mapped
+      .filter((e) => e.type === 'LIBERO_CHANGED' && e.status !== 'deleted')
+      .pop();
+    if (lastLiberoEvent) {
+      const payload = lastLiberoEvent['payload'] || {};
+      const lId = payload.liberoId || lastLiberoEvent['liberoId'];
+      this._liberoId.set(lId || null);
+    }
+
     this.save();
     this.cleanStagedSubsForEjected();
   }
@@ -355,6 +722,20 @@ export class LiveGameStateService {
       // If we are undoing a PERIOD_END, revert the period back
       if (lastActive.type === 'PERIOD_END') {
         this._currentPeriod.set(lastActive['period'] || 1);
+      }
+
+      if (lastActive.type === 'POSITION_SWAP') {
+        const toDelete = new Set<any>();
+        for (let i = activeEvents.length - 1; i >= 0; i--) {
+          if (activeEvents[i].type === 'POSITION_SWAP') {
+            toDelete.add(activeEvents[i]);
+          } else {
+            break;
+          }
+        }
+        return prev.map((e) =>
+          toDelete.has(e) ? { ...e, status: 'deleted', synced: false } : e
+        );
       }
 
       return prev.map((e) =>
@@ -439,6 +820,7 @@ export class LiveGameStateService {
         });
       }
 
+      let updatedList;
       if (existingIndex > -1) {
         const newEvents = [...prev];
         newEvents[existingIndex] = {
@@ -446,17 +828,46 @@ export class LiveGameStateService {
           ...mappedEvent,
           timestamp: newEvents[existingIndex].timestamp // Keep original local timestamp
         };
-        return newEvents;
+        updatedList = newEvents;
       } else {
-        return [
+        updatedList = [
           ...prev,
           {
             ...mappedEvent,
-            timestamp: Date.now()
+            timestamp: mappedEvent.timestamp || Date.now()
           }
         ];
       }
+
+      // Always sort the updated list to ensure correct chronological processing order
+      updatedList.sort((a, b) => {
+        const timeA = a.timestamp;
+        const timeB = b.timestamp;
+        if (Math.abs(timeA - timeB) > 10) {
+          return timeA - timeB;
+        }
+        if (
+          a.type === 'POSITION_SWAP' &&
+          b.type === 'POSITION_SWAP' &&
+          a['gameTimeMs'] === b['gameTimeMs']
+        ) {
+          return (a['slotIndexA'] ?? 0) - (b['slotIndexA'] ?? 0);
+        }
+        const dateA = a['createdAt'] ? new Date(a['createdAt']).getTime() : 0;
+        const dateB = b['createdAt'] ? new Date(b['createdAt']).getTime() : 0;
+        return dateA - dateB;
+      });
+
+      return updatedList;
     });
+
+    const type = event.eventType || event.type;
+    if (type === 'LIBERO_CHANGED') {
+      const payload = event.payload || {};
+      const lId = payload.liberoId || event.liberoId;
+      this._liberoId.set(lId || null);
+    }
+
     this.save();
   }
 
@@ -496,6 +907,8 @@ export class LiveGameStateService {
       status: event.status || 'active',
       gameTimeMs: event.gameTimeMs !== undefined ? event.gameTimeMs : payload.gameTimeMs,
       period: event.period !== undefined ? event.period : payload.period,
+      timestamp: event.timestamp !== undefined ? event.timestamp : (payload.timestamp !== undefined ? Number(payload.timestamp) : Date.now()),
+      createdAt: event.createdAt || payload.createdAt,
     };
   }
 

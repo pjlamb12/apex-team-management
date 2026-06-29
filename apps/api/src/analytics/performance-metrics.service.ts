@@ -18,6 +18,12 @@ export interface PlayerPerformanceMetrics {
   gamesPlayed: number;
   blockedShots: number;
   blockedPenaltyKicks: number;
+  kills?: number;
+  aces?: number;
+  blocks?: number;
+  digs?: number;
+  serviceErrors?: number;
+  hittingErrors?: number;
 }
 
 @Injectable()
@@ -137,6 +143,36 @@ export class PerformanceMetricsService {
             metricsMap[goalkeeperId].blockedPenaltyKicks++;
           }
         }
+      } else if (ge.eventType === 'KILL') {
+        const scorerId = payload.scorerId || payload.playerId;
+        if (scorerId && metricsMap[scorerId]) {
+          metricsMap[scorerId].kills = (metricsMap[scorerId].kills || 0) + 1;
+        }
+      } else if (ge.eventType === 'ACE') {
+        const scorerId = payload.scorerId || payload.playerId;
+        if (scorerId && metricsMap[scorerId]) {
+          metricsMap[scorerId].aces = (metricsMap[scorerId].aces || 0) + 1;
+        }
+      } else if (ge.eventType === 'BLOCK') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].blocks = (metricsMap[playerId].blocks || 0) + 1;
+        }
+      } else if (ge.eventType === 'DIG') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].digs = (metricsMap[playerId].digs || 0) + 1;
+        }
+      } else if (ge.eventType === 'SERVICE_ERROR') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].serviceErrors = (metricsMap[playerId].serviceErrors || 0) + 1;
+        }
+      } else if (ge.eventType === 'HITTING_ERROR') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].hittingErrors = (metricsMap[playerId].hittingErrors || 0) + 1;
+        }
       }
     });
 
@@ -155,7 +191,13 @@ export class PerformanceMetricsService {
       redCards: 0,
       gamesPlayed: 0,
       blockedShots: 0,
-      blockedPenaltyKicks: 0
+      blockedPenaltyKicks: 0,
+      kills: 0,
+      aces: 0,
+      blocks: 0,
+      digs: 0,
+      serviceErrors: 0,
+      hittingErrors: 0
     };
   }
 }

@@ -16,6 +16,7 @@ export class BenchViewComponent {
   stagedInIds = input<Set<string>>(new Set());
   selectedPlayerId = input<string | null>(null);
   ejectedPlayerIds = input<Set<string>>(new Set());
+  liberoDesignation = input<{ liberoId: string; replacedId: string } | null>(null);
   playerSelected = output<{ player: Player; event: Event }>();
 
   protected selectPlayer(player: Player, event: Event) {

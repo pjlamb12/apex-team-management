@@ -51,6 +51,24 @@ export class LeagueEntity {
   @Column({ name: 'home_location_id', nullable: true })
   homeLocationId: string | null;
 
+  @Column({ name: 'best_of_sets', type: 'integer', default: 5 })
+  bestOfSets: number;
+
+  @Column({ name: 'set_score_goal', type: 'integer', default: 25 })
+  setScoreGoal: number;
+
+  @Column({ name: 'win_by_two', type: 'boolean', default: true })
+  winByTwo: boolean;
+
+  @Column({ name: 'point_cap', type: 'integer', nullable: true })
+  pointCap: number | null;
+
+  @Column({ name: 'deciding_set_score_goal', type: 'integer', default: 15 })
+  decidingSetScoreGoal: number;
+
+  @Column({ name: 'deciding_set_point_cap', type: 'integer', nullable: true })
+  decidingSetPointCap: number | null;
+
   @OneToMany(() => EventEntity, (event) => event.league)
   events: EventEntity[];
 

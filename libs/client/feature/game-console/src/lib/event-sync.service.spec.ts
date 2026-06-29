@@ -65,7 +65,8 @@ describe('EventSyncService', () => {
           inPlayerId: 'p2',
           outPlayerId: 'p1',
           slotIndex: 0,
-          period: 1
+          period: 1,
+          timestamp,
         }
       }
     );
@@ -95,7 +96,8 @@ describe('EventSyncService', () => {
           playerIdB: 'p3',
           slotIndexA: 0,
           slotIndexB: 1,
-          period: 1
+          period: 1,
+          timestamp,
         }
       }
     );

@@ -57,7 +57,6 @@ export class EventSyncService {
     }
 
     delete payload.type;
-    delete payload.timestamp;
     delete payload.minuteOccurred;
     delete payload.synced;
     delete payload.status;
@@ -69,6 +68,13 @@ export class EventSyncService {
       delete payload.playerIdIn;
       delete payload.playerIdOut;
     }
+
+    // Clean up undefined properties
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === undefined) {
+        delete payload[key];
+      }
+    });
 
     const body = {
       eventType: event.type,

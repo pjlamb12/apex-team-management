@@ -42,8 +42,8 @@ export class TeamsController {
 
   @Post('seed-demo')
   @UseGuards(AuthGuard('jwt'))
-  seedDemo(@Request() req: { user: { sub: string } }) {
-    return this.teamsService.seedDemo(req.user.sub);
+  seedDemo(@Request() req: { user: { sub: string } }, @Body() body?: { sport?: string }) {
+    return this.teamsService.seedDemo(req.user.sub, body?.sport);
   }
 
   @Post('join')

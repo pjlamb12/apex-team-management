@@ -23,7 +23,10 @@ export class PlayingTimeService {
   ) {}
 
   async calculateForEvent(eventId: string): Promise<Record<string, PlayerPlaytime>> {
-    const event = await this.eventRepo.findOne({ where: { id: eventId } });
+    const event = await this.eventRepo.findOne({
+      where: { id: eventId },
+      relations: ['season', 'season.team', 'season.team.sport'],
+    });
     if (!event) throw new NotFoundException(`Event ${eventId} not found`);
 
     const lineup = await this.lineupRepo.find({ where: { eventId } });
@@ -32,6 +35,8 @@ export class PlayingTimeService {
       order: { createdAt: 'ASC' },
     });
 
+    const isVolleyball = event?.season?.team?.sport?.name === 'Volleyball';
+
     if (gameEvents.length === 0) {
       const result: Record<string, PlayerPlaytime> = {};
       lineup.forEach((entry) => {
@@ -39,6 +44,82 @@ export class PlayingTimeService {
           playerId: entry.playerId,
           totalSeconds: 0,
           positionSeconds: {},
+        };
+      });
+      return result;
+    }
+
+    if (isVolleyball) {
+      const totalsPoints: Record<string, number> = {};
+      const positionTotalsPoints: Record<string, Record<string, number>> = {};
+      
+      const onField = new Set<string>();
+      const stintPosition: Record<string, string> = {};
+
+      // Initialize totals for everyone in the lineup
+      lineup.forEach((entry) => {
+        totalsPoints[entry.playerId] = 0;
+        positionTotalsPoints[entry.playerId] = {};
+        if (entry.status === 'starting') {
+          onField.add(entry.playerId);
+          stintPosition[entry.playerId] = entry.positionName || 'Unknown';
+        }
+      });
+
+      // Point scoring events
+      const pointEventTypes = new Set([
+        'KILL', 'ACE', 'BLOCK', 'POINT_WON',
+        'SERVICE_ERROR', 'HITTING_ERROR', 'POINT_LOST', 'OPPONENT_GOAL'
+      ]);
+
+      gameEvents.forEach((ge) => {
+        const payload = ge.payload as any;
+
+        if (ge.eventType === 'SUB') {
+          const outId = payload.outPlayerId || payload.playerIdOut;
+          const inId = payload.inPlayerId || payload.playerIdIn;
+          const posName = payload.positionName || payload.position || 'Unknown';
+
+          if (outId && onField.has(outId)) {
+            delete stintPosition[outId];
+            onField.delete(outId);
+          }
+
+          if (inId) {
+            stintPosition[inId] = posName;
+            onField.add(inId);
+            if (totalsPoints[inId] === undefined) {
+              totalsPoints[inId] = 0;
+              positionTotalsPoints[inId] = {};
+            }
+          }
+        } else if (ge.eventType === 'POSITION_SWAP') {
+          const pA = payload.playerIdA;
+          const pB = payload.playerIdB;
+          
+          if (pA && pB && onField.has(pA) && onField.has(pB)) {
+            const posA = stintPosition[pA];
+            const posB = stintPosition[pB];
+            stintPosition[pA] = posB;
+            stintPosition[pB] = posA;
+          }
+        } else if (pointEventTypes.has(ge.eventType)) {
+          // A point occurred! Everyone currently on field gets 1 point
+          onField.forEach((pid) => {
+            const pos = stintPosition[pid] || 'Unknown';
+            totalsPoints[pid] = (totalsPoints[pid] || 0) + 1;
+            if (!positionTotalsPoints[pid]) positionTotalsPoints[pid] = {};
+            positionTotalsPoints[pid][pos] = (positionTotalsPoints[pid][pos] || 0) + 1;
+          });
+        }
+      });
+
+      const result: Record<string, PlayerPlaytime> = {};
+      Object.keys(totalsPoints).forEach((pid) => {
+        result[pid] = {
+          playerId: pid,
+          totalSeconds: totalsPoints[pid],
+          positionSeconds: positionTotalsPoints[pid] || {},
         };
       });
       return result;
