@@ -1,14 +1,14 @@
 import { Component, inject, computed, ViewChild, ElementRef, signal, effect } from '@angular/core';
-import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController } from '@ionic/angular/standalone';
+import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController, IonSpinner } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline } from 'ionicons/icons';
-import { LiveGameStateService } from '../live-game-state.service';
+import { LiveGameStateService, GameEvent } from '../live-game-state.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-event-log',
-  imports: [IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader],
+  imports: [IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, IonSpinner],
   templateUrl: './event-log.html',
   styleUrls: ['./event-log.scss']
 })
@@ -102,7 +102,7 @@ export class EventLogViewComponent {
     });
   }
 
-  protected onScroll(event: Event): void {
+  protected onScroll(): void {
     this.checkScroll();
   }
 
@@ -144,6 +144,9 @@ export class EventLogViewComponent {
       case 'POINT_LOST': return 'remove-circle-outline';
       case 'SERVE_RECEIVE': return 'arrow-forward-outline';
       case 'HIT': return 'flash-outline';
+      case 'SET_ATTEMPT': return 'arrow-forward-outline';
+      case 'SET_ASSIST': return 'star-outline';
+      case 'SET_ERROR': return 'close-circle-outline';
       default: return 'help-outline';
     }
   }
@@ -177,6 +180,9 @@ export class EventLogViewComponent {
       case 'POINT_LOST': return 'danger';
       case 'SERVE_RECEIVE': return 'primary';
       case 'HIT': return 'medium';
+      case 'SET_ATTEMPT': return 'medium';
+      case 'SET_ASSIST': return 'primary';
+      case 'SET_ERROR': return 'danger';
       default: return 'medium';
     }
   }
@@ -216,6 +222,12 @@ export class EventLogViewComponent {
         color: 'medium'
       });
       await toast.present();
+    }
+  }
+
+  protected retrySync(event: GameEvent): void {
+    if (event.timestamp) {
+      this.stateService.retryEventSync(event.timestamp);
     }
   }
 }

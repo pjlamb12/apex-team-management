@@ -14,8 +14,8 @@
   }
 
   <div class="event-log-scroll-wrapper" [class.has-shadow-bottom]="hasScrollBottom()">
-    <div class="events-scroll-container" (scroll)="onScroll($event)" #scrollContainer>
-      @for (event of events(); track event.id) {
+    <div class="events-scroll-container" (scroll)="onScroll()" #scrollContainer>
+      @for (event of events(); track event.timestamp) {
         <ion-item>
           <ion-badge slot="start" color="light">
             @if (stateService.sportName() === 'Volleyball') {
@@ -73,6 +73,16 @@
               </p>
             }
           </ion-label>
+
+          @if (!event.synced && event.type !== 'COURT_ROTATE') {
+            @if (event.syncFailed) {
+              <ion-button slot="end" fill="clear" color="danger" size="small" (click)="retrySync(event); $event.stopPropagation()" title="Sync failed. Click to retry.">
+                <ion-icon slot="icon-only" name="alert-circle-outline"></ion-icon>
+              </ion-button>
+            } @else {
+              <ion-spinner slot="end" name="dots" color="medium" size="small"></ion-spinner>
+            }
+          }
         </ion-item>
       } @empty {
         <div class="empty-state">

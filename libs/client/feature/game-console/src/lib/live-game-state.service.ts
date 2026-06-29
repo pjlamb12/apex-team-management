@@ -18,6 +18,7 @@ export interface GameEvent {
   timestamp: number;
   synced?: boolean;
   status?: 'active' | 'deleted';
+  syncFailed?: boolean;
   [key: string]: any;
 }
 
@@ -37,6 +38,7 @@ export class LiveGameStateService {
   private _eventId = signal<string | null>(null);
   private _teamId = signal<string | null>(null);
   private _teamName = signal<string>('Apex Team');
+  private _opponentName = signal<string>('Opponent');
   private _initialLineup = signal<LineupEntry[]>([]);
   private _playersOnField = signal<number>(11);
   private _currentPeriod = signal<number>(1);
@@ -67,6 +69,7 @@ export class LiveGameStateService {
   public readonly eventId = this._eventId.asReadonly();
   public readonly teamId = this._teamId.asReadonly();
   public readonly teamName = this._teamName.asReadonly();
+  public readonly opponentName = this._opponentName.asReadonly();
   public readonly initialLineup = this._initialLineup.asReadonly();
   public readonly players = computed(() => this._initialLineup().map((e) => e.player));
   public readonly playersOnField = this._playersOnField.asReadonly();
@@ -76,6 +79,40 @@ export class LiveGameStateService {
   public readonly lastIntervalTriggered = this._lastIntervalTriggered.asReadonly();
   public readonly rotationConfig = this._rotationConfig.asReadonly();
   public readonly sportName = this._sportName.asReadonly();
+
+  public readonly runningBoxScore = computed(() => {
+    const events = this._events().filter((e) => e.status !== 'deleted');
+    const isVolleyball = this._sportName() === 'Volleyball';
+
+    if (!isVolleyball) return [];
+
+    const currentPeriod = this._currentPeriod();
+    const boxScore = [];
+
+    for (let p = 1; p <= currentPeriod; p++) {
+      const setEvents = events.filter((e) => e['period'] === p);
+      const teamPoints = setEvents.filter(
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
+      ).length;
+      const opponentPoints = setEvents.filter(
+        (e) =>
+          e.type === 'SERVICE_ERROR' ||
+          e.type === 'HITTING_ERROR' ||
+          e.type === 'SET_ERROR' ||
+          e.type === 'POINT_LOST' ||
+          e.type === 'OPPONENT_GOAL'
+      ).length;
+
+      boxScore.push({
+        setNumber: p,
+        teamScore: teamPoints,
+        opponentScore: opponentPoints,
+        isCurrent: p === currentPeriod
+      });
+    }
+
+    return boxScore;
+  });
 
   private _forceSetCompleted = signal<boolean>(false);
   public readonly forceSetCompletedSignal = this._forceSetCompleted.asReadonly();
@@ -267,6 +304,7 @@ export class LiveGameStateService {
         (e) =>
           e.type === 'SERVICE_ERROR' ||
           e.type === 'HITTING_ERROR' ||
+          e.type === 'SET_ERROR' ||
           e.type === 'POINT_LOST' ||
           e.type === 'OPPONENT_GOAL'
       ).length;
@@ -299,6 +337,7 @@ export class LiveGameStateService {
         (e) =>
           e.type === 'SERVICE_ERROR' ||
           e.type === 'HITTING_ERROR' ||
+          e.type === 'SET_ERROR' ||
           e.type === 'POINT_LOST' ||
           e.type === 'OPPONENT_GOAL'
       ).length;
@@ -332,7 +371,7 @@ export class LiveGameStateService {
       const aces = events.filter((e) => e.type === 'ACE').length;
       const blocks = events.filter((e) => e.type === 'BLOCK').length;
       const digs = events.filter((e) => e.type === 'DIG').length;
-      const assists = events.filter((e) => e.type === 'ASSIST').length;
+      const assists = events.filter((e) => e.type === 'ASSIST' || e.type === 'SET_ASSIST').length;
       const serviceErrors = events.filter((e) => e.type === 'SERVICE_ERROR').length;
       const hittingErrors = events.filter((e) => e.type === 'HITTING_ERROR').length;
 
@@ -376,14 +415,42 @@ export class LiveGameStateService {
 
   public readonly playerStats = computed(() => {
     const events = this._events().filter((e) => e.status !== 'deleted');
-    const stats: Record<string, { kills: number; aces: number; blocks: number; digs: number; assists: number; serviceErrors: number; hittingErrors: number }> = {};
+    const stats: Record<string, {
+      kills: number;
+      aces: number;
+      blocks: number;
+      digs: number;
+      assists: number;
+      serviceErrors: number;
+      hittingErrors: number;
+      hits: number;
+      setAttempts: number;
+      setAssists: number;
+      setErrors: number;
+      passCount: number;
+      passScoreSum: number;
+    }> = {};
 
     events.forEach((e) => {
       const pid = e.playerId || e['scorerId'] || e['payload']?.scorerId || e['payload']?.playerId;
       if (!pid) return;
 
       if (!stats[pid]) {
-        stats[pid] = { kills: 0, aces: 0, blocks: 0, digs: 0, assists: 0, serviceErrors: 0, hittingErrors: 0 };
+        stats[pid] = {
+          kills: 0,
+          aces: 0,
+          blocks: 0,
+          digs: 0,
+          assists: 0,
+          serviceErrors: 0,
+          hittingErrors: 0,
+          hits: 0,
+          setAttempts: 0,
+          setAssists: 0,
+          setErrors: 0,
+          passCount: 0,
+          passScoreSum: 0,
+        };
       }
 
       if (e.type === 'KILL') {
@@ -400,6 +467,19 @@ export class LiveGameStateService {
         stats[pid].serviceErrors++;
       } else if (e.type === 'HITTING_ERROR') {
         stats[pid].hittingErrors++;
+      } else if (e.type === 'HIT') {
+        stats[pid].hits++;
+      } else if (e.type === 'SET_ATTEMPT') {
+        stats[pid].setAttempts++;
+      } else if (e.type === 'SET_ASSIST') {
+        stats[pid].setAssists++;
+        stats[pid].assists++;
+      } else if (e.type === 'SET_ERROR') {
+        stats[pid].setErrors++;
+      } else if (e.type === 'SERVE_RECEIVE') {
+        stats[pid].passCount++;
+        const score = e['payload']?.score ?? e['score'] ?? 0;
+        stats[pid].passScoreSum += score;
       }
     });
 
@@ -460,13 +540,16 @@ export class LiveGameStateService {
       pointCap?: number | null;
       decidingSetScoreGoal?: number;
       decidingSetPointCap?: number | null;
-    }
+    },
+    opponentName?: string
   ): void {
     this._eventId.set(eventId);
     if (teamId) this._teamId.set(teamId);
     this._initialLineup.set(lineup);
     if (playersOnField) this._playersOnField.set(playersOnField);
     if (teamName) this._teamName.set(teamName);
+    if (opponentName) this._opponentName.set(opponentName);
+    else this._opponentName.set('Opponent');
     if (sportName) this._sportName.set(sportName);
     else this._sportName.set('Soccer');
 
@@ -766,7 +849,7 @@ export class LiveGameStateService {
     this._events.update((prev) =>
       prev.map((e) =>
         e.timestamp === localTimestamp
-          ? { ...e, id: backendId, synced: true }
+          ? { ...e, id: backendId, synced: true, syncFailed: false }
           : e
       )
     );
@@ -776,7 +859,29 @@ export class LiveGameStateService {
   public markDeletionSynced(localTimestamp: number): void {
     this._events.update((prev) =>
       prev.map((e) =>
-        e.timestamp === localTimestamp ? { ...e, synced: true } : e
+        e.timestamp === localTimestamp ? { ...e, synced: true, syncFailed: false } : e
+      )
+    );
+    this.save();
+  }
+
+  public markEventSyncFailed(localTimestamp: number): void {
+    this._events.update((prev) =>
+      prev.map((e) =>
+        e.timestamp === localTimestamp
+          ? { ...e, syncFailed: true }
+          : e
+      )
+    );
+    this.save();
+  }
+
+  public retryEventSync(localTimestamp: number): void {
+    this._events.update((prev) =>
+      prev.map((e) =>
+        e.timestamp === localTimestamp
+          ? { ...e, syncFailed: false }
+          : e
       )
     );
     this.save();

@@ -372,6 +372,92 @@
       </div>
     }
 
+    <!-- Volleyball Player Box Score -->
+    @if (stateService.sportName() === 'Volleyball') {
+      <div class="bg-ap-surface-raised border-t border-ap-border px-4 py-3">
+        <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted mb-2">Team Box Score</h3>
+        <div class="overflow-x-auto max-h-[220px] overflow-y-auto">
+          <table class="min-w-[800px] text-xs table-auto border-collapse">
+            <thead>
+              <tr class="border-b border-ap-border text-[10px] uppercase font-bold text-ap-muted sticky top-0 z-10 bg-ap-surface-raised">
+                <th class="py-2 text-left font-bold pl-2 bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">Player</th>
+                <th class="py-2 text-center font-bold px-2">K</th>
+                <th class="py-2 text-center font-bold px-2">H</th>
+                <th class="py-2 text-center font-bold px-2">E</th>
+                <th class="py-2 text-center font-bold px-2">Pct</th>
+                <th class="py-2 text-center font-bold px-2">S.Att</th>
+                <th class="py-2 text-center font-bold px-2">S.Ast</th>
+                <th class="py-2 text-center font-bold px-2">S.Err</th>
+                <th class="py-2 text-center font-bold px-2">Count</th>
+                <th class="py-2 text-center font-bold px-2">P.Avg</th>
+                <th class="py-2 text-center font-bold px-2">A</th>
+                <th class="py-2 text-center font-bold px-2">SE</th>
+                <th class="py-2 text-center font-bold px-2">D</th>
+                <th class="py-2 text-center font-bold pr-2">B</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (player of stateService.players(); track player.id) {
+                <tr class="border-b border-ap-border/30 hover:bg-ap-bg/50">
+                  <td class="py-2 text-left font-bold text-ap-text pl-2 whitespace-nowrap bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
+                    {{ getPlayerShortName(player) }}
+                  </td>
+                  <td class="py-2 text-center px-2 font-semibold text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.kills || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.hits || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-red-500 tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.hittingErrors || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 font-black tabular-nums" 
+                      [class.text-green-500]="((stateService.playerStats()[player.id]?.kills || 0) - (stateService.playerStats()[player.id]?.hittingErrors || 0)) > 0" 
+                      [class.text-red-500]="((stateService.playerStats()[player.id]?.kills || 0) - (stateService.playerStats()[player.id]?.hittingErrors || 0)) < 0">
+                    {{ getHittingPct(
+                      stateService.playerStats()[player.id]?.kills || 0,
+                      stateService.playerStats()[player.id]?.hittingErrors || 0,
+                      stateService.playerStats()[player.id]?.hits || 0
+                    ) }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.setAttempts || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.setAssists || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-red-500 tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.setErrors || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.passCount || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 font-semibold text-ap-primary tabular-nums">
+                    {{ getPassAverage(
+                      stateService.playerStats()[player.id]?.passCount || 0,
+                      stateService.playerStats()[player.id]?.passScoreSum || 0
+                    ) }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.aces || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-orange-500 tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.serviceErrors || 0 }}
+                  </td>
+                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.digs || 0 }}
+                  </td>
+                  <td class="py-2 text-center pr-2 text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.blocks || 0 }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
     <!-- Event Log: full width at bottom -->
     <div class="border-t border-ap-border">
       <app-event-log></app-event-log>

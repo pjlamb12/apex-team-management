@@ -348,7 +348,7 @@ export class GameSummary implements OnDestroy {
       const aces = playerEvents.filter(e => e.eventType === 'ACE').length;
       const blocks = playerEvents.filter(e => e.eventType === 'BLOCK').length;
       const digs = playerEvents.filter(e => e.eventType === 'DIG').length;
-      const assists = playerEvents.filter(e => e.eventType === 'ASSIST').length;
+      const assists = playerEvents.filter(e => e.eventType === 'ASSIST' || e.eventType === 'SET_ASSIST').length;
       const serviceErrors = playerEvents.filter(e => e.eventType === 'SERVICE_ERROR').length;
       const hittingErrors = playerEvents.filter(e => e.eventType === 'HITTING_ERROR').length;
       const hits = playerEvents.filter(e => e.eventType === 'HIT').length;

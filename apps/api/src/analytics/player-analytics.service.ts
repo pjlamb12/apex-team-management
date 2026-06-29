@@ -168,7 +168,7 @@ export class PlayerAnalyticsService {
           if (ge.eventType === 'GOAL') {
              if (payload.scorerId === playerId || payload.playerId === playerId) eventGoals++;
              if (payload.assistorId === playerId) eventAssists++;
-          } else if (ge.eventType === 'ASSIST') {
+          } else if (ge.eventType === 'ASSIST' || ge.eventType === 'SET_ASSIST') {
              if (payload.assistorId === playerId || payload.playerId === playerId) eventAssists++;
           } else if (ge.eventType === 'BLOCKED_SHOT') {
              if (payload.playerId === playerId) eventBlockedShots++;

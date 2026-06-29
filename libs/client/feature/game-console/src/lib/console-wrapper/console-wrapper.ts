@@ -168,7 +168,8 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
                 pointCap: event?.league?.pointCap,
                 decidingSetScoreGoal: event?.league?.decidingSetScoreGoal,
                 decidingSetPointCap: event?.league?.decidingSetPointCap,
-              }
+              },
+              event?.opponent || undefined
             );
             this.clockService.initialize(
               eventId,
@@ -881,5 +882,26 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     this.stateService.pushEvent({ ...baseEvent, ...eventPayload });
     this.selectedPlayerId.set(null);
     this.actionPlayer.set(null);
+  }
+
+  protected getHittingPct(kills = 0, hittingErrors = 0, hits = 0): string {
+    const total = kills + hittingErrors + hits;
+    if (total === 0) return '.000';
+    const pct = (kills - hittingErrors) / total;
+    if (pct < 0) {
+      return pct.toFixed(3);
+    }
+    const fixed = pct.toFixed(3);
+    return fixed.startsWith('0') ? fixed.substring(1) : fixed;
+  }
+
+  protected getPlayerShortName(player: Player): string {
+    const firstInitial = player.firstName ? `${player.firstName.charAt(0)}.` : '';
+    return `${player.jerseyNumber !== null && player.jerseyNumber !== undefined ? '#' + player.jerseyNumber + ' ' : ''}${player.lastName}, ${firstInitial}`;
+  }
+
+  protected getPassAverage(passCount = 0, passScoreSum = 0): string {
+    if (passCount === 0) return '-';
+    return (passScoreSum / passCount).toFixed(2);
   }
 }

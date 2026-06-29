@@ -17,6 +17,11 @@ import { Player } from '@apex-team/shared/util/models';
     ion-icon[slot="start"] {
       margin-inline-end: 20px;
     }
+    ion-button {
+      font-size: 10px;
+      --padding-start: 4px;
+      --padding-end: 4px;
+    }
   `]
 })
 export class PlayerActionMenuComponent {

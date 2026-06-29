@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { EventSyncService } from './event-sync.service';
 import { LiveGameStateService } from './live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('EventSyncService', () => {
@@ -154,5 +154,59 @@ describe('EventSyncService', () => {
     TestBed.flushEffects();
 
     expect(httpMock.post).toHaveBeenCalledTimes(1);
+  });
+
+  it('should mark event as syncFailed if POST fails with 400', () => {
+    vi.useFakeTimers();
+    httpMock.post.mockReturnValue(throwError(() => ({ status: 400, message: 'Bad Request' })));
+
+    stateService.pushEvent({
+      type: 'GOAL',
+      playerId: 'p1',
+      minuteOccurred: 15,
+      timestamp: Date.now(),
+    });
+
+    TestBed.flushEffects();
+    vi.advanceTimersByTime(4000);
+
+    const events = stateService.events();
+    expect(events[0].synced).toBe(false);
+    expect(events[0].syncFailed).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('should retry syncing when retryEventSync is called', () => {
+    vi.useFakeTimers();
+    // 1. First POST fails with 400 -> marks syncFailed
+    httpMock.post.mockReturnValueOnce(throwError(() => ({ status: 400, message: 'Bad Request' })));
+
+    const timestamp = Date.now();
+    stateService.pushEvent({
+      type: 'GOAL',
+      playerId: 'p1',
+      minuteOccurred: 15,
+      timestamp,
+    });
+
+    TestBed.flushEffects();
+    vi.advanceTimersByTime(4000);
+    expect(stateService.events()[0].syncFailed).toBe(true);
+    expect(httpMock.post).toHaveBeenCalledTimes(1);
+
+    // 2. Next POST succeeds
+    httpMock.post.mockReturnValue(of({ id: 'server-event-2' }));
+
+    // 3. Trigger retry
+    stateService.retryEventSync(timestamp);
+    TestBed.flushEffects();
+    vi.advanceTimersByTime(4000);
+
+    const events = stateService.events();
+    expect(events[0].synced).toBe(true);
+    expect(events[0].syncFailed).toBe(false);
+    expect(events[0].id).toBe('server-event-2');
+    expect(httpMock.post).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
   });
 });

@@ -105,7 +105,7 @@ export class PerformanceMetricsService {
         if (assistorId && metricsMap[assistorId]) {
           metricsMap[assistorId].assists++;
         }
-      } else if (ge.eventType === 'ASSIST') {
+      } else if (ge.eventType === 'ASSIST' || ge.eventType === 'SET_ASSIST') {
         const assistorId = payload.assistorId || payload.playerId;
         if (assistorId && metricsMap[assistorId]) {
           metricsMap[assistorId].assists++;

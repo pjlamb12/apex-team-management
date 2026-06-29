@@ -40,6 +40,7 @@ import { MoveScoreWinningRulesToLeagues1783200000000 } from './1783200000000-Mov
 import { AddDecidingSetScoreRules1783300000000 } from './1783300000000-AddDecidingSetScoreRules';
 import { AddServeReceiveEventDefinition1783400000000 } from './1783400000000-AddServeReceiveEventDefinition';
 import { AddHitEventDefinition1783500000000 } from './1783500000000-AddHitEventDefinition';
+import { AddSetEventDefinitions1783600000000 } from './1783600000000-AddSetEventDefinitions';
 
 
 export const ALL_MIGRATIONS = [
@@ -85,5 +86,6 @@ export const ALL_MIGRATIONS = [
   AddDecidingSetScoreRules1783300000000,
   AddServeReceiveEventDefinition1783400000000,
   AddHitEventDefinition1783500000000,
+  AddSetEventDefinitions1783600000000,
 ];
 
