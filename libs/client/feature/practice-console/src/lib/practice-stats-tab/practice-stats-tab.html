@@ -1,0 +1,135 @@
+<div class="flex flex-col h-full gap-4 p-4 bg-ap-bg">
+  <!-- Player Selection Grid -->
+  <div>
+    <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted mb-2">Select Player</h3>
+    <div class="flex flex-wrap gap-2 max-h-[140px] overflow-y-auto p-2 border border-ap-border/40 rounded-lg bg-ap-surface-raised">
+      @for (player of players(); track player.id) {
+        <ion-button 
+          [color]="selectedPlayerId() === player.id ? 'primary' : 'medium'"
+          [fill]="selectedPlayerId() === player.id ? 'solid' : 'outline'"
+          size="small"
+          class="font-semibold m-0 text-xs"
+          (click)="selectPlayer(player.id)">
+          {{ player.jerseyNumber ? '#' + player.jerseyNumber : '' }} {{ player.lastName }}
+        </ion-button>
+      }
+      @if (players().length === 0) {
+        <div class="text-center py-4 w-full text-ap-muted text-xs">No players registered on the team</div>
+      }
+    </div>
+  </div>
+
+  <!-- Action Logging Panel -->
+  <div class="border border-ap-border/40 rounded-lg p-4 bg-ap-surface-raised">
+    @if (!selectedPlayerId()) {
+      <div class="text-center py-8 text-ap-muted text-sm flex flex-col items-center justify-center gap-2">
+        <ion-icon name="alert-circle-outline" class="text-2xl text-ap-muted/60"></ion-icon>
+        <span>Select a player above to record practice stats</span>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-4">
+        <!-- Passing Group -->
+        <div class="flex flex-col gap-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Passing</span>
+          <div class="flex gap-2">
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 1 })">1</ion-button>
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 2 })">2</ion-button>
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 3 })">3</ion-button>
+          </div>
+        </div>
+
+        <div class="h-px bg-ap-border/30"></div>
+
+        <!-- Setting Group -->
+        <div class="flex flex-col gap-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Setting</span>
+          <div class="flex gap-2">
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SET_ATTEMPT')">Attempt</ion-button>
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SET_ASSIST')">Assist</ion-button>
+            <ion-button fill="outline" color="danger" class="flex-1 font-bold m-0" (click)="logAction('SET_ERROR')">Error</ion-button>
+          </div>
+        </div>
+
+        <div class="h-px bg-ap-border/30"></div>
+
+        <!-- Hitting Group -->
+        <div class="flex flex-col gap-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Hitting</span>
+          <div class="flex gap-2">
+            <ion-button fill="outline" color="success" class="flex-1 font-bold m-0" (click)="logAction('KILL')">Kill</ion-button>
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('HIT')">Attempt</ion-button>
+            <ion-button fill="outline" color="danger" class="flex-1 font-bold m-0" (click)="logAction('HITTING_ERROR')">Error</ion-button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Player Box Score Summary -->
+  <div class="flex-1 flex flex-col min-h-[250px]">
+    <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted mb-2">Practice Box Score</h3>
+    <div class="overflow-x-auto max-h-[300px] overflow-y-auto border border-ap-border/40 rounded-lg bg-ap-surface-raised">
+      <table class="min-w-[800px] text-xs table-auto border-collapse">
+        <thead>
+          <tr class="border-b border-ap-border text-[10px] uppercase font-bold text-ap-muted sticky top-0 z-10 bg-ap-surface-raised">
+            <th class="py-2 text-left font-bold pl-2 bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">Player</th>
+            <th class="py-2 text-center font-bold px-2">K</th>
+            <th class="py-2 text-center font-bold px-2">H</th>
+            <th class="py-2 text-center font-bold px-2">E</th>
+            <th class="py-2 text-center font-bold px-2">Pct</th>
+            <th class="py-2 text-center font-bold px-2">S.Att</th>
+            <th class="py-2 text-center font-bold px-2">S.Ast</th>
+            <th class="py-2 text-center font-bold px-2">S.Err</th>
+            <th class="py-2 text-center font-bold px-2">Count</th>
+            <th class="py-2 text-center font-bold pr-2">P.Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (player of players(); track player.id) {
+            <tr class="border-b border-ap-border/30 hover:bg-ap-bg/50">
+              <td class="py-2 text-left font-bold text-ap-text pl-2 whitespace-nowrap bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
+                {{ getPlayerShortName(player) }}
+              </td>
+              <td class="py-2 text-center px-2 font-semibold text-ap-text tabular-nums">
+                {{ playerStats()[player.id]?.kills || 0 }}
+              </td>
+              <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                {{ playerStats()[player.id]?.hits || 0 }}
+              </td>
+              <td class="py-2 text-center px-2 text-red-500 tabular-nums">
+                {{ playerStats()[player.id]?.hittingErrors || 0 }}
+              </td>
+              <td class="py-2 text-center px-2 font-black tabular-nums" 
+                  [class.text-green-500]="((playerStats()[player.id]?.kills || 0) - (playerStats()[player.id]?.hittingErrors || 0)) > 0" 
+                  [class.text-red-500]="((playerStats()[player.id]?.kills || 0) - (playerStats()[player.id]?.hittingErrors || 0)) < 0">
+                {{ getHittingPct(
+                  playerStats()[player.id]?.kills || 0,
+                  playerStats()[player.id]?.hittingErrors || 0,
+                  playerStats()[player.id]?.hits || 0
+                ) }}
+              </td>
+              <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                {{ playerStats()[player.id]?.setAttempts || 0 }}
+              </td>
+              <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                {{ playerStats()[player.id]?.setAssists || 0 }}
+              </td>
+              <td class="py-2 text-center px-2 text-red-500 tabular-nums">
+                {{ playerStats()[player.id]?.setErrors || 0 }}
+              </td>
+              <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                {{ playerStats()[player.id]?.passCount || 0 }}
+              </td>
+              <td class="py-2 text-center pr-2 font-semibold text-ap-primary tabular-nums">
+                {{ getPassAverage(
+                  playerStats()[player.id]?.passCount || 0,
+                  playerStats()[player.id]?.passScoreSum || 0
+                ) }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
