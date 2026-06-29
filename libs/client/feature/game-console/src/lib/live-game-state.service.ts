@@ -92,7 +92,7 @@ export class LiveGameStateService {
     for (let p = 1; p <= currentPeriod; p++) {
       const setEvents = events.filter((e) => e['period'] === p);
       const teamPoints = setEvents.filter(
-        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'POINT_WON'
       ).length;
       const opponentPoints = setEvents.filter(
         (e) =>
@@ -297,7 +297,7 @@ export class LiveGameStateService {
       const setEvents = events.filter((e) => e['period'] === currentPeriod);
       
       const team = setEvents.filter(
-        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'POINT_WON'
       ).length;
 
       const opponent = setEvents.filter(
@@ -331,7 +331,7 @@ export class LiveGameStateService {
     for (let p = 1; p < this._currentPeriod(); p++) {
       const setEvents = events.filter((e) => e['period'] === p);
       const teamPoints = setEvents.filter(
-        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'POINT_WON'
       ).length;
       const opponentPoints = setEvents.filter(
         (e) =>

@@ -226,12 +226,13 @@ export class GameSummary implements OnDestroy {
     const results = periods.map(p => {
       const setEvents = events.filter(e => (e.period === p || e.payload?.period === p) && e.status !== 'deleted');
       const teamScore = setEvents.filter(
-        (e) => e.eventType === 'KILL' || e.eventType === 'ACE' || e.eventType === 'BLOCK' || e.eventType === 'POINT_WON'
+        (e) => e.eventType === 'KILL' || e.eventType === 'ACE' || e.eventType === 'POINT_WON'
       ).length;
       const opponentScore = setEvents.filter(
         (e) =>
           e.eventType === 'SERVICE_ERROR' ||
           e.eventType === 'HITTING_ERROR' ||
+          e.eventType === 'SET_ERROR' ||
           e.eventType === 'POINT_LOST' ||
           e.eventType === 'OPPONENT_GOAL'
       ).length;
