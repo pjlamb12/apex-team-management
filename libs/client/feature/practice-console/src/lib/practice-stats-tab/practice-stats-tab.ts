@@ -20,6 +20,7 @@ import {
   flashOutline,
   arrowForwardOutline,
   alertCircleOutline,
+  trashOutline,
 } from 'ionicons/icons';
 import {
   EventsService,
@@ -47,6 +48,17 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
   protected players = signal<PlayerEntity[]>([]);
   protected selectedPlayerId = signal<string | null>(null);
   protected events = signal<any[]>([]);
+
+  // Computed sorted list of active events (newest first)
+  protected sortedEvents = computed(() => {
+    return [...this.events()]
+      .filter((e) => e.status !== 'deleted')
+      .sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+        const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+        return timeB - timeA;
+      });
+  });
 
   // Calculate box score statistics for each player
   protected playerStats = computed(() => {
@@ -114,6 +126,7 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
       flashOutline,
       arrowForwardOutline,
       alertCircleOutline,
+      trashOutline,
     });
   }
 
@@ -207,5 +220,46 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
   protected getPlayerShortName(player: PlayerEntity): string {
     const firstInitial = player.firstName ? `${player.firstName.charAt(0)}.` : '';
     return `${player.jerseyNumber !== null && player.jerseyNumber !== undefined ? '#' + player.jerseyNumber + ' ' : ''}${player.lastName}, ${firstInitial}`;
+  }
+
+  protected getPlayerNameById(playerId: string | null | undefined): string {
+    if (!playerId) return 'Unknown Player';
+    const player = this.players().find((p) => p.id === playerId);
+    if (!player) return 'Unknown Player';
+    return `${player.jerseyNumber ? '#' + player.jerseyNumber + ' ' : ''}${player.lastName}, ${player.firstName ? player.firstName.charAt(0) + '.' : ''}`;
+  }
+
+  protected getEventLabel(e: any): string {
+    const type = e.eventType || e.type;
+    const payload = e.payload || {};
+    switch (type) {
+      case 'KILL':
+        return 'Kill';
+      case 'HIT':
+        return 'Hitting Attempt';
+      case 'HITTING_ERROR':
+        return 'Hitting Error';
+      case 'SET_ATTEMPT':
+        return 'Setting Attempt';
+      case 'SET_ASSIST':
+        return 'Setting Assist';
+      case 'SET_ERROR':
+        return 'Setting Error';
+      case 'SERVE_RECEIVE':
+        return `Pass (Score: ${payload.score ?? e.score ?? 0})`;
+      default:
+        return type || 'Action';
+    }
+  }
+
+  protected async deletePracticeEvent(gameEventId: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.eventsService.deleteGameEvent(this.teamId, this.eventId, gameEventId)
+      );
+      this.events.update((list) => list.filter((e) => e.id !== gameEventId));
+    } catch (e) {
+      console.error('Failed to delete practice event:', e);
+    }
   }
 }

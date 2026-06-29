@@ -65,6 +65,36 @@
     }
   </div>
 
+  <!-- Practice Event Log & Undo -->
+  <div class="border border-ap-border/40 rounded-lg p-4 bg-ap-surface-raised flex flex-col gap-2">
+    <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted">Practice Event Log</h3>
+    <div class="max-h-[160px] overflow-y-auto flex flex-col gap-2 pr-1">
+      @for (e of sortedEvents(); track e.id) {
+        <div class="flex items-center justify-between bg-ap-bg/50 border border-ap-border/20 rounded px-3 py-2 text-xs">
+          <div class="flex flex-col">
+            <span class="font-bold text-ap-text">
+              {{ getPlayerNameById(e.playerId || e.payload?.playerId || e.payload?.scorerId || e.scorerId) }}
+            </span>
+            <span class="text-ap-muted text-[10px]">
+              {{ getEventLabel(e) }}
+            </span>
+          </div>
+          <ion-button 
+            fill="clear" 
+            color="danger" 
+            size="small" 
+            class="m-0 p-0 h-6 w-6 font-bold"
+            (click)="deletePracticeEvent(e.id)">
+            <ion-icon name="trash-outline" slot="icon-only" class="text-sm"></ion-icon>
+          </ion-button>
+        </div>
+      }
+      @if (sortedEvents().length === 0) {
+        <div class="text-center py-6 text-ap-muted text-xs">No events logged yet for this practice</div>
+      }
+    </div>
+  </div>
+
   <!-- Player Box Score Summary -->
   <div class="flex-1 flex flex-col min-h-[250px]">
     <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted mb-2">Practice Box Score</h3>
