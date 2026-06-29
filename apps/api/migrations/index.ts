@@ -41,6 +41,7 @@ import { AddDecidingSetScoreRules1783300000000 } from './1783300000000-AddDecidi
 import { AddServeReceiveEventDefinition1783400000000 } from './1783400000000-AddServeReceiveEventDefinition';
 import { AddHitEventDefinition1783500000000 } from './1783500000000-AddHitEventDefinition';
 import { AddSetEventDefinitions1783600000000 } from './1783600000000-AddSetEventDefinitions';
+import { AddBlockTouchDefinition1783700000000 } from './1783700000000-AddBlockTouchDefinition';
 
 
 export const ALL_MIGRATIONS = [
@@ -87,5 +88,6 @@ export const ALL_MIGRATIONS = [
   AddServeReceiveEventDefinition1783400000000,
   AddHitEventDefinition1783500000000,
   AddSetEventDefinitions1783600000000,
+  AddBlockTouchDefinition1783700000000,
 ];
 

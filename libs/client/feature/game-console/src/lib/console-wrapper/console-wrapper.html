@@ -393,7 +393,8 @@
                 <th class="py-2 text-center font-bold px-2">A</th>
                 <th class="py-2 text-center font-bold px-2">SE</th>
                 <th class="py-2 text-center font-bold px-2">D</th>
-                <th class="py-2 text-center font-bold pr-2">B</th>
+                <th class="py-2 text-center font-bold px-2">B</th>
+                <th class="py-2 text-center font-bold pr-2">BT</th>
               </tr>
             </thead>
             <tbody>
@@ -447,8 +448,11 @@
                   <td class="py-2 text-center px-2 text-ap-text tabular-nums">
                     {{ stateService.playerStats()[player.id]?.digs || 0 }}
                   </td>
-                  <td class="py-2 text-center pr-2 text-ap-text tabular-nums">
+                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
                     {{ stateService.playerStats()[player.id]?.blocks || 0 }}
+                  </td>
+                  <td class="py-2 text-center pr-2 text-ap-text tabular-nums">
+                    {{ stateService.playerStats()[player.id]?.blockTouches || 0 }}
                   </td>
                 </tr>
               }

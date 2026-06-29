@@ -135,6 +135,7 @@ export class EventLogViewComponent {
       case 'KILL': return 'flash-outline';
       case 'ACE': return 'ribbon-outline';
       case 'BLOCK': return 'shield-outline';
+      case 'BLOCK_TOUCH': return 'shield-outline';
       case 'DIG': return 'hand-right-outline';
       case 'SERVICE_ERROR': return 'close-circle-outline';
       case 'HITTING_ERROR': return 'alert-circle-outline';
@@ -171,6 +172,7 @@ export class EventLogViewComponent {
       case 'KILL': return 'success';
       case 'ACE': return 'success';
       case 'BLOCK': return 'primary';
+      case 'BLOCK_TOUCH': return 'medium';
       case 'DIG': return 'secondary';
       case 'SERVICE_ERROR': return 'warning';
       case 'HITTING_ERROR': return 'danger';

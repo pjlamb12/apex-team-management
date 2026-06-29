@@ -429,6 +429,7 @@ export class LiveGameStateService {
       setErrors: number;
       passCount: number;
       passScoreSum: number;
+      blockTouches: number;
     }> = {};
 
     events.forEach((e) => {
@@ -450,6 +451,7 @@ export class LiveGameStateService {
           setErrors: 0,
           passCount: 0,
           passScoreSum: 0,
+          blockTouches: 0,
         };
       }
 
@@ -480,6 +482,8 @@ export class LiveGameStateService {
         stats[pid].passCount++;
         const score = e['payload']?.score ?? e['score'] ?? 0;
         stats[pid].passScoreSum += score;
+      } else if (e.type === 'BLOCK_TOUCH') {
+        stats[pid].blockTouches++;
       }
     });
 
