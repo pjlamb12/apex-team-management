@@ -33,6 +33,11 @@
       <ion-segment-button value="notes">
         <ion-label>Notes</ion-label>
       </ion-segment-button>
+      @if (sportName() === 'Volleyball') {
+        <ion-segment-button value="stats">
+          <ion-label>Stats</ion-label>
+        </ion-segment-button>
+      }
     </ion-segment>
   </ion-toolbar>
 </ion-header>
@@ -74,6 +79,8 @@
     <app-attendance-list [teamId]="teamId" [eventId]="eventId"></app-attendance-list>
   } @else if (selectedSegment() === 'notes') {
     <app-coaching-notes [teamId]="teamId" [eventId]="eventId"></app-coaching-notes>
+  } @else if (selectedSegment() === 'stats') {
+    <app-practice-stats-tab [teamId]="teamId" [eventId]="eventId"></app-practice-stats-tab>
   }
 
   @if (selectedSegment() === 'plan' && plan().length > 0) {

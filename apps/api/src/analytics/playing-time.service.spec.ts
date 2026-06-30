@@ -179,5 +179,42 @@ describe('PlayingTimeService', () => {
       // total = 80 mins
       expect(result[player1].totalSeconds).toBe(80 * 60);
     });
+
+    it('should calculate points-based playtime correctly for Volleyball events', async () => {
+      const p1 = 'player-v1';
+      const p2 = 'player-v2';
+      
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue({
+        id: eventId,
+        season: {
+          team: {
+            sport: {
+              name: 'Volleyball'
+            }
+          }
+        }
+      } as any);
+
+      vi.spyOn(lineupRepo, 'find').mockResolvedValue([
+        { playerId: p1, status: 'starting', positionName: 'Setter' },
+        { playerId: p2, status: 'bench', positionName: 'Libero' },
+      ] as any);
+
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([
+        { eventType: 'KILL', payload: {} },
+        { eventType: 'ACE', payload: {} },
+        { eventType: 'SUB', payload: { outPlayerId: p1, inPlayerId: p2, positionName: 'Libero' } },
+        { eventType: 'BLOCK', payload: {} },
+        { eventType: 'POINT_WON', payload: {} },
+      ] as any);
+
+      const result = await service.calculateForEvent(eventId);
+
+      expect(result[p1].totalSeconds).toBe(2);
+      expect(result[p1].positionSeconds['Setter']).toBe(2);
+
+      expect(result[p2].totalSeconds).toBe(2);
+      expect(result[p2].positionSeconds['Libero']).toBe(2);
+    });
   });
 });

@@ -13,54 +13,86 @@
     </ion-item>
   }
 
-  @for (event of events(); track event.id) {
-    <ion-item>
-      <ion-badge slot="start" color="light">{{ event.minuteOccurred }}'</ion-badge>
-      
-      <ion-icon 
-        slot="start" 
-        [name]="getEventIcon(event.type)" 
-        [color]="getEventColor(event.type)"
-      ></ion-icon>
-
-      <ion-label>
-        <h3 class="font-bold">{{ event.type.replace('_', ' ') }}</h3>
-        @if (event.type === 'SUB') {
-          <p>
-            {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
-          </p>
-        }
-        @if (event.type === 'GOAL') {
-          <p>
-            {{ getPlayerName(event['scorerId'] || event.playerId) }}
-          </p>
-        } @else if (event.type === 'OWN_GOAL') {
-          <p>
-            {{ getPlayerName(event.playerId) }} (OG)
-          </p>
-        } @else if (event.type === 'ASSIST') {
-          <p>
-            {{ getPlayerName(event['assistorId'] || event.playerId) }}
-          </p>
-        } @else if (event.type === 'SHOOTOUT_KICK') {
-          <p>
-            @if ((event['team'] || event['payload']?.team) === 'team') {
-              Shooter: {{ getPlayerName(event.playerId || event['playerId'] || event['payload']?.playerId) }}
+  <div class="event-log-scroll-wrapper" [class.has-shadow-bottom]="hasScrollBottom()">
+    <div class="events-scroll-container" (scroll)="onScroll()" #scrollContainer>
+      @for (event of events(); track event.timestamp) {
+        <ion-item>
+          <ion-badge slot="start" color="light">
+            @if (stateService.sportName() === 'Volleyball') {
+              S{{ event.period || event.payload?.period || 1 }}
             } @else {
-              Keeper: {{ getPlayerName(event['goalkeeperId'] || event['payload']?.goalkeeperId) }}
+              {{ event.minuteOccurred }}'
             }
-            ({{ event['outcome'] || event['payload']?.outcome }})
-          </p>
-        } @else if (event.playerId) {
-          <p>
-            {{ getPlayerName(event.playerId) }}
-          </p>
-        }
-      </ion-label>
-    </ion-item>
-  } @empty {
-    <div class="empty-state">
-      <ion-note>No events logged yet.</ion-note>
+          </ion-badge>
+          
+          <ion-icon 
+            slot="start" 
+            [name]="getEventIcon(event.type)" 
+            [color]="getEventColor(event.type)"
+          ></ion-icon>
+ 
+          <ion-label>
+            <h3 class="font-bold">{{ event.type.replace('_', ' ') }}</h3>
+            @if (event.type === 'SUB') {
+              <p>
+                {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
+              </p>
+            }
+            @if (event.type === 'GOAL') {
+              <p>
+                {{ getPlayerName(event['scorerId'] || event.playerId) }}
+              </p>
+            } @else if (event.type === 'OWN_GOAL') {
+              <p>
+                {{ getPlayerName(event.playerId) }} (OG)
+              </p>
+            } @else if (event.type === 'ASSIST') {
+              <p>
+                {{ getPlayerName(event['assistorId'] || event.playerId) }}
+              </p>
+            } @else if (event.type === 'SHOOTOUT_KICK') {
+              <p>
+                @if ((event['team'] || event['payload']?.team) === 'team') {
+                  Shooter: {{ getPlayerName(event.playerId || event['playerId'] || event['payload']?.playerId) }}
+                } @else {
+                  Keeper: {{ getPlayerName(event['goalkeeperId'] || event['payload']?.goalkeeperId) }}
+                }
+                ({{ event['outcome'] || event['payload']?.outcome }})
+              </p>
+            } @else if (event.type === 'SERVE_RECEIVE') {
+              <p>
+                Passed by: {{ getPlayerName(event.playerId) }} (Rating: {{ event.payload?.score ?? event['score'] ?? 0 }}/3)
+              </p>
+            } @else if (event.type === 'HIT') {
+              <p>
+                Hit by: {{ getPlayerName(event.playerId) }}
+              </p>
+            } @else if (event.playerId) {
+              <p>
+                {{ getPlayerName(event.playerId) }}
+              </p>
+            }
+          </ion-label>
+
+          @if (!event.synced && event.type !== 'COURT_ROTATE') {
+            @if (event.syncFailed) {
+              <ion-button slot="end" fill="clear" color="danger" size="small" (click)="retrySync(event); $event.stopPropagation()" title="Sync failed. Click to retry.">
+                <ion-icon slot="icon-only" name="alert-circle-outline"></ion-icon>
+              </ion-button>
+            } @else {
+              <ion-spinner slot="end" name="dots" color="medium" size="small"></ion-spinner>
+            }
+          } @else if (event.id) {
+            <ion-button slot="end" fill="clear" color="danger" size="small" (click)="deleteEvent(event); $event.stopPropagation()" aria-label="Delete event">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            </ion-button>
+          }
+        </ion-item>
+      } @empty {
+        <div class="empty-state">
+          <ion-note>No events logged yet.</ion-note>
+        </div>
+      }
     </div>
-  }
+  </div>
 </ion-list>

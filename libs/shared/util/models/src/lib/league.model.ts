@@ -15,6 +15,12 @@ export interface League {
   defaultHomeColor?: string;
   defaultAwayColor?: string;
   homeLocationId?: string;
+  bestOfSets?: number;
+  setScoreGoal?: number;
+  winByTwo?: boolean;
+  pointCap?: number | null;
+  decidingSetScoreGoal?: number;
+  decidingSetPointCap?: number | null;
 }
 
 export interface LeagueStats {

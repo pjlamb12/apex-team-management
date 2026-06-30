@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { PlayerEntity } from '../entities/player.entity';
+import { TeamEntity } from '../entities/team.entity';
 import { EventEntity } from '../entities/event.entity';
 import { AttendanceEntity } from '../entities/attendance.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
@@ -18,6 +19,12 @@ export interface PlayerHistoryEntry {
   blockedShots: number;
   blockedPenaltyKicks: number;
   playingTimeSeconds: number;
+  kills?: number;
+  aces?: number;
+  blocks?: number;
+  digs?: number;
+  serviceErrors?: number;
+  hittingErrors?: number;
 }
 
 export interface PlayerProfileAnalytics {
@@ -36,6 +43,12 @@ export interface PlayerProfileAnalytics {
   totalMinutes: number;
   positionDistribution: Record<string, number>;
   history: PlayerHistoryEntry[];
+  totalKills?: number;
+  totalAces?: number;
+  totalBlocks?: number;
+  totalDigs?: number;
+  totalServiceErrors?: number;
+  totalHittingErrors?: number;
 }
 
 @Injectable()
@@ -55,6 +68,15 @@ export class PlayerAnalyticsService {
   async getPlayerProfile(playerId: string, teamId: string, seasonId?: string, leagueId?: string): Promise<PlayerProfileAnalytics> {
     const player = await this.playerRepo.findOne({ where: { id: playerId, teamId } });
     if (!player) throw new NotFoundException(`Player ${playerId} not found in team ${teamId}`);
+
+    let isVolleyball = false;
+    if (this.playerRepo.manager) {
+      const team = await this.playerRepo.manager.findOne(TeamEntity, {
+        where: { id: teamId },
+        relations: ['sport'],
+      });
+      isVolleyball = team?.sport?.name === 'Volleyball';
+    }
 
     // Get all events for the team/season/league
     const where: any = {};
@@ -89,7 +111,13 @@ export class PlayerAnalyticsService {
         totalBlockedPenaltyKicks: 0,
         totalMinutes: 0,
         positionDistribution: {},
-        history: []
+        history: [],
+        totalKills: 0,
+        totalAces: 0,
+        totalBlocks: 0,
+        totalDigs: 0,
+        totalServiceErrors: 0,
+        totalHittingErrors: 0
       };
     }
 
@@ -106,6 +134,12 @@ export class PlayerAnalyticsService {
     let totalAssists = 0;
     let totalBlockedShots = 0;
     let totalBlockedPenaltyKicks = 0;
+    let totalKills = 0;
+    let totalAces = 0;
+    let totalBlocks = 0;
+    let totalDigs = 0;
+    let totalServiceErrors = 0;
+    let totalHittingErrors = 0;
     let totalSeconds = 0;
     let gamesPlayed = 0;
     const positionDistribution: Record<string, number> = {};
@@ -118,17 +152,23 @@ export class PlayerAnalyticsService {
       let eventAssists = 0;
       let eventBlockedShots = 0;
       let eventBlockedPenaltyKicks = 0;
+      let eventKills = 0;
+      let eventAces = 0;
+      let eventBlocks = 0;
+      let eventDigs = 0;
+      let eventServiceErrors = 0;
+      let eventHittingErrors = 0;
       let playingTime = 0;
 
       if (event.type === 'game') {
-        // Calculate goals/assists for this specific game
+        // Calculate goals/assists/volleyball metrics for this specific game
         const matchEvents = gameEvents.filter(ge => ge.eventId === event.id);
         matchEvents.forEach(ge => {
           const payload = ge.payload as any;
           if (ge.eventType === 'GOAL') {
              if (payload.scorerId === playerId || payload.playerId === playerId) eventGoals++;
              if (payload.assistorId === playerId) eventAssists++;
-          } else if (ge.eventType === 'ASSIST') {
+          } else if (ge.eventType === 'ASSIST' || ge.eventType === 'SET_ASSIST') {
              if (payload.assistorId === playerId || payload.playerId === playerId) eventAssists++;
           } else if (ge.eventType === 'BLOCKED_SHOT') {
              if (payload.playerId === playerId) eventBlockedShots++;
@@ -136,8 +176,20 @@ export class PlayerAnalyticsService {
              if (payload.playerId === playerId) eventBlockedPenaltyKicks++;
           } else if (ge.eventType === 'SHOOTOUT_KICK') {
              if (payload.team === 'opponent' && payload.outcome === 'save' && payload.goalkeeperId === playerId) {
-               eventBlockedPenaltyKicks++;
+                eventBlockedPenaltyKicks++;
              }
+          } else if (ge.eventType === 'KILL') {
+             if (payload.scorerId === playerId || payload.playerId === playerId) eventKills++;
+          } else if (ge.eventType === 'ACE') {
+             if (payload.scorerId === playerId || payload.playerId === playerId) eventAces++;
+          } else if (ge.eventType === 'BLOCK') {
+             if (payload.playerId === playerId) eventBlocks++;
+          } else if (ge.eventType === 'DIG') {
+             if (payload.playerId === playerId) eventDigs++;
+          } else if (ge.eventType === 'SERVICE_ERROR') {
+             if (payload.playerId === playerId) eventServiceErrors++;
+          } else if (ge.eventType === 'HITTING_ERROR') {
+             if (payload.playerId === playerId) eventHittingErrors++;
           }
         });
 
@@ -162,6 +214,12 @@ export class PlayerAnalyticsService {
       totalAssists += eventAssists;
       totalBlockedShots += eventBlockedShots;
       totalBlockedPenaltyKicks += eventBlockedPenaltyKicks;
+      totalKills += eventKills;
+      totalAces += eventAces;
+      totalBlocks += eventBlocks;
+      totalDigs += eventDigs;
+      totalServiceErrors += eventServiceErrors;
+      totalHittingErrors += eventHittingErrors;
       totalSeconds += playingTime;
 
       history.push({
@@ -174,7 +232,13 @@ export class PlayerAnalyticsService {
         assists: eventAssists,
         blockedShots: eventBlockedShots,
         blockedPenaltyKicks: eventBlockedPenaltyKicks,
-        playingTimeSeconds: playingTime
+        playingTimeSeconds: playingTime,
+        kills: eventKills,
+        aces: eventAces,
+        blocks: eventBlocks,
+        digs: eventDigs,
+        serviceErrors: eventServiceErrors,
+        hittingErrors: eventHittingErrors
       });
     }
 
@@ -191,7 +255,13 @@ export class PlayerAnalyticsService {
       totalAssists,
       totalBlockedShots,
       totalBlockedPenaltyKicks,
-      totalMinutes: Math.floor(totalSeconds / 60),
+      totalKills,
+      totalAces,
+      totalBlocks,
+      totalDigs,
+      totalServiceErrors,
+      totalHittingErrors,
+      totalMinutes: isVolleyball ? totalSeconds : Math.floor(totalSeconds / 60),
       positionDistribution,
       history
     };

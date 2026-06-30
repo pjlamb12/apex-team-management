@@ -72,9 +72,9 @@ export class TeamService {
     );
   }
 
-  async seedDemoTeam(): Promise<any> {
+  async seedDemoTeam(sport: string = 'Soccer'): Promise<any> {
     return firstValueFrom(
-      this.http.post<any>(`${this.apiUrl}/teams/seed-demo`, {})
+      this.http.post<any>(`${this.apiUrl}/teams/seed-demo`, { sport })
     );
   }
 }

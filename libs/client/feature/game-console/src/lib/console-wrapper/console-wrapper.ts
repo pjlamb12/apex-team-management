@@ -22,7 +22,7 @@ import {
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline, footballOutline } from 'ionicons/icons';
+import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline, footballOutline, refreshOutline, shirtOutline, swapHorizontalOutline, trophyOutline, stopCircleOutline } from 'ionicons/icons';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
@@ -32,6 +32,7 @@ import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
 import { SoccerPitchViewComponent } from '../soccer-pitch-view/soccer-pitch-view';
+import { VolleyballCourtViewComponent } from '../volleyball-court-view/volleyball-court-view';
 import { PlayerActionMenuComponent } from '../player-action-menu/player-action-menu';
 import { EventLogViewComponent } from '../event-log/event-log';
 import { SubQueueComponent } from '../sub-queue/sub-queue';
@@ -61,6 +62,7 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
     ClockDisplayComponent,
     BenchViewComponent,
     SoccerPitchViewComponent,
+    VolleyballCourtViewComponent,
     PlayerActionMenuComponent,
     EventLogViewComponent,
     SubQueueComponent,
@@ -141,9 +143,10 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       
       return forkJoin({
         event: this.http.get<EventEntity>(`${url}/teams/${teamId}/events/${eventId}`),
-        lineup: this.http.get<LineupEntry[]>(`${url}/teams/${teamId}/events/${eventId}/lineup`)
+        lineup: this.http.get<LineupEntry[]>(`${url}/teams/${teamId}/events/${eventId}/lineup`),
+        team: this.http.get<any>(`${url}/teams/${teamId}`)
       }).pipe(
-        tap(async ({ event, lineup }) => {
+        tap(async ({ event, lineup, team }) => {
           // If the event is already completed, redirect and do not initialize the console
           if (event?.status === 'completed') {
             void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
@@ -151,7 +154,23 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
           }
 
           if (eventId && teamId) {
-            this.stateService.initialize(eventId, lineup, teamId, event?.playersOnField || undefined, event?.season?.team?.name);
+            this.stateService.initialize(
+              eventId,
+              lineup,
+              teamId,
+              event?.playersOnField || undefined,
+              event?.season?.team?.name || team?.name,
+              team?.sport?.name,
+              {
+                bestOfSets: event?.league?.bestOfSets,
+                setScoreGoal: event?.league?.setScoreGoal,
+                winByTwo: event?.league?.winByTwo,
+                pointCap: event?.league?.pointCap,
+                decidingSetScoreGoal: event?.league?.decidingSetScoreGoal,
+                decidingSetPointCap: event?.league?.decidingSetPointCap,
+              },
+              event?.opponent || undefined
+            );
             this.clockService.initialize(
               eventId,
               event?.clockStartTime,
@@ -159,26 +178,43 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
             );
 
             // If no events in local state, fetch from backend to restore logs
-            if (this.stateService.events().length === 0) {
-              try {
-                const backendEvents = await firstValueFrom(this.eventsService.getGameEvents(teamId, eventId));
-                if (backendEvents && backendEvents.length > 0) {
-                  // Map backend events to frontend GameEvent format
-                  const mappedEvents = backendEvents.map(be => ({
-                    id: be.id,
-                    type: be.eventType,
-                    minuteOccurred: be.minuteOccurred,
-                    timestamp: Date.now(), // Use current time since backend doesn't store original local timestamp
-                    synced: true,
-                    status: 'active' as const,
-                    payload: be.payload,
-                    ...be.payload
-                  }));
-                  this.stateService.setEvents(mappedEvents);
-                }
-              } catch (err) {
-                console.error('Failed to restore event logs from backend', err);
+            try {
+              const backendEvents = await firstValueFrom(this.eventsService.getGameEvents(teamId, eventId));
+              if (backendEvents && backendEvents.length > 0) {
+                // Map backend events to frontend GameEvent format
+                const mappedEvents = backendEvents.map(be => ({
+                  id: be.id,
+                  type: be.eventType,
+                  minuteOccurred: be.minuteOccurred,
+                  timestamp: be.payload?.timestamp || Date.now(),
+                  createdAt: be.createdAt,
+                  synced: true,
+                  status: 'active' as const,
+                  payload: be.payload,
+                  ...be.payload
+                }));
+                // Sort by timestamp to ensure they are in correct chronological order
+                mappedEvents.sort((a, b) => {
+                  const timeA = a.timestamp;
+                  const timeB = b.timestamp;
+                  if (Math.abs(timeA - timeB) > 10) {
+                    return timeA - timeB;
+                  }
+                  if (
+                    a.type === 'POSITION_SWAP' &&
+                    b.type === 'POSITION_SWAP' &&
+                    a['gameTimeMs'] === b['gameTimeMs']
+                  ) {
+                    return (a['slotIndexA'] ?? 0) - (b['slotIndexA'] ?? 0);
+                  }
+                  const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                  const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                  return dateA - dateB;
+                });
+                this.stateService.setEvents(mappedEvents);
               }
+            } catch (err) {
+              console.error('Failed to restore event logs from backend', err);
             }
           }
         }),
@@ -213,6 +249,11 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       settingsOutline,
       alertCircleOutline,
       footballOutline,
+      refreshOutline,
+      shirtOutline,
+      swapHorizontalOutline,
+      trophyOutline,
+      stopCircleOutline,
     });
 
     effect(() => {
@@ -246,6 +287,14 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
           this.clockService.stop();
           void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
         }
+      }
+    });
+
+    effect(() => {
+      const matchRes = this.stateService.matchResult();
+      const status = this.stateService.status();
+      if (matchRes && status !== 'completed') {
+        void this.autoEndGame();
       }
     });
   }
@@ -347,7 +396,171 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     });
   }
 
+  protected addOpponentPoint(): void {
+    this.stateService.pushEvent({
+      type: 'POINT_LOST',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
+  protected addTeamPoint(): void {
+    this.stateService.pushEvent({
+      type: 'POINT_WON',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
+
+
+  protected addTeamBlock(): void {
+    this.stateService.pushEvent({
+      type: 'BLOCK',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
+  protected addTeamDig(): void {
+    this.stateService.pushEvent({
+      type: 'DIG',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
+  protected rotateActivePlayers(): void {
+    const timestamp = Date.now();
+    const currentMinute = this.clockService.currentMinute();
+    const gameTimeMs = this.clockService.elapsedMs();
+    const activePlayers = this.stateService.activePlayers();
+
+    const getPlayerIdAtSlot = (slot: number) => activePlayers.find(p => (p as any).slotIndex === slot)?.id || '';
+
+    const isSetComplete = !!this.stateService.currentSetResult();
+    const basePayload = isSetComplete ? { hideFromLog: true } : {};
+
+    const swaps = [
+      { 
+        type: 'POSITION_SWAP', 
+        slotIndexA: 0, 
+        slotIndexB: 1, 
+        playerIdA: getPlayerIdAtSlot(0), 
+        playerIdB: getPlayerIdAtSlot(1), 
+        timestamp, 
+        minuteOccurred: currentMinute, 
+        gameTimeMs, 
+        payload: { ...basePayload, slotIndexA: 0, slotIndexB: 1, playerIdA: getPlayerIdAtSlot(0), playerIdB: getPlayerIdAtSlot(1) } 
+      },
+      { 
+        type: 'POSITION_SWAP', 
+        slotIndexA: 1, 
+        slotIndexB: 2, 
+        playerIdA: getPlayerIdAtSlot(1), 
+        playerIdB: getPlayerIdAtSlot(2), 
+        timestamp: timestamp + 1, 
+        minuteOccurred: currentMinute, 
+        gameTimeMs, 
+        payload: { ...basePayload, slotIndexA: 1, slotIndexB: 2, playerIdA: getPlayerIdAtSlot(1), playerIdB: getPlayerIdAtSlot(2) } 
+      },
+      { 
+        type: 'POSITION_SWAP', 
+        slotIndexA: 2, 
+        slotIndexB: 3, 
+        playerIdA: getPlayerIdAtSlot(2), 
+        playerIdB: getPlayerIdAtSlot(3), 
+        timestamp: timestamp + 2, 
+        minuteOccurred: currentMinute, 
+        gameTimeMs, 
+        payload: { ...basePayload, slotIndexA: 2, slotIndexB: 3, playerIdA: getPlayerIdAtSlot(2), playerIdB: getPlayerIdAtSlot(3) } 
+      },
+      { 
+        type: 'POSITION_SWAP', 
+        slotIndexA: 3, 
+        slotIndexB: 4, 
+        playerIdA: getPlayerIdAtSlot(3), 
+        playerIdB: getPlayerIdAtSlot(4), 
+        timestamp: timestamp + 3, 
+        minuteOccurred: currentMinute, 
+        gameTimeMs, 
+        payload: { ...basePayload, slotIndexA: 3, slotIndexB: 4, playerIdA: getPlayerIdAtSlot(3), playerIdB: getPlayerIdAtSlot(4) } 
+      },
+      { 
+        type: 'POSITION_SWAP', 
+        slotIndexA: 4, 
+        slotIndexB: 5, 
+        playerIdA: getPlayerIdAtSlot(4), 
+        playerIdB: getPlayerIdAtSlot(5), 
+        timestamp: timestamp + 4, 
+        minuteOccurred: currentMinute, 
+        gameTimeMs, 
+        payload: { ...basePayload, slotIndexA: 4, slotIndexB: 5, playerIdA: getPlayerIdAtSlot(4), playerIdB: getPlayerIdAtSlot(5) } 
+      }
+    ];
+    this.stateService.pushEvents(swaps);
+  }
+
+
+  protected async confirmEndSetEarly(): Promise<void> {
+    const score = this.stateService.score();
+    const alert = await this.alertCtrl.create({
+      header: 'End Set Early?',
+      message: `Are you sure you want to end Set ${this.stateService.currentPeriod()} early? The team with the higher score (${score.team} - ${score.opponent}) will win the set.`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'End Set',
+          handler: () => {
+            this.stateService.forceSetCompleted(true);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   protected async nextPeriod(): Promise<void> {
+    const isVolleyball = this.stateService.sportName() === 'Volleyball';
+    const setResult = this.stateService.currentSetResult();
+    const score = this.stateService.score();
+
+    // Check if score doesn't match expected winning rules (i.e. setResult is null or it was forced)
+    const isUnexpected = isVolleyball && (!setResult || (setResult as any).forced);
+
+    if (isUnexpected) {
+      const alert = await this.alertCtrl.create({
+        header: 'Proceed to Next Set?',
+        message: `The current score (${score.team} - ${score.opponent}) does not match the expected winning rules. Are you sure you want to proceed?`,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel'
+          },
+          {
+            text: 'Proceed',
+            handler: () => {
+              this.executeNextPeriod();
+            }
+          }
+        ]
+      });
+      await alert.present();
+    } else {
+      await this.executeNextPeriod();
+    }
+  }
+
+  private async executeNextPeriod(): Promise<void> {
+    this.stateService.clearForceCompleted();
+
     const gameTimeMs = this.clockService.elapsedMs();
     this.stateService.pushEvent({
       type: 'PERIOD_END',
@@ -435,13 +648,17 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     const teamId = this.teamId();
     const eventId = this.eventId();
     if (teamId && eventId) {
+      const isVolleyball = this.stateService.sportName() === 'Volleyball';
       const score = this.stateService.score();
+      const sets = this.stateService.setsWon();
+      const goalsFor = isVolleyball ? sets.team : score.team;
+      const goalsAgainst = isVolleyball ? sets.opponent : score.opponent;
       const actualDuration = elapsedMs > 0 ? Math.ceil(elapsedMs / 60000) : undefined;
 
       await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
         status: 'completed',
-        goalsFor: score.team,
-        goalsAgainst: score.opponent,
+        goalsFor,
+        goalsAgainst,
         ...(actualDuration ? { durationMinutes: actualDuration } : {})
       }));
       
@@ -450,9 +667,42 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     }
   }
 
+  private async autoEndGame(): Promise<void> {
+    const elapsedMs = this.clockService.elapsedMs();
+    const currentMinute = this.clockService.currentMinute();
+
+    // Log a final PERIOD_END event so all active player stints are closed at the correct timestamp
+    this.stateService.pushEvent({
+      type: 'PERIOD_END',
+      timestamp: Date.now(),
+      minuteOccurred: currentMinute,
+      gameTimeMs: elapsedMs,
+    });
+
+    await this.clockService.stop();
+    this.stateService.endGame();
+
+    const teamId = this.teamId();
+    const eventId = this.eventId();
+    if (teamId && eventId) {
+      const sets = this.stateService.setsWon();
+      const goalsFor = sets.team;
+      const goalsAgainst = sets.opponent;
+      const actualDuration = elapsedMs > 0 ? Math.ceil(elapsedMs / 60000) : undefined;
+
+      await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
+        status: 'completed',
+        goalsFor,
+        goalsAgainst,
+        ...(actualDuration ? { durationMinutes: actualDuration } : {})
+      }));
+    }
+  }
+
   protected handlePlayerSelection(data: { player: Player; event: Event }): void {
     const { player, event } = data;
     const currentSelectionId = this.selectedPlayerId();
+    const isVolleyball = this.stateService.sportName() === 'Volleyball';
     
     // Check if one is bench and one is pitch
     const benchPlayers = this.stateService.benchPlayers();
@@ -465,8 +715,13 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     if (!currentSelectionId) {
       this.selectedPlayerId.set(player.id);
       
-      // If we tapped an active player, don't show popover immediately
-      // User must tap AGAIN to show popover
+      if (tappedActive) {
+        if (isVolleyball) {
+          // In volleyball, context menu shows on first click of an active player
+          this.actionPlayer.set(player);
+          this.popoverEvent.set(event);
+        }
+      }
       return;
     }
 
@@ -484,18 +739,27 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     
     // 1. Position Swap: Both are active
     if (selectedActive && tappedActive) {
-      const playerA = selectedActive as any;
-      const playerB = tappedActive as any;
+      if (!isVolleyball) {
+        const playerA = selectedActive as any;
+        const playerB = tappedActive as any;
 
-      if (playerA.slotIndex !== undefined && playerB.slotIndex !== undefined) {
-        this.stateService.pushEvent({
-          type: 'POSITION_SWAP',
-          slotIndexA: playerA.slotIndex,
-          slotIndexB: playerB.slotIndex,
-          timestamp: Date.now(),
-          minuteOccurred: this.clockService.currentMinute(),
-          gameTimeMs: this.clockService.elapsedMs(),
-        });
+        if (playerA.slotIndex !== undefined && playerB.slotIndex !== undefined) {
+          this.stateService.pushEvent({
+            type: 'POSITION_SWAP',
+            slotIndexA: playerA.slotIndex,
+            slotIndexB: playerB.slotIndex,
+            timestamp: Date.now(),
+            minuteOccurred: this.clockService.currentMinute(),
+            gameTimeMs: this.clockService.elapsedMs(),
+          });
+        }
+      } else {
+        // In volleyball, two players on the court will never swap positions.
+        // Selecting another active player just switches selection/opens context menu for them
+        this.selectedPlayerId.set(player.id);
+        this.actionPlayer.set(player);
+        this.popoverEvent.set(event);
+        return;
       }
       this.selectedPlayerId.set(null);
       this.actionPlayer.set(null);
@@ -513,6 +777,10 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       // Just change selection to the new player
       this.selectedPlayerId.set(player.id);
       this.actionPlayer.set(null);
+      if (tappedActive && isVolleyball) {
+        this.actionPlayer.set(player);
+        this.popoverEvent.set(event);
+      }
     }
   }
 
@@ -570,11 +838,24 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     this.stateService.unstageSub(playerId);
   }
 
+  protected handleLiberoChange(event: any): void {
+    const value = event.detail.value;
+    this.stateService.pushEvent({
+      type: 'LIBERO_CHANGED',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+      liberoId: value || '',
+      payload: { liberoId: value || '' }
+    });
+    this.stateService.setLiberoId(value || null);
+  }
+
   protected handleClearSubs(): void {
     this.stateService.clearStagedSubs();
   }
 
-  protected handleAction(action: { type: string; playerId: string }): void {
+  protected handleAction(action: { type: string; playerId: string; payload?: any }): void {
     const baseEvent = {
       type: action.type,
       timestamp: Date.now(),
@@ -587,13 +868,40 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       eventPayload = { scorerId: action.playerId };
     } else if (action.type === 'ASSIST') {
       eventPayload = { assistorId: action.playerId };
+    } else if (action.type === 'KILL' || action.type === 'ACE') {
+      eventPayload = { scorerId: action.playerId };
     } else {
       // YELLOW_CARD, RED_CARD, and any other player-centric events
       eventPayload = { playerId: action.playerId };
     }
 
+    if (action.payload) {
+      eventPayload = { ...eventPayload, ...action.payload };
+    }
+
     this.stateService.pushEvent({ ...baseEvent, ...eventPayload });
     this.selectedPlayerId.set(null);
     this.actionPlayer.set(null);
+  }
+
+  protected getHittingPct(kills = 0, hittingErrors = 0, hits = 0): string {
+    const total = kills + hittingErrors + hits;
+    if (total === 0) return '.000';
+    const pct = (kills - hittingErrors) / total;
+    if (pct < 0) {
+      return pct.toFixed(3);
+    }
+    const fixed = pct.toFixed(3);
+    return fixed.startsWith('0') ? fixed.substring(1) : fixed;
+  }
+
+  protected getPlayerShortName(player: Player): string {
+    const firstInitial = player.firstName ? `${player.firstName.charAt(0)}.` : '';
+    return `${player.jerseyNumber !== null && player.jerseyNumber !== undefined ? '#' + player.jerseyNumber + ' ' : ''}${player.lastName}, ${firstInitial}`;
+  }
+
+  protected getPassAverage(passCount = 0, passScoreSum = 0): string {
+    if (passCount === 0) return '-';
+    return (passScoreSum / passCount).toFixed(2);
   }
 }

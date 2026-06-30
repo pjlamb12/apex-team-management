@@ -53,7 +53,7 @@
           <ion-label>List View</ion-label>
         </ion-segment-button>
         <ion-segment-button value="pitch">
-          <ion-label>Pitch View</ion-label>
+          <ion-label>{{ team()?.sport?.name === 'Volleyball' ? 'Court View' : 'Pitch View' }}</ion-label>
         </ion-segment-button>
         <ion-segment-button value="notes">
           <ion-label>Notes</ion-label>
@@ -69,57 +69,105 @@
           ></app-attendance-list>
         </div>
       } @else if (viewMode() === 'list') {
+        @if (team()?.sport?.name === 'Volleyball') {
+          <div class="p-4 bg-ap-bg/50 border border-ap-border/40 rounded-lg mb-4 flex flex-col gap-3">
+            <h3 class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">Libero Setup</h3>
+            <div>
+              <ion-select
+                label="Designated Libero"
+                label-placement="stacked"
+                placeholder="Select Player"
+                [value]="liberoId()"
+                (ionChange)="setLiberoId($event.detail.value)"
+              >
+                <ion-select-option [value]="null">-- None --</ion-select-option>
+                @for (p of eligibleLiberos(); track p.id) {
+                  <ion-select-option [value]="p.id">
+                    #{{ p.jerseyNumber }} {{ p.firstName }} {{ p.lastName }}
+                  </ion-select-option>
+                }
+              </ion-select>
+            </div>
+          </div>
+        }
+
         <ion-list>
           <ion-list-header>
-            <ion-label>Starting {{ event()?.playersOnField || 11 }}</ion-label>
+            <ion-label>Starting {{ event()?.playersOnField || (team()?.sport?.name === 'Volleyball' ? 6 : 11) }}</ion-label>
           </ion-list-header>
 
           @for (slot of slots(); track slot.slotIndex; let idx = $index) {
-            <ion-item>
-              <div class="slot-row w-full flex gap-2 py-2">
-                <div class="w-24">
-                  <ion-select
-                    label="Pos"
-                    label-placement="stacked"
-                    placeholder="Pos"
-                    [value]="slot.positionName"
-                    (ionChange)="updateSlot(idx, 'positionName', $event.detail.value)"
-                  >
-                    @for (pos of positionOptions; track pos) {
-                      <ion-select-option [value]="pos">{{ pos }}</ion-select-option>
-                    }
-                  </ion-select>
+            @if (slot.slotIndex !== 99) {
+              <ion-item>
+                <div class="slot-row w-full flex gap-2 py-2">
+                  <div class="w-24">
+                    <ion-select
+                      label="Pos"
+                      label-placement="stacked"
+                      placeholder="Pos"
+                      [value]="slot.positionName"
+                      (ionChange)="updateSlot(idx, 'positionName', $event.detail.value)"
+                    >
+                      @for (pos of positionOptions(); track pos) {
+                        <ion-select-option [value]="pos">{{ pos }}</ion-select-option>
+                      }
+                    </ion-select>
+                  </div>
+                  <div class="flex-1">
+                    <ion-select
+                      label="Player"
+                      label-placement="stacked"
+                      placeholder="Select Player"
+                      [value]="slot.playerId"
+                      (ionChange)="updateSlot(idx, 'playerId', $event.detail.value)"
+                    >
+                      <ion-select-option [value]="null">-- None --</ion-select-option>
+                      @for (player of availablePlayers(slot.slotIndex); track player.id) {                      <ion-select-option [value]="player.id">
+                          #{{ player.jerseyNumber }} {{ player.firstName }} {{ player.lastName }}
+                        </ion-select-option>
+                      }
+                    </ion-select>
+                  </div>
                 </div>
-                <div class="flex-1">
-                  <ion-select
-                    label="Player"
-                    label-placement="stacked"
-                    placeholder="Select Player"
-                    [value]="slot.playerId"
-                    (ionChange)="updateSlot(idx, 'playerId', $event.detail.value)"
-                  >
-                    <ion-select-option [value]="null">-- None --</ion-select-option>
-                    @for (player of availablePlayers(slot.slotIndex); track player.id) {                      <ion-select-option [value]="player.id">
-                        #{{ player.jerseyNumber }} {{ player.firstName }} {{ player.lastName }}
-                      </ion-select-option>
-                    }
-                  </ion-select>
-                </div>
-              </div>
-            </ion-item>
+              </ion-item>
+            }
           }
         </ion-list>
       } @else if (viewMode() === 'pitch') {
-        <div class="h-[450px] mb-4">
-          <app-soccer-pitch-view
-            [players]="pitchPlayers()"
-            [playersOnField]="event()?.playersOnField || 11"
-            [selectedPlayerId]="selectedPlayerId()"
-            (playerSelected)="handlePitchPlayerSelected($event)"
-            (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
-            (backgroundClicked)="selectedPlayerId.set(null)"
-          >
-          </app-soccer-pitch-view>
+        <div class="mb-4">
+          @if (team()?.sport?.name === 'Volleyball') {
+            <div class="flex justify-between items-center mb-3 bg-ap-bg/40 p-2 rounded-lg border border-ap-border/30">
+              <span class="text-xs font-black text-ap-primary uppercase tracking-wider pl-1">Starting Rotation</span>
+              <ion-button size="small" color="warning" fill="outline" (click)="rotateStartingLineup()">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                Rotate
+              </ion-button>
+            </div>
+
+            <app-volleyball-court-view
+              class="h-[400px] w-full block relative"
+              [players]="pitchPlayers()"
+              [playersOnField]="event()?.playersOnField || 6"
+              [selectedPlayerId]="selectedPlayerId()"
+              [liberoDesignation]="liberoDesignation()"
+              [showLiberoSlot]="true"
+              (playerSelected)="handlePitchPlayerSelected($event)"
+              (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
+              (backgroundClicked)="selectedPlayerId.set(null)"
+            >
+            </app-volleyball-court-view>
+          } @else {
+            <app-soccer-pitch-view
+              class="h-[450px] w-full block relative"
+              [players]="pitchPlayers()"
+              [playersOnField]="event()?.playersOnField || 11"
+              [selectedPlayerId]="selectedPlayerId()"
+              (playerSelected)="handlePitchPlayerSelected($event)"
+              (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
+              (backgroundClicked)="selectedPlayerId.set(null)"
+            >
+            </app-soccer-pitch-view>
+          }
         </div>
       } @else if (viewMode() === 'notes') {
         <app-coaching-notes [teamId]="teamId" [eventId]="eventId"></app-coaching-notes>

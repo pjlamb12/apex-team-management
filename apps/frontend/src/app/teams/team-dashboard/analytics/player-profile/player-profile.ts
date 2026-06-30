@@ -37,9 +37,13 @@ import {
   closeCircleOutline,
   bandageOutline,
   shirtOutline,
-  calendarOutline
+  calendarOutline,
+  flashOutline,
+  ribbonOutline,
+  shieldOutline,
+  handRightOutline
 } from 'ionicons/icons';
-import { AnalyticsService, PlayerProfileAnalytics } from '@apex-team/client/data-access/team';
+import { AnalyticsService, PlayerProfileAnalytics, TeamService } from '@apex-team/client/data-access/team';
 import { ModalController } from '@ionic/angular/standalone';
 
 @Component({
@@ -76,9 +80,11 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
   @Input({ required: true }) playerId!: string;
 
   private readonly analyticsService = inject(AnalyticsService);
+  private readonly teamService = inject(TeamService);
   private readonly modalCtrl = inject(ModalController);
 
   protected profile = signal<PlayerProfileAnalytics | null>(null);
+  protected sportName = signal<string>('Soccer');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
 
@@ -96,7 +102,11 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
       closeCircleOutline,
       bandageOutline,
       shirtOutline,
-      calendarOutline
+      calendarOutline,
+      flashOutline,
+      ribbonOutline,
+      shieldOutline,
+      handRightOutline,
     });
   }
 
@@ -108,14 +118,20 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const profile = await firstValueFrom(this.analyticsService.getPlayerProfile(this.teamId, this.playerId));
+      const [profile, team] = await Promise.all([
+        firstValueFrom(this.analyticsService.getPlayerProfile(this.teamId, this.playerId)),
+        this.teamService.getTeam(this.teamId)
+      ]);
       this.profile.set(profile);
+      this.sportName.set(team.sport?.name || 'Soccer');
     } catch {
       this.errorMessage.set('Failed to load player analytics.');
     } finally {
       this.isLoading.set(false);
     }
   }
+
+  protected Math = Math;
 
   protected async dismiss() {
     await this.modalCtrl.dismiss();

@@ -15,6 +15,20 @@ export interface PlayerPerformanceMetrics {
   gamesPlayed: number;
   blockedShots: number;
   blockedPenaltyKicks: number;
+  kills?: number;
+  aces?: number;
+  blocks?: number;
+  digs?: number;
+  serviceErrors?: number;
+  hittingErrors?: number;
+  hits?: number;
+  serveAttempts?: number;
+  blockTouches?: number;
+  setAttempts?: number;
+  setAssists?: number;
+  setErrors?: number;
+  passCount?: number;
+  passScoreSum?: number;
 }
 
 export interface PlayerPlaytime {
@@ -43,6 +57,12 @@ export interface PlayerHistoryEntry {
   blockedShots: number;
   blockedPenaltyKicks: number;
   playingTimeSeconds: number;
+  kills?: number;
+  aces?: number;
+  blocks?: number;
+  digs?: number;
+  serviceErrors?: number;
+  hittingErrors?: number;
 }
 
 export interface PlayerProfileAnalytics {
@@ -61,6 +81,12 @@ export interface PlayerProfileAnalytics {
   totalMinutes: number;
   positionDistribution: Record<string, number>;
   history: PlayerHistoryEntry[];
+  totalKills?: number;
+  totalAces?: number;
+  totalBlocks?: number;
+  totalDigs?: number;
+  totalServiceErrors?: number;
+  totalHittingErrors?: number;
 }
 
 @Injectable({
@@ -74,10 +100,11 @@ export class AnalyticsService {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
-  getPerformanceMetrics(teamId: string, seasonId?: string, leagueId?: string): Observable<PlayerPerformanceMetrics[]> {
+  getPerformanceMetrics(teamId: string, seasonId?: string, leagueId?: string, eventType?: 'game' | 'practice' | 'all'): Observable<PlayerPerformanceMetrics[]> {
     const params: any = {};
     if (seasonId) params.seasonId = seasonId;
     if (leagueId) params.leagueId = leagueId;
+    if (eventType) params.eventType = eventType;
     return this.http.get<PlayerPerformanceMetrics[]>(`${this.apiUrl}/teams/${teamId}/analytics/performance`, { params });
   }
 

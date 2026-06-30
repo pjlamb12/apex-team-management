@@ -81,6 +81,10 @@ export class EventsService {
         defaultPeriodLengthMinutes = league.periodLengthMinutes;
         defaultPlayersOnField = league.playersOnField;
       }
+    } else {
+      defaultPeriodCount = (activeSeason as any).periodCount ?? null;
+      defaultPeriodLengthMinutes = (activeSeason as any).periodLengthMinutes ?? null;
+      defaultPlayersOnField = (activeSeason as any).playersOnField ?? null;
     }
 
     if (event.type === 'practice') {

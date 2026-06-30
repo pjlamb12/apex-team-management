@@ -22,7 +22,7 @@ import { addIcons } from 'ionicons';
 import { addOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { LocationService, LocationEntity } from '@apex-team/client/data-access/team';
+import { LocationService, LocationEntity, TeamService } from '@apex-team/client/data-access/team';
 import { LocationModal } from '@apex-team/client/ui/location-modal';
 import { League, LeagueType } from '@apex-team/shared/util/models';
 
@@ -57,8 +57,10 @@ export class LeagueModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly modalCtrl = inject(ModalController);
   private readonly locationService = inject(LocationService);
+  private readonly teamService = inject(TeamService);
 
   protected locations = signal<LocationEntity[]>([]);
+  protected team = signal<any | null>(null);
 
   protected form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -71,6 +73,12 @@ export class LeagueModal implements OnInit {
     defaultHomeColor: [''],
     defaultAwayColor: [''],
     homeLocationId: [''],
+    bestOfSets: [5, [Validators.required, Validators.min(1)]],
+    setScoreGoal: [25, [Validators.required, Validators.min(1)]],
+    winByTwo: [true],
+    pointCap: [null as number | null, [Validators.min(1)]],
+    decidingSetScoreGoal: [15, [Validators.required, Validators.min(1)]],
+    decidingSetPointCap: [null as number | null, [Validators.min(1)]],
   });
 
   constructor() {
@@ -90,10 +98,26 @@ export class LeagueModal implements OnInit {
         defaultHomeColor: this.league.defaultHomeColor || '',
         defaultAwayColor: this.league.defaultAwayColor || '',
         homeLocationId: this.league.homeLocationId || '',
+        bestOfSets: this.league.bestOfSets ?? 5,
+        setScoreGoal: this.league.setScoreGoal ?? 25,
+        winByTwo: this.league.winByTwo ?? true,
+        pointCap: this.league.pointCap ?? null,
+        decidingSetScoreGoal: this.league.decidingSetScoreGoal ?? 15,
+        decidingSetPointCap: this.league.decidingSetPointCap ?? null,
       });
     }
     if (this.teamId) {
       void this.loadLocations(this.teamId);
+      void this.loadTeam(this.teamId);
+    }
+  }
+
+  protected async loadTeam(teamId: string): Promise<void> {
+    try {
+      const teamDetails = await this.teamService.getTeam(teamId);
+      this.team.set(teamDetails);
+    } catch (e) {
+      console.error('Failed to load team details', e);
     }
   }
 

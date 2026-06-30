@@ -2,7 +2,7 @@ import { Injectable, inject, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LiveGameStateService, GameEvent } from './live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { catchError, of, retry } from 'rxjs';
+import { catchError, retry, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -13,6 +13,7 @@ export class EventSyncService {
   private config = inject(RuntimeConfigLoaderService);
 
   private syncingIds = new Set<string>();
+  private isSyncing = false;
 
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
@@ -20,24 +21,14 @@ export class EventSyncService {
 
   constructor() {
     effect(() => {
-      const events = this.stateService.events();
+      // Establish dependency on state service signals
+      this.stateService.events();
       const eventId = this.stateService.eventId();
       const teamId = this.stateService.teamId();
       
       if (!eventId || !teamId) return;
 
-      events.forEach((event, index) => {
-        const tempId = this.getEventTempId(event, index);
-        
-        // If it's active and not synced, sync it
-        if (event.status === 'active' && !event.synced && !this.syncingIds.has(tempId)) {
-          this.syncAdd(teamId, eventId, event, index);
-        }
-        // If it's deleted, has a backend ID, and is not synced (meaning deletion not synced), delete it
-        else if (event.status === 'deleted' && event.id && !event.synced && !this.syncingIds.has(tempId)) {
-          this.syncDelete(teamId, eventId, event, index);
-        }
-      });
+      this.processNext();
     });
   }
 
@@ -45,9 +36,50 @@ export class EventSyncService {
     return `${event.timestamp}-${index}`;
   }
 
+  private processNext(): void {
+    if (this.isSyncing) {
+      return;
+    }
+
+    const eventId = this.stateService.eventId();
+    const teamId = this.stateService.teamId();
+    if (!eventId || !teamId) return;
+
+    const events = this.stateService.events();
+
+    // Find the first unsynced event (in chronological order)
+    const nextEventIndex = events.findIndex((event) => {
+      // Unsynced active event
+      const isUnsyncedAdd = event.status === 'active' && !event.synced && !event.syncFailed;
+      // Unsynced delete event (needs backend ID)
+      const isUnsyncedDelete = event.status === 'deleted' && event.id && !event.synced && !event.syncFailed;
+      return isUnsyncedAdd || isUnsyncedDelete;
+    });
+
+    if (nextEventIndex === -1) {
+      return;
+    }
+
+    const nextEvent = events[nextEventIndex];
+    const tempId = this.getEventTempId(nextEvent, nextEventIndex);
+
+    // If it's already in syncingIds, skip it to prevent double syncing (safety guard)
+    if (this.syncingIds.has(tempId)) {
+      return;
+    }
+
+    this.isSyncing = true;
+    this.syncingIds.add(tempId);
+
+    if (nextEvent.status === 'active') {
+      this.syncAdd(teamId, eventId, nextEvent, nextEventIndex);
+    } else {
+      this.syncDelete(teamId, eventId, nextEvent, nextEventIndex);
+    }
+  }
+
   private syncAdd(teamId: string, eventId: string, event: GameEvent, index: number) {
     const tempId = this.getEventTempId(event, index);
-    this.syncingIds.add(tempId);
 
     // If event has a nested payload object (like SHOOTOUT_KICK), flatten it into the parent payload first
     let payload: any = { ...event };
@@ -57,11 +89,11 @@ export class EventSyncService {
     }
 
     delete payload.type;
-    delete payload.timestamp;
     delete payload.minuteOccurred;
     delete payload.synced;
     delete payload.status;
     delete payload.id;
+    delete payload.syncFailed;
 
     if (event.type === 'SUB') {
       payload.inPlayerId = event.playerIdIn || event['inPlayerId'];
@@ -69,6 +101,13 @@ export class EventSyncService {
       delete payload.playerIdIn;
       delete payload.playerIdOut;
     }
+
+    // Clean up undefined properties
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === undefined) {
+        delete payload[key];
+      }
+    });
 
     const body = {
       eventType: event.type,
@@ -81,38 +120,60 @@ export class EventSyncService {
         retry({ count: 3, delay: 1000 }),
         catchError(err => {
           console.error('Failed to sync event', err);
-          this.syncingIds.delete(tempId);
-          return of(null);
+          return throwError(() => err);
         })
       )
-      .subscribe(response => {
-        if (response) {
-          this.stateService.markEventSynced(event.timestamp, response.id);
+      .subscribe({
+        next: (response) => {
+          if (response) {
+            this.stateService.markEventSynced(event.timestamp, response.id);
+          }
           this.syncingIds.delete(tempId);
+          this.isSyncing = false;
+          this.processNext();
+        },
+        error: (err) => {
+          this.syncingIds.delete(tempId);
+          this.isSyncing = false;
+
+          // If it's a persistent client-side error (like 400 Bad Request), mark it failed
+          if (err && err.status >= 400 && err.status < 500 && err.status !== 408 && err.status !== 429) {
+            this.stateService.markEventSyncFailed(event.timestamp);
+          } else {
+            // Otherwise, wait 3 seconds before retrying (connection error, rate limit, server error)
+            setTimeout(() => this.processNext(), 3000);
+          }
         }
       });
   }
 
   private syncDelete(teamId: string, eventId: string, event: GameEvent, index: number) {
     const tempId = this.getEventTempId(event, index);
-    this.syncingIds.add(tempId);
 
     this.http.delete<any>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/game-events/${event.id}`)
       .pipe(
         retry({ count: 3, delay: 1000 }),
         catchError(err => {
           console.error('Failed to sync deletion', err);
-          this.syncingIds.delete(tempId);
-          return of(null);
+          return throwError(() => err);
         })
       )
       .subscribe({
         next: () => {
           this.stateService.markDeletionSynced(event.timestamp);
           this.syncingIds.delete(tempId);
+          this.isSyncing = false;
+          this.processNext();
         },
-        error: () => {
+        error: (err) => {
           this.syncingIds.delete(tempId);
+          this.isSyncing = false;
+
+          if (err && err.status >= 400 && err.status < 500 && err.status !== 408 && err.status !== 429) {
+            this.stateService.markEventSyncFailed(event.timestamp);
+          } else {
+            setTimeout(() => this.processNext(), 3000);
+          }
         }
       });
   }

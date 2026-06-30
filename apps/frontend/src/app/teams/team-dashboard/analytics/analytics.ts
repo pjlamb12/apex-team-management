@@ -35,6 +35,10 @@ import {
   trendingUpOutline,
   alertCircleOutline,
   downloadOutline,
+  flashOutline,
+  ribbonOutline,
+  shieldOutline,
+  handRightOutline,
 } from 'ionicons/icons';
 import { 
   AnalyticsService, 
@@ -42,7 +46,8 @@ import {
   ParticipationStats, 
   PlayerPlaytime, 
   SeasonsService, 
-  LeaguesService 
+  LeaguesService,
+  TeamService
 } from '@apex-team/client/data-access/team';
 import { ModalController } from '@ionic/angular/standalone';
 import { ExportModalComponent, ExportOptions } from './export-modal/export-modal';
@@ -92,6 +97,7 @@ export class TeamAnalytics {
   private readonly analyticsService = inject(AnalyticsService);
   private readonly seasonsService = inject(SeasonsService);
   private readonly leaguesService = inject(LeaguesService);
+  private readonly teamService = inject(TeamService);
   private readonly modalCtrl = inject(ModalController);
 
   protected performanceMetrics = signal<PlayerPerformanceMetrics[]>([]);
@@ -105,6 +111,8 @@ export class TeamAnalytics {
   protected selectedSeasonId = this.seasonsService.selectedSeasonId;
   protected leagues = signal<League[]>([]);
   protected selectedLeagueId = signal<string | null>(null);
+  protected selectedEventType = signal<'game' | 'practice' | 'all'>('game');
+  protected sportName = signal<string>('Soccer');
 
   protected topScorers = computed(() => {
     return [...this.performanceMetrics()]
@@ -117,6 +125,34 @@ export class TeamAnalytics {
     return [...this.performanceMetrics()]
       .filter(m => m.assists > 0)
       .sort((a, b) => b.assists - a.assists)
+      .slice(0, 5);
+  });
+
+  protected topKills = computed(() => {
+    return [...this.performanceMetrics()]
+      .filter(m => (m.kills ?? 0) > 0)
+      .sort((a, b) => (b.kills ?? 0) - (a.kills ?? 0))
+      .slice(0, 5);
+  });
+
+  protected topAces = computed(() => {
+    return [...this.performanceMetrics()]
+      .filter(m => (m.aces ?? 0) > 0)
+      .sort((a, b) => (b.aces ?? 0) - (a.aces ?? 0))
+      .slice(0, 5);
+  });
+
+  protected topBlocks = computed(() => {
+    return [...this.performanceMetrics()]
+      .filter(m => (m.blocks ?? 0) > 0)
+      .sort((a, b) => (b.blocks ?? 0) - (a.blocks ?? 0))
+      .slice(0, 5);
+  });
+
+  protected topDigs = computed(() => {
+    return [...this.performanceMetrics()]
+      .filter(m => (m.digs ?? 0) > 0)
+      .sort((a, b) => (b.digs ?? 0) - (a.digs ?? 0))
       .slice(0, 5);
   });
 
@@ -141,10 +177,20 @@ export class TeamAnalytics {
       .sort((a, b) => b.totalSeconds - a.totalSeconds);
   });
 
+  protected maxPoints = computed(() => {
+    const pt = this.playingTime();
+    const values = Object.values(pt).map(p => p.totalSeconds);
+    return values.length > 0 ? Math.max(...values) : 1;
+  });
+
+  protected Math = Math;
+
   protected getPlayerName(playerId: string): string {
     const p = this.performanceMetrics().find(m => m.playerId === playerId);
     return p ? `${p.firstName} ${p.lastName}` : 'Unknown';
   }
+
+  private lastInitializedTeamId: string | null = null;
 
   constructor() {
     addIcons({ 
@@ -156,15 +202,40 @@ export class TeamAnalytics {
       trendingUpOutline,
       alertCircleOutline,
       downloadOutline,
+      flashOutline,
+      ribbonOutline,
+      shieldOutline,
+      handRightOutline,
     });
 
-    // Load data whenever teamId, selectedSeasonId or selectedLeagueId changes
+    // Initialize seasons if not already done
+    effect(() => {
+      const id = this._teamId();
+      if (id && id !== this.lastInitializedTeamId) {
+        this.lastInitializedTeamId = id;
+        this.isLoading.set(true);
+        if (this.seasonsService.seasons().length === 0) {
+          this.seasonsService.initialize(id).then(() => {
+            if (this.seasonsService.seasons().length === 0) {
+              this.isLoading.set(false);
+            }
+          });
+        } else {
+          if (!this.seasonsService.selectedSeasonId()) {
+            this.isLoading.set(false);
+          }
+        }
+      }
+    });
+
+    // Load data whenever teamId, selectedSeasonId, selectedLeagueId or selectedEventType changes
     effect(() => {
       const id = this._teamId();
       const seasonId = this.selectedSeasonId();
       const leagueId = this.selectedLeagueId();
+      const eventType = this.selectedEventType();
       if (id && seasonId) {
-        void this.loadData(id, seasonId, leagueId ?? undefined);
+        void this.loadData(id, seasonId, leagueId ?? undefined, eventType);
       }
     });
 
@@ -197,6 +268,10 @@ export class TeamAnalytics {
     this.selectedLeagueId.set(event.detail.value);
   }
 
+  protected onEventTypeChange(event: any): void {
+    this.selectedEventType.set(event.detail.value);
+  }
+
   protected async openExportModal(): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: ExportModalComponent,
@@ -218,23 +293,44 @@ export class TeamAnalytics {
     }
   }
 
-  protected async loadData(teamId: string, seasonId: string, leagueId?: string): Promise<void> {
+  protected async loadData(teamId: string, seasonId: string, leagueId?: string, eventType?: 'game' | 'practice' | 'all'): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [performance, participation, playingTime] = await Promise.all([
-        firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId, seasonId, leagueId)),
+      const [performance, participation, playingTime, team] = await Promise.all([
+        firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId, seasonId, leagueId, eventType)),
         firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId, leagueId)),
-        firstValueFrom(this.analyticsService.getTeamPlayingTime(teamId, seasonId, leagueId))
+        firstValueFrom(this.analyticsService.getTeamPlayingTime(teamId, seasonId, leagueId)),
+        this.teamService.getTeam(teamId)
       ]);
       this.performanceMetrics.set(performance);
       this.participationStats.set(participation);
       this.playingTime.set(playingTime);
+      this.sportName.set(team.sport?.name || 'Soccer');
     } catch {
       this.errorMessage.set('Failed to load team analytics.');
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  protected getHittingPct(kills = 0, errors = 0, hits = 0): string {
+    const attempts = hits + kills + errors;
+    if (attempts === 0) return '.000';
+    const pct = (kills - errors) / attempts;
+    if (pct === 1) return '1.000';
+    if (pct === -1) return '-1.000';
+    if (pct < 0) {
+      const fixed = pct.toFixed(3);
+      return '-' + fixed.substring(2);
+    }
+    const fixed = pct.toFixed(3);
+    return fixed.startsWith('0') ? fixed.substring(1) : fixed;
+  }
+
+  protected getPassAverage(passCount = 0, passScoreSum = 0): string {
+    if (passCount === 0) return '-';
+    return (passScoreSum / passCount).toFixed(2);
   }
 
   protected formatMinutes(seconds: number): string {

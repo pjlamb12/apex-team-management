@@ -32,12 +32,13 @@ import {
   PracticeDrill,
   PracticePacerService,
 } from '@apex-team/client/data-access/drill';
-import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, TeamService } from '@apex-team/client/data-access/team';
 import { SocketService } from '@apex-team/client/shared/services';
 import { forkJoin } from 'rxjs';
 
 import { PracticePlanTab } from '../practice-plan-tab/practice-plan-tab';
 import { PracticeExecutionTab } from '../practice-execution-tab/practice-execution-tab';
+import { PracticeStatsTab } from '../practice-stats-tab/practice-stats-tab';
 
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 
@@ -65,6 +66,7 @@ import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
     IonFabButton,
     PracticePlanTab,
     PracticeExecutionTab,
+    PracticeStatsTab,
     AttendanceList,
     CoachingNotes,
   ],
@@ -76,6 +78,7 @@ export class PracticeConsoleWrapper implements OnInit, OnDestroy {
 
   private readonly route = inject(ActivatedRoute);
   private readonly eventsService = inject(EventsService);
+  private readonly teamService = inject(TeamService);
   private readonly practiceDrillsService = inject(PracticeDrillsService);
   private readonly pacerService = inject(PracticePacerService);
   private readonly socketService = inject(SocketService);
@@ -83,7 +86,8 @@ export class PracticeConsoleWrapper implements OnInit, OnDestroy {
   protected teamId = this.route.snapshot.params['id'];
   protected eventId = this.route.snapshot.params['eventId'];
 
-  protected selectedSegment = signal<'summary' | 'plan' | 'execution' | 'attendance' | 'notes'>('summary');
+  protected selectedSegment = signal<'summary' | 'plan' | 'execution' | 'attendance' | 'notes' | 'stats'>('summary');
+  protected sportName = signal<string>('');
   
   private _event = signal<EventEntity | null>(null);
   protected event = this._event.asReadonly();
@@ -118,10 +122,12 @@ export class PracticeConsoleWrapper implements OnInit, OnDestroy {
   protected loadData() {
     forkJoin({
       event: this.eventsService.getEvent(this.teamId, this.eventId),
-      plan: this.practiceDrillsService.getPlan(this.teamId, this.eventId)
-    }).subscribe(({ event, plan }) => {
+      plan: this.practiceDrillsService.getPlan(this.teamId, this.eventId),
+      team: this.teamService.getTeam(this.teamId),
+    }).subscribe(({ event, plan, team }) => {
       this._event.set(event);
       this._plan.set(plan);
+      this.sportName.set(team?.sport?.name || '');
       this.pacerService.initialize(
         this.eventId,
         plan,

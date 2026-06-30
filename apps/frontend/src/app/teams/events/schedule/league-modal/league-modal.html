@@ -115,6 +115,66 @@
             </ion-item>
           </ngx-control-errors-display>
         </div>
+ 
+        @if (team()?.sport?.name === 'Volleyball') {
+          <div class="mt-6 mb-2 px-4 text-xs font-bold uppercase tracking-wider text-ap-muted">
+            Score Winning Rules
+          </div>
+ 
+          <div>
+            <ngx-control-errors-display>
+              <ion-item class="rounded-xl border border-ap-border" lines="none">
+                <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Best of (Sets)</ion-label>
+                <ion-input formControlName="bestOfSets" type="number" placeholder="e.g. 5"></ion-input>
+              </ion-item>
+            </ngx-control-errors-display>
+          </div>
+ 
+          <div>
+            <ngx-control-errors-display>
+              <ion-item class="rounded-xl border border-ap-border" lines="none">
+                <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Set Score Goal</ion-label>
+                <ion-input formControlName="setScoreGoal" type="number" placeholder="e.g. 25"></ion-input>
+              </ion-item>
+            </ngx-control-errors-display>
+          </div>
+ 
+          <ion-item class="rounded-xl border border-ap-border" lines="none">
+            <ion-toggle formControlName="winByTwo" justify="space-between">
+              <ion-label>
+                <h2 class="font-bold">Win by Two</h2>
+                <p class="text-xs text-ap-muted">Require a 2-point lead to win each set.</p>
+              </ion-label>
+            </ion-toggle>
+          </ion-item>
+ 
+          <div>
+            <ngx-control-errors-display>
+              <ion-item class="rounded-xl border border-ap-border" lines="none">
+                <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Point Cap (Optional)</ion-label>
+                <ion-input formControlName="pointCap" type="number" placeholder="e.g. 30 (leave blank for no cap)"></ion-input>
+              </ion-item>
+            </ngx-control-errors-display>
+          </div>
+
+          <div>
+            <ngx-control-errors-display>
+              <ion-item class="rounded-xl border border-ap-border" lines="none">
+                <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Deciding Set Score Goal</ion-label>
+                <ion-input formControlName="decidingSetScoreGoal" type="number" placeholder="e.g. 15"></ion-input>
+              </ion-item>
+            </ngx-control-errors-display>
+          </div>
+
+          <div>
+            <ngx-control-errors-display>
+              <ion-item class="rounded-xl border border-ap-border" lines="none">
+                <ion-label position="stacked" class="text-ap-muted uppercase text-[10px] font-bold tracking-widest">Deciding Set Point Cap (Optional)</ion-label>
+                <ion-input formControlName="decidingSetPointCap" type="number" placeholder="e.g. 20 (leave blank for no cap)"></ion-input>
+              </ion-item>
+            </ngx-control-errors-display>
+          </div>
+        }
       </ion-list>
     </form>
   </div>

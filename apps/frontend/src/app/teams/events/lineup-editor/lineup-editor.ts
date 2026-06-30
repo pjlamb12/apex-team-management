@@ -26,7 +26,7 @@ import {
   IonToast,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { settingsOutline } from 'ionicons/icons';
+import { settingsOutline, refreshOutline } from 'ionicons/icons';
 import {
   EventsService,
   EventEntity,
@@ -36,8 +36,9 @@ import {
   PlayerEntity,
   AttendanceService,
   AttendanceRecord,
+  TeamService,
 } from '@apex-team/client/data-access/team';
-import { SoccerPitchViewComponent } from '@apex-team/client/feature/game-console';
+import { SoccerPitchViewComponent, VolleyballCourtViewComponent } from '@apex-team/client/feature/game-console';
 import { Player } from '@apex-team/shared/util/models';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 
@@ -47,7 +48,8 @@ interface LineupSlot {
   playerId: string | null;
 }
 
-function getDefaultSlots(count: number): number[] {
+function getDefaultSlots(count: number, sportName?: string): number[] {
+  if (sportName === 'Volleyball') return [0, 1, 2, 3, 4, 5];
   if (count === 11) return [0, 1, 2, 4, 5, 6, 7, 9, 10, 12, 14]; // GK, 4 DEF, 4 MID, 2 FWD
   if (count === 9) return [0, 2, 3, 4, 7, 8, 9, 12, 14]; // GK, 3 DEF, 3 MID, 2 FWD
   if (count === 7) return [0, 2, 4, 7, 8, 9, 13]; // GK, 2 DEF, 3 MID, 1 FWD
@@ -55,7 +57,19 @@ function getDefaultSlots(count: number): number[] {
   return Array.from({length: count}, (_, i) => i);
 }
 
-function getPositionFromSlot(slot: number): string {
+function getPositionFromSlot(slot: number, sportName?: string, positionTypes?: string[]): string {
+  if (sportName === 'Volleyball') {
+    if (slot === 99) return 'Libero';
+    const defaults = [
+      'Opposite Hitter', // Slot 0 / Zone 1
+      'Outside Hitter',  // Slot 1 / Zone 2
+      'Middle Blocker',  // Slot 2 / Zone 3
+      'Opposite Hitter', // Slot 3 / Zone 4
+      'Outside Hitter',  // Slot 4 / Zone 5
+      'Middle Blocker',  // Slot 5 / Zone 6
+    ];
+    return defaults[slot] || 'Outside Hitter';
+  }
   if (slot === 0) return 'GK';
   if (slot >= 1 && slot <= 5) return 'DEF';
   if (slot >= 6 && slot <= 10) return 'MID';
@@ -91,6 +105,7 @@ function getPositionFromSlot(slot: number): string {
     IonIcon,
     IonToast,
     SoccerPitchViewComponent,
+    VolleyballCourtViewComponent,
     AttendanceList,
     CoachingNotes,
   ],
@@ -120,9 +135,11 @@ export class LineupEditor implements OnInit {
   private readonly eventsService = inject(EventsService);
   private readonly playersService = inject(PlayersService);
   private readonly attendanceService = inject(AttendanceService);
+  private readonly teamService = inject(TeamService);
   private readonly router = inject(Router);
 
   protected event = signal<EventEntity | null>(null);
+  protected team = signal<any | null>(null);
   protected players = signal<PlayerEntity[]>([]);
   protected attendance = signal<AttendanceRecord[]>([]);
   protected slots = signal<LineupSlot[]>([]);
@@ -133,11 +150,43 @@ export class LineupEditor implements OnInit {
   protected selectedPlayerId = signal<string | null>(null);
   protected toastMessage = signal<string | null>(null);
 
+  protected liberoId = computed(() => {
+    const liberoSlot = this.slots().find((s) => s.slotIndex === 99);
+    return liberoSlot?.playerId || null;
+  });
+  protected liberoDesignation = computed(() => {
+    const lId = this.liberoId();
+    if (!lId) return null;
+    return { liberoId: lId, replacedId: '' };
+  });
+
+  protected setLiberoId(playerId: string | null): void {
+    this.slots.update((prev) => {
+      const exists = prev.some((s) => s.slotIndex === 99);
+      if (exists) {
+        return prev.map((s) => {
+          if (s.slotIndex === 99) {
+            return { ...s, playerId };
+          }
+          return s;
+        });
+      } else {
+        return [...prev, { slotIndex: 99, positionName: 'Libero', playerId }];
+      }
+    });
+  }
+
   protected setViewMode(mode: any): void {
     this.viewMode.set(mode);
   }
 
-  protected readonly positionOptions = ['GK', 'DEF', 'MID', 'FWD'];
+  protected positionOptions = computed(() => {
+    const teamObj = this.team();
+    if (teamObj?.sport?.name === 'Volleyball') {
+      return teamObj.sport.positionTypes || ['Setter', 'Outside Hitter', 'Opposite Hitter', 'Middle Blocker', 'Libero', 'Defensive Specialist'];
+    }
+    return ['GK', 'DEF', 'MID', 'FWD'];
+  });
 
   protected assignedPlayerIds = computed(() => {
     return new Set(
@@ -161,6 +210,16 @@ export class LineupEditor implements OnInit {
     return this.players().filter((p) => !assigned.has(p.id) && !absent.has(p.id));
   });
 
+  protected eligibleLiberos = computed(() => {
+    const startingIds = new Set(
+      this.slots()
+        .filter((s) => s.slotIndex !== 99 && !!s.playerId)
+        .map((s) => s.playerId!)
+    );
+    const absent = this.absentPlayerIds();
+    return this.players().filter((p) => !startingIds.has(p.id) && !absent.has(p.id));
+  });
+
   protected pitchPlayers = computed(() => {
     const players = this.players();
     return this.slots()
@@ -178,7 +237,7 @@ export class LineupEditor implements OnInit {
   });
 
   constructor() {
-    addIcons({ settingsOutline });
+    addIcons({ settingsOutline, refreshOutline });
     // Load data whenever teamId or eventId changes
     effect(() => {
       const tId = this._teamId();
@@ -201,28 +260,48 @@ export class LineupEditor implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [event, players, lineup, attendance] = await Promise.all([
+      const [event, players, lineup, attendance, team, gameEvents] = await Promise.all([
         firstValueFrom(this.eventsService.getEvent(teamId, eventId)),
         firstValueFrom(this.playersService.getPlayers(teamId)),
         firstValueFrom(this.eventsService.getLineup(teamId, eventId)),
         firstValueFrom(this.attendanceService.getAttendance(teamId, eventId)),
+        this.teamService.getTeam(teamId),
+        firstValueFrom(this.eventsService.getGameEvents(teamId, eventId)),
       ]);
 
       this.event.set(event);
       this.players.set(players);
       this.attendance.set(attendance);
+      this.team.set(team);
 
-      const fieldCount = event.playersOnField || 11;
-      const defaultSlots = getDefaultSlots(fieldCount);
+      // Extract libero designation if it exists
+      const liberoEvent = gameEvents
+        .filter((e: any) => e.eventType === 'SUB' && e.payload?.isLiberoDesignation === true)
+        .pop();
+      const liberoEntry = lineup.find((e) => e.slotIndex === 99);
+      const initialLiberoId = liberoEntry?.playerId || (liberoEvent ? (liberoEvent.payload.inPlayerId as string) : null);
+
+      const sportName = team?.sport?.name;
+      const positionTypes = team?.sport?.positionTypes || [];
+      const fieldCount = event.playersOnField || (sportName === 'Volleyball' ? 6 : 11);
+      const defaultSlots = getDefaultSlots(fieldCount, sportName);
 
       // Map existing lineup to slots
       const startingLineup = lineup.filter((e) => e.status === 'starting');
       
       const newSlots: LineupSlot[] = Array.from({ length: fieldCount }, (_, i) => ({
         slotIndex: defaultSlots[i] ?? i,
-        positionName: getPositionFromSlot(defaultSlots[i] ?? i),
+        positionName: getPositionFromSlot(defaultSlots[i] ?? i, sportName, positionTypes),
         playerId: null,
       }));
+
+      if (sportName === 'Volleyball') {
+        newSlots.push({
+          slotIndex: 99,
+          positionName: 'Libero',
+          playerId: initialLiberoId,
+        });
+      }
 
       // Filter out absent player IDs
       const absent = new Set(attendance.filter((a) => a.status === 'absent').map((a) => a.playerId));
@@ -237,21 +316,21 @@ export class LineupEditor implements OnInit {
           const existingSlot = newSlots.find(s => s.slotIndex === entry.slotIndex);
           if (existingSlot && existingSlot.playerId === null) {
             existingSlot.playerId = entry.playerId;
-            existingSlot.positionName = entry.positionName || getPositionFromSlot(entry.slotIndex);
+            existingSlot.positionName = entry.positionName || getPositionFromSlot(entry.slotIndex, sportName, positionTypes);
           } else {
              // Fallback
              const emptySlot = newSlots.find(s => s.playerId === null);
              if (emptySlot) {
                emptySlot.playerId = entry.playerId;
-               emptySlot.positionName = entry.positionName || getPositionFromSlot(emptySlot.slotIndex);
+               emptySlot.positionName = entry.positionName || getPositionFromSlot(emptySlot.slotIndex, sportName, positionTypes);
              }
           }
         } else {
-           const emptySlot = newSlots.find(s => s.playerId === null);
-           if (emptySlot) {
-             emptySlot.playerId = entry.playerId;
-             emptySlot.positionName = entry.positionName || getPositionFromSlot(emptySlot.slotIndex);
-           }
+            const emptySlot = newSlots.find(s => s.playerId === null);
+            if (emptySlot) {
+              emptySlot.playerId = entry.playerId;
+              emptySlot.positionName = entry.positionName || getPositionFromSlot(emptySlot.slotIndex, sportName, positionTypes);
+            }
         }
       });
       this.slots.set(newSlots);
@@ -263,22 +342,11 @@ export class LineupEditor implements OnInit {
     }
   }
 
-  protected async onAttendanceChanged(): Promise<void> {
+  protected onAttendanceChanged(): void {
     const tId = this.teamId;
     const eId = this.eventId;
     if (tId && eId) {
-      try {
-        const attendance = await firstValueFrom(this.attendanceService.getAttendance(tId, eId));
-        this.attendance.set(attendance);
-        
-        // Remove any players who are now absent from slots
-        const absent = new Set(attendance.filter(a => a.status === 'absent').map(a => a.playerId));
-        this.slots.update((current) =>
-          current.map((s) => (s.playerId && absent.has(s.playerId) ? { ...s, playerId: null } : s))
-        );
-      } catch (err) {
-        console.error('Failed to update attendance in editor', err);
-      }
+      void this.loadData(tId, eId);
     }
   }
 
@@ -302,7 +370,7 @@ export class LineupEditor implements OnInit {
       const next = [...current];
       next[index] = { ...next[index], [field]: value };
       
-      if (field === 'positionName') {
+      if (field === 'positionName' && this.team()?.sport?.name !== 'Volleyball') {
         const pos = value as string;
         let minSlot = 0, maxSlot = 0;
         if (pos === 'GK') { minSlot = 0; maxSlot = 0; }
@@ -367,31 +435,43 @@ export class LineupEditor implements OnInit {
     const currentSelection = this.selectedPlayerId();
     if (!currentSelection) return;
 
-    const slots = this.slots();
-    const currentArrayIndex = slots.findIndex(s => s.playerId === currentSelection);
-
-    if (currentArrayIndex !== -1) {
-      // Move from old slot to new slot by just updating the slot properties
-      this.updateSlot(currentArrayIndex, 'slotIndex', targetSlotIndex);
-      this.updateSlot(currentArrayIndex, 'positionName', getPositionFromSlot(targetSlotIndex));
-    } else {
-      // Must be from bench. Find an empty item in the array
-      const emptyArrayIndex = slots.findIndex(s => s.playerId === null);
-      if (emptyArrayIndex !== -1) {
-        this.slots.update(current => {
-          const next = [...current];
-          next[emptyArrayIndex] = {
-            ...next[emptyArrayIndex],
-            playerId: currentSelection,
-            slotIndex: targetSlotIndex,
-            positionName: getPositionFromSlot(targetSlotIndex)
-          };
-          return next;
-        });
-      }
+    if (targetSlotIndex === 99) {
+      const isStarting = this.slots().some(s => s.slotIndex !== 99 && s.playerId === currentSelection);
+      if (isStarting) return;
     }
 
+    this.slots.update((prev) => {
+      return prev.map((s) => {
+        if (s.playerId === currentSelection) {
+          return { ...s, playerId: null };
+        }
+        if (s.slotIndex === targetSlotIndex) {
+          return { ...s, playerId: currentSelection };
+        }
+        return s;
+      });
+    });
+
     this.selectedPlayerId.set(null);
+  }
+
+  protected rotateStartingLineup(): void {
+    this.slots.update((prev) => {
+      const next = prev.map(s => ({ ...s }));
+      const courtSlots = next.filter((s) => s.slotIndex !== 99);
+      if (courtSlots.length !== 6) return prev;
+
+      const tempPlayers = courtSlots.map((s) => s.playerId);
+      const tempPositions = courtSlots.map((s) => s.positionName);
+
+      courtSlots.forEach((slot, i) => {
+        const sourceIndex = (i + 1) % 6;
+        slot.playerId = tempPlayers[sourceIndex];
+        slot.positionName = tempPositions[sourceIndex];
+      });
+
+      return next;
+    });
   }
 
   protected handleBenchPlayerClick(player: PlayerEntity): void {
@@ -429,7 +509,7 @@ export class LineupEditor implements OnInit {
               playerId: s.playerId!,
               positionName: s.positionName || undefined,
               slotIndex: s.slotIndex,
-              status: 'starting' as const,
+              status: s.slotIndex === 99 ? ('bench' as const) : ('starting' as const),
             })),
           // Bench
           ...this.benchPlayers().map((p) => ({

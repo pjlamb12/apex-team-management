@@ -6,40 +6,101 @@
     </ion-label>
   </ion-list-header>
   
-  @if (isGoalkeeper()) {
-    <ion-item button (click)="selectAction('BLOCKED_SHOT')">
-      <ion-icon slot="start" name="shield-half-outline" color="primary"></ion-icon>
-      <ion-label>Block Shot</ion-label>
+  @if (sportName() === 'Volleyball') {
+    <!-- Serving Group -->
+    <div class="px-4 py-2 flex flex-col gap-2">
+      <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Serving</span>
+      <div class="flex gap-2">
+        <ion-button fill="outline" size="small" color="success" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('ACE')">Ace</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SERVE_ATTEMPT')">Attempt</ion-button>
+        <ion-button fill="outline" size="small" color="danger" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SERVICE_ERROR')">Error</ion-button>
+      </div>
+    </div>
+
+    <div class="h-px bg-ap-border/60 my-2"></div>
+
+    <!-- Hitting Group -->
+    <div class="px-4 py-2 flex flex-col gap-2">
+      <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Hitting</span>
+      <div class="flex gap-2">
+        <ion-button fill="outline" size="small" color="success" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('KILL')">Kill</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('HIT')">Attempt</ion-button>
+        <ion-button fill="outline" size="small" color="danger" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('HITTING_ERROR')">Error</ion-button>
+      </div>
+    </div>
+
+    <div class="h-px bg-ap-border/60 my-2"></div>
+
+    <!-- Passing Group -->
+    <div class="px-4 py-2 flex flex-col gap-2">
+      <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Passing</span>
+      <div class="flex gap-2">
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(3)">3</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(2)">2</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(1)">1</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(0)">0</ion-button>
+      </div>
+    </div>
+
+    <div class="h-px bg-ap-border/60 my-2"></div>
+
+    <!-- Setting Group -->
+    <div class="px-4 py-2 flex flex-col gap-2">
+      <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Setting</span>
+      <div class="flex gap-2">
+        <ion-button fill="outline" size="small" color="success" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SET_ASSIST')">Assist</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SET_ATTEMPT')">Attempt</ion-button>
+        <ion-button fill="outline" size="small" color="danger" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SET_ERROR')">Error</ion-button>
+      </div>
+    </div>
+
+    <div class="h-px bg-ap-border/60 my-2"></div>
+
+    <!-- Defense Group -->
+    <div class="px-4 py-2 flex flex-col gap-2">
+      <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Defense</span>
+      <div class="flex gap-2">
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('BLOCK')">Block</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('BLOCK_TOUCH')">Touch</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('DIG')">Dig</ion-button>
+      </div>
+    </div>
+  } @else {
+    @if (isGoalkeeper()) {
+      <ion-item button (click)="selectAction('BLOCKED_SHOT')">
+        <ion-icon slot="start" name="shield-half-outline" color="primary"></ion-icon>
+        <ion-label>Block Shot</ion-label>
+      </ion-item>
+      
+      <ion-item button (click)="selectAction('BLOCKED_PENALTY')">
+        <ion-icon slot="start" name="shield-outline" color="primary"></ion-icon>
+        <ion-label>Block Penalty Kick</ion-label>
+      </ion-item>
+    }
+
+    <ion-item button (click)="selectAction('GOAL')">
+      <ion-icon slot="start" name="football-outline" color="dark"></ion-icon>
+      <ion-label>Goal</ion-label>
+    </ion-item>
+
+    <ion-item button (click)="selectAction('OWN_GOAL')">
+      <ion-icon slot="start" name="football-outline" color="danger"></ion-icon>
+      <ion-label>Own Goal</ion-label>
     </ion-item>
     
-    <ion-item button (click)="selectAction('BLOCKED_PENALTY')">
-      <ion-icon slot="start" name="shield-outline" color="primary"></ion-icon>
-      <ion-label>Block Penalty Kick</ion-label>
+    <ion-item button (click)="selectAction('ASSIST')">
+      <ion-icon slot="start" name="star-outline" color="dark"></ion-icon>
+      <ion-label>Assist</ion-label>
+    </ion-item>
+    
+    <ion-item button (click)="selectAction('YELLOW_CARD')">
+      <ion-icon slot="start" name="card-outline" color="warning"></ion-icon>
+      <ion-label>Yellow Card</ion-label>
+    </ion-item>
+    
+    <ion-item button (click)="selectAction('RED_CARD')">
+      <ion-icon slot="start" name="card-outline" color="danger"></ion-icon>
+      <ion-label>Red Card</ion-label>
     </ion-item>
   }
-
-  <ion-item button (click)="selectAction('GOAL')">
-    <ion-icon slot="start" name="football-outline" color="dark"></ion-icon>
-    <ion-label>Goal</ion-label>
-  </ion-item>
-
-  <ion-item button (click)="selectAction('OWN_GOAL')">
-    <ion-icon slot="start" name="football-outline" color="danger"></ion-icon>
-    <ion-label>Own Goal</ion-label>
-  </ion-item>
-  
-  <ion-item button (click)="selectAction('ASSIST')">
-    <ion-icon slot="start" name="star-outline" color="dark"></ion-icon>
-    <ion-label>Assist</ion-label>
-  </ion-item>
-  
-  <ion-item button (click)="selectAction('YELLOW_CARD')">
-    <ion-icon slot="start" name="card-outline" color="warning"></ion-icon>
-    <ion-label>Yellow Card</ion-label>
-  </ion-item>
-  
-  <ion-item button (click)="selectAction('RED_CARD')">
-    <ion-icon slot="start" name="card-outline" color="danger"></ion-icon>
-    <ion-label>Red Card</ion-label>
-  </ion-item>
 </ion-list>

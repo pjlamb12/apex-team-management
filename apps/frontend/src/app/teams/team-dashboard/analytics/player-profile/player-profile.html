@@ -15,53 +15,105 @@
       <div class="flex flex-col items-center justify-center py-20 gap-4">
         <ion-spinner name="crescent" color="primary"></ion-spinner>
       </div>
-    } @else if (errorMessage()) {
-      <div class="text-center py-20 text-ap-danger font-bold">
-        <ion-icon name="alert-circle-outline" class="text-4xl mb-2"></ion-icon>
-        <p>{{ errorMessage() }}</p>
-      </div>
     } @else if (profile(); as p) {
       <!-- Summary Grid -->
       <div class="grid grid-cols-2 gap-4">
-        @if (p.player.preferredPosition === 'Goalkeeper') {
+        @if (sportName() === 'Volleyball') {
           <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
             <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocked Shots</div>
-              <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalBlockedShots || 0 }}</div>
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Kills</div>
+              <div class="text-3xl font-black text-red-500 summary-value">{{ p.totalKills || 0 }}</div>
             </ion-card-content>
           </ion-card>
           <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
             <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocked PKs</div>
-              <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalBlockedPenaltyKicks || 0 }}</div>
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Aces</div>
+              <div class="text-3xl font-black text-amber-500 summary-value">{{ p.totalAces || 0 }}</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocks</div>
+              <div class="text-3xl font-black text-blue-500 summary-value">{{ p.totalBlocks || 0 }}</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Digs</div>
+              <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalDigs || 0 }}</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Assists</div>
+              <div class="text-3xl font-black text-purple-500 summary-value">{{ p.totalAssists || 0 }}</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Points</div>
+              <div class="text-3xl font-black text-blue-500 summary-value">{{ p.totalMinutes }} pts</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Errors</div>
+              <div class="text-3xl font-black text-red-500 summary-value">{{ (p.totalServiceErrors || 0) + (p.totalHittingErrors || 0) }}</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Games</div>
+              <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalGamesPlayed }}</div>
+            </ion-card-content>
+          </ion-card>
+        } @else {
+          @if (p.player.preferredPosition === 'Goalkeeper') {
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+              <ion-card-content class="flex flex-col items-center py-6">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocked Shots</div>
+                <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalBlockedShots || 0 }}</div>
+              </ion-card-content>
+            </ion-card>
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+              <ion-card-content class="flex flex-col items-center py-6">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocked PKs</div>
+                <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalBlockedPenaltyKicks || 0 }}</div>
+              </ion-card-content>
+            </ion-card>
+          }
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Goals</div>
+              <div class="text-3xl font-black text-blue-500 summary-value">{{ p.totalGoals }}</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Assists</div>
+              <div class="text-3xl font-black text-amber-500 summary-value">{{ p.totalAssists }}</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Minutes</div>
+              <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalMinutes }}m</div>
+            </ion-card-content>
+          </ion-card>
+          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+            <ion-card-content class="flex flex-col items-center py-6">
+              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Games</div>
+              <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalGamesPlayed }}</div>
             </ion-card-content>
           </ion-card>
         }
-        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-          <ion-card-content class="flex flex-col items-center py-6">
-            <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Goals</div>
-            <div class="text-3xl font-black text-blue-500 summary-value">{{ p.totalGoals }}</div>
-          </ion-card-content>
-        </ion-card>
-        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-          <ion-card-content class="flex flex-col items-center py-6">
-            <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Assists</div>
-            <div class="text-3xl font-black text-amber-500 summary-value">{{ p.totalAssists }}</div>
-          </ion-card-content>
-        </ion-card>
-        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-          <ion-card-content class="flex flex-col items-center py-6">
-            <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Minutes</div>
-            <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalMinutes }}m</div>
-          </ion-card-content>
-        </ion-card>
-        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-          <ion-card-content class="flex flex-col items-center py-6">
-            <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Games</div>
-            <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalGamesPlayed }}</div>
-          </ion-card-content>
-        </ion-card>
       </div>
+      @if (errorMessage()) {
+        <div class="text-center py-20 text-ap-danger font-bold">
+          <ion-icon name="alert-circle-outline" class="text-4xl mb-2"></ion-icon>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      }
 
       <!-- Position Distribution -->
       <ion-card class="m-0 border border-ap-border shadow-none">
@@ -78,13 +130,25 @@
                 <ion-label>
                   <div class="flex items-center justify-between mb-2">
                     <span class="font-bold text-ap-text">{{ pos.key }}</span>
-                    <span class="text-xs font-black text-ap-muted">{{ formatMinutes(pos.value) }}</span>
+                    @if (sportName() === 'Volleyball') {
+                      <span class="text-xs font-black text-ap-muted">{{ pos.value }} pts ({{ Math.round((pos.value / (p.totalMinutes || 1)) * 100) }}%)</span>
+                    } @else {
+                      <span class="text-xs font-black text-ap-muted">{{ formatMinutes(pos.value) }}</span>
+                    }
                   </div>
-                  <ion-progress-bar 
-                    [value]="pos.value / (p.totalMinutes * 60 || 1)" 
-                    [class]="getHeatmapClass(pos.value, p.totalMinutes * 60)"
-                    class="h-1 rounded-full">
-                  </ion-progress-bar>
+                  @if (sportName() === 'Volleyball') {
+                    <ion-progress-bar 
+                      [value]="pos.value / (p.totalMinutes || 1)" 
+                      [class]="getHeatmapClass(pos.value, p.totalMinutes)"
+                      class="h-1 rounded-full">
+                    </ion-progress-bar>
+                  } @else {
+                    <ion-progress-bar 
+                      [value]="pos.value / (p.totalMinutes * 60 || 1)" 
+                      [class]="getHeatmapClass(pos.value, p.totalMinutes * 60)"
+                      class="h-1 rounded-full">
+                    </ion-progress-bar>
+                  }
                 </ion-label>
               </ion-item>
             } @empty {
@@ -115,21 +179,39 @@
                     </div>
                     <div class="text-right">
                        @if (h.eventType === 'game') {
-                         <div class="flex items-center justify-end gap-2">
-                            @if (h.goals > 0) {
-                              <ion-badge color="primary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">G: {{ h.goals }}</ion-badge>
-                            }
-                            @if (h.assists > 0) {
-                              <ion-badge color="warning" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">A: {{ h.assists }}</ion-badge>
-                            }
-                            @if (h.blockedShots > 0) {
-                              <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">BS: {{ h.blockedShots }}</ion-badge>
-                            }
-                            @if (h.blockedPenaltyKicks > 0) {
-                              <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">BPK: {{ h.blockedPenaltyKicks }}</ion-badge>
-                            }
-                            <span class="text-xs font-black text-ap-text">{{ formatMinutes(h.playingTimeSeconds) }}</span>
-                         </div>
+                          <div class="flex items-center justify-end gap-2 flex-wrap max-w-[200px]">
+                             @if (sportName() === 'Volleyball') {
+                               @if ((h.kills ?? 0) > 0) {
+                                 <ion-badge color="danger" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">K: {{ h.kills }}</ion-badge>
+                               }
+                               @if ((h.aces ?? 0) > 0) {
+                                 <ion-badge color="warning" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">A: {{ h.aces }}</ion-badge>
+                               }
+                               @if ((h.blocks ?? 0) > 0) {
+                                 <ion-badge color="primary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">B: {{ h.blocks }}</ion-badge>
+                               }
+                               @if ((h.digs ?? 0) > 0) {
+                                 <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">D: {{ h.digs }}</ion-badge>
+                               }
+                               @if (h.assists > 0) {
+                                 <ion-badge color="secondary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">AST: {{ h.assists }}</ion-badge>
+                               }
+                             } @else {
+                               @if (h.goals > 0) {
+                                 <ion-badge color="primary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">G: {{ h.goals }}</ion-badge>
+                               }
+                               @if (h.assists > 0) {
+                                 <ion-badge color="warning" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">A: {{ h.assists }}</ion-badge>
+                               }
+                               @if (h.blockedShots > 0) {
+                                 <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">BS: {{ h.blockedShots }}</ion-badge>
+                               }
+                               @if (h.blockedPenaltyKicks > 0) {
+                                 <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">BPK: {{ h.blockedPenaltyKicks }}</ion-badge>
+                               }
+                             }
+                             <span class="text-xs font-black text-ap-text">{{ formatMinutes(h.playingTimeSeconds) }}</span>
+                          </div>
                        } @else {
                          <div class="flex items-center justify-end gap-2">
                            <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 uppercase tracking-tighter font-bold">Practice</ion-badge>

@@ -31,7 +31,6 @@ import {
   IonCol,
   IonSelect,
   IonSelectOption,
-  ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { saveOutline, calendarOutline, barChartOutline, addOutline } from 'ionicons/icons';

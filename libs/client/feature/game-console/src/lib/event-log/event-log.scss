@@ -26,3 +26,30 @@ ion-list-header {
   --padding-end: 16px;
   padding-inline: 16px;
 }
+
+.events-scroll-container {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.event-log-scroll-wrapper {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease-in-out;
+    z-index: 10;
+  }
+  
+  &.has-shadow-bottom::after {
+    opacity: 1;
+  }
+}
