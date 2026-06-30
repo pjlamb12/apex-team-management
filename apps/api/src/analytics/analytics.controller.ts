@@ -31,8 +31,9 @@ export class AnalyticsController {
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
     @Query('leagueId') leagueId?: string,
+    @Query('eventType') eventType?: 'game' | 'practice' | 'all',
   ) {
-    return this.performanceMetricsService.getTeamMetrics(teamId, seasonId, leagueId);
+    return this.performanceMetricsService.getTeamMetrics(teamId, seasonId, leagueId, eventType);
   }
 
   @Get('analytics/playing-time')

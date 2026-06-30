@@ -24,6 +24,14 @@ export interface PlayerPerformanceMetrics {
   digs?: number;
   serviceErrors?: number;
   hittingErrors?: number;
+  hits?: number;
+  serveAttempts?: number;
+  blockTouches?: number;
+  setAttempts?: number;
+  setAssists?: number;
+  setErrors?: number;
+  passCount?: number;
+  passScoreSum?: number;
 }
 
 @Injectable()
@@ -39,9 +47,20 @@ export class PerformanceMetricsService {
     private readonly attendanceRepo: Repository<AttendanceEntity>,
   ) {}
 
-  async getTeamMetrics(teamId: string, seasonId?: string, leagueId?: string): Promise<PlayerPerformanceMetrics[]> {
-    // Find all games for the team/season/league
-    const where: any = { type: 'game', status: 'completed' };
+  async getTeamMetrics(
+    teamId: string,
+    seasonId?: string,
+    leagueId?: string,
+    eventType: 'game' | 'practice' | 'all' = 'game'
+  ): Promise<PlayerPerformanceMetrics[]> {
+    // Find all events for the team/season/league
+    const where: any = { status: 'completed' };
+    if (eventType === 'all') {
+      where.type = In(['game', 'practice']);
+    } else {
+      where.type = eventType;
+    }
+
     if (leagueId) {
       where.leagueId = leagueId;
     } else if (seasonId) {
@@ -173,6 +192,43 @@ export class PerformanceMetricsService {
         if (playerId && metricsMap[playerId]) {
           metricsMap[playerId].hittingErrors = (metricsMap[playerId].hittingErrors || 0) + 1;
         }
+      } else if (ge.eventType === 'HIT') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].hits = (metricsMap[playerId].hits || 0) + 1;
+        }
+      } else if (ge.eventType === 'SERVE_ATTEMPT') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].serveAttempts = (metricsMap[playerId].serveAttempts || 0) + 1;
+        }
+      } else if (ge.eventType === 'BLOCK_TOUCH') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].blockTouches = (metricsMap[playerId].blockTouches || 0) + 1;
+        }
+      } else if (ge.eventType === 'SET_ATTEMPT') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].setAttempts = (metricsMap[playerId].setAttempts || 0) + 1;
+        }
+      } else if (ge.eventType === 'SET_ASSIST') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].setAssists = (metricsMap[playerId].setAssists || 0) + 1;
+        }
+      } else if (ge.eventType === 'SET_ERROR') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].setErrors = (metricsMap[playerId].setErrors || 0) + 1;
+        }
+      } else if (ge.eventType === 'SERVE_RECEIVE') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].passCount = (metricsMap[playerId].passCount || 0) + 1;
+          const score = payload.score ?? ge.payload?.score ?? 0;
+          metricsMap[playerId].passScoreSum = (metricsMap[playerId].passScoreSum || 0) + score;
+        }
       }
     });
 
@@ -197,7 +253,15 @@ export class PerformanceMetricsService {
       blocks: 0,
       digs: 0,
       serviceErrors: 0,
-      hittingErrors: 0
+      hittingErrors: 0,
+      hits: 0,
+      serveAttempts: 0,
+      blockTouches: 0,
+      setAttempts: 0,
+      setAssists: 0,
+      setErrors: 0,
+      passCount: 0,
+      passScoreSum: 0
     };
   }
 }

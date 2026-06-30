@@ -21,6 +21,14 @@ export interface PlayerPerformanceMetrics {
   digs?: number;
   serviceErrors?: number;
   hittingErrors?: number;
+  hits?: number;
+  serveAttempts?: number;
+  blockTouches?: number;
+  setAttempts?: number;
+  setAssists?: number;
+  setErrors?: number;
+  passCount?: number;
+  passScoreSum?: number;
 }
 
 export interface PlayerPlaytime {
@@ -92,10 +100,11 @@ export class AnalyticsService {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
-  getPerformanceMetrics(teamId: string, seasonId?: string, leagueId?: string): Observable<PlayerPerformanceMetrics[]> {
+  getPerformanceMetrics(teamId: string, seasonId?: string, leagueId?: string, eventType?: 'game' | 'practice' | 'all'): Observable<PlayerPerformanceMetrics[]> {
     const params: any = {};
     if (seasonId) params.seasonId = seasonId;
     if (leagueId) params.leagueId = leagueId;
+    if (eventType) params.eventType = eventType;
     return this.http.get<PlayerPerformanceMetrics[]>(`${this.apiUrl}/teams/${teamId}/analytics/performance`, { params });
   }
 

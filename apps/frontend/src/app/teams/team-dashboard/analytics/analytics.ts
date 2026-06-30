@@ -111,6 +111,7 @@ export class TeamAnalytics {
   protected selectedSeasonId = this.seasonsService.selectedSeasonId;
   protected leagues = signal<League[]>([]);
   protected selectedLeagueId = signal<string | null>(null);
+  protected selectedEventType = signal<'game' | 'practice' | 'all'>('game');
   protected sportName = signal<string>('Soccer');
 
   protected topScorers = computed(() => {
@@ -205,13 +206,14 @@ export class TeamAnalytics {
       handRightOutline,
     });
 
-    // Load data whenever teamId, selectedSeasonId or selectedLeagueId changes
+    // Load data whenever teamId, selectedSeasonId, selectedLeagueId or selectedEventType changes
     effect(() => {
       const id = this._teamId();
       const seasonId = this.selectedSeasonId();
       const leagueId = this.selectedLeagueId();
+      const eventType = this.selectedEventType();
       if (id && seasonId) {
-        void this.loadData(id, seasonId, leagueId ?? undefined);
+        void this.loadData(id, seasonId, leagueId ?? undefined, eventType);
       }
     });
 
@@ -244,6 +246,10 @@ export class TeamAnalytics {
     this.selectedLeagueId.set(event.detail.value);
   }
 
+  protected onEventTypeChange(event: any): void {
+    this.selectedEventType.set(event.detail.value);
+  }
+
   protected async openExportModal(): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: ExportModalComponent,
@@ -265,12 +271,12 @@ export class TeamAnalytics {
     }
   }
 
-  protected async loadData(teamId: string, seasonId: string, leagueId?: string): Promise<void> {
+  protected async loadData(teamId: string, seasonId: string, leagueId?: string, eventType?: 'game' | 'practice' | 'all'): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
       const [performance, participation, playingTime, team] = await Promise.all([
-        firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId, seasonId, leagueId)),
+        firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId, seasonId, leagueId, eventType)),
         firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId, leagueId)),
         firstValueFrom(this.analyticsService.getTeamPlayingTime(teamId, seasonId, leagueId)),
         this.teamService.getTeam(teamId)
@@ -284,6 +290,25 @@ export class TeamAnalytics {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  protected getHittingPct(kills = 0, errors = 0, hits = 0): string {
+    const attempts = hits + kills + errors;
+    if (attempts === 0) return '.000';
+    const pct = (kills - errors) / attempts;
+    if (pct === 1) return '1.000';
+    if (pct === -1) return '-1.000';
+    if (pct < 0) {
+      const fixed = pct.toFixed(3);
+      return '-' + fixed.substring(2);
+    }
+    const fixed = pct.toFixed(3);
+    return fixed.startsWith('0') ? fixed.substring(1) : fixed;
+  }
+
+  protected getPassAverage(passCount = 0, passScoreSum = 0): string {
+    if (passCount === 0) return '-';
+    return (passScoreSum / passCount).toFixed(2);
   }
 
   protected formatMinutes(seconds: number): string {

@@ -13,8 +13,8 @@
 
   <ion-toolbar class="border-b border-ap-border bg-ap-bg">
     <div class="px-4 py-2 space-y-2">
-      <div class="flex items-center gap-2">
-        <ion-item lines="none" class="bg-ap-surface rounded-lg border border-ap-border flex-1 min-h-[44px]">
+      <div class="flex flex-col sm:flex-row items-center gap-2">
+        <ion-item lines="none" class="bg-ap-surface rounded-lg border border-ap-border w-full sm:flex-1 min-h-[44px]">
           <ion-select
             label="Season"
             labelPlacement="floating"
@@ -31,7 +31,7 @@
           </ion-select>
         </ion-item>
 
-        <ion-item lines="none" class="bg-ap-surface rounded-lg border border-ap-border flex-1 min-h-[44px]">
+        <ion-item lines="none" class="bg-ap-surface rounded-lg border border-ap-border w-full sm:flex-1 min-h-[44px]">
           <ion-select
             label="Competition"
             labelPlacement="floating"
@@ -45,6 +45,21 @@
             @for (league of leagues(); track league.id) {
               <ion-select-option [value]="league.id">{{ league.name }}</ion-select-option>
             }
+          </ion-select>
+        </ion-item>
+
+        <ion-item lines="none" class="bg-ap-surface rounded-lg border border-ap-border w-full sm:flex-1 min-h-[44px]">
+          <ion-select
+            label="Event Type"
+            labelPlacement="floating"
+            [value]="selectedEventType()"
+            (ionChange)="onEventTypeChange($event)"
+            interface="action-sheet"
+            class="w-full text-sm"
+          >
+            <ion-select-option value="game">Games Only</ion-select-option>
+            <ion-select-option value="practice">Practices Only</ion-select-option>
+            <ion-select-option value="all">All Events</ion-select-option>
           </ion-select>
         </ion-item>
       </div>
@@ -208,18 +223,25 @@
               <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted">Roster Performance</ion-card-title>
             </ion-card-header>
             <ion-card-content class="p-0 overflow-x-auto">
-              <table class="w-full text-left border-collapse text-sm">
+              <table class="w-full text-left border-collapse text-xs table-auto min-w-[900px]">
                 <thead class="bg-ap-surface-raised">
-                  <tr>
+                  <tr class="border-b border-ap-border">
                     <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted">Player</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">GP</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-red-500">K</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-amber-500">A</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-blue-500">B</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">D</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-purple-500">AST</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-orange-500">SE</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-red-500">HE</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">GP</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">K</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">H</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-red-500">E</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">Pct</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">S.Att</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">S.Ast</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-red-500">S.Err</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">Pass</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-ap-primary">P.Avg</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-amber-500">A</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-orange-500">SE</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">D</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-blue-500">B</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center pr-4">BT</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-ap-border">
@@ -229,14 +251,27 @@
                         {{ m.firstName }} {{ m.lastName }}
                         <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition || 'No Position' }}</span>
                       </td>
-                      <td class="px-4 py-3 text-center text-ap-muted">{{ m.gamesPlayed }}</td>
-                      <td class="px-4 py-3 text-center font-black text-red-500">{{ m.kills || 0 }}</td>
-                      <td class="px-4 py-3 text-center font-black text-amber-500">{{ m.aces || 0 }}</td>
-                      <td class="px-4 py-3 text-center font-black text-blue-500">{{ m.blocks || 0 }}</td>
-                      <td class="px-4 py-3 text-center font-black text-emerald-500">{{ m.digs || 0 }}</td>
-                      <td class="px-4 py-3 text-center font-black text-purple-500">{{ m.assists || 0 }}</td>
-                      <td class="px-4 py-3 text-center font-black text-orange-500">{{ m.serviceErrors || 0 }}</td>
-                      <td class="px-4 py-3 text-center font-black text-red-500">{{ m.hittingErrors || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
+                      <td class="px-2 py-3 text-center font-bold text-ap-text tabular-nums">{{ m.kills || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.hits || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-red-500 tabular-nums">{{ m.hittingErrors || 0 }}</td>
+                      <td class="px-2 py-3 text-center font-black tabular-nums"
+                          [class.text-green-500]="((m.kills || 0) - (m.hittingErrors || 0)) > 0"
+                          [class.text-red-500]="((m.kills || 0) - (m.hittingErrors || 0)) < 0">
+                        {{ getHittingPct(m.kills || 0, m.hittingErrors || 0, m.hits || 0) }}
+                      </td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.setAttempts || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.setAssists || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-red-500 tabular-nums">{{ m.setErrors || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.passCount || 0 }}</td>
+                      <td class="px-2 py-3 text-center font-bold text-ap-primary tabular-nums">
+                        {{ getPassAverage(m.passCount || 0, m.passScoreSum || 0) }}
+                      </td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.aces || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-orange-500 tabular-nums">{{ m.serviceErrors || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.digs || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.blocks || 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text pr-4 tabular-nums">{{ m.blockTouches || 0 }}</td>
                     </tr>
                   }
                 </tbody>
