@@ -190,6 +190,8 @@ export class TeamAnalytics {
     return p ? `${p.firstName} ${p.lastName}` : 'Unknown';
   }
 
+  private lastInitializedTeamId: string | null = null;
+
   constructor() {
     addIcons({ 
       statsChartOutline, 
@@ -204,6 +206,26 @@ export class TeamAnalytics {
       ribbonOutline,
       shieldOutline,
       handRightOutline,
+    });
+
+    // Initialize seasons if not already done
+    effect(() => {
+      const id = this._teamId();
+      if (id && id !== this.lastInitializedTeamId) {
+        this.lastInitializedTeamId = id;
+        this.isLoading.set(true);
+        if (this.seasonsService.seasons().length === 0) {
+          this.seasonsService.initialize(id).then(() => {
+            if (this.seasonsService.seasons().length === 0) {
+              this.isLoading.set(false);
+            }
+          });
+        } else {
+          if (!this.seasonsService.selectedSeasonId()) {
+            this.isLoading.set(false);
+          }
+        }
+      }
     });
 
     // Load data whenever teamId, selectedSeasonId, selectedLeagueId or selectedEventType changes
