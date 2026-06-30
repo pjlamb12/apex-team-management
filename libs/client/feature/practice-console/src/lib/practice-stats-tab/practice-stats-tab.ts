@@ -74,6 +74,9 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
         setErrors: number;
         passCount: number;
         passScoreSum: number;
+        aces: number;
+        serviceErrors: number;
+        serveAttempts: number;
       }
     > = {};
 
@@ -92,6 +95,9 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
           setErrors: 0,
           passCount: 0,
           passScoreSum: 0,
+          aces: 0,
+          serviceErrors: 0,
+          serveAttempts: 0,
         };
       }
 
@@ -112,6 +118,12 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
         stats[pid].passCount++;
         const score = payload.score ?? e.score ?? 0;
         stats[pid].passScoreSum += score;
+      } else if (type === 'SERVE_ATTEMPT') {
+        stats[pid].serveAttempts++;
+      } else if (type === 'ACE') {
+        stats[pid].aces++;
+      } else if (type === 'SERVICE_ERROR') {
+        stats[pid].serviceErrors++;
       }
     });
 
@@ -247,6 +259,12 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
         return 'Setting Error';
       case 'SERVE_RECEIVE':
         return `Pass (Score: ${payload.score ?? e.score ?? 0})`;
+      case 'SERVE_ATTEMPT':
+        return 'Serve Attempt';
+      case 'ACE':
+        return 'Ace';
+      case 'SERVICE_ERROR':
+        return 'Service Error';
       default:
         return type || 'Action';
     }

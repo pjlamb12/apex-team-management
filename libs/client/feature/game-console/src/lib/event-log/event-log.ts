@@ -1,7 +1,7 @@
 import { Component, inject, computed, ViewChild, ElementRef, signal, effect } from '@angular/core';
 import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController, IonSpinner } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline } from 'ionicons/icons';
+import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline, trashOutline } from 'ionicons/icons';
 import { LiveGameStateService, GameEvent } from '../live-game-state.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { firstValueFrom } from 'rxjs';
@@ -90,7 +90,8 @@ export class EventLogViewComponent {
       syncOutline,
       addCircleOutline,
       removeCircleOutline,
-      arrowForwardOutline
+      arrowForwardOutline,
+      trashOutline
     });
 
     effect(() => {
@@ -144,6 +145,7 @@ export class EventLogViewComponent {
       case 'POINT_WON': return 'add-circle-outline';
       case 'POINT_LOST': return 'remove-circle-outline';
       case 'SERVE_RECEIVE': return 'arrow-forward-outline';
+      case 'SERVE_ATTEMPT': return 'arrow-forward-outline';
       case 'HIT': return 'flash-outline';
       case 'SET_ATTEMPT': return 'arrow-forward-outline';
       case 'SET_ASSIST': return 'star-outline';
@@ -181,6 +183,7 @@ export class EventLogViewComponent {
       case 'POINT_WON': return 'success';
       case 'POINT_LOST': return 'danger';
       case 'SERVE_RECEIVE': return 'primary';
+      case 'SERVE_ATTEMPT': return 'medium';
       case 'HIT': return 'medium';
       case 'SET_ATTEMPT': return 'medium';
       case 'SET_ASSIST': return 'primary';
@@ -230,6 +233,20 @@ export class EventLogViewComponent {
   protected retrySync(event: GameEvent): void {
     if (event.timestamp) {
       this.stateService.retryEventSync(event.timestamp);
+    }
+  }
+
+  protected async deleteEvent(event: GameEvent): Promise<void> {
+    if (event.id) {
+      this.stateService.deleteEvent(event.id);
+      
+      const toast = await this.toastController.create({
+        message: `Deleted: ${event.type.replace('_', ' ')}`,
+        duration: 2000,
+        position: 'bottom',
+        color: 'medium'
+      });
+      await toast.present();
     }
   }
 }

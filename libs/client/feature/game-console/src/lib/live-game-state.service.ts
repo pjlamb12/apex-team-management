@@ -430,6 +430,7 @@ export class LiveGameStateService {
       passCount: number;
       passScoreSum: number;
       blockTouches: number;
+      serveAttempts: number;
     }> = {};
 
     events.forEach((e) => {
@@ -452,6 +453,7 @@ export class LiveGameStateService {
           passCount: 0,
           passScoreSum: 0,
           blockTouches: 0,
+          serveAttempts: 0,
         };
       }
 
@@ -484,6 +486,8 @@ export class LiveGameStateService {
         stats[pid].passScoreSum += score;
       } else if (e.type === 'BLOCK_TOUCH') {
         stats[pid].blockTouches++;
+      } else if (e.type === 'SERVE_ATTEMPT') {
+        stats[pid].serveAttempts++;
       }
     });
 
@@ -829,6 +833,15 @@ export class LiveGameStateService {
         e === lastActive ? { ...e, status: 'deleted', synced: false } : e
       );
     });
+    this.save();
+  }
+
+  public deleteEvent(id: string): void {
+    this._events.update((prev) =>
+      prev.map((e) =>
+        e.id === id ? { ...e, status: 'deleted', synced: false } : e
+      )
+    );
     this.save();
   }
 

@@ -61,7 +61,7 @@
               </p>
             } @else if (event.type === 'SERVE_RECEIVE') {
               <p>
-                Passed by: {{ getPlayerName(event.playerId) }} (Rating: {{ event.payload?.score || event['score'] }}/3)
+                Passed by: {{ getPlayerName(event.playerId) }} (Rating: {{ event.payload?.score ?? event['score'] ?? 0 }}/3)
               </p>
             } @else if (event.type === 'HIT') {
               <p>
@@ -82,6 +82,10 @@
             } @else {
               <ion-spinner slot="end" name="dots" color="medium" size="small"></ion-spinner>
             }
+          } @else if (event.id) {
+            <ion-button slot="end" fill="clear" color="danger" size="small" (click)="deleteEvent(event); $event.stopPropagation()" aria-label="Delete event">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            </ion-button>
           }
         </ion-item>
       } @empty {

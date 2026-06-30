@@ -42,6 +42,8 @@ import { AddServeReceiveEventDefinition1783400000000 } from './1783400000000-Add
 import { AddHitEventDefinition1783500000000 } from './1783500000000-AddHitEventDefinition';
 import { AddSetEventDefinitions1783600000000 } from './1783600000000-AddSetEventDefinitions';
 import { AddBlockTouchDefinition1783700000000 } from './1783700000000-AddBlockTouchDefinition';
+import { AddServeAttemptDefinition1783800000000 } from './1783800000000-AddServeAttemptDefinition';
+import { UpdateServeReceiveMinimumScore1783900000000 } from './1783900000000-UpdateServeReceiveMinimumScore';
 
 
 export const ALL_MIGRATIONS = [
@@ -89,5 +91,7 @@ export const ALL_MIGRATIONS = [
   AddHitEventDefinition1783500000000,
   AddSetEventDefinitions1783600000000,
   AddBlockTouchDefinition1783700000000,
+  AddServeAttemptDefinition1783800000000,
+  UpdateServeReceiveMinimumScore1783900000000,
 ];
 
