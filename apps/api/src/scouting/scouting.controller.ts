@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } f
 import { ScoutingService } from './scouting.service';
 import { ScoutingRubricEntity } from '../entities/scouting-rubric.entity';
 import { CandidateEvaluationEntity } from '../entities/candidate-evaluation.entity';
+import { CandidateNoteEntity } from '../entities/candidate-note.entity';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('teams/:teamId/scouting')
@@ -48,5 +49,32 @@ export class ScoutingController {
     @Body() data: Partial<CandidateEvaluationEntity>,
   ): Promise<CandidateEvaluationEntity> {
     return this.scoutingService.recordEvaluation(req.user.sub, data);
+  }
+
+  // Candidate Notes
+  @Get('candidates/:candidateId/notes')
+  async findNotes(
+    @Param('candidateId') candidateId: string,
+  ): Promise<CandidateNoteEntity[]> {
+    return this.scoutingService.findNotesForCandidate(candidateId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('candidates/:candidateId/notes')
+  async recordNote(
+    @Param('candidateId') candidateId: string,
+    @Body() data: { eventId?: string; content: string },
+    @Request() req: any,
+  ): Promise<CandidateNoteEntity> {
+    return this.scoutingService.recordCandidateNote(req.user.sub, candidateId, data);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('notes/:id')
+  async deleteNote(
+    @Param('id') id: string,
+    @Request() req: any,
+  ): Promise<void> {
+    return this.scoutingService.deleteCandidateNote(req.user.sub, id);
   }
 }

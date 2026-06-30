@@ -12,9 +12,10 @@ export interface CandidateEntity {
   lastName: string;
   dateOfBirth?: string;
   parentName?: string;
-  parentEmail: string;
+  parentEmail?: string;
   parentPhone?: string;
   preferredPosition?: string;
+  tryoutJerseyNumber?: number;
   notes?: string;
   status: CandidateStatus;
   teamId: string;

@@ -21,6 +21,7 @@ import { LeagueEntity } from './entities/league.entity';
 import { CandidateEntity } from './entities/candidate.entity';
 import { CandidateAttendanceEntity } from './entities/candidate-attendance.entity';
 import { CandidateEvaluationEntity } from './entities/candidate-evaluation.entity';
+import { CandidateNoteEntity } from './entities/candidate-note.entity';
 import { ScoutingRubricEntity } from './entities/scouting-rubric.entity';
 import { SeasonPlayerEntity } from './entities/season-player.entity';
 import { EventNoteEntity } from './entities/event-note.entity';
@@ -53,6 +54,7 @@ export default new DataSource({
     CandidateEntity,
     CandidateAttendanceEntity,
     CandidateEvaluationEntity,
+    CandidateNoteEntity,
     ScoutingRubricEntity,
     SeasonPlayerEntity,
     EventNoteEntity,

@@ -52,7 +52,8 @@ export class CandidateModal implements OnInit {
     parentName: [''],
     parentEmail: ['', [Validators.email]],
     parentPhone: [''],
-    preferredPosition: [''],
+    preferredPosition: ['', [Validators.required]],
+    tryoutJerseyNumber: [null as number | null, [Validators.required]],
     notes: [''],
     status: ['interested' as CandidateStatus, [Validators.required]],
   });
@@ -64,9 +65,10 @@ export class CandidateModal implements OnInit {
         lastName: this.candidate.lastName,
         dateOfBirth: this.candidate.dateOfBirth ?? '',
         parentName: this.candidate.parentName ?? '',
-        parentEmail: this.candidate.parentEmail,
+        parentEmail: this.candidate.parentEmail ?? '',
         parentPhone: this.candidate.parentPhone ?? '',
         preferredPosition: this.candidate.preferredPosition ?? '',
+        tryoutJerseyNumber: this.candidate.tryoutJerseyNumber ?? null,
         notes: this.candidate.notes ?? '',
         status: this.candidate.status,
       });

@@ -13,6 +13,14 @@
       <ion-segment-button value="attendance">
         <ion-label>Attendance</ion-label>
       </ion-segment-button>
+      <ion-segment-button value="rubrics">
+        <ion-label>Rubrics</ion-label>
+      </ion-segment-button>
+      @if (team()?.sport?.name === 'Volleyball') {
+        <ion-segment-button value="stats">
+          <ion-label>Stats</ion-label>
+        </ion-segment-button>
+      }
       <ion-segment-button value="evaluations">
         <ion-label>Evaluations</ion-label>
       </ion-segment-button>
@@ -30,13 +38,13 @@
       <p class="text-ap-muted text-sm font-medium">Loading session data...</p>
     </div>
   } @else {
-    <div class="ion-padding">
+    <div class="ion-padding max-w-3xl mx-auto">
       
       <!-- SUMMARY TAB -->
       @if (selectedSegment() === 'summary') {
         <div class="space-y-4">
           <ion-card class="m-0 border border-ap-border shadow-none">
-            <ion-card-header>
+            <ion-card-header class="px-4 pt-4 pb-3">
               <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
                 <ion-icon name="megaphone-outline" class="text-ap-primary"></ion-icon>
                 Session Overview
@@ -96,12 +104,17 @@
             </ion-button>
           </div>
           
-          <ion-list lines="none" class="bg-transparent space-y-2">
+          <ion-list lines="none" class="bg-transparent space-y-2" style="--background: transparent; padding: 0">
             @for (candidate of candidates(); track candidate.id) {
               <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
                 <div class="p-4">
                   <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-lg font-black text-ap-text tracking-tight">{{ candidate.firstName }} {{ candidate.lastName }}</h2>
+                    <div>
+                      <h2 class="text-lg font-black text-ap-text tracking-tight">{{ candidate.firstName }} {{ candidate.lastName }}</h2>
+                      <p class="text-xs text-ap-muted">
+                        Jersey: #{{ candidate.tryoutJerseyNumber || 'N/A' }} | Position: {{ candidate.preferredPosition || 'N/A' }}
+                      </p>
+                    </div>
                     <div class="flex items-center gap-2">
                       <ion-button 
                         [fill]="getAttendanceStatus(candidate.id) === 'present' ? 'solid' : 'outline'" 
@@ -157,51 +170,455 @@
         </div>
       }
 
+      <!-- RUBRICS TAB -->
+      @if (selectedSegment() === 'rubrics') {
+        <div class="space-y-4">
+          <div class="flex items-center justify-between px-2">
+            <h3 class="text-xs font-black uppercase tracking-widest text-ap-muted">Scouting Rubrics</h3>
+            <ion-button fill="clear" size="small" (click)="addRubric()">
+              <ion-icon slot="start" name="add-outline"></ion-icon>
+              Add Rubric
+            </ion-button>
+          </div>
+
+          <ion-list lines="none" class="bg-transparent space-y-2" style="--background: transparent; padding: 0">
+            @for (rubric of rubrics(); track rubric.id) {
+              <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+                <div class="p-4 flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-ap-surface-raised flex items-center justify-center text-amber-400">
+                      <ion-icon name="star" class="text-xl"></ion-icon>
+                    </div>
+                    <div>
+                      <h2 class="text-lg font-black text-ap-text tracking-tight">{{ rubric.name }}</h2>
+                    </div>
+                  </div>
+                  <ion-button fill="clear" color="danger" (click)="deleteRubric(rubric.id)">
+                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  </ion-button>
+                </div>
+              </ion-card>
+            } @empty {
+              <div class="flex flex-col items-center justify-center py-20 text-center">
+                <ion-icon name="star-outline" class="text-5xl text-ap-muted mb-4 opacity-30"></ion-icon>
+                <p class="text-ap-muted italic">No scouting rubrics defined yet.</p>
+                <ion-button fill="outline" class="mt-4 font-black uppercase tracking-widest" (click)="addRubric()">
+                  Add Rubric
+                </ion-button>
+              </div>
+            }
+          </ion-list>
+        </div>
+      }
+
+      <!-- STATS TAB (Volleyball Only) -->
+      @if (selectedSegment() === 'stats' && team()?.sport?.name === 'Volleyball') {
+        <div class="flex flex-col min-h-full gap-4 pb-32">
+          <!-- Candidate Selection Grid -->
+          <div>
+            <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted mb-2">Select Player (In Attendance)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 max-h-[160px] overflow-y-auto p-2 border border-ap-border/40 rounded-lg bg-ap-surface-raised">
+              @for (candidate of candidatesInAttendance(); track candidate.id) {
+                <ion-button 
+                  [color]="selectedPlayerId() === candidate.id ? 'primary' : 'medium'"
+                  [fill]="selectedPlayerId() === candidate.id ? 'solid' : 'outline'"
+                  size="small"
+                  class="font-semibold m-0 text-xs w-full"
+                  (click)="selectPlayer(candidate.id)">
+                  {{ candidate.tryoutJerseyNumber ? '#' + candidate.tryoutJerseyNumber : '' }} {{ candidate.lastName }}
+                </ion-button>
+              }
+              @if (candidatesInAttendance().length === 0) {
+                <div class="text-center py-4 text-ap-muted text-xs col-span-2 md:col-span-5">No players marked present or tardy</div>
+              }
+            </div>
+          </div>
+
+          <!-- Action Logging Panel -->
+          <div class="border border-ap-border/40 rounded-lg p-4 bg-ap-surface-raised">
+            @if (!selectedPlayerId()) {
+              <div class="text-center py-8 text-ap-muted text-sm flex flex-col items-center justify-center gap-2">
+                <ion-icon name="alert-circle-outline" class="text-2xl text-ap-muted/60"></ion-icon>
+                <span>Select a candidate above to record tryout stats</span>
+              </div>
+            } @else {
+              <div class="flex flex-col gap-4">
+                <!-- Serving Group -->
+                <div class="flex flex-col gap-2">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Serving</span>
+                  <div class="flex gap-2">
+                    <ion-button fill="outline" color="success" class="flex-1 font-bold m-0" (click)="logAction('ACE')">Ace</ion-button>
+                    <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_ATTEMPT')">Attempt</ion-button>
+                    <ion-button fill="outline" color="danger" class="flex-1 font-bold m-0" (click)="logAction('SERVICE_ERROR')">Error</ion-button>
+                  </div>
+                </div>
+
+                <div class="h-px bg-ap-border/30"></div>
+
+                <!-- Hitting Group -->
+                <div class="flex flex-col gap-2">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Hitting</span>
+                  <div class="flex gap-2">
+                    <ion-button fill="outline" color="success" class="flex-1 font-bold m-0" (click)="logAction('KILL')">Kill</ion-button>
+                    <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('HIT')">Attempt</ion-button>
+                    <ion-button fill="outline" color="danger" class="flex-1 font-bold m-0" (click)="logAction('HITTING_ERROR')">Error</ion-button>
+                  </div>
+                </div>
+
+                <div class="h-px bg-ap-border/30"></div>
+
+                <!-- Passing Group -->
+                <div class="flex flex-col gap-2">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Passing</span>
+                  <div class="flex gap-2">
+                    <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 3 })">3</ion-button>
+                    <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 2 })">2</ion-button>
+                    <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 1 })">1</ion-button>
+                    <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 0 })">0</ion-button>
+                  </div>
+                </div>
+
+                <div class="h-px bg-ap-border/30"></div>
+
+                <!-- Setting Group -->
+                <div class="flex flex-col gap-2">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Setting</span>
+                  <div class="flex gap-2">
+                    <ion-button fill="outline" color="success" class="flex-1 font-bold m-0" (click)="logAction('SET_ASSIST')">Assist</ion-button>
+                    <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SET_ATTEMPT')">Attempt</ion-button>
+                    <ion-button fill="outline" color="danger" class="flex-1 font-bold m-0" (click)="logAction('SET_ERROR')">Error</ion-button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Box Score Summary -->
+          <div class="flex flex-col min-h-[200px]">
+            <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted mb-2">Tryout Box Score</h3>
+            <div class="overflow-x-auto max-h-[300px] overflow-y-auto border border-ap-border/40 rounded-lg bg-ap-surface-raised">
+              <table class="min-w-[800px] text-xs table-auto border-collapse">
+                <thead>
+                  <tr class="border-b border-ap-border text-[10px] uppercase font-bold text-ap-muted sticky top-0 z-10 bg-ap-surface-raised">
+                    <th class="py-2 text-left font-bold pl-2 bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">Player</th>
+                    <!-- HITTING -->
+                    <th class="py-2 text-center font-bold px-2">K</th>
+                    <th class="py-2 text-center font-bold px-2">H.Att</th>
+                    <th class="py-2 text-center font-bold px-2">H.Err</th>
+                    <th class="py-2 text-center font-bold px-2">H.Pct</th>
+                    <!-- SERVING -->
+                    <th class="py-2 text-center font-bold px-2">Ace</th>
+                    <th class="py-2 text-center font-bold px-2">S.Err</th>
+                    <th class="py-2 text-center font-bold px-2">S.Att</th>
+                    <!-- SETTING -->
+                    <th class="py-2 text-center font-bold px-2">Ast</th>
+                    <th class="py-2 text-center font-bold px-2">Set.Att</th>
+                    <th class="py-2 text-center font-bold px-2">Set.Err</th>
+                    <!-- PASSING -->
+                    <th class="py-2 text-center font-bold px-2">Pass</th>
+                    <th class="py-2 text-center font-bold pr-2">P.Avg</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (candidate of candidatesInAttendance(); track candidate.id) {
+                    <tr class="border-b border-ap-border/30 hover:bg-ap-bg/50">
+                      <td class="py-2 text-left font-bold text-ap-text pl-2 whitespace-nowrap bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
+                        {{ getCandidateShortName(candidate) }}
+                      </td>
+                      <!-- HITTING -->
+                      <td class="py-2 text-center px-2 font-semibold text-ap-text tabular-nums">
+                        {{ candidateStats()[candidate.id]?.kills || 0 }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ candidateStats()[candidate.id]?.hits || 0 }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-red-500 tabular-nums">
+                        {{ candidateStats()[candidate.id]?.hittingErrors || 0 }}
+                      </td>
+                      <td class="py-2 text-center px-2 font-black tabular-nums" 
+                          [class.text-green-500]="((candidateStats()[candidate.id]?.kills || 0) - (candidateStats()[candidate.id]?.hittingErrors || 0)) > 0" 
+                          [class.text-red-500]="((candidateStats()[candidate.id]?.kills || 0) - (candidateStats()[candidate.id]?.hittingErrors || 0)) < 0">
+                        {{ getHittingPct(
+                          candidateStats()[candidate.id]?.kills || 0,
+                          candidateStats()[candidate.id]?.hittingErrors || 0,
+                          candidateStats()[candidate.id]?.hits || 0
+                        ) }}
+                      </td>
+                      <!-- SERVING -->
+                      <td class="py-2 text-center px-2 font-semibold text-green-500 tabular-nums">
+                        {{ candidateStats()[candidate.id]?.aces || 0 }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-red-500 tabular-nums">
+                        {{ candidateStats()[candidate.id]?.serviceErrors || 0 }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ candidateStats()[candidate.id]?.serveAttempts || 0 }}
+                      </td>
+                      <!-- SETTING -->
+                      <td class="py-2 text-center px-2 font-semibold text-ap-text tabular-nums">
+                        {{ candidateStats()[candidate.id]?.setAssists || 0 }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ candidateStats()[candidate.id]?.setAttempts || 0 }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-red-500 tabular-nums">
+                        {{ candidateStats()[candidate.id]?.setErrors || 0 }}
+                      </td>
+                      <!-- PASSING -->
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ candidateStats()[candidate.id]?.passCount || 0 }}
+                      </td>
+                      <td class="py-2 text-center pr-2 font-semibold text-ap-primary tabular-nums">
+                        {{ getPassAverage(
+                          candidateStats()[candidate.id]?.passCount || 0,
+                          candidateStats()[candidate.id]?.passScoreSum || 0
+                        ) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+
+            </div>
+          </div>
+
+          <!-- Event Log -->
+          <div class="border border-ap-border/40 rounded-lg p-4 bg-ap-surface-raised flex flex-col gap-2">
+            <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted">Tryout Event Log</h3>
+            <div class="max-h-[160px] overflow-y-auto flex flex-col gap-2 pr-1">
+              @for (e of sortedEvents(); track e.id) {
+                <div class="flex items-center justify-between bg-ap-bg/50 border border-ap-border/20 rounded px-3 py-2 text-xs">
+                  <div class="flex flex-col">
+                    <span class="font-bold text-ap-text">
+                      {{ getCandidateNameById(e.playerId || e.payload?.playerId || e.payload?.scorerId || e.scorerId) }}
+                    </span>
+                    <span class="text-ap-muted text-[10px]">
+                      {{ getEventLabel(e) }}
+                    </span>
+                  </div>
+                  <ion-button 
+                    fill="clear" 
+                    color="danger" 
+                    size="small" 
+                    class="m-0 p-0 h-6 w-6 font-bold"
+                    (click)="deletePracticeEvent(e.id)">
+                    <ion-icon name="trash-outline" slot="icon-only" class="text-sm"></ion-icon>
+                  </ion-button>
+                </div>
+              }
+              @if (sortedEvents().length === 0) {
+                <div class="text-center py-6 text-ap-muted text-xs">No events logged yet for this tryout session</div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- EVALUATIONS TAB -->
       @if (selectedSegment() === 'evaluations') {
-        <div class="space-y-4 pb-20">
+        <div class="space-y-2 pb-20">
           @if (rubrics().length === 0) {
             <div class="flex flex-col items-center justify-center py-20 text-center">
               <ion-icon name="star-outline" class="text-5xl text-ap-muted mb-4 opacity-30"></ion-icon>
               <h3 class="text-lg font-bold text-ap-text">No Rubrics Defined</h3>
               <p class="text-sm text-ap-muted max-w-[240px] mt-2">
-                Define scouting rubrics in team settings to begin structured evaluations.
+                Define scouting rubrics in the Rubrics tab to begin structured evaluations.
               </p>
-              <ion-button [routerLink]="['/teams', teamId, 'settings']" class="mt-6 font-black uppercase tracking-widest h-12">
+              <ion-button (click)="selectedSegment.set('rubrics')" class="mt-6 font-black uppercase tracking-widest h-12">
                 Setup Rubrics
               </ion-button>
             </div>
           } @else {
-            @for (candidate of candidates(); track candidate.id) {
-              <ion-card class="m-0 border border-ap-border shadow-none">
-                <ion-card-header class="border-b border-ap-border px-4">
-                  <ion-card-title class="text-lg font-black text-ap-text">{{ candidate.firstName }} {{ candidate.lastName }}</ion-card-title>
-                </ion-card-header>
-                <ion-card-content class="p-0">
-                  <ion-list lines="full">
-                    @for (rubric of rubrics(); track rubric.id) {
-                      <ion-item>
-                        <ion-label>
-                          <h3 class="text-xs font-bold uppercase tracking-wider text-ap-muted">{{ rubric.name }}</h3>
-                          <div class="flex items-center gap-1 mt-2">
-                            @for (starVal of [1,2,3,4,5]; track starVal) {
-                              <ion-icon 
-                                [name]="getRating(candidate.id, rubric.id) >= starVal ? 'star' : 'star-outline'" 
-                                [class.text-amber-400]="getRating(candidate.id, rubric.id) >= starVal"
-                                [class.text-ap-muted]="getRating(candidate.id, rubric.id) < starVal"
-                                class="text-2xl cursor-pointer"
-                                (click)="recordRating(candidate.id, rubric.id, starVal)"
-                              ></ion-icon>
+            @if (candidates().length === 0) {
+              <div class="py-20 text-center text-ap-muted italic">No players to evaluate. Add them in the Attendance tab first.</div>
+            } @else {
+              <ion-accordion-group [multiple]="true">
+                @for (candidate of candidates(); track candidate.id) {
+                  <ion-accordion [value]="candidate.id" class="border border-ap-border rounded-xl overflow-hidden mb-3 bg-ap-surface shadow-none">
+                    <ion-item slot="header" lines="none" class="bg-ap-surface">
+                      <div class="py-1">
+                        <p class="text-base font-black text-ap-text tracking-tight">{{ candidate.firstName }} {{ candidate.lastName }}</p>
+                        <p class="text-xs text-ap-muted font-medium">
+                          Jersey: #{{ candidate.tryoutJerseyNumber || 'N/A' }} | Position: {{ candidate.preferredPosition || 'N/A' }}
+                        </p>
+                      </div>
+                    </ion-item>
+
+                    <div slot="content" class="border-t border-ap-border">
+                      <!-- Volleyball KPI Stats Panel (If Volleyball Sport) -->
+                      @if (team()?.sport?.name === 'Volleyball') {
+                        <div class="p-4 bg-ap-surface-raised/40 border-b border-ap-border/60">
+                          <p class="text-[10px] text-ap-muted font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
+                            <ion-icon name="stats-chart-outline"></ion-icon>
+                            Live Session Stats
+                          </p>
+                          <div class="grid grid-cols-5 gap-2 text-center">
+                            <div class="bg-ap-surface border border-ap-border/50 rounded-lg p-2">
+                              <p class="text-[10px] text-ap-muted font-semibold uppercase">Kills</p>
+                              <p class="text-sm font-black text-ap-text">{{ candidateStats()[candidate.id]?.kills || 0 }}</p>
+                            </div>
+                            <div class="bg-ap-surface border border-ap-border/50 rounded-lg p-2">
+                              <p class="text-[10px] text-ap-muted font-semibold uppercase">Hit Pct</p>
+                              <p class="text-sm font-black" [class.text-green-500]="((candidateStats()[candidate.id]?.kills || 0) - (candidateStats()[candidate.id]?.hittingErrors || 0)) > 0" [class.text-red-500]="((candidateStats()[candidate.id]?.kills || 0) - (candidateStats()[candidate.id]?.hittingErrors || 0)) < 0">
+                                {{ getHittingPct(candidateStats()[candidate.id]?.kills || 0, candidateStats()[candidate.id]?.hittingErrors || 0, candidateStats()[candidate.id]?.hits || 0) }}
+                              </p>
+                            </div>
+                            <div class="bg-ap-surface border border-ap-border/50 rounded-lg p-2">
+                              <p class="text-[10px] text-ap-muted font-semibold uppercase">Aces</p>
+                              <p class="text-sm font-black text-ap-text">{{ candidateStats()[candidate.id]?.aces || 0 }}</p>
+                            </div>
+                            <div class="bg-ap-surface border border-ap-border/50 rounded-lg p-2">
+                              <p class="text-[10px] text-ap-muted font-semibold uppercase">Pass Avg</p>
+                              <p class="text-sm font-black text-ap-primary">{{ getPassAverage(candidateStats()[candidate.id]?.passCount || 0, candidateStats()[candidate.id]?.passScoreSum || 0) }}</p>
+                            </div>
+                            <div class="bg-ap-surface border border-ap-border/50 rounded-lg p-2">
+                              <p class="text-[10px] text-ap-muted font-semibold uppercase">Assists</p>
+                              <p class="text-sm font-black text-ap-text">{{ candidateStats()[candidate.id]?.setAssists || 0 }}</p>
+                            </div>
+                          </div>
+                        </div>
+                      }
+
+                      <!-- Rubrics Evaluations -->
+                      <div class="divide-y divide-ap-border/60">
+                        @for (rubric of rubrics(); track rubric.id) {
+                          <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                              <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted">{{ rubric.name }}</h3>
+                              <div class="flex items-center gap-1">
+                                @for (starVal of [1,2,3,4,5]; track starVal) {
+                                  <ion-icon
+                                    [name]="(evaluationsMap()[candidate.id]?.[rubric.id]?.currentCoachEval?.rating || 0) >= starVal ? 'star' : 'star-outline'"
+                                    [class.text-amber-400]="(evaluationsMap()[candidate.id]?.[rubric.id]?.currentCoachEval?.rating || 0) >= starVal"
+                                    [class.text-ap-muted]="(evaluationsMap()[candidate.id]?.[rubric.id]?.currentCoachEval?.rating || 0) < starVal"
+                                    class="text-2xl cursor-pointer"
+                                    (click)="recordEvaluation(candidate.id, rubric.id, starVal)"
+                                  ></ion-icon>
+                                }
+                              </div>
+                            </div>
+
+                            <!-- Current Coach Rubric Notes -->
+                            <div class="mt-2 flex flex-col gap-2">
+                              <ion-textarea
+                                [(ngModel)]="localRubricNotes[candidate.id][rubric.id]"
+                                placeholder="Add your notes for this category..."
+                                rows="2"
+                                class="bg-ap-surface-raised border border-ap-border/40 rounded-lg p-2 text-xs"
+                              ></ion-textarea>
+                              <div class="flex justify-end gap-2">
+                                @if (evaluationsMap()[candidate.id]?.[rubric.id]?.currentCoachEval?.notes) {
+                                  <ion-button size="small" color="danger" fill="clear" class="font-bold text-xs" (click)="deleteRubricNote(candidate.id, rubric.id)">
+                                    Delete Note
+                                  </ion-button>
+                                }
+                                <ion-button size="small" class="font-black uppercase tracking-widest text-xs" (click)="saveRubricNote(candidate.id, rubric.id)">
+                                  Save Note
+                                </ion-button>
+                              </div>
+                            </div>
+
+                            <!-- Other Coaches Rubric Notes -->
+                            @if (evaluationsMap()[candidate.id]?.[rubric.id]?.otherCoachesEvals?.length) {
+                              <div class="mt-3 space-y-2">
+                                <p class="text-[9px] uppercase font-bold tracking-widest text-ap-muted">Other Coaches' Feedback</p>
+                                @for (otherEval of evaluationsMap()[candidate.id]?.[rubric.id]?.otherCoachesEvals; track otherEval.id) {
+                                  <div class="p-2.5 rounded-lg bg-blue-50/50 border border-blue-100/60 text-xs">
+                                    <div class="flex items-center justify-between mb-1">
+                                      <span class="font-bold text-blue-900">{{ otherEval.coach?.displayName || 'Assistant Coach' }}</span>
+                                      <div class="flex gap-0.5">
+                                        @for (s of [1,2,3,4,5]; track s) {
+                                          <ion-icon
+                                            [name]="otherEval.rating >= s ? 'star' : 'star-outline'"
+                                            class="text-xs text-amber-400"
+                                          ></ion-icon>
+                                        }
+                                      </div>
+                                    </div>
+                                    <p class="text-blue-800 italic leading-relaxed">{{ otherEval.notes || 'No notes left' }}</p>
+                                  </div>
+                                }
+                              </div>
                             }
                           </div>
-                        </ion-label>
-                      </ion-item>
-                    }
-                  </ion-list>
-                </ion-card-content>
-              </ion-card>
-            } @empty {
-              <div class="py-20 text-center text-ap-muted italic">No players to evaluate. Add them in the Attendance tab first.</div>
+                        }
+                      </div>
+
+                      <!-- General Player Notes -->
+                      <div class="p-4 bg-ap-surface-raised/20 border-t border-ap-border/60">
+                        <p class="text-[10px] text-ap-muted font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                          <ion-icon name="document-text-outline" class="text-blue-500"></ion-icon>
+                          General Evaluation Notes
+                        </p>
+
+                        <!-- Notes List (Collaborative) -->
+                        <div class="space-y-3 mb-4">
+                          <!-- Current Coach Note -->
+                          @if (generalNotesMap()[candidate.id]?.currentCoachNote) {
+                            <div class="p-3 rounded-lg bg-ap-surface border border-ap-border/50 text-xs">
+                              <div class="flex items-center justify-between mb-1.5">
+                                <span class="font-bold text-ap-text">You (Coach)</span>
+                                <div class="flex items-center gap-2">
+                                  <span class="text-[10px] text-ap-muted">{{ generalNotesMap()[candidate.id].currentCoachNote!.updatedAt | date: 'short' }}</span>
+                                  <ion-button fill="clear" size="small" class="h-6 w-6 m-0 text-ap-primary" (click)="editGeneralNote(candidate.id)">
+                                    <ion-icon slot="icon-only" name="pencil-outline" class="text-xs"></ion-icon>
+                                  </ion-button>
+                                  <ion-button fill="clear" size="small" class="h-6 w-6 m-0 text-red-500" (click)="deleteGeneralNote(candidate.id, generalNotesMap()[candidate.id].currentCoachNote!.id)">
+                                    <ion-icon slot="icon-only" name="trash-outline" class="text-xs"></ion-icon>
+                                  </ion-button>
+                                </div>
+                              </div>
+                              @if (isEditingGeneralNote[candidate.id]) {
+                                <div class="flex flex-col gap-2 mt-2">
+                                  <ion-textarea
+                                    [(ngModel)]="localGeneralNotes[candidate.id]"
+                                    rows="3"
+                                    class="bg-ap-surface border border-ap-border/50 rounded-lg p-2 text-xs"
+                                  ></ion-textarea>
+                                  <div class="flex justify-end gap-2">
+                                    <ion-button size="small" fill="outline" (click)="isEditingGeneralNote[candidate.id] = false">Cancel</ion-button>
+                                    <ion-button size="small" (click)="saveGeneralNote(candidate.id)">Save</ion-button>
+                                  </div>
+                                </div>
+                              } @else {
+                                <p class="text-ap-muted italic leading-relaxed">{{ generalNotesMap()[candidate.id].currentCoachNote!.content }}</p>
+                              }
+                            </div>
+                          }
+
+                          <!-- Other Coaches General Notes -->
+                          @for (otherNote of generalNotesMap()[candidate.id]?.otherCoachesNotes; track otherNote.id) {
+                            <div class="p-3 rounded-lg bg-ap-surface-raised border border-ap-border/50 text-xs">
+                              <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-ap-text">{{ otherNote.coach?.displayName || 'Assistant Coach' }}</span>
+                                <span class="text-[10px] text-ap-muted">{{ otherNote.createdAt | date: 'short' }}</span>
+                              </div>
+                              <p class="text-ap-muted italic leading-relaxed">{{ otherNote.content }}</p>
+                            </div>
+                          }
+                        </div>
+
+                        <!-- Add Note Input (If Current Coach hasn't added one yet) -->
+                        @if (!generalNotesMap()[candidate.id]?.currentCoachNote) {
+                          <div class="flex flex-col gap-2">
+                            <ion-textarea
+                              [(ngModel)]="localGeneralNotes[candidate.id]"
+                              placeholder="Overall impression, recommendations, attitude..."
+                              rows="3"
+                              class="bg-ap-surface border border-ap-border/50 rounded-lg p-2 text-xs"
+                            ></ion-textarea>
+                            <div class="flex justify-end">
+                              <ion-button size="small" class="font-black uppercase tracking-widest text-xs" (click)="saveGeneralNote(candidate.id)">
+                                Save Note
+                              </ion-button>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </ion-accordion>
+                }
+              </ion-accordion-group>
             }
           }
         </div>
@@ -220,13 +637,13 @@
             </p>
           </div>
 
-          <ion-list lines="none" class="bg-transparent space-y-2">
+          <ion-list lines="none" class="bg-transparent space-y-2" style="--background: transparent; padding: 0">
             @for (candidate of candidates(); track candidate.id) {
               <ion-card class="m-0 border border-ap-border shadow-none">
                 <div class="p-4 flex items-center justify-between">
                   <div>
                     <h2 class="text-lg font-black text-ap-text tracking-tight">{{ candidate.firstName }} {{ candidate.lastName }}</h2>
-                    <p class="text-[10px] text-ap-muted font-bold uppercase tracking-widest">{{ candidate.parentEmail }}</p>
+                    <p class="text-[10px] text-ap-muted font-bold uppercase tracking-widest">{{ candidate.parentEmail || 'No Parent Email' }}</p>
                   </div>
                   
                   @if (candidate.status === 'accepted') {

@@ -20,14 +20,17 @@ export class CandidateEntity {
   @Column({ name: 'parent_name', nullable: true })
   parentName: string | null;
 
-  @Column({ name: 'parent_email' })
-  parentEmail: string;
+  @Column({ name: 'parent_email', nullable: true })
+  parentEmail: string | null;
 
   @Column({ name: 'parent_phone', nullable: true })
   parentPhone: string | null;
 
   @Column({ name: 'preferred_position', nullable: true })
   preferredPosition: string | null;
+
+  @Column({ name: 'tryout_jersey_number', nullable: true, type: 'int' })
+  tryoutJerseyNumber: number | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;

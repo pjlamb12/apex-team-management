@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ScoutingRubricEntity } from '../entities/scouting-rubric.entity';
 import { CandidateEvaluationEntity } from '../entities/candidate-evaluation.entity';
+import { CandidateNoteEntity } from '../entities/candidate-note.entity';
 
 @Injectable()
 export class ScoutingService {
@@ -11,6 +12,8 @@ export class ScoutingService {
     private readonly rubricRepo: Repository<ScoutingRubricEntity>,
     @InjectRepository(CandidateEvaluationEntity)
     private readonly evaluationRepo: Repository<CandidateEvaluationEntity>,
+    @InjectRepository(CandidateNoteEntity)
+    private readonly candidateNoteRepo: Repository<CandidateNoteEntity>,
   ) {}
 
   // Rubric Management
@@ -68,5 +71,48 @@ export class ScoutingService {
     }
 
     return this.evaluationRepo.save(evaluation);
+  }
+
+  // Candidate Notes Management
+  async findNotesForCandidate(candidateId: string): Promise<CandidateNoteEntity[]> {
+    return this.candidateNoteRepo.find({
+      where: { candidateId },
+      relations: ['coach', 'event'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async recordCandidateNote(
+    coachId: string,
+    candidateId: string,
+    data: { eventId?: string; content: string },
+  ): Promise<CandidateNoteEntity> {
+    let note = await this.candidateNoteRepo.findOne({
+      where: {
+        candidateId,
+        coachId,
+        eventId: data.eventId || null,
+      },
+    });
+
+    if (note) {
+      note.content = data.content;
+    } else {
+      note = this.candidateNoteRepo.create({
+        candidateId,
+        coachId,
+        eventId: data.eventId || null,
+        content: data.content,
+      });
+    }
+
+    return this.candidateNoteRepo.save(note);
+  }
+
+  async deleteCandidateNote(coachId: string, id: string): Promise<void> {
+    const note = await this.candidateNoteRepo.findOne({ where: { id, coachId } });
+    if (note) {
+      await this.candidateNoteRepo.remove(note);
+    }
   }
 }
