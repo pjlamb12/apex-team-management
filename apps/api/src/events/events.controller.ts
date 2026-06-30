@@ -42,13 +42,12 @@ export class EventsController {
   }
 
   @Post()
-  @TeamRoles(TeamRole.HEAD_COACH)
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   create(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Body() dto: CreateEventDto,
-    @Request() req: { user: { sub: string } },
   ) {
-    return this.eventsService.create(teamId, dto, req.user.sub);
+    return this.eventsService.create(teamId, dto);
   }
 
   @Get()
