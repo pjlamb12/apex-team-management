@@ -32,8 +32,8 @@
         <div class="flex flex-col gap-2">
           <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Serving</span>
           <div class="flex gap-2">
-            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_ATTEMPT')">Attempt</ion-button>
             <ion-button fill="outline" color="success" class="flex-1 font-bold m-0" (click)="logAction('ACE')">Ace</ion-button>
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_ATTEMPT')">Attempt</ion-button>
             <ion-button fill="outline" color="danger" class="flex-1 font-bold m-0" (click)="logAction('SERVICE_ERROR')">Error</ion-button>
           </div>
         </div>
@@ -56,10 +56,10 @@
         <div class="flex flex-col gap-2">
           <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Passing</span>
           <div class="flex gap-2">
-            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 0 })">0</ion-button>
-            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 1 })">1</ion-button>
-            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 2 })">2</ion-button>
             <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 3 })">3</ion-button>
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 2 })">2</ion-button>
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 1 })">1</ion-button>
+            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SERVE_RECEIVE', { score: 0 })">0</ion-button>
           </div>
         </div>
 
@@ -69,8 +69,8 @@
         <div class="flex flex-col gap-2">
           <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Setting</span>
           <div class="flex gap-2">
+            <ion-button fill="outline" color="success" class="flex-1 font-bold m-0" (click)="logAction('SET_ASSIST')">Assist</ion-button>
             <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SET_ATTEMPT')">Attempt</ion-button>
-            <ion-button fill="outline" class="flex-1 font-bold m-0" (click)="logAction('SET_ASSIST')">Assist</ion-button>
             <ion-button fill="outline" color="danger" class="flex-1 font-bold m-0" (click)="logAction('SET_ERROR')">Error</ion-button>
           </div>
         </div>

@@ -11,8 +11,8 @@
     <div class="px-4 py-2 flex flex-col gap-2">
       <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Serving</span>
       <div class="flex gap-2">
-        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SERVE_ATTEMPT')">Attempt</ion-button>
         <ion-button fill="outline" size="small" color="success" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('ACE')">Ace</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SERVE_ATTEMPT')">Attempt</ion-button>
         <ion-button fill="outline" size="small" color="danger" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SERVICE_ERROR')">Error</ion-button>
       </div>
     </div>
@@ -23,8 +23,8 @@
     <div class="px-4 py-2 flex flex-col gap-2">
       <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Hitting</span>
       <div class="flex gap-2">
-        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('HIT')">Attempt</ion-button>
         <ion-button fill="outline" size="small" color="success" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('KILL')">Kill</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('HIT')">Attempt</ion-button>
         <ion-button fill="outline" size="small" color="danger" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('HITTING_ERROR')">Error</ion-button>
       </div>
     </div>
@@ -35,10 +35,10 @@
     <div class="px-4 py-2 flex flex-col gap-2">
       <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Passing</span>
       <div class="flex gap-2">
-        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(0)">0</ion-button>
-        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(1)">1</ion-button>
-        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(2)">2</ion-button>
         <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(3)">3</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(2)">2</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(1)">1</ion-button>
+        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectPassingAction(0)">0</ion-button>
       </div>
     </div>
 
@@ -48,8 +48,8 @@
     <div class="px-4 py-2 flex flex-col gap-2">
       <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Setting</span>
       <div class="flex gap-2">
+        <ion-button fill="outline" size="small" color="success" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SET_ASSIST')">Assist</ion-button>
         <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SET_ATTEMPT')">Attempt</ion-button>
-        <ion-button fill="outline" size="small" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SET_ASSIST')">Assist</ion-button>
         <ion-button fill="outline" size="small" color="danger" class="flex-1 text-[10px] font-bold m-0" (click)="selectAction('SET_ERROR')">Error</ion-button>
       </div>
     </div>
