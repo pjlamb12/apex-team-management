@@ -53,26 +53,39 @@ export class PerformanceMetricsService {
     leagueId?: string,
     eventType: 'game' | 'practice' | 'all' = 'game'
   ): Promise<PlayerPerformanceMetrics[]> {
-    // Find all events for the team/season/league
-    const where: any = { status: 'completed' };
-    if (eventType === 'all') {
-      where.type = In(['game', 'practice']);
-    } else {
-      where.type = eventType;
-    }
-
+    const baseWhere: any = {};
     if (leagueId) {
-      where.leagueId = leagueId;
+      baseWhere.leagueId = leagueId;
     } else if (seasonId) {
-      where.seasonId = seasonId;
+      baseWhere.seasonId = seasonId;
     } else {
-      where.season = { teamId };
+      baseWhere.season = { teamId };
     }
 
-    const events = await this.eventRepo.find({ 
-      where,
-      relations: ['season', 'season.team']
-    });
+    let events: EventEntity[] = [];
+    if (eventType === 'game') {
+      events = await this.eventRepo.find({
+        where: { ...baseWhere, type: 'game', status: 'completed' },
+        relations: ['season', 'season.team']
+      });
+    } else if (eventType === 'practice') {
+      events = await this.eventRepo.find({
+        where: { ...baseWhere, type: 'practice' },
+        relations: ['season', 'season.team']
+      });
+    } else {
+      const [games, practices] = await Promise.all([
+        this.eventRepo.find({
+          where: { ...baseWhere, type: 'game', status: 'completed' },
+          relations: ['season', 'season.team']
+        }),
+        this.eventRepo.find({
+          where: { ...baseWhere, type: 'practice' },
+          relations: ['season', 'season.team']
+        })
+      ]);
+      events = [...games, ...practices];
+    }
     
     if (events.length === 0) {
       const players = await this.playerRepo.find({ where: { teamId } });
