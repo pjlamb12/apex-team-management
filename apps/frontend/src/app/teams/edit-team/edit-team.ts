@@ -118,7 +118,7 @@ export class EditTeam {
   protected successMessage = signal<string | null>(null);
   protected toastMessage = signal<string | null>(null);
 
-  protected rubrics = signal<ScoutingRubricEntity[]>([]);
+
 
   protected form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -145,7 +145,6 @@ export class EditTeam {
       const teamId = this._teamId();
       if (teamId) {
         void this.loadTeam(teamId);
-        void this.loadRubrics();
       }
     });
   }
@@ -166,51 +165,6 @@ export class EditTeam {
     }
   }
 
-  protected async loadRubrics(): Promise<void> {
-    const teamId = this.teamId;
-    if (!teamId) return;
-    try {
-      const rubrics = await firstValueFrom(this.scoutingService.getRubrics(teamId));
-      this.rubrics.set(rubrics);
-    } catch {
-      console.error('Failed to load rubrics');
-    }
-  }
-
-  protected async addRubric(): Promise<void> {
-    const alert = await this.alertCtrl.create({
-      header: 'Add Scouting Rubric',
-      message: 'Enter a name for the evaluation category (e.g. Technical Skills)',
-      inputs: [{ name: 'name', type: 'text', placeholder: 'Rubric Name' }],
-      buttons: [
-        'Cancel',
-        {
-          text: 'Add',
-          handler: async (data) => {
-            if (!data.name) return;
-            try {
-              const rubric = await firstValueFrom(this.scoutingService.addRubric(this.teamId, { name: data.name }));
-              this.rubrics.update(list => [...list, rubric]);
-              this.toastMessage.set('Rubric added');
-            } catch {
-              this.errorMessage.set('Failed to add rubric');
-            }
-          }
-        }
-      ]
-    });
-    await alert.present();
-  }
-
-  protected async deleteRubric(id: string): Promise<void> {
-    try {
-      await firstValueFrom(this.scoutingService.deleteRubric(this.teamId, id));
-      this.rubrics.update(list => list.filter(r => r.id !== id));
-      this.toastMessage.set('Rubric removed');
-    } catch {
-      this.errorMessage.set('Failed to delete rubric');
-    }
-  }
 
   protected async regenerateCode(): Promise<void> {
     const teamId = this._teamId();

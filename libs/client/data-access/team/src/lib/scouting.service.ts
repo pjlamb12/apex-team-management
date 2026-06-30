@@ -64,4 +64,28 @@ export class ScoutingService {
   recordEvaluation(teamId: string, data: Partial<CandidateEvaluationEntity>): Observable<CandidateEvaluationEntity> {
     return this.http.post<CandidateEvaluationEntity>(`${this.apiUrl}/teams/${teamId}/scouting/evaluations`, data);
   }
+
+  getCandidateNotes(teamId: string, candidateId: string): Observable<CandidateNoteEntity[]> {
+    return this.http.get<CandidateNoteEntity[]>(`${this.apiUrl}/teams/${teamId}/scouting/candidates/${candidateId}/notes`);
+  }
+
+  recordCandidateNote(teamId: string, candidateId: string, data: { eventId?: string; content: string }): Observable<CandidateNoteEntity> {
+    return this.http.post<CandidateNoteEntity>(`${this.apiUrl}/teams/${teamId}/scouting/candidates/${candidateId}/notes`, data);
+  }
+
+  deleteCandidateNote(teamId: string, id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/scouting/notes/${id}`);
+  }
+}
+
+export interface CandidateNoteEntity {
+  id: string;
+  candidateId: string;
+  coachId: string;
+  eventId?: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  coach?: any; // To show displayName
+  event?: any;
 }

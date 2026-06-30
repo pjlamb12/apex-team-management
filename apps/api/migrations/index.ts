@@ -44,6 +44,7 @@ import { AddSetEventDefinitions1783600000000 } from './1783600000000-AddSetEvent
 import { AddBlockTouchDefinition1783700000000 } from './1783700000000-AddBlockTouchDefinition';
 import { AddServeAttemptDefinition1783800000000 } from './1783800000000-AddServeAttemptDefinition';
 import { UpdateServeReceiveMinimumScore1783900000000 } from './1783900000000-UpdateServeReceiveMinimumScore';
+import { ImproveTryoutConsole1784000000000 } from './1784000000000-ImproveTryoutConsole';
 
 
 export const ALL_MIGRATIONS = [
@@ -93,5 +94,6 @@ export const ALL_MIGRATIONS = [
   AddBlockTouchDefinition1783700000000,
   AddServeAttemptDefinition1783800000000,
   UpdateServeReceiveMinimumScore1783900000000,
+  ImproveTryoutConsole1784000000000,
 ];
 
