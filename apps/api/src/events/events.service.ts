@@ -43,10 +43,9 @@ export class EventsService {
     addFormats(this.ajv);
   }
 
-  async create(teamId: string, dto: CreateEventDto, userId: string): Promise<EventEntity> {
+  async create(teamId: string, dto: CreateEventDto): Promise<EventEntity> {
     const team = await this.teamRepo.findOne({ where: { id: teamId } });
     if (!team) throw new NotFoundException('Team not found');
-    if (team.coachId !== userId) throw new ForbiddenException('Not authorized');
 
     let activeSeason = await this.seasonRepo.findOne({
       where: { teamId, isActive: true },
