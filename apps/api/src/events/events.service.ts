@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThanOrEqual, LessThan } from 'typeorm';
+import { Repository, MoreThanOrEqual, LessThan, DataSource } from 'typeorm';
 import { RRule } from 'rrule';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
@@ -13,10 +13,12 @@ import { LeagueEntity } from '../entities/league.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UpdateGameEventDto } from './dto/update-game-event.dto';
+import { ApplyPlayingTimeCorrectionsDto } from './dto/apply-playing-time-corrections.dto';
 import { SocketGateway } from '../socket/socket.gateway';
 import { WeatherService } from './weather.service';
 import { AttendanceService } from '../attendance/attendance.service';
 import { TeamRole } from '@apex-team/shared/util/models';
+import { PlayingTimeValidationService, PlayingTimeValidationReport } from '../analytics/playing-time-validation.service';
 
 @Injectable()
 export class EventsService {
@@ -38,6 +40,8 @@ export class EventsService {
     private readonly socketGateway: SocketGateway,
     private readonly weatherService: WeatherService,
     private readonly attendanceService: AttendanceService,
+    private readonly playingTimeValidationService: PlayingTimeValidationService,
+    private readonly dataSource: DataSource,
   ) {
     this.ajv = new Ajv();
     addFormats(this.ajv);
@@ -508,5 +512,62 @@ export class EventsService {
     const saved = await this.gameEventRepo.save(gameEvent);
     this.socketGateway.server.to(`event:${eventId}`).emit('gameEventUpdated', saved);
     return saved;
+  }
+
+  async applyPlayingTimeCorrections(
+    eventId: string,
+    dto: ApplyPlayingTimeCorrectionsDto,
+    userId: string,
+  ): Promise<{ appliedCorrections: GameEventEntity[]; report: PlayingTimeValidationReport }> {
+    const event = await this.eventRepo.findOne({
+      where: { id: eventId },
+      relations: ['season', 'season.team', 'season.team.members'],
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Event ${eventId} not found`);
+    }
+
+    const isCoach = event.season?.team?.coachId === userId;
+    const isMemberCoachOrAssistant = event.season?.team?.members?.some(
+      (m) => m.userId === userId && (m.role === TeamRole.HEAD_COACH || m.role === TeamRole.ASSISTANT)
+    ) ?? false;
+
+    if (!isCoach && !isMemberCoachOrAssistant) {
+      throw new ForbiddenException('Not authorized to update events for this event');
+    }
+
+    const freshReport = await this.playingTimeValidationService.validateForEvent(eventId);
+    const correctionKey = (c: { gameEventId: string; field: string; currentPlayerId: string; correctedPlayerId: string }) =>
+      `${c.gameEventId}:${c.field}:${c.currentPlayerId}:${c.correctedPlayerId}`;
+    const freshKeys = new Set(freshReport.suggestedCorrections.map(correctionKey));
+    const submittedKeys = new Set(dto.corrections.map(correctionKey));
+    const sameSize = freshKeys.size === submittedKeys.size;
+    const sameMembers = sameSize && [...freshKeys].every((k) => submittedKeys.has(k));
+
+    if (!sameMembers) {
+      throw new ConflictException(
+        'The suggested playing-time corrections have changed since they were last checked. Please re-check and try again.'
+      );
+    }
+
+    const updated: GameEventEntity[] = [];
+    await this.dataSource.transaction(async (manager) => {
+      for (const correction of dto.corrections) {
+        const row = await manager.findOne(GameEventEntity, { where: { id: correction.gameEventId, eventId } });
+        if (!row) {
+          throw new NotFoundException(`Game event ${correction.gameEventId} not found for event ${eventId}`);
+        }
+        row.payload = { ...row.payload, [correction.field]: correction.correctedPlayerId };
+        updated.push(await manager.save(GameEventEntity, row));
+      }
+    });
+
+    updated.forEach((row) => {
+      this.socketGateway.server.to(`event:${eventId}`).emit('gameEventUpdated', row);
+    });
+
+    const finalReport = await this.playingTimeValidationService.validateForEvent(eventId);
+    return { appliedCorrections: updated, report: finalReport };
   }
 }

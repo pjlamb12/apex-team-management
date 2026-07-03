@@ -59,7 +59,7 @@ import {
   chevronDownOutline
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
-import { EventsService, EventEntity, AttendanceService, TeamService } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport } from '@apex-team/client/data-access/team';
 import { SocketService } from '@apex-team/client/shared/services';
 
 
@@ -191,6 +191,7 @@ export class GameSummary implements OnDestroy {
     return processed;
   });
   protected playingTime = signal<Record<string, any>>({});
+  protected playingTimeValidation = signal<PlayingTimeValidationReport | null>(null);
   protected lineup = signal<any[]>([]);
   protected activeSegment = signal<'highlights' | 'attendance' | 'playtime' | 'notes' | 'event-log' | 'boxscore'>('highlights');
   protected isLoading = signal(true);
@@ -884,6 +885,78 @@ export class GameSummary implements OnDestroy {
       const alert = await this.alertController.create({
         header: 'Error',
         message: 'Failed to delete the event. Please try again.',
+        buttons: ['OK']
+      });
+      await alert.present();
+    }
+  }
+
+  protected async checkPlayingTime(): Promise<void> {
+    try {
+      const report = await firstValueFrom(this.eventsService.validatePlayingTime(this.teamId, this.eventId));
+      this.playingTimeValidation.set(report);
+
+      if (report.suggestedCorrections.length === 0) {
+        const alert = await this.alertController.create({
+          header: 'Playing Time Looks Good',
+          message: 'No substitution errors were found for this game.',
+          buttons: ['OK']
+        });
+        await alert.present();
+        return;
+      }
+
+      await this.confirmApplyCorrections(report);
+    } catch (err) {
+      console.error('Failed to validate playing time:', err);
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: 'Failed to check playing time. Please try again.',
+        buttons: ['OK']
+      });
+      await alert.present();
+    }
+  }
+
+  protected async confirmApplyCorrections(report: PlayingTimeValidationReport): Promise<void> {
+    const message = report.suggestedCorrections.map(c => c.reason).join('<br><br>');
+    const alert = await this.alertController.create({
+      header: 'Possible Substitution Errors Found',
+      message,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Apply Corrections',
+          handler: () => {
+            void this.applyPlayingTimeCorrections(report.suggestedCorrections);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  protected async applyPlayingTimeCorrections(corrections: PlayingTimeValidationReport['suggestedCorrections']): Promise<void> {
+    try {
+      const result = await firstValueFrom(
+        this.eventsService.applyPlayingTimeCorrections(this.teamId, this.eventId, corrections)
+      );
+      this.playingTimeValidation.set(result.report);
+      const toast = await this.toastController.create({
+        message: 'Playing time corrected successfully.',
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+      await this.loadData(this.teamId, this.eventId, true);
+    } catch (err) {
+      console.error('Failed to apply playing time corrections:', err);
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: 'Failed to apply corrections. Please check for errors again and retry.',
         buttons: ['OK']
       });
       await alert.present();

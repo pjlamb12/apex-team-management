@@ -61,4 +61,50 @@ describe('EventsService', () => {
     expect(req.request.body).toEqual(dto);
     req.flush(mockResponse);
   });
+
+  it('should validate playing time for an event', () => {
+    const teamId = 'team-1';
+    const eventId = 'event-1';
+    const mockResponse = {
+      eventId,
+      isValid: false,
+      violations: [],
+      suggestedCorrections: [
+        { gameEventId: 'ge-1', field: 'outPlayerId' as const, currentPlayerId: 'p1', correctedPlayerId: 'p2', reason: 'because' },
+      ],
+    };
+
+    service.validatePlayingTime(teamId, eventId).subscribe((res) => {
+      expect(res).toEqual(mockResponse);
+    });
+
+    const req = httpMock.expectOne(`${service['apiUrl']}/teams/${teamId}/events/${eventId}/playing-time/validate`);
+    expect(req.request.method).toBe('GET');
+    req.flush(mockResponse);
+  });
+
+  it('should apply playing time corrections for an event', () => {
+    const teamId = 'team-1';
+    const eventId = 'event-1';
+    const corrections = [
+      { gameEventId: 'ge-1', field: 'outPlayerId' as const, currentPlayerId: 'p1', correctedPlayerId: 'p2', reason: 'because' },
+    ];
+    const mockResponse = {
+      appliedCorrections: [{ id: 'ge-1' }],
+      report: { eventId, isValid: true, violations: [], suggestedCorrections: [] },
+    };
+
+    service.applyPlayingTimeCorrections(teamId, eventId, corrections).subscribe((res) => {
+      expect(res).toEqual(mockResponse);
+    });
+
+    const req = httpMock.expectOne(`${service['apiUrl']}/teams/${teamId}/events/${eventId}/playing-time/apply-corrections`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      corrections: [
+        { gameEventId: 'ge-1', field: 'outPlayerId', currentPlayerId: 'p1', correctedPlayerId: 'p2' },
+      ],
+    });
+    req.flush(mockResponse);
+  });
 });

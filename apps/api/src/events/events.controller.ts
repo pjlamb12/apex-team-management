@@ -20,9 +20,11 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { SaveLineupDto } from './dto/save-lineup.dto';
 import { CreateGameEventDto } from './dto/create-game-event.dto';
 import { UpdateGameEventDto } from './dto/update-game-event.dto';
+import { ApplyPlayingTimeCorrectionsDto } from './dto/apply-playing-time-corrections.dto';
 import { TeamRoleGuard } from '../auth/guards/team-role.guard';
 import { TeamRoles } from '../auth/decorators/team-role.decorator';
 import { TeamRole } from '@apex-team/shared/util/models';
+import { PlayingTimeValidationService } from '../analytics/playing-time-validation.service';
 
 @UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId/events')
@@ -31,6 +33,7 @@ export class EventsController {
     private readonly eventsService: EventsService,
     private readonly lineupEntriesService: LineupEntriesService,
     private readonly weatherService: WeatherService,
+    private readonly playingTimeValidationService: PlayingTimeValidationService,
   ) {}
 
   @Post(':eventId/weather/refresh')
@@ -148,6 +151,26 @@ export class EventsController {
     @Request() req: { user: { sub: string } },
   ) {
     return this.eventsService.removeEvent(eventId, gameEventId, req.user.sub);
+  }
+
+  @Get(':eventId/playing-time/validate')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  validatePlayingTime(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+  ) {
+    return this.playingTimeValidationService.validateForEvent(eventId);
+  }
+
+  @Post(':eventId/playing-time/apply-corrections')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  applyPlayingTimeCorrections(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Body() dto: ApplyPlayingTimeCorrectionsDto,
+    @Request() req: { user: { sub: string } },
+  ) {
+    return this.eventsService.applyPlayingTimeCorrections(eventId, dto, req.user.sub);
   }
 
   @Get(':eventId/notes')

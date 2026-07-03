@@ -120,6 +120,21 @@ export interface SaveLineupDto {
   entries: SaveLineupEntryDto[];
 }
 
+export interface PlayingTimeSuggestedCorrection {
+  gameEventId: string;
+  field: 'outPlayerId';
+  currentPlayerId: string;
+  correctedPlayerId: string;
+  reason: string;
+}
+
+export interface PlayingTimeValidationReport {
+  eventId: string;
+  isValid: boolean;
+  violations: unknown[];
+  suggestedCorrections: PlayingTimeSuggestedCorrection[];
+}
+
 export interface EventNote {
   id: string;
   eventId: string;
@@ -202,6 +217,28 @@ export class EventsService {
 
   getPlayingTime(teamId: string, eventId: string): Observable<Record<string, any>> {
     return this.http.get<Record<string, any>>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/analytics/playing-time`);
+  }
+
+  validatePlayingTime(teamId: string, eventId: string): Observable<PlayingTimeValidationReport> {
+    return this.http.get<PlayingTimeValidationReport>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/playing-time/validate`);
+  }
+
+  applyPlayingTimeCorrections(
+    teamId: string,
+    eventId: string,
+    corrections: PlayingTimeSuggestedCorrection[],
+  ): Observable<{ appliedCorrections: any[]; report: PlayingTimeValidationReport }> {
+    return this.http.post<{ appliedCorrections: any[]; report: PlayingTimeValidationReport }>(
+      `${this.apiUrl}/teams/${teamId}/events/${eventId}/playing-time/apply-corrections`,
+      {
+        corrections: corrections.map(({ gameEventId, field, currentPlayerId, correctedPlayerId }) => ({
+          gameEventId,
+          field,
+          currentPlayerId,
+          correctedPlayerId,
+        })),
+      },
+    );
   }
 
   refreshWeather(teamId: string, eventId: string): Observable<any> {
