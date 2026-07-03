@@ -535,11 +535,14 @@
           @if (activeSegment() === 'playtime') {
             <!-- Playing Time Card -->
             <ion-card class="m-0">
-              <ion-card-header class="px-6 pt-6 pb-2">
+              <ion-card-header class="px-6 pt-6 pb-2 flex justify-between items-center">
                 <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
                   <ion-icon name="time-outline"></ion-icon>
                   Playing Time
                 </ion-card-title>
+                <ion-button size="small" fill="outline" color="primary" class="font-black text-[10px] uppercase h-7 m-0" (click)="checkPlayingTime()">
+                  Check for Errors
+                </ion-button>
               </ion-card-header>
               <ion-card-content class="p-0">
                 <ion-list lines="full">

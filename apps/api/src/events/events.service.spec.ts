@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { NotFoundException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { EventEntity } from '../entities/event.entity';
 import { SeasonEntity } from '../entities/season.entity';
@@ -14,6 +14,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
 import { WeatherService } from './weather.service';
 import { AttendanceService } from '../attendance/attendance.service';
+import { PlayingTimeValidationService } from '../analytics/playing-time-validation.service';
 import { TeamRole } from '@apex-team/shared/util/models';
 import { vi } from 'vitest';
 
@@ -24,6 +25,9 @@ describe('EventsService', () => {
   let teamRepo: Repository<TeamEntity>;
   let gameEventRepo: Repository<GameEventEntity>;
   let eventNoteRepo: Repository<EventNoteEntity>;
+  let socketGateway: { server: { to: ReturnType<typeof vi.fn>; emit: ReturnType<typeof vi.fn> } };
+  let playingTimeValidationService: PlayingTimeValidationService;
+  let dataSource: DataSource;
 
 
   beforeEach(async () => {
@@ -105,6 +109,18 @@ describe('EventsService', () => {
             syncFromLineup: vi.fn(),
           },
         },
+        {
+          provide: PlayingTimeValidationService,
+          useValue: {
+            validateForEvent: vi.fn(),
+          },
+        },
+        {
+          provide: DataSource,
+          useValue: {
+            transaction: vi.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -114,6 +130,9 @@ describe('EventsService', () => {
     teamRepo = module.get<Repository<TeamEntity>>(getRepositoryToken(TeamEntity));
     gameEventRepo = module.get<Repository<GameEventEntity>>(getRepositoryToken(GameEventEntity));
     eventNoteRepo = module.get<Repository<EventNoteEntity>>(getRepositoryToken(EventNoteEntity));
+    socketGateway = module.get(SocketGateway);
+    playingTimeValidationService = module.get<PlayingTimeValidationService>(PlayingTimeValidationService);
+    dataSource = module.get<DataSource>(DataSource);
   });
 
   describe('create', () => {
@@ -682,6 +701,75 @@ describe('EventsService', () => {
 
       await service.deleteNote(eventId, 'note-1', userId);
       expect(eventNoteRepo.remove).toHaveBeenCalledWith(mockNote);
+    });
+  });
+
+  describe('applyPlayingTimeCorrections', () => {
+    const eventId = 'event-1';
+    const userId = 'user-1';
+    const correction = { gameEventId: 'ge-1', field: 'outPlayerId' as const, currentPlayerId: 'p1', correctedPlayerId: 'p2' };
+    const dto = { corrections: [correction] };
+
+    it('should apply corrections that match the freshly-recomputed suggestions and emit a socket update', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: { team: { coachId: userId, members: [] } },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+
+      vi.spyOn(playingTimeValidationService, 'validateForEvent')
+        .mockResolvedValueOnce({
+          eventId,
+          isValid: false,
+          violations: [],
+          suggestedCorrections: [{ ...correction, reason: 'because' }],
+        } as any)
+        .mockResolvedValueOnce({ eventId, isValid: true, violations: [], suggestedCorrections: [] } as any);
+
+      const gameEventRow = { id: 'ge-1', eventId, payload: { outPlayerId: 'p1' } };
+      const manager = {
+        findOne: vi.fn().mockResolvedValue(gameEventRow),
+        save: vi.fn().mockImplementation(async (_entity: unknown, row: any) => row),
+      };
+      vi.spyOn(dataSource, 'transaction').mockImplementation(async (cb: any) => cb(manager));
+
+      const result = await service.applyPlayingTimeCorrections(eventId, dto as any, userId);
+
+      expect(manager.findOne).toHaveBeenCalledWith(GameEventEntity, { where: { id: 'ge-1', eventId } });
+      expect(manager.save).toHaveBeenCalledWith(
+        GameEventEntity,
+        expect.objectContaining({ id: 'ge-1', payload: { outPlayerId: 'p2' } }),
+      );
+      expect(socketGateway.server.to).toHaveBeenCalledWith(`event:${eventId}`);
+      expect(socketGateway.server.emit).toHaveBeenCalledWith('gameEventUpdated', expect.objectContaining({ id: 'ge-1' }));
+      expect(result.appliedCorrections).toHaveLength(1);
+      expect(result.report.isValid).toBe(true);
+    });
+
+    it('should throw ConflictException if submitted corrections no longer match the freshly-recomputed suggestions', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: { team: { coachId: userId, members: [] } },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+      vi.spyOn(playingTimeValidationService, 'validateForEvent').mockResolvedValue({
+        eventId,
+        isValid: true,
+        violations: [],
+        suggestedCorrections: [],
+      } as any);
+
+      await expect(service.applyPlayingTimeCorrections(eventId, dto as any, userId)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ForbiddenException if user is not authorized for the event', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: { team: { coachId: 'other-coach', members: [] } },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+
+      await expect(service.applyPlayingTimeCorrections(eventId, dto as any, userId)).rejects.toThrow(ForbiddenException);
     });
   });
 });

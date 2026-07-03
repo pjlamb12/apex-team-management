@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnalyticsController } from './analytics.controller';
 import { PlayingTimeService } from './playing-time.service';
+import { PlayingTimeValidationService } from './playing-time-validation.service';
 import { PerformanceMetricsService } from './performance-metrics.service';
 import { PlayerAnalyticsService } from './player-analytics.service';
 import { CsvExportService } from './export/csv-export.service';
@@ -24,15 +25,17 @@ import { AttendanceEntity } from '../entities/attendance.entity';
   ],
   controllers: [AnalyticsController],
   providers: [
-    PlayingTimeService, 
-    PerformanceMetricsService, 
+    PlayingTimeService,
+    PlayingTimeValidationService,
+    PerformanceMetricsService,
     PlayerAnalyticsService,
     CsvExportService,
     PdfExportService
   ],
   exports: [
-    PlayingTimeService, 
-    PerformanceMetricsService, 
+    PlayingTimeService,
+    PlayingTimeValidationService,
+    PerformanceMetricsService,
     PlayerAnalyticsService,
     CsvExportService,
     PdfExportService

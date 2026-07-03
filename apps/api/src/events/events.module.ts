@@ -19,6 +19,7 @@ import { SocketModule } from '../socket/socket.module';
 import { LocationsModule } from '../locations/locations.module';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { MembershipsModule } from '../memberships/memberships.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { MembershipsModule } from '../memberships/memberships.module';
     LocationsModule,
     AttendanceModule,
     MembershipsModule,
+    AnalyticsModule,
   ],
   controllers: [EventsController],
   providers: [EventsService, LineupEntriesService, ICalService, WeatherService],
