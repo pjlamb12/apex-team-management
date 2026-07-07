@@ -244,5 +244,71 @@ describe('LiveGameStateService', () => {
       expect(service.activePlayers().length).toBe(1);
       expect(service.benchPlayers().map(p => p.id)).toContain('p1');
     });
+
+    it('should clean up staged subs if the outgoing player is no longer active or the incoming player is no longer on the bench', () => {
+      const lineup: any[] = [
+        { playerId: 'p1', player: { id: 'p1', firstName: 'P1', lastName: 'L1' }, status: 'starting', slotIndex: 1 },
+        { playerId: 'p2', player: { id: 'p2', firstName: 'P2', lastName: 'L2' }, status: 'starting', slotIndex: 2 },
+        { playerId: 'p3', player: { id: 'p3', firstName: 'P3', lastName: 'L3' }, status: 'bench' },
+        { playerId: 'p4', player: { id: 'p4', firstName: 'P4', lastName: 'L4' }, status: 'bench' }
+      ];
+      service.initialize('event-123', lineup, 'team-123', 2);
+
+      // p1 and p2 are active. p3 and p4 are bench.
+      // Stage sub: p3 (bench) -> p1 (active)
+      service.stageSub('p3', 'p1');
+      expect(service.stagedSubs()).toEqual([{ inPlayerId: 'p3', outPlayerId: 'p1' }]);
+
+      // Now sub out p1 using another sub event (simulating a remote sync or another sub)
+      service.pushEvent({ type: 'SUB', playerIdIn: 'p4', playerIdOut: 'p1', slotIndex: 1, timestamp: Date.now(), minuteOccurred: 5 });
+      
+      // Since p1 is no longer active, the staged sub involving p1 as the outgoing player should be automatically cleaned up!
+      expect(service.stagedSubs()).toEqual([]);
+    });
+
+    it('should keep synced as false in markEventSynced if the event was deleted locally while in-flight', () => {
+      const timestamp = 123456789;
+      service.pushEvent({ type: 'GOAL', timestamp, minuteOccurred: 5, playerId: 'p1' });
+      
+      // Revert/delete the event locally before sync completes
+      service.undo();
+      
+      const event = service.events().find(e => e.timestamp === timestamp)!;
+      expect(event.status).toBe('deleted');
+      expect(event.synced).toBe(false);
+
+      // Simulate the sync POST completing and calling markEventSynced
+      service.markEventSynced(timestamp, 'backend-id-123');
+
+      const updatedEvent = service.events().find(e => e.timestamp === timestamp)!;
+      expect(updatedEvent.id).toBe('backend-id-123');
+      expect(updatedEvent.status).toBe('deleted');
+      expect(updatedEvent.synced).toBe(false); // synced must remain false so syncDelete can run!
+    });
+
+    it('should preserve local deleted status and unsynced deletion state in handleRemoteEvent', () => {
+      const timestamp = 123456789;
+      service.pushEvent({ type: 'GOAL', timestamp, minuteOccurred: 5, playerId: 'p1' });
+      
+      // Revert/delete the event locally before sync completes
+      service.undo();
+      
+      // mark event as having backend id but unsynced deletion
+      service.markEventSynced(timestamp, 'backend-id-123');
+
+      // Now simulate receiving the broadcast of the logged event from the socket
+      service.handleRemoteEvent({
+        id: 'backend-id-123',
+        eventType: 'GOAL',
+        minuteOccurred: 5,
+        timestamp,
+        status: 'active',
+        payload: { playerId: 'p1' }
+      });
+
+      const updatedEvent = service.events().find(e => e.timestamp === timestamp)!;
+      expect(updatedEvent.status).toBe('deleted'); // must NOT be revived to active!
+      expect(updatedEvent.synced).toBe(false); // synced must still be false to allow syncDelete to process
+    });
   });
 });

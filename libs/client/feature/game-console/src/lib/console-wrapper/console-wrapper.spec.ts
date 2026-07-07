@@ -166,6 +166,27 @@ describe('ConsoleWrapper', () => {
     expect(stateService.benchPlayers().find(p => p.id === 'p1')).toBeTruthy();
   });
 
+  it('should ignore and clear staged subs in handleApplySubs if the players are no longer valid', () => {
+    const activePlayer = mockLineup[0].player as any;
+    const benchPlayer = mockLineup[1].player as any;
+    const mockEvent = new MouseEvent('click');
+
+    // Stage (p2, p1)
+    component['handlePlayerSelection']({ player: benchPlayer, event: mockEvent });
+    component['handlePlayerSelection']({ player: activePlayer, event: mockEvent });
+    expect(stateService.stagedSubs().length).toBe(1);
+
+    // Simulate p1 (outgoing) becoming bench via some other event
+    stateService.pushEvent({ type: 'SUB', playerIdIn: 'p3', playerIdOut: 'p1', slotIndex: 0, timestamp: Date.now(), minuteOccurred: 5 });
+    
+    // Applying subs should now clear the staged sub without pushing any new sub events (since it is invalid now)
+    const initialEventsCount = stateService.events().length;
+    component['handleApplySubs']();
+
+    expect(stateService.stagedSubs().length).toBe(0);
+    expect(stateService.events().length).toBe(initialEventsCount);
+  });
+
   it('should trigger POSITION_SWAP event when tapping two active players', () => {
     const player1 = mockLineup[0].player as any;
     const player3 = mockLineup[2].player as any;

@@ -104,18 +104,30 @@ html {
 // Shell header offset — child route ion-content is outside the shell component's
 // encapsulation scope, so this must live in global styles to reach it.
 // The value matches Ionic's MD toolbar height (56px).
-// We also add padding-bottom (64px) to ensure no content is obscured by the bottom tab bar.
+// We also add padding-bottom to ensure no content is obscured by the bottom tab bar and safe area.
 app-shell ion-content {
   --padding-top: 56px;
-  --padding-bottom: 64px;
+  --padding-bottom: calc(128px + var(--ion-safe-area-bottom, 0px));
 }
 
-// Game and practice consoles have their own headers and full screen layouts,
-// so we cancel the shell-level top and bottom padding.
+app-shell ion-content::part(scroll) {
+  padding-bottom: calc(128px + var(--ion-safe-area-bottom, 0px)) !important;
+}
+
+// Game, practice, and tryout consoles have their own local headers, so they cancel the shell-level top padding.
 app-console-wrapper ion-content,
-app-practice-console-wrapper ion-content {
+app-practice-console-wrapper ion-content,
+app-tryout-console ion-content {
   --padding-top: 0;
+}
+
+// Only the live game console uses a full screen absolute layout, so it cancels the bottom padding.
+app-console-wrapper ion-content {
   --padding-bottom: 0;
+}
+
+app-console-wrapper ion-content::part(scroll) {
+  padding-bottom: 0 !important;
 }
 
 // Dark mode card elevation — subtle accent-tinted shadow makes cards float above the deep base
@@ -214,16 +226,32 @@ html.dark ion-input[type="date"]::part(native) {
   color-scheme: dark !important;
 }
 
-// Responsive layout & wrapping for segment buttons on mobile
+// Clean scrollbar visibility for ion-segment
+ion-segment {
+  &::-webkit-scrollbar {
+    display: none !important;
+  }
+  scrollbar-width: none !important;
+}
+
+// Let segment buttons have a reasonable padding
+ion-segment-button {
+  --padding-start: 12px;
+  --padding-end: 12px;
+}
+
 ion-segment-button ion-label {
-  white-space: normal !important;
-  font-size: 10px !important;
-  line-height: 1.1 !important;
+  white-space: nowrap !important; // Stop text wrapping in tab labels
+  font-size: 11px !important;
+  line-height: 1.2 !important;
   padding: 0 4px;
+  word-break: keep-all !important;
+  text-overflow: ellipsis;
 
   @media (min-width: 640px) {
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 1.2 !important;
+    padding: 0 8px;
   }
 }
 
