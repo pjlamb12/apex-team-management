@@ -104,16 +104,17 @@ html {
 // Shell header offset — child route ion-content is outside the shell component's
 // encapsulation scope, so this must live in global styles to reach it.
 // The value matches Ionic's MD toolbar height (56px).
-// We also add padding-bottom (64px) to ensure no content is obscured by the bottom tab bar.
+// We also add padding-bottom to ensure no content is obscured by the bottom tab bar and safe area.
 app-shell ion-content {
   --padding-top: 56px;
-  --padding-bottom: 64px;
+  --padding-bottom: calc(96px + var(--ion-safe-area-bottom, 0px));
 }
 
-// Game and practice consoles have their own headers and full screen layouts,
+// Game, practice, and tryout consoles have their own headers and full screen layouts,
 // so we cancel the shell-level top and bottom padding.
 app-console-wrapper ion-content,
-app-practice-console-wrapper ion-content {
+app-practice-console-wrapper ion-content,
+app-tryout-console ion-content {
   --padding-top: 0;
   --padding-bottom: 0;
 }
