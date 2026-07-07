@@ -64,7 +64,7 @@
         </ion-item>
       </div>
 
-      <ion-segment [value]="activeSegment()" (ionChange)="activeSegment.set($any($event).detail.value)" mode="ios" class="bg-ap-surface rounded-lg p-1">
+      <ion-segment [value]="activeSegment()" (ionChange)="activeSegment.set($any($event).detail.value)" mode="ios" class="bg-ap-surface rounded-lg p-1" scrollable="true">
         <ion-segment-button value="performance">
           <ion-label class="text-xs font-bold uppercase tracking-wider">Performance</ion-label>
         </ion-segment-button>

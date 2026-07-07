@@ -226,32 +226,18 @@ html.dark ion-input[type="date"]::part(native) {
   color-scheme: dark !important;
 }
 
-// Globally ensure all segments scroll horizontally if they overflow, instead of squishing
+// Clean scrollbar visibility for ion-segment
 ion-segment {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch;
-  
   &::-webkit-scrollbar {
     display: none !important;
   }
   scrollbar-width: none !important;
 }
 
-// Let segment buttons have a reasonable width and prevent text wrapping from ruining the layout
+// Let segment buttons have a reasonable padding
 ion-segment-button {
-  flex: 0 0 auto !important; // Prevent buttons from shrinking to fit
-  min-width: auto !important; // Allow size based on padding/content
   --padding-start: 12px;
   --padding-end: 12px;
-
-  &:first-of-type {
-    margin-inline-start: 8px !important;
-  }
-  &:last-of-type {
-    margin-inline-end: 8px !important;
-  }
 }
 
 ion-segment-button ion-label {

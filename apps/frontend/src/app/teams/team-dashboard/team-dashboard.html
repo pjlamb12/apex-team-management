@@ -12,7 +12,7 @@
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChange($event)">
+    <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChange($event)" scrollable="true">
       <ion-segment-button value="roster">
         <ion-label>Roster</ion-label>
       </ion-segment-button>

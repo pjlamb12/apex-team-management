@@ -6,7 +6,7 @@
     <ion-title>Tryout Console</ion-title>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChange($event)">
+    <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChange($event)" scrollable="true">
       <ion-segment-button value="summary">
         <ion-label>Summary</ion-label>
       </ion-segment-button>
