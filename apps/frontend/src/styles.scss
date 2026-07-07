@@ -107,7 +107,11 @@ html {
 // We also add padding-bottom to ensure no content is obscured by the bottom tab bar and safe area.
 app-shell ion-content {
   --padding-top: 56px;
-  --padding-bottom: calc(96px + var(--ion-safe-area-bottom, 0px));
+  --padding-bottom: calc(128px + var(--ion-safe-area-bottom, 0px));
+}
+
+app-shell ion-content::part(scroll) {
+  padding-bottom: calc(128px + var(--ion-safe-area-bottom, 0px)) !important;
 }
 
 // Game, practice, and tryout consoles have their own headers and full screen layouts,
@@ -117,6 +121,12 @@ app-practice-console-wrapper ion-content,
 app-tryout-console ion-content {
   --padding-top: 0;
   --padding-bottom: 0;
+}
+
+app-console-wrapper ion-content::part(scroll),
+app-practice-console-wrapper ion-content::part(scroll),
+app-tryout-console ion-content::part(scroll) {
+  padding-bottom: 0 !important;
 }
 
 // Dark mode card elevation — subtle accent-tinted shadow makes cards float above the deep base
