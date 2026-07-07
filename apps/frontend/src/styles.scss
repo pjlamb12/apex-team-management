@@ -114,18 +114,19 @@ app-shell ion-content::part(scroll) {
   padding-bottom: calc(128px + var(--ion-safe-area-bottom, 0px)) !important;
 }
 
-// Game, practice, and tryout consoles have their own headers and full screen layouts,
-// so we cancel the shell-level top and bottom padding.
+// Game, practice, and tryout consoles have their own local headers, so they cancel the shell-level top padding.
 app-console-wrapper ion-content,
 app-practice-console-wrapper ion-content,
 app-tryout-console ion-content {
   --padding-top: 0;
+}
+
+// Only the live game console uses a full screen absolute layout, so it cancels the bottom padding.
+app-console-wrapper ion-content {
   --padding-bottom: 0;
 }
 
-app-console-wrapper ion-content::part(scroll),
-app-practice-console-wrapper ion-content::part(scroll),
-app-tryout-console ion-content::part(scroll) {
+app-console-wrapper ion-content::part(scroll) {
   padding-bottom: 0 !important;
 }
 
