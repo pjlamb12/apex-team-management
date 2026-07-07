@@ -815,7 +815,19 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     const timestamp = Date.now();
     const activePlayers = this.stateService.activePlayers();
 
-    const events = staged.map(sub => {
+    // Filter out staged subs that are no longer valid (e.g. due to remote updates)
+    const validStaged = staged.filter(sub => {
+      const isOutActive = activePlayers.some(p => p.id === sub.outPlayerId);
+      const isInActive = activePlayers.some(p => p.id === sub.inPlayerId);
+      return isOutActive && !isInActive;
+    });
+
+    if (validStaged.length === 0) {
+      this.stateService.clearStagedSubs();
+      return;
+    }
+
+    const events = validStaged.map(sub => {
       const outgoingActive = activePlayers.find(p => (p as any).id === sub.outPlayerId) as any;
       
       return {

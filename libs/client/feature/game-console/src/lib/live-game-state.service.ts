@@ -670,7 +670,7 @@ export class LiveGameStateService {
         console.error('Failed to parse stored rotation state', e);
       }
     }
-    this.cleanStagedSubsForEjected();
+    this.cleanStagedSubs();
   }
 
   public updateRotationConfig(config: Partial<RotationConfig>): void {
@@ -689,7 +689,7 @@ export class LiveGameStateService {
       this.mapEvent({ ...event, status: 'active', period: this._currentPeriod() }),
     ]);
     this.save();
-    this.cleanStagedSubsForEjected();
+    this.cleanStagedSubs();
   }
 
   public pushEvents(events: GameEvent[]): void {
@@ -703,7 +703,7 @@ export class LiveGameStateService {
     );
     this._events.update((prev) => [...prev, ...decoratedEvents]);
     this.save();
-    this.cleanStagedSubsForEjected();
+    this.cleanStagedSubs();
   }
 
   public setEvents(events: GameEvent[]): void {
@@ -744,14 +744,22 @@ export class LiveGameStateService {
     }
 
     this.save();
-    this.cleanStagedSubsForEjected();
+    this.cleanStagedSubs();
   }
 
-  private cleanStagedSubsForEjected(): void {
+  private cleanStagedSubs(): void {
+    const active = this.activePlayers();
+    const activeIds = new Set(active.map((p) => p.id));
     const ejected = this.ejectedPlayerIds();
-    if (ejected.size === 0) return;
+
     this._stagedSubs.update((subs) =>
-      subs.filter((s) => !ejected.has(s.inPlayerId) && !ejected.has(s.outPlayerId))
+      subs.filter((s) => {
+        // Outgoing player must be active and not ejected
+        const isOutValid = activeIds.has(s.outPlayerId) && !ejected.has(s.outPlayerId);
+        // Incoming player must be on the bench (not active) and not ejected
+        const isInValid = !activeIds.has(s.inPlayerId) && !ejected.has(s.inPlayerId);
+        return isOutValid && isInValid;
+      })
     );
   }
 
@@ -834,6 +842,7 @@ export class LiveGameStateService {
       );
     });
     this.save();
+    this.cleanStagedSubs();
   }
 
   public deleteEvent(id: string): void {
@@ -864,11 +873,20 @@ export class LiveGameStateService {
 
   public markEventSynced(localTimestamp: number, backendId: string): void {
     this._events.update((prev) =>
-      prev.map((e) =>
-        e.timestamp === localTimestamp
-          ? { ...e, id: backendId, synced: true, syncFailed: false }
-          : e
-      )
+      prev.map((e) => {
+        if (e.timestamp === localTimestamp) {
+          // If the event was deleted locally while the sync request was in-flight,
+          // we must keep synced as false so that the delete sync operation can run next.
+          const wasDeleted = e.status === 'deleted';
+          return {
+            ...e,
+            id: backendId,
+            synced: !wasDeleted,
+            syncFailed: false
+          };
+        }
+        return e;
+      })
     );
     this.save();
   }
@@ -945,10 +963,17 @@ export class LiveGameStateService {
       let updatedList;
       if (existingIndex > -1) {
         const newEvents = [...prev];
+        const localEvent = newEvents[existingIndex];
+        // Preserve local deleted status and unsynced deletion state
+        const status = localEvent.status === 'deleted' ? 'deleted' : (mappedEvent.status || 'active');
+        const synced = localEvent.status === 'deleted' ? localEvent.synced : mappedEvent.synced;
+
         newEvents[existingIndex] = {
-          ...newEvents[existingIndex],
+          ...localEvent,
           ...mappedEvent,
-          timestamp: newEvents[existingIndex].timestamp // Keep original local timestamp
+          status,
+          synced,
+          timestamp: localEvent.timestamp // Keep original local timestamp
         };
         updatedList = newEvents;
       } else {
@@ -991,6 +1016,7 @@ export class LiveGameStateService {
     }
 
     this.save();
+    this.cleanStagedSubs();
   }
 
   public handleRemoteDeletion(data: { id: string }): void {
