@@ -245,6 +245,13 @@ ion-segment-button {
   min-width: auto !important; // Allow size based on padding/content
   --padding-start: 12px;
   --padding-end: 12px;
+
+  &:first-of-type {
+    margin-inline-start: 8px !important;
+  }
+  &:last-of-type {
+    margin-inline-end: 8px !important;
+  }
 }
 
 ion-segment-button ion-label {
