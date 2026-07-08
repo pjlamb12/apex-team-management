@@ -13,3 +13,56 @@ ion-badge {
   font-size: 0.65rem;
   letter-spacing: 0.03em;
 }
+
+.checklist-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 12px 16px !important;
+  }
+
+  th.player-col, td.player-col {
+    padding-left: 24px !important;
+    padding-right: 16px !important;
+    text-align: left;
+  }
+
+  th.checklist-col {
+    text-align: center;
+    vertical-align: middle;
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      
+      span {
+        text-align: center;
+        white-space: normal !important;
+        word-break: break-word !important;
+        display: inline-block;
+        max-width: 110px;
+        line-height: 1.2;
+      }
+    }
+  }
+
+  .delete-btn {
+    --padding-start: 0;
+    --padding-end: 0;
+    --padding-top: 0;
+    --padding-bottom: 0;
+    margin: 0;
+    height: 16px;
+    width: 16px;
+    min-height: 16px;
+    font-size: 12px;
+    
+    ion-icon {
+      font-size: 14px;
+    }
+  }
+}
+

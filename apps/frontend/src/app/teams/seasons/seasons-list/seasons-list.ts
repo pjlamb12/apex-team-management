@@ -8,7 +8,6 @@ import {
   IonList,
   IonItem,
   IonLabel,
-  IonBadge,
   IonButton,
   IonButtons,
   IonIcon,
@@ -27,13 +26,16 @@ import {
   chevronDownOutline,
   trophyOutline,
 } from 'ionicons/icons';
-import { SeasonsService, LeaguesService } from '@apex-team/client/data-access/team';
-import { Season, League } from '@apex-team/shared/util/models';
+import { SeasonsService, LeaguesService, PlayersService, SeasonChecklistService } from '@apex-team/client/data-access/team';
+import { Season, League, SeasonChecklistItem, SeasonChecklistValue } from '@apex-team/shared/util/models';
 import { LeagueModal } from '../../events/schedule/league-modal/league-modal';
 
 interface SeasonWithLeagues extends Season {
   leagues: League[];
   isExpanded?: boolean;
+  players?: any[];
+  checklistItems?: SeasonChecklistItem[];
+  checklistValues?: Record<string, Record<string, string | null>>;
 }
 
 @Component({
@@ -46,7 +48,6 @@ interface SeasonWithLeagues extends Season {
     IonList,
     IonItem,
     IonLabel,
-    IonBadge,
     IonButton,
     IonButtons,
     IonIcon,
@@ -71,6 +72,8 @@ export class SeasonsList {
 
   private readonly seasonsService = inject(SeasonsService);
   private readonly leaguesService = inject(LeaguesService);
+  private readonly playersService = inject(PlayersService);
+  private readonly checklistService = inject(SeasonChecklistService);
   protected readonly alertCtrl = inject(AlertController);
   protected readonly modalCtrl = inject(ModalController);
 
@@ -108,9 +111,40 @@ export class SeasonsList {
         data.map(async (season) => {
           try {
             const leagues = await firstValueFrom(this.leaguesService.findAllForSeason(season.id));
-            return { ...season, leagues, isExpanded: true };
+            const players = await firstValueFrom(this.playersService.getPlayersForSeason(teamId, season.id));
+            const checklistItems = await firstValueFrom(this.checklistService.findItems(season.id));
+            const checklistValues = await firstValueFrom(this.checklistService.findValues(season.id));
+
+            const valuesMap: Record<string, Record<string, string | null>> = {};
+            players.forEach(p => {
+              valuesMap[p.id] = {};
+              checklistItems.forEach(item => {
+                valuesMap[p.id][item.id] = null;
+              });
+            });
+            checklistValues.forEach(val => {
+              if (valuesMap[val.playerId]) {
+                valuesMap[val.playerId][val.itemId] = val.value;
+              }
+            });
+
+            return {
+              ...season,
+              leagues,
+              isExpanded: season.isActive,
+              players,
+              checklistItems,
+              checklistValues: valuesMap,
+            };
           } catch {
-            return { ...season, leagues: [], isExpanded: true };
+            return {
+              ...season,
+              leagues: [],
+              isExpanded: season.isActive,
+              players: [],
+              checklistItems: [],
+              checklistValues: {},
+            };
           }
         })
       );
@@ -130,7 +164,7 @@ export class SeasonsList {
       buttons: [
         { text: 'Keep Season', role: 'cancel' },
         {
-          text: 'Delete Season',
+          text: 'Delete',
           role: 'destructive',
           cssClass: 'text-danger',
           handler: () => {
@@ -226,6 +260,82 @@ export class SeasonsList {
     } catch (error: any) {
       const msg = error?.error?.message || 'Failed to delete competition. Please try again.';
       this.errorMessage.set(msg);
+    }
+  }
+
+  protected async addChecklistItem(season: SeasonWithLeagues): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Add Tracked Item',
+      inputs: [
+        {
+          name: 'name',
+          type: 'text',
+          placeholder: 'e.g. Uniform Ordered, Offer Sent',
+        },
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Add',
+          handler: async (data) => {
+            if (!data.name?.trim()) return;
+            try {
+              await firstValueFrom(this.checklistService.createItem(season.id, data.name.trim()));
+              void this.loadSeasons(this.teamId);
+            } catch (error: any) {
+              const msg = error?.error?.message || 'Failed to add checklist item.';
+              this.errorMessage.set(msg);
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  protected async deleteChecklistItem(season: SeasonWithLeagues, itemId: string, itemName: string): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Tracked Item',
+      message: `Are you sure you want to delete "${itemName}"? This will delete all tracking data for this item across all players in this season.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: async () => {
+            try {
+              await firstValueFrom(this.checklistService.removeItem(season.id, itemId));
+              void this.loadSeasons(this.teamId);
+            } catch (error: any) {
+              const msg = error?.error?.message || 'Failed to delete checklist item.';
+              this.errorMessage.set(msg);
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  protected async onChecklistValueChange(
+    season: SeasonWithLeagues,
+    playerId: string,
+    itemId: string,
+    value: string | null
+  ): Promise<void> {
+    try {
+      const dbValue = value === 'null' || value === '' ? null : value;
+      
+      if (season.checklistValues && season.checklistValues[playerId]) {
+        season.checklistValues[playerId][itemId] = dbValue;
+        this.seasons.set([...this.seasons()]);
+      }
+
+      await firstValueFrom(this.checklistService.upsertValue(season.id, playerId, itemId, dbValue));
+    } catch (error: any) {
+      const msg = error?.error?.message || 'Failed to update checklist status.';
+      this.errorMessage.set(msg);
+      void this.loadSeasons(this.teamId);
     }
   }
 }

@@ -45,6 +45,7 @@ import { AddBlockTouchDefinition1783700000000 } from './1783700000000-AddBlockTo
 import { AddServeAttemptDefinition1783800000000 } from './1783800000000-AddServeAttemptDefinition';
 import { UpdateServeReceiveMinimumScore1783900000000 } from './1783900000000-UpdateServeReceiveMinimumScore';
 import { ImproveTryoutConsole1784000000000 } from './1784000000000-ImproveTryoutConsole';
+import { CreateSeasonChecklist1784100000000 } from './1784100000000-CreateSeasonChecklist';
 
 
 export const ALL_MIGRATIONS = [
@@ -95,5 +96,6 @@ export const ALL_MIGRATIONS = [
   AddServeAttemptDefinition1783800000000,
   UpdateServeReceiveMinimumScore1783900000000,
   ImproveTryoutConsole1784000000000,
+  CreateSeasonChecklist1784100000000,
 ];
 

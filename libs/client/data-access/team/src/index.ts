@@ -8,3 +8,5 @@ export * from './lib/analytics.service';
 export * from './lib/players.service';
 export * from './lib/candidates.service';
 export * from './lib/scouting.service';
+export * from './lib/season-checklist.service';
+
