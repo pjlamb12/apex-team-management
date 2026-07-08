@@ -25,6 +25,8 @@ import { CandidateNoteEntity } from './entities/candidate-note.entity';
 import { ScoutingRubricEntity } from './entities/scouting-rubric.entity';
 import { SeasonPlayerEntity } from './entities/season-player.entity';
 import { EventNoteEntity } from './entities/event-note.entity';
+import { SeasonChecklistItemEntity } from './entities/season-checklist-item.entity';
+import { SeasonChecklistValueEntity } from './entities/season-checklist-value.entity';
 
 import { ALL_MIGRATIONS } from '../migrations';
 
@@ -58,6 +60,8 @@ export default new DataSource({
     ScoutingRubricEntity,
     SeasonPlayerEntity,
     EventNoteEntity,
+    SeasonChecklistItemEntity,
+    SeasonChecklistValueEntity,
   ],
   migrations: ALL_MIGRATIONS,
   synchronize: false,

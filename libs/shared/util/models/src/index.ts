@@ -9,3 +9,5 @@ export * from './lib/game.model';
 export * from './lib/game-event.model';
 export * from './lib/lineup-entry.model';
 export * from './lib/staged-sub.model';
+export * from './lib/season-checklist.model';
+
