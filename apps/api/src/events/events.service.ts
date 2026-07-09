@@ -177,11 +177,22 @@ export class EventsService {
       }
     }
 
-    let filtered = expandedEvents.filter(e => {
+    const filtered = expandedEvents.filter(e => {
+      const startMs = e.scheduledAt?.getTime() || 0;
+      let durationMinutes = e.durationMinutes;
+      if (durationMinutes === null || durationMinutes === undefined) {
+        if (e.type === 'game') durationMinutes = 90;
+        else if (e.type === 'practice') durationMinutes = 60;
+        else if (e.type === 'tryout') durationMinutes = 90;
+        else durationMinutes = 0;
+      }
+      const durationMs = durationMinutes * 60 * 1000;
+      const endMs = startMs + durationMs;
+
       if (scope === 'upcoming') {
-        return (e.scheduledAt?.getTime() || 0) >= now.getTime();
+        return endMs >= now.getTime();
       } else {
-        return (e.scheduledAt?.getTime() || 0) < now.getTime();
+        return endMs < now.getTime();
       }
     });
 
