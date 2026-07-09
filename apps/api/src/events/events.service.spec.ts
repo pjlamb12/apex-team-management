@@ -334,6 +334,74 @@ describe('EventsService', () => {
         where: { id: 'season-2' }
       });
     });
+
+    it('should keep ongoing events (start time + duration) in the upcoming filter', async () => {
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1' } as any);
+      
+      const now = new Date();
+      // Started 30 mins ago, 60 min duration -> ends in 30 mins (should be upcoming)
+      const scheduledAt = new Date(now.getTime() - 30 * 60 * 1000);
+      
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([
+        { id: 'ongoing-practice', type: 'practice', scheduledAt, durationMinutes: 60 }
+      ] as any);
+
+      const upcomingResult = await service.findAllForTeam('team-1', 'upcoming');
+      expect(upcomingResult).toHaveLength(1);
+      expect(upcomingResult[0].id).toBe('ongoing-practice');
+
+      const pastResult = await service.findAllForTeam('team-1', 'past');
+      expect(pastResult).toHaveLength(0);
+    });
+
+    it('should move ended events (start time + duration) to the past filter', async () => {
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1' } as any);
+      
+      const now = new Date();
+      // Started 70 mins ago, 60 min duration -> ended 10 mins ago (should be past)
+      const scheduledAt = new Date(now.getTime() - 70 * 60 * 1000);
+      
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([
+        { id: 'ended-practice', type: 'practice', scheduledAt, durationMinutes: 60 }
+      ] as any);
+
+      const upcomingResult = await service.findAllForTeam('team-1', 'upcoming');
+      expect(upcomingResult).toHaveLength(0);
+
+      const pastResult = await service.findAllForTeam('team-1', 'past');
+      expect(pastResult).toHaveLength(1);
+      expect(pastResult[0].id).toBe('ended-practice');
+    });
+
+    it('should fall back to standard type durations if durationMinutes is not provided', async () => {
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1' } as any);
+      
+      const now = new Date();
+      // Started 45 mins ago, no duration:
+      // - Game: default 90 mins -> ends in 45 mins (upcoming)
+      // - Practice: default 60 mins -> ends in 15 mins (upcoming)
+      // - Practice ended: started 75 mins ago, default 60 mins -> ended (past)
+      const start45Ago = new Date(now.getTime() - 45 * 60 * 1000);
+      const start75Ago = new Date(now.getTime() - 75 * 60 * 1000);
+
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([
+        { id: 'game-45', type: 'game', scheduledAt: start45Ago, durationMinutes: null },
+        { id: 'practice-45', type: 'practice', scheduledAt: start45Ago, durationMinutes: null },
+        { id: 'practice-75', type: 'practice', scheduledAt: start75Ago, durationMinutes: null }
+      ] as any);
+
+      const upcomingResult = await service.findAllForTeam('team-1', 'upcoming');
+      const upcomingIds = upcomingResult.map(e => e.id);
+      expect(upcomingIds).toContain('game-45');
+      expect(upcomingIds).toContain('practice-45');
+      expect(upcomingIds).not.toContain('practice-75');
+
+      const pastResult = await service.findAllForTeam('team-1', 'past');
+      const pastIds = pastResult.map(e => e.id);
+      expect(pastIds).toContain('practice-75');
+      expect(pastIds).not.toContain('game-45');
+      expect(pastIds).not.toContain('practice-45');
+    });
   });
 
   describe('findOne', () => {
