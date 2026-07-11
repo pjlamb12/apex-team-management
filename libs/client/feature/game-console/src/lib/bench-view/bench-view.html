@@ -1,5 +1,10 @@
 <div class="bench-container p-4">
-  <h2 class="text-xl font-bold mb-4">Bench</h2>
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold">Bench</h2>
+    <ion-button size="small" fill="outline" color="primary" class="font-bold m-0" (click)="addGuestPlayer.emit()">
+      + Guest
+    </ion-button>
+  </div>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4">
     @for (player of players(); track player.id) {
       <ion-card

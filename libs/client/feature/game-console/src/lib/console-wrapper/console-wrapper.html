@@ -357,7 +357,8 @@
             [selectedPlayerId]="selectedPlayerId()"
             [ejectedPlayerIds]="stateService.ejectedPlayerIds()"
             [liberoDesignation]="stateService.liberoDesignation()"
-            (playerSelected)="handlePlayerSelection($event)">
+            (playerSelected)="handlePlayerSelection($event)"
+            (addGuestPlayer)="handleAddGuestPlayer()">
           </app-bench-view>
           <div class="border-t border-ap-border flex-1">
             <app-sub-queue

@@ -22,6 +22,7 @@ describe('PlayingTimeService', () => {
           provide: getRepositoryToken(EventEntity),
           useValue: {
             findOne: vi.fn(),
+            find: vi.fn(),
           },
         },
         {
@@ -215,6 +216,40 @@ describe('PlayingTimeService', () => {
 
       expect(result[p2].totalSeconds).toBe(2);
       expect(result[p2].positionSeconds['Libero']).toBe(2);
+    });
+  });
+
+  describe('calculateForTeam', () => {
+    const teamId = 'team-1';
+
+    it('should aggregate playing time for team games but skip games with ignorePlayingTime: true', async () => {
+      const event1 = { id: 'event-1', type: 'game', ignorePlayingTime: false };
+      const event2 = { id: 'event-2', type: 'game', ignorePlayingTime: true };
+
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([event1, event2] as any);
+      
+      const calcMock = vi.spyOn(service, 'calculateForEvent');
+      calcMock.mockImplementation(async (id) => {
+        if (id === 'event-1') {
+          return {
+            'p1': { playerId: 'p1', totalSeconds: 1200, positionSeconds: { 'FWD': 1200 } }
+          };
+        }
+        if (id === 'event-2') {
+          return {
+            'p1': { playerId: 'p1', totalSeconds: 1800, positionSeconds: { 'FWD': 1800 } }
+          };
+        }
+        return {};
+      });
+
+      const result = await service.calculateForTeam(teamId);
+      
+      expect(calcMock).toHaveBeenCalledWith('event-1');
+      expect(calcMock).not.toHaveBeenCalledWith('event-2');
+      
+      expect(result['p1']).toBeDefined();
+      expect(result['p1'].totalSeconds).toBe(1200);
     });
   });
 });

@@ -17,17 +17,20 @@ export class PlayersService {
 
   findAllForTeam(teamId: string): Promise<PlayerEntity[]> {
     return this.playerRepo.find({
-      where: { teamId },
+      where: { teamId, isGuest: false },
       order: { jerseyNumber: 'ASC', lastName: 'ASC' },
     });
   }
 
   async findAllForSeason(seasonId: string): Promise<PlayerEntity[]> {
     const seasonPlayers = await this.seasonPlayerRepo.find({
-      where: { seasonId },
+      where: { seasonId, player: { isGuest: false } },
       relations: ['player'],
     });
-    return seasonPlayers.map(sp => sp.player).sort((a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity));
+    return seasonPlayers
+      .map(sp => sp.player)
+      .filter(Boolean)
+      .sort((a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity));
   }
 
   async create(teamId: string, data: CreatePlayerDto & { seasonId?: string }): Promise<PlayerEntity> {
@@ -37,6 +40,7 @@ export class PlayersService {
       jerseyNumber: data.jerseyNumber,
       parentEmail: data.parentEmail,
       preferredPosition: data.preferredPosition,
+      isGuest: data.isGuest ?? false,
       teamId 
     });
     const savedPlayer = await this.playerRepo.save(player);

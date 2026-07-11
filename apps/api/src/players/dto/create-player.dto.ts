@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, IsBoolean } from 'class-validator';
 
 export class CreatePlayerDto {
   @IsString()
@@ -20,4 +20,8 @@ export class CreatePlayerDto {
   @IsEmail()
   @IsOptional()
   parentEmail?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isGuest?: boolean;
 }

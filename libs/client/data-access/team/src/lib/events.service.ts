@@ -43,6 +43,7 @@ export interface EventEntity {
   clockAccumulatedMs?: number;
   recurrenceRule?: string | null;
   parentEventId?: string | null;
+  ignorePlayingTime?: boolean;
   weatherData?: {
     temp_f: number;
     condition: string;
@@ -97,6 +98,7 @@ export interface UpdateEventDto {
   clockStartTime?: string | null;
   clockAccumulatedMs?: number;
   recurrenceRule?: string;
+  ignorePlayingTime?: boolean;
 }
 
 export interface LineupEntry {

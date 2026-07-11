@@ -21,6 +21,9 @@ export class PlayerEntity {
   @Column({ name: 'parent_email', nullable: true })
   parentEmail: string;
 
+  @Column({ name: 'is_guest', type: 'boolean', default: false })
+  isGuest: boolean;
+
   @ManyToOne(() => TeamEntity)
   @JoinColumn({ name: 'team_id' })
   team: TeamEntity;

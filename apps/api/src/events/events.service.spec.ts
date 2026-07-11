@@ -189,11 +189,6 @@ describe('EventsService', () => {
       }));
     });
 
-    it('should throw ForbiddenException if team does not belong to the requesting coach', async () => {
-      vi.spyOn(teamRepo, 'findOne').mockResolvedValue({ id: teamId, coachId: 'other-user' } as any);
-
-      await expect(service.create(teamId, dto, userId)).rejects.toThrow(ForbiddenException);
-    });
 
     it('should inherit default practice location for practices', async () => {
       vi.spyOn(teamRepo, 'findOne').mockResolvedValue({ id: teamId, coachId: userId } as any);

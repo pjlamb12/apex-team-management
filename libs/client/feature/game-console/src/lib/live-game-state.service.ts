@@ -1071,4 +1071,8 @@ export class LiveGameStateService {
   private getRotationStateStorageKey(): string {
     return `rotation-state-${this._eventId()}`;
   }
+
+  public updateInitialLineup(lineup: LineupEntry[]): void {
+    this._initialLineup.set(lineup);
+  }
 }

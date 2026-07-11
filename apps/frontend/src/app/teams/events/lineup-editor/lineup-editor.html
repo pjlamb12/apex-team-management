@@ -36,13 +36,20 @@
     </div>
   } @else {
     <div class="p-4">
-      <div class="mb-4">
-        <h2 class="text-xl font-bold">
-          {{ event()?.type === 'practice' ? 'Practice' : 'vs ' + event()?.opponent }}
-        </h2>
-        <p class="text-sm text-ap-muted">
-          {{ event()?.scheduledAt | date: 'MMM d, y, h:mm a' }}
-        </p>
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h2 class="text-xl font-bold">
+            {{ event()?.type === 'practice' ? 'Practice' : 'vs ' + event()?.opponent }}
+          </h2>
+          <p class="text-sm text-ap-muted">
+            {{ event()?.scheduledAt | date: 'MMM d, y, h:mm a' }}
+          </p>
+        </div>
+        @if (viewMode() !== 'notes') {
+          <ion-button size="small" fill="outline" color="primary" class="font-bold m-0" (click)="addGuestPlayer()">
+            + Guest
+          </ion-button>
+        }
       </div>
 
       <ion-segment [value]="viewMode()" (ionChange)="setViewMode($event.detail.value)" class="mb-4" scrollable="true">
@@ -177,6 +184,9 @@
         <ion-list class="mt-4">
           <ion-list-header>
             <ion-label>Bench</ion-label>
+            <ion-button slot="end" size="small" fill="outline" color="primary" class="font-bold m-0 mr-2" (click)="addGuestPlayer()">
+              + Guest
+            </ion-button>
             <ion-note slot="end">{{ benchPlayers().length }} players</ion-note>
           </ion-list-header>
 

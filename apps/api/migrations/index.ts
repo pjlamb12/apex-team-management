@@ -46,6 +46,7 @@ import { AddServeAttemptDefinition1783800000000 } from './1783800000000-AddServe
 import { UpdateServeReceiveMinimumScore1783900000000 } from './1783900000000-UpdateServeReceiveMinimumScore';
 import { ImproveTryoutConsole1784000000000 } from './1784000000000-ImproveTryoutConsole';
 import { CreateSeasonChecklist1784100000000 } from './1784100000000-CreateSeasonChecklist';
+import { AddIgnorePlayingTimeAndGuestPlayers1784200000000 } from './1784200000000-AddIgnorePlayingTimeAndGuestPlayers';
 
 
 export const ALL_MIGRATIONS = [
@@ -97,5 +98,6 @@ export const ALL_MIGRATIONS = [
   UpdateServeReceiveMinimumScore1783900000000,
   ImproveTryoutConsole1784000000000,
   CreateSeasonChecklist1784100000000,
+  AddIgnorePlayingTimeAndGuestPlayers1784200000000,
 ];
 

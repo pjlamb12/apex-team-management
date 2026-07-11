@@ -33,6 +33,10 @@ export class UpdateEventDto {
   @IsOptional()
   isHomeGame?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  ignorePlayingTime?: boolean;
+
   @IsInt()
   @Min(1)
   @IsOptional()

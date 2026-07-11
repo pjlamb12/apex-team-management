@@ -6,4 +6,5 @@ export interface Player {
   lastName: string;
   jerseyNumber?: number;
   preferredPosition?: string;
+  isGuest?: boolean;
 }

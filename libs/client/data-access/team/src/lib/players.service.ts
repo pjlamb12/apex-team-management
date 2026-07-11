@@ -11,6 +11,7 @@ export interface PlayerEntity {
   preferredPosition?: string;
   parentEmail?: string;
   teamId: string;
+  isGuest?: boolean;
 }
 
 export interface CreatePlayerDto {
@@ -19,6 +20,7 @@ export interface CreatePlayerDto {
   jerseyNumber?: number;
   parentEmail?: string;
   seasonId?: string; // Optional: add to season roster immediately
+  isGuest?: boolean;
 }
 
 export interface UpdatePlayerDto {
@@ -27,6 +29,7 @@ export interface UpdatePlayerDto {
   jerseyNumber?: number;
   preferredPosition?: string;
   parentEmail?: string;
+  isGuest?: boolean;
 }
 
 @Injectable({

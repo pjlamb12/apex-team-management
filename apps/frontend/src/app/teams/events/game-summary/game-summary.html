@@ -545,6 +545,17 @@
                 </ion-button>
               </ion-card-header>
               <ion-card-content class="p-0">
+                <ion-item lines="full" class="bg-ap-surface/40">
+                  <ion-label>
+                    <div class="font-semibold text-sm text-ap-text">Ignore playing time from statistics</div>
+                    <div class="text-[10px] text-ap-muted mt-0.5">Exclude playtime of this game from season and player totals</div>
+                  </ion-label>
+                  <ion-toggle 
+                    [checked]="game()?.ignorePlayingTime ?? false" 
+                    (ionChange)="toggleIgnorePlayingTime($event)"
+                    slot="end">
+                  </ion-toggle>
+                </ion-item>
                 <ion-list lines="full">
                   @for (player of sortedPlayingTime(); track player.playerId) {
                     <ion-item>

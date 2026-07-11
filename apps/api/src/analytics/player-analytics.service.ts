@@ -195,13 +195,15 @@ export class PlayerAnalyticsService {
 
         // Calculate playing time for this specific game
         try {
-          const ptResult = await this.playingTimeService.calculateForEvent(event.id);
-          const stats = ptResult[playerId];
-          if (stats) {
-            playingTime = stats.totalSeconds;
-            Object.keys(stats.positionSeconds).forEach(pos => {
-              positionDistribution[pos] = (positionDistribution[pos] || 0) + stats.positionSeconds[pos];
-            });
+          if (!event.ignorePlayingTime) {
+            const ptResult = await this.playingTimeService.calculateForEvent(event.id);
+            const stats = ptResult[playerId];
+            if (stats) {
+              playingTime = stats.totalSeconds;
+              Object.keys(stats.positionSeconds).forEach(pos => {
+                positionDistribution[pos] = (positionDistribution[pos] || 0) + stats.positionSeconds[pos];
+              });
+            }
           }
         } catch (e) {
           // Playtime engine might fail if game is misconfigured, skip silently

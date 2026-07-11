@@ -31,6 +31,7 @@ import {
   IonInput,
   AlertController,
   ToastController,
+  IonToggle,
 } from '@ionic/angular/standalone';
 import { LiveGameStateService, ShootoutScorecardComponent, EventSyncService } from '@apex-team/client/feature/game-console';
 import { addIcons } from 'ionicons';
@@ -98,6 +99,7 @@ import { SocketService } from '@apex-team/client/shared/services';
     IonRow,
     IonCol,
     CoachingNotes,
+    IonToggle,
   ],
   templateUrl: './game-summary.html',
   styleUrl: './game-summary.scss',
@@ -1052,5 +1054,23 @@ export class GameSummary implements OnDestroy {
         await alert.present();
       }
     }, 500);
+  }
+
+  protected async toggleIgnorePlayingTime(event: any): Promise<void> {
+    const checked = event.detail.checked;
+    const gameVal = this.game();
+    if (!gameVal) return;
+
+    try {
+      const updated = await firstValueFrom(
+        this.eventsService.updateEvent(this.teamId, gameVal.id, {
+          ignorePlayingTime: checked
+        })
+      );
+      this.game.set(updated);
+    } catch (err) {
+      console.error('Failed to update ignorePlayingTime:', err);
+      this.errorMessage.set('Failed to update playing time setting.');
+    }
   }
 }

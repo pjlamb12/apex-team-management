@@ -27,7 +27,7 @@ import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
-import { EventsService, EventEntity } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, PlayersService } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
@@ -83,6 +83,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected rotationService = inject(RotationService);
   protected eventsService = inject(EventsService);
   protected syncService = inject(EventSyncService);
+  protected playersService = inject(PlayersService);
   private socketService = inject(SocketService);
   private alertCtrl = inject(AlertController);
 
@@ -915,5 +916,75 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected getPassAverage(passCount = 0, passScoreSum = 0): string {
     if (passCount === 0) return '-';
     return (passScoreSum / passCount).toFixed(2);
+  }
+
+  protected async handleAddGuestPlayer(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Add Guest Player',
+      inputs: [
+        { name: 'firstName', type: 'text', placeholder: 'First Name' },
+        { name: 'lastName', type: 'text', placeholder: 'Last Name' },
+        { name: 'jerseyNumber', type: 'number', placeholder: 'Jersey Number' }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Add',
+          handler: (data) => {
+            if (!data.firstName || !data.lastName || !data.jerseyNumber) {
+              return false;
+            }
+            void this.addGuestPlayer(data.firstName, data.lastName, +data.jerseyNumber);
+            return true;
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async addGuestPlayer(firstName: string, lastName: string, jerseyNumber: number): Promise<void> {
+    const tId = this.teamId();
+    const eId = this.eventId();
+    if (!tId || !eId) return;
+
+    try {
+      // 1. Create the guest player
+      const guest = await firstValueFrom(
+        this.playersService.addPlayer(tId, {
+          firstName,
+          lastName,
+          jerseyNumber,
+          isGuest: true,
+        } as any)
+      );
+
+      // 2. Fetch the current lineup entries
+      const currentLineup = await firstValueFrom(this.eventsService.getLineup(tId, eId));
+      
+      const newEntries = currentLineup.map(entry => ({
+        playerId: entry.playerId,
+        positionName: entry.positionName || undefined,
+        slotIndex: entry.slotIndex !== null ? entry.slotIndex : undefined,
+        status: entry.status,
+      }));
+
+      newEntries.push({
+        playerId: guest.id,
+        positionName: undefined,
+        slotIndex: undefined,
+        status: 'bench',
+      });
+
+      // 3. Save the lineup to backend
+      const updatedLineup = await firstValueFrom(
+        this.eventsService.saveLineup(tId, eId, { entries: newEntries })
+      );
+
+      // 4. Update the local live state service lineup so the UI updates
+      this.stateService.updateInitialLineup(updatedLineup as any);
+    } catch (err) {
+      console.error('Failed to add guest player:', err);
+    }
   }
 }

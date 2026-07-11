@@ -24,6 +24,7 @@ import {
   IonSegmentButton,
   IonIcon,
   IonToast,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { settingsOutline, refreshOutline } from 'ionicons/icons';
@@ -137,6 +138,7 @@ export class LineupEditor implements OnInit {
   private readonly attendanceService = inject(AttendanceService);
   private readonly teamService = inject(TeamService);
   private readonly router = inject(Router);
+  private readonly alertCtrl = inject(AlertController);
 
   protected event = signal<EventEntity | null>(null);
   protected team = signal<any | null>(null);
@@ -270,9 +272,21 @@ export class LineupEditor implements OnInit {
       ]);
 
       this.event.set(event);
-      this.players.set(players);
       this.attendance.set(attendance);
       this.team.set(team);
+
+      // Merge players from the lineup (e.g. guest players) into the players list
+      const allPlayersMap = new Map<string, PlayerEntity>();
+      players.forEach((p) => allPlayersMap.set(p.id, p));
+      lineup.forEach((entry) => {
+        if (entry.player && !allPlayersMap.has(entry.player.id)) {
+          allPlayersMap.set(entry.player.id, {
+            ...entry.player,
+            teamId,
+          } as any);
+        }
+      });
+      this.players.set(Array.from(allPlayersMap.values()));
 
       // Extract libero designation if it exists
       const liberoEvent = gameEvents
@@ -531,6 +545,52 @@ export class LineupEditor implements OnInit {
       this.errorMessage.set('Failed to save lineup. Please try again.');
     } finally {
       this.isSaving.set(false);
+    }
+  }
+
+  protected async addGuestPlayer(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Add Guest Player',
+      inputs: [
+        { name: 'firstName', type: 'text', placeholder: 'First Name' },
+        { name: 'lastName', type: 'text', placeholder: 'Last Name' },
+        { name: 'jerseyNumber', type: 'number', placeholder: 'Jersey Number' }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Add',
+          handler: (data) => {
+            if (!data.firstName || !data.lastName || !data.jerseyNumber) {
+              return false;
+            }
+            void this.performAddGuestPlayer(data.firstName, data.lastName, +data.jerseyNumber);
+            return true;
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async performAddGuestPlayer(firstName: string, lastName: string, jerseyNumber: number): Promise<void> {
+    try {
+      const guest = await firstValueFrom(
+        this.playersService.addPlayer(this.teamId, {
+          firstName,
+          lastName,
+          jerseyNumber,
+          isGuest: true
+        })
+      );
+
+      // Add the new guest player to the local players list so they can be assigned
+      this.players.update((prev) => [...prev, guest]);
+
+      this.toastMessage.set(`Guest player #${jerseyNumber} added to bench.`);
+    } catch (err) {
+      console.error('Failed to add guest player:', err);
+      this.errorMessage.set('Failed to add guest player.');
     }
   }
 }

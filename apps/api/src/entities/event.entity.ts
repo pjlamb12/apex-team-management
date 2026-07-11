@@ -59,6 +59,9 @@ export class EventEntity {
   @Column({ default: 'scheduled' })
   status: 'scheduled' | 'in_progress' | 'completed';
 
+  @Column({ name: 'ignore_playing_time', type: 'boolean', default: false })
+  ignorePlayingTime: boolean;
+
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 

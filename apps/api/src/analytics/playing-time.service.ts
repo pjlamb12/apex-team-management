@@ -253,6 +253,9 @@ export class PlayingTimeService {
     const teamResult: Record<string, PlayerPlaytime> = {};
 
     for (const event of events) {
+      if (event.ignorePlayingTime) {
+        continue;
+      }
       const eventResult = await this.calculateForEvent(event.id);
       
       Object.keys(eventResult).forEach(pid => {
