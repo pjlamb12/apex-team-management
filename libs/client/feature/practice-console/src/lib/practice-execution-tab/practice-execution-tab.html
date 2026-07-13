@@ -13,6 +13,36 @@
       <p class="drill-desc text-ap-muted mt-2 max-w-md mx-auto">
         {{ drill.drill?.description || drill.notes }}
       </p>
+
+      @if (drill.drill; as d) {
+        @if (d.instructions?.length) {
+          <details class="drill-details-dropdown mt-4 text-left max-w-md mx-auto bg-ap-surface-raised rounded-xl border border-white/5 overflow-hidden">
+            <summary class="flex justify-between items-center p-3 font-semibold text-ap-text cursor-pointer hover:bg-white/5 focus:outline-none select-none">
+              <span>Drill Steps</span>
+              <ion-icon name="chevron-down-outline" class="summary-chevron text-ap-muted"></ion-icon>
+            </summary>
+            <div class="steps-content p-4 border-t border-white/5">
+              <div class="steps-list">
+                @for (step of d.instructions; track $index) {
+                  <div class="step-row flex items-start mb-4 last:mb-0">
+                    <span class="step-badge">{{ $index + 1 }}</span>
+                    <div class="step-content flex-1">
+                      @if (step.title || step.description) {
+                        <h4 class="step-title font-semibold text-sm text-ap-text">{{ step.title }}</h4>
+                        <p class="step-description text-xs text-ap-muted mt-1 leading-relaxed">{{ step.description }}</p>
+                      } @else {
+                        <p class="step-description text-sm text-ap-text leading-relaxed">
+                          {{ step.instruction_text || step.text || step.instruction || step.content || step }}
+                        </p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </details>
+        }
+      }
     </div>
 
     <div class="controls-section flex justify-center items-center gap-6 mt-12">

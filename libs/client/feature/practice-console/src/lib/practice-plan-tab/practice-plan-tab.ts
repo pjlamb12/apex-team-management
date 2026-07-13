@@ -41,6 +41,7 @@ import {
 } from '@apex-team/client/data-access/drill';
 import { EventEntity } from '@apex-team/client/data-access/team';
 import { DrillSelectorModal } from '../drill-selector-modal/drill-selector-modal';
+import { DrillDetailsModal } from '../drill-details-modal/drill-details-modal';
 
 @Component({
   selector: 'app-practice-plan-tab',
@@ -206,6 +207,17 @@ export class PracticePlanTab {
     this.practiceDrillsService.reorderDrills(this.teamId(), this.eventId(), ids).subscribe(() => {
       this.planChanged.emit();
     });
+  }
+
+  protected async viewDrillDetails(pd: PracticeDrill) {
+    if (!pd.drill) return;
+    const modal = await this.modalCtrl.create({
+      component: DrillDetailsModal,
+      componentProps: {
+        drill: pd.drill,
+      },
+    });
+    await modal.present();
   }
 
   protected async editDrill(pd: PracticeDrill) {

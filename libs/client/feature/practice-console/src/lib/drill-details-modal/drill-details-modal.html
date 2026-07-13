@@ -1,0 +1,48 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ drill.name || 'Drill Details' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (drill) {
+    <div class="modal-content">
+      <div class="drill-meta mb-6">
+        <p class="drill-description text-ap-muted leading-relaxed text-sm">{{ drill.description }}</p>
+      </div>
+
+      <div class="steps-section">
+        <h3 class="font-bold text-xs uppercase tracking-wider text-ap-muted mb-4">
+          Instructions
+        </h3>
+
+        <div class="steps-list">
+          @for (step of drill.instructions; track $index) {
+            <div class="step-row">
+              <span class="step-badge">{{ $index + 1 }}</span>
+              <div class="step-content">
+                @if (step.title || step.description) {
+                  <h4 class="step-title font-semibold text-sm text-ap-text">{{ step.title }}</h4>
+                  <p class="step-description text-xs text-ap-muted mt-1 leading-relaxed">{{ step.description }}</p>
+                } @else {
+                  <p class="step-description text-sm text-ap-text leading-relaxed">
+                    {{ step.instruction_text || step.text || step.instruction || step.content || step }}
+                  </p>
+                }
+              </div>
+            </div>
+          }
+
+          @if (!drill.instructions || drill.instructions.length === 0) {
+            <p class="text-sm text-ap-muted">No instructions provided.</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</ion-content>
