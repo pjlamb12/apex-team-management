@@ -50,6 +50,11 @@
           }
         </ion-label>
         <ion-buttons slot="end">
+          @if (pd.drill?.instructions?.length) {
+            <ion-button (click)="viewDrillDetails(pd)">
+              <ion-icon name="document-text-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          }
           <ion-button (click)="editDrill(pd)">
             <ion-icon name="create-outline" slot="icon-only"></ion-icon>
           </ion-button>

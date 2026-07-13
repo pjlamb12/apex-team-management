@@ -16,6 +16,7 @@ import {
   refreshOutline,
   timeOutline,
   alertCircleOutline,
+  chevronDownOutline,
 } from 'ionicons/icons';
 import { PracticePacerService } from '@apex-team/client/data-access/drill';
 import { EventsService } from '@apex-team/client/data-access/team';
@@ -62,6 +63,7 @@ export class PracticeExecutionTab {
       refreshOutline,
       timeOutline,
       alertCircleOutline,
+      chevronDownOutline,
     });
   }
 
