@@ -6,6 +6,9 @@ import {
   OnInit,
   OnDestroy,
   Input,
+  ViewChild,
+  AfterViewInit,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -21,7 +24,11 @@ import {
   arrowForwardOutline,
   alertCircleOutline,
   trashOutline,
+  checkmarkCircleOutline,
+  closeOutline,
+  informationCircleOutline,
 } from 'ionicons/icons';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import {
   EventsService,
   PlayersService,
@@ -37,9 +44,11 @@ import { firstValueFrom } from 'rxjs';
   templateUrl: './practice-stats-tab.html',
   styleUrl: './practice-stats-tab.scss',
 })
-export class PracticeStatsTab implements OnInit, OnDestroy {
+export class PracticeStatsTab implements OnInit, OnDestroy, AfterViewInit {
   @Input({ required: true }) teamId!: string;
   @Input({ required: true }) eventId!: string;
+
+  @ViewChild('toastContainer') toastContainerEl?: ElementRef<HTMLDivElement>;
 
   private readonly eventsService = inject(EventsService);
   private readonly playersService = inject(PlayersService);
@@ -48,6 +57,14 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
   protected players = signal<PlayerEntity[]>([]);
   protected selectedPlayerId = signal<string | null>(null);
   protected events = signal<any[]>([]);
+  protected toasts = signal<{
+    id: string;
+    message: string;
+    subMessage?: string;
+    category: 'success' | 'error' | 'attempt' | 'info' | 'delete';
+    type: string;
+    isLeaving?: boolean;
+  }[]>([]);
 
   // Computed sorted list of active events (newest first)
   protected sortedEvents = computed(() => {
@@ -139,7 +156,17 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
       arrowForwardOutline,
       alertCircleOutline,
       trashOutline,
+      checkmarkCircleOutline,
+      closeOutline,
+      informationCircleOutline,
     });
+  }
+
+  ngAfterViewInit() {
+    if (this.toastContainerEl) {
+      const ionApp = document.querySelector('ion-app') || document.body;
+      ionApp.appendChild(this.toastContainerEl.nativeElement);
+    }
   }
 
   ngOnInit() {
@@ -164,6 +191,13 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.socketService.offEvent('gameEventCreated');
     this.socketService.offEvent('gameEventDeleted');
+    
+    if (this.toastContainerEl) {
+      const el = this.toastContainerEl.nativeElement;
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    }
   }
 
   private loadPlayers() {
@@ -188,12 +222,105 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
     this.selectedPlayerId.set(this.selectedPlayerId() === playerId ? null : playerId);
   }
 
+  private getCategory(type: string, score?: number): 'success' | 'error' | 'attempt' | 'info' | 'delete' {
+    if (type === 'SERVE_RECEIVE' && score !== undefined) {
+      if (score >= 2) return 'success';
+      if (score === 1) return 'attempt';
+      return 'error';
+    }
+    
+    switch (type) {
+      case 'KILL':
+      case 'ACE':
+      case 'SET_ASSIST':
+        return 'success';
+      case 'HITTING_ERROR':
+      case 'SERVICE_ERROR':
+      case 'SET_ERROR':
+        return 'error';
+      case 'HIT':
+      case 'SERVE_ATTEMPT':
+      case 'SET_ATTEMPT':
+        return 'attempt';
+      default:
+        return 'info';
+    }
+  }
+
+  private async triggerVibration(category: 'success' | 'error' | 'attempt' | 'info' | 'delete') {
+    try {
+      switch (category) {
+        case 'success':
+          await Haptics.impact({ style: ImpactStyle.Medium });
+          break;
+        case 'error':
+          await Haptics.vibrate({ duration: 150 });
+          break;
+        case 'attempt':
+          await Haptics.impact({ style: ImpactStyle.Light });
+          break;
+        case 'delete':
+          await Haptics.impact({ style: ImpactStyle.Heavy });
+          break;
+        default:
+          await Haptics.impact({ style: ImpactStyle.Light });
+          break;
+      }
+    } catch {
+      if (navigator.vibrate) {
+        try {
+          switch (category) {
+            case 'success':
+              navigator.vibrate(80);
+              break;
+            case 'error':
+              navigator.vibrate([100, 50, 100]);
+              break;
+            case 'delete':
+              navigator.vibrate(150);
+              break;
+            default:
+              navigator.vibrate(40);
+              break;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
+  protected showToast(message: string, subMessage: string, category: 'success' | 'error' | 'attempt' | 'info' | 'delete', type: string) {
+    const id = Math.random().toString(36).substring(2, 9);
+    
+    this.toasts.update((current) => {
+      const next = [...current, { id, message, subMessage, category, type }];
+      if (next.length > 3) {
+        next[0].isLeaving = true;
+      }
+      return next;
+    });
+
+    setTimeout(() => {
+      this.dismissToast(id);
+    }, 2800);
+  }
+
+  protected dismissToast(id: string) {
+    this.toasts.update((current) =>
+      current.map((t) => (t.id === id ? { ...t, isLeaving: true } : t))
+    );
+    setTimeout(() => {
+      this.toasts.update((current) => current.filter((t) => t.id !== id));
+    }, 250);
+  }
+
   protected async logAction(type: string, payloadExtra: Record<string, any> = {}) {
     const playerId = this.selectedPlayerId();
     if (!playerId) return;
 
     let payload: Record<string, any> = { playerId };
-    if (type === 'KILL') {
+    if (type === 'KILL' || type === 'ACE') {
       payload = { scorerId: playerId };
     }
     payload = { ...payload, ...payloadExtra };
@@ -208,6 +335,19 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
       if (!this.events().some((e) => e.id === created.id)) {
         this.events.update((list) => [...list, created]);
       }
+
+      // Generate Toast and Vibration feedback
+      const category = this.getCategory(type, payloadExtra['score']);
+      const playerName = this.getPlayerNameById(playerId);
+      const actionName = this.getEventLabel(created);
+      
+      this.showToast(
+        playerName,
+        `Logged: ${actionName}`,
+        category,
+        type
+      );
+      void this.triggerVibration(category);
     } catch (e) {
       console.error('Failed to log practice action:', e);
     }
@@ -271,11 +411,27 @@ export class PracticeStatsTab implements OnInit, OnDestroy {
   }
 
   protected async deletePracticeEvent(gameEventId: string): Promise<void> {
+    const eventToDelete = this.events().find((e) => e.id === gameEventId);
     try {
       await firstValueFrom(
         this.eventsService.deleteGameEvent(this.teamId, this.eventId, gameEventId)
       );
       this.events.update((list) => list.filter((e) => e.id !== gameEventId));
+
+      if (eventToDelete) {
+        const type = eventToDelete.eventType || eventToDelete.type;
+        const playerId = eventToDelete.playerId || eventToDelete.payload?.playerId || eventToDelete.payload?.scorerId || eventToDelete.scorerId;
+        const playerName = this.getPlayerNameById(playerId);
+        const actionLabel = this.getEventLabel(eventToDelete);
+        
+        this.showToast(
+          `Undone / Deleted`,
+          `${playerName} - ${actionLabel}`,
+          'delete',
+          type
+        );
+        void this.triggerVibration('delete');
+      }
     } catch (e) {
       console.error('Failed to delete practice event:', e);
     }

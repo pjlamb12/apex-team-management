@@ -1,7 +1,8 @@
-import { Component, inject, signal, effect, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, effect, computed, OnInit, OnDestroy, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router, NavigationEnd } from '@angular/router';
 import { firstValueFrom, filter } from 'rxjs';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import {
   IonHeader,
   IonToolbar,
@@ -54,7 +55,9 @@ import {
   closeOutline,
   documentTextOutline,
   statsChartOutline,
-  settingsOutline
+  settingsOutline,
+  flashOutline,
+  informationCircleOutline
 } from 'ionicons/icons';
 import { 
   EventsService, 
@@ -110,8 +113,9 @@ import { CandidateModal } from './candidate-modal/candidate-modal';
     IonAccordionGroup,
   ],
   templateUrl: './tryout-console.html',
+  styleUrl: './tryout-console.scss',
 })
-export class TryoutConsole implements OnInit, OnDestroy {
+export class TryoutConsole implements OnInit, OnDestroy, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly eventsService = inject(EventsService);
@@ -125,6 +129,8 @@ export class TryoutConsole implements OnInit, OnDestroy {
   protected teamId = this.route.snapshot.params['id'];
   protected eventId = this.route.snapshot.params['eventId'];
 
+  @ViewChild('toastContainer') toastContainerEl?: ElementRef<HTMLDivElement>;
+
   protected selectedSegment = signal<'summary' | 'attendance' | 'rubrics' | 'stats' | 'evaluations' | 'promotion'>('summary');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
@@ -136,6 +142,14 @@ export class TryoutConsole implements OnInit, OnDestroy {
   protected attendance = signal<Record<string, CandidateAttendanceEntity>>({});
   protected rubrics = signal<ScoutingRubricEntity[]>([]);
   protected events = signal<any[]>([]);
+  protected toasts = signal<{
+    id: string;
+    message: string;
+    subMessage?: string;
+    category: 'success' | 'error' | 'attempt' | 'info' | 'delete';
+    type: string;
+    isLeaving?: boolean;
+  }[]>([]);
 
   protected evaluationsMap = signal<Record<string, Record<string, { currentCoachEval?: CandidateEvaluationEntity; otherCoachesEvals: CandidateEvaluationEntity[] }>>>({});
   protected generalNotesMap = signal<Record<string, { currentCoachNote?: CandidateNoteEntity; otherCoachesNotes: CandidateNoteEntity[] }>>({});
@@ -258,7 +272,9 @@ export class TryoutConsole implements OnInit, OnDestroy {
       closeOutline,
       documentTextOutline,
       statsChartOutline,
-      settingsOutline
+      settingsOutline,
+      flashOutline,
+      informationCircleOutline
     });
 
     this.router.events.pipe(
@@ -268,6 +284,13 @@ export class TryoutConsole implements OnInit, OnDestroy {
         void this.loadAllData();
       }
     });
+  }
+
+  ngAfterViewInit() {
+    if (this.toastContainerEl) {
+      const ionApp = document.querySelector('ion-app') || document.body;
+      ionApp.appendChild(this.toastContainerEl.nativeElement);
+    }
   }
 
   ngOnInit() {
@@ -291,6 +314,13 @@ export class TryoutConsole implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.socketService.offEvent('gameEventCreated');
     this.socketService.offEvent('gameEventDeleted');
+
+    if (this.toastContainerEl) {
+      const el = this.toastContainerEl.nativeElement;
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    }
   }
 
   private getUserIdFromToken(): string | null {
@@ -604,6 +634,99 @@ export class TryoutConsole implements OnInit, OnDestroy {
     this.selectedPlayerId.set(this.selectedPlayerId() === playerId ? null : playerId);
   }
 
+  private getCategory(type: string, score?: number): 'success' | 'error' | 'attempt' | 'info' | 'delete' {
+    if (type === 'SERVE_RECEIVE' && score !== undefined) {
+      if (score >= 2) return 'success';
+      if (score === 1) return 'attempt';
+      return 'error';
+    }
+    
+    switch (type) {
+      case 'KILL':
+      case 'ACE':
+      case 'SET_ASSIST':
+        return 'success';
+      case 'HITTING_ERROR':
+      case 'SERVICE_ERROR':
+      case 'SET_ERROR':
+        return 'error';
+      case 'HIT':
+      case 'SERVE_ATTEMPT':
+      case 'SET_ATTEMPT':
+        return 'attempt';
+      default:
+        return 'info';
+    }
+  }
+
+  private async triggerVibration(category: 'success' | 'error' | 'attempt' | 'info' | 'delete') {
+    try {
+      switch (category) {
+        case 'success':
+          await Haptics.impact({ style: ImpactStyle.Medium });
+          break;
+        case 'error':
+          await Haptics.vibrate({ duration: 150 });
+          break;
+        case 'attempt':
+          await Haptics.impact({ style: ImpactStyle.Light });
+          break;
+        case 'delete':
+          await Haptics.impact({ style: ImpactStyle.Heavy });
+          break;
+        default:
+          await Haptics.impact({ style: ImpactStyle.Light });
+          break;
+      }
+    } catch {
+      if (navigator.vibrate) {
+        try {
+          switch (category) {
+            case 'success':
+              navigator.vibrate(80);
+              break;
+            case 'error':
+              navigator.vibrate([100, 50, 100]);
+              break;
+            case 'delete':
+              navigator.vibrate(150);
+              break;
+            default:
+              navigator.vibrate(40);
+              break;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
+  protected showToast(message: string, subMessage: string, category: 'success' | 'error' | 'attempt' | 'info' | 'delete', type: string) {
+    const id = Math.random().toString(36).substring(2, 9);
+    
+    this.toasts.update((current) => {
+      const next = [...current, { id, message, subMessage, category, type }];
+      if (next.length > 3) {
+        next[0].isLeaving = true;
+      }
+      return next;
+    });
+
+    setTimeout(() => {
+      this.dismissToast(id);
+    }, 2800);
+  }
+
+  protected dismissToast(id: string) {
+    this.toasts.update((current) =>
+      current.map((t) => (t.id === id ? { ...t, isLeaving: true } : t))
+    );
+    setTimeout(() => {
+      this.toasts.update((current) => current.filter((t) => t.id !== id));
+    }, 250);
+  }
+
   protected async logAction(type: string, payloadExtra: Record<string, any> = {}) {
     const playerId = this.selectedPlayerId();
     if (!playerId) return;
@@ -624,17 +747,46 @@ export class TryoutConsole implements OnInit, OnDestroy {
       if (!this.events().some((e) => e.id === created.id)) {
         this.events.update((list) => [...list, created]);
       }
+
+      // Generate Toast and Vibration feedback
+      const category = this.getCategory(type, payloadExtra['score']);
+      const candidateName = this.getCandidateNameById(playerId);
+      const actionName = this.getEventLabel(created);
+      
+      this.showToast(
+        candidateName,
+        `Logged: ${actionName}`,
+        category,
+        type
+      );
+      void this.triggerVibration(category);
     } catch (e) {
       console.error('Failed to log tryout action:', e);
     }
   }
 
   protected async deletePracticeEvent(gameEventId: string): Promise<void> {
+    const eventToDelete = this.events().find((e) => e.id === gameEventId);
     try {
       await firstValueFrom(
         this.eventsService.deleteGameEvent(this.teamId, this.eventId, gameEventId)
       );
       this.events.update((list) => list.filter((e) => e.id !== gameEventId));
+
+      if (eventToDelete) {
+        const type = eventToDelete.eventType || eventToDelete.type;
+        const playerId = eventToDelete.playerId || eventToDelete.payload?.playerId || eventToDelete.payload?.scorerId || eventToDelete.scorerId;
+        const candidateName = this.getCandidateNameById(playerId);
+        const actionLabel = this.getEventLabel(eventToDelete);
+        
+        this.showToast(
+          `Undone / Deleted`,
+          `${candidateName} - ${actionLabel}`,
+          'delete',
+          type
+        );
+        void this.triggerVibration('delete');
+      }
     } catch (e) {
       console.error('Failed to delete tryout event:', e);
     }

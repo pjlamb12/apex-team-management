@@ -2,3 +2,76 @@
   display: block;
   height: 100%;
 }
+
+.toast-container {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  
+  // Mobile layout
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding: 0;
+  
+  // Desktop layout
+  @media (min-width: 768px) {
+    top: 1.5rem;
+    right: 1.5rem;
+    left: auto;
+    width: 24rem;
+    padding: 0.5rem;
+  }
+}
+
+.toast-card {
+  pointer-events: auto;
+  
+  // Animations
+  animation: toast-in-mobile 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  
+  @media (min-width: 768px) {
+    animation: toast-in-desktop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  &.leaving {
+    animation: toast-out 0.25s ease-in forwards !important;
+  }
+}
+
+@keyframes toast-in-mobile {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-in-desktop {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
