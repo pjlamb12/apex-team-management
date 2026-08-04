@@ -650,7 +650,11 @@ export class LiveGameStateService {
         // Recover current period from last event if possible
         const lastEvent = mapped.filter((e: any) => e.status !== 'deleted').pop();
         if (lastEvent?.period) {
-          this._currentPeriod.set(lastEvent.period);
+          if (lastEvent.type === 'PERIOD_END') {
+            this._currentPeriod.set(lastEvent.period + 1);
+          } else {
+            this._currentPeriod.set(lastEvent.period);
+          }
         }
       } catch (e) {
         console.error('Failed to parse stored events', e);
