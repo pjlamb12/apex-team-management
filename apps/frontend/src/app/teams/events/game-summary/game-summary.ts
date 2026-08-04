@@ -135,6 +135,11 @@ export class GameSummary implements OnDestroy {
   protected sortedGameEvents = computed(() => {
     // 1. Sort the raw events first
     const sorted = [...this.gameEvents()].sort((a, b) => {
+      const periodA = a.period ?? a.payload?.period ?? 1;
+      const periodB = b.period ?? b.payload?.period ?? 1;
+      if (periodA !== periodB) {
+        return periodA - periodB;
+      }
       if (a.minuteOccurred !== b.minuteOccurred) {
         return a.minuteOccurred - b.minuteOccurred;
       }
@@ -455,6 +460,11 @@ export class GameSummary implements OnDestroy {
         return e;
       })
       .sort((a, b) => {
+        const periodA = a.period ?? a.payload?.period ?? 1;
+        const periodB = b.period ?? b.payload?.period ?? 1;
+        if (periodA !== periodB) {
+          return periodA - periodB;
+        }
         if (a.minuteOccurred !== b.minuteOccurred) {
           return a.minuteOccurred - b.minuteOccurred;
         }
@@ -966,19 +976,28 @@ export class GameSummary implements OnDestroy {
   }
 
   protected canMoveUp(event: any): boolean {
-    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === event.minuteOccurred);
+    const period = event.period ?? event.payload?.period ?? 1;
+    const sameMinute = this.sortedGameEvents().filter(
+      e => e.minuteOccurred === event.minuteOccurred && (e.period ?? e.payload?.period ?? 1) === period
+    );
     const index = sameMinute.findIndex(e => e.id === event.id);
     return index > 0;
   }
 
   protected canMoveDown(event: any): boolean {
-    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === event.minuteOccurred);
+    const period = event.period ?? event.payload?.period ?? 1;
+    const sameMinute = this.sortedGameEvents().filter(
+      e => e.minuteOccurred === event.minuteOccurred && (e.period ?? e.payload?.period ?? 1) === period
+    );
     const index = sameMinute.findIndex(e => e.id === event.id);
     return index >= 0 && index < sameMinute.length - 1;
   }
 
   protected async moveEventUp(event: any): Promise<void> {
-    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === event.minuteOccurred);
+    const period = event.period ?? event.payload?.period ?? 1;
+    const sameMinute = this.sortedGameEvents().filter(
+      e => e.minuteOccurred === event.minuteOccurred && (e.period ?? e.payload?.period ?? 1) === period
+    );
     const index = sameMinute.findIndex(e => e.id === event.id);
     if (index <= 0) return;
 
@@ -987,7 +1006,10 @@ export class GameSummary implements OnDestroy {
   }
 
   protected async moveEventDown(event: any): Promise<void> {
-    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === event.minuteOccurred);
+    const period = event.period ?? event.payload?.period ?? 1;
+    const sameMinute = this.sortedGameEvents().filter(
+      e => e.minuteOccurred === event.minuteOccurred && (e.period ?? e.payload?.period ?? 1) === period
+    );
     const index = sameMinute.findIndex(e => e.id === event.id);
     if (index < 0 || index >= sameMinute.length - 1) return;
 
@@ -999,7 +1021,10 @@ export class GameSummary implements OnDestroy {
   private pendingSequenceUpdates = new Map<string, any>();
 
   private async swapEventOrder(eventA: any, eventB: any): Promise<void> {
-    const sameMinute = this.sortedGameEvents().filter(e => e.minuteOccurred === eventA.minuteOccurred);
+    const period = eventA.period ?? eventA.payload?.period ?? 1;
+    const sameMinute = this.sortedGameEvents().filter(
+      e => e.minuteOccurred === eventA.minuteOccurred && (e.period ?? e.payload?.period ?? 1) === period
+    );
     const idxA = sameMinute.findIndex(item => item.id === eventA.id);
     const idxB = sameMinute.findIndex(item => item.id === eventB.id);
     if (idxA < 0 || idxB < 0) return;
