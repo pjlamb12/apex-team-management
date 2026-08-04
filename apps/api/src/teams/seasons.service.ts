@@ -17,7 +17,7 @@ export class SeasonsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async getSeasonStats(teamId: string, seasonId: string): Promise<SeasonStats> {
+  async getSeasonStats(teamId: string, seasonId: string, leagueId?: string): Promise<SeasonStats> {
     const season = await this.seasonRepo.findOne({
       where: { id: seasonId, teamId },
     });
@@ -27,9 +27,14 @@ export class SeasonsService {
       );
     }
 
-    // Fetch all games for the season to calculate aggregate stats
+    const whereClause: any = { seasonId: seasonId, type: 'game' };
+    if (leagueId) {
+      whereClause.leagueId = leagueId;
+    }
+
+    // Fetch all games matching filter for the season to calculate aggregate stats
     const games = await this.dataSource.getRepository(EventEntity).find({
-      where: { seasonId: seasonId, type: 'game' },
+      where: whereClause,
     });
 
     const stats: SeasonStats = {

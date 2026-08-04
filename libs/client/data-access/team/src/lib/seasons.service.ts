@@ -54,9 +54,14 @@ export class SeasonsService {
     return this.http.delete<void>(`${this.apiUrl}/seasons/${id}`);
   }
 
-  getSeasonStats(teamId: string, seasonId: string): Observable<SeasonStats> {
+  getSeasonStats(teamId: string, seasonId: string, leagueId?: string): Observable<SeasonStats> {
+    const params: any = {};
+    if (leagueId) {
+      params.leagueId = leagueId;
+    }
     return this.http.get<SeasonStats>(
       `${this.apiUrl}/teams/${teamId}/seasons/${seasonId}/stats`,
+      { params }
     );
   }
 }
