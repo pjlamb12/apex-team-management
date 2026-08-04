@@ -249,6 +249,9 @@
                     <tr class="hover:bg-ap-surface-raised transition-colors">
                       <td class="px-4 py-3 font-bold text-ap-text player-cell">
                         {{ m.firstName }} {{ m.lastName }}
+                        @if (m.isGuest) {
+                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                        }
                         <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition || 'No Position' }}</span>
                       </td>
                       <td class="px-2 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
@@ -366,6 +369,9 @@
                     <tr class="hover:bg-ap-surface-raised transition-colors">
                       <td class="px-4 py-3 font-bold text-ap-text player-cell">
                         {{ m.firstName }} {{ m.lastName }}
+                        @if (m.isGuest) {
+                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                        }
                         <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition || 'No Position' }}</span>
                       </td>
                       <td class="px-4 py-3 text-center text-ap-muted">{{ m.gamesPlayed }}</td>

@@ -11,6 +11,26 @@ export interface PlayerPlaytime {
   positionSeconds: Record<string, number>;
 }
 
+function getPositionFromSlot(slot: number, isVolleyball?: boolean): string {
+  if (isVolleyball) {
+    if (slot === 99) return 'Libero';
+    const defaults = [
+      'Opposite Hitter',
+      'Outside Hitter',
+      'Middle Blocker',
+      'Opposite Hitter',
+      'Outside Hitter',
+      'Middle Blocker',
+    ];
+    return defaults[slot] || 'Outside Hitter';
+  }
+  if (slot === 0) return 'GK';
+  if (slot >= 1 && slot <= 5) return 'DEF';
+  if (slot >= 6 && slot <= 10) return 'MID';
+  if (slot >= 11 && slot <= 15) return 'FWD';
+  return 'UNKNOWN';
+}
+
 @Injectable()
 export class PlayingTimeService {
   constructor(
@@ -141,6 +161,8 @@ export class PlayingTimeService {
       positionTotalsMs[pid][pos] = (positionTotalsMs[pid][pos] || 0) + duration;
     };
 
+    const slotToPlayerId: Record<number, string> = {};
+
     // Initialize totals for everyone in the lineup
     lineup.forEach((entry) => {
       totalsMs[entry.playerId] = 0;
@@ -148,7 +170,11 @@ export class PlayingTimeService {
       if (entry.status === 'starting') {
         onField.add(entry.playerId);
         stintStartMs[entry.playerId] = 0;
-        stintPosition[entry.playerId] = entry.positionName || 'Unknown';
+        const pos = entry.positionName || (entry.slotIndex !== null && entry.slotIndex !== undefined ? getPositionFromSlot(entry.slotIndex, isVolleyball) : 'Unknown');
+        stintPosition[entry.playerId] = pos;
+        if (entry.slotIndex !== null && entry.slotIndex !== undefined) {
+          slotToPlayerId[entry.slotIndex] = entry.playerId;
+        }
       }
     });
 
@@ -167,7 +193,8 @@ export class PlayingTimeService {
       } else if (ge.eventType === 'SUB') {
         const outId = payload.outPlayerId || payload.playerIdOut;
         const inId = payload.inPlayerId || payload.playerIdIn;
-        const posName = payload.positionName || payload.position || 'Unknown';
+        const slot = payload.slotIndex ?? payload.slotIndexA;
+        const posName = payload.positionName || payload.position || (slot !== undefined ? getPositionFromSlot(slot, isVolleyball) : 'Unknown');
 
         if (outId && onField.has(outId)) {
           closeStint(outId, eventTimeMs);
@@ -187,35 +214,72 @@ export class PlayingTimeService {
             totalsMs[inId] = 0;
             positionTotalsMs[inId] = {};
           }
+          if (slot !== undefined && slot !== null) {
+            slotToPlayerId[slot] = inId;
+          }
         }
       } else if (ge.eventType === 'POSITION_SWAP') {
-        const pA = payload.playerIdA;
-        const pB = payload.playerIdB;
-        
+        const slotA = payload.slotIndexA;
+        const slotB = payload.slotIndexB;
+
+        let pA = payload.playerIdA;
+        let pB = payload.playerIdB;
+
+        if (!pA && slotA !== undefined) pA = slotToPlayerId[slotA];
+        if (!pB && slotB !== undefined) pB = slotToPlayerId[slotB];
+
+        const posNameA = payload.positionNameA || (slotB !== undefined ? getPositionFromSlot(slotB, isVolleyball) : undefined);
+        const posNameB = payload.positionNameB || (slotA !== undefined ? getPositionFromSlot(slotA, isVolleyball) : undefined);
+
         if (pA && onField.has(pA)) closeStint(pA, eventTimeMs);
         if (pB && onField.has(pB)) closeStint(pB, eventTimeMs);
 
         if (pA && pB && onField.has(pA) && onField.has(pB)) {
-          const posA = stintPosition[pA];
-          const posB = stintPosition[pB];
-          stintPosition[pA] = posB;
-          stintPosition[pB] = posA;
+          const oldPosA = stintPosition[pA];
+          const oldPosB = stintPosition[pB];
+
+          stintPosition[pA] = posNameA || oldPosB || 'Unknown';
+          stintPosition[pB] = posNameB || oldPosA || 'Unknown';
           stintStartMs[pA] = eventTimeMs;
           stintStartMs[pB] = eventTimeMs;
+
+          if (slotA !== undefined && slotB !== undefined) {
+            slotToPlayerId[slotA] = pB;
+            slotToPlayerId[slotB] = pA;
+          }
+        } else if (pA && onField.has(pA)) {
+          const oldPosA = stintPosition[pA];
+          stintPosition[pA] = posNameA || (slotB !== undefined ? getPositionFromSlot(slotB, isVolleyball) : oldPosA || 'Unknown');
+          stintStartMs[pA] = eventTimeMs;
+
+          if (slotA !== undefined && slotB !== undefined) {
+            delete slotToPlayerId[slotA];
+            slotToPlayerId[slotB] = pA;
+          }
+        } else if (pB && onField.has(pB)) {
+          const oldPosB = stintPosition[pB];
+          stintPosition[pB] = posNameB || (slotA !== undefined ? getPositionFromSlot(slotA, isVolleyball) : oldPosB || 'Unknown');
+          stintStartMs[pB] = eventTimeMs;
+
+          if (slotA !== undefined && slotB !== undefined) {
+            delete slotToPlayerId[slotB];
+            slotToPlayerId[slotA] = pB;
+          }
         }
       }
     });
 
     if (event.status === 'completed') {
-      // Calculate how much time is left in the final period
+      // Calculate how much time is left in the final period if period end wasn't logged
       const completedPeriods = currentPeriod - 1;
       const totalCompletedMinutes = completedPeriods * (event.periodLengthMinutes || 0);
       const remainingMinutes = Math.max(0, (event.durationMinutes || 0) - totalCompletedMinutes);
-      const remainingMs = remainingMinutes * 60000;
-
-      onField.forEach((pid) => {
-        closeStint(pid, remainingMs);
-      });
+      if (remainingMinutes > 0) {
+        const remainingMs = remainingMinutes * 60000;
+        onField.forEach((pid) => {
+          closeStint(pid, remainingMs);
+        });
+      }
     }
 
     const result: Record<string, PlayerPlaytime> = {};

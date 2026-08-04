@@ -153,6 +153,9 @@
                         </p>
                       </ion-label>
                       <ion-buttons slot="end">
+                        <ion-button fill="clear" color="tertiary" (click)="manageGuestPlayers(season, league)" size="small" title="Guest Players">
+                          <ion-icon slot="icon-only" name="people-outline" class="text-sm"></ion-icon>
+                        </ion-button>
                         <ion-button fill="clear" color="primary" (click)="editCompetition(season, league)" size="small">
                           <ion-icon slot="icon-only" name="create-outline" class="text-sm"></ion-icon>
                         </ion-button>

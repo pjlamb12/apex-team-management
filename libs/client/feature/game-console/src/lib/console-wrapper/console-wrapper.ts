@@ -39,7 +39,7 @@ import { SubQueueComponent } from '../sub-queue/sub-queue';
 import { EventSyncService } from '../event-sync.service';
 import { ShootoutScorecardComponent } from '../shootout-scorecard/shootout-scorecard';
 import { SocketService } from '@apex-team/client/shared/services';
-import { Player, LineupEntry } from '@apex-team/shared/util/models';
+import { Player, LineupEntry, getPositionFromSlot } from '@apex-team/shared/util/models';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 
 @Component({
@@ -745,10 +745,18 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         const playerB = tappedActive as any;
 
         if (playerA.slotIndex !== undefined && playerB.slotIndex !== undefined) {
+          const sportName = this.team()?.sport?.name;
+          const posA = getPositionFromSlot(playerA.slotIndex, sportName);
+          const posB = getPositionFromSlot(playerB.slotIndex, sportName);
+
           this.stateService.pushEvent({
             type: 'POSITION_SWAP',
             slotIndexA: playerA.slotIndex,
             slotIndexB: playerB.slotIndex,
+            playerIdA: playerA.id,
+            playerIdB: playerB.id,
+            positionNameA: posB,
+            positionNameB: posA,
             timestamp: Date.now(),
             minuteOccurred: this.clockService.currentMinute(),
             gameTimeMs: this.clockService.elapsedMs(),
@@ -793,11 +801,16 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     const selectedActive = activePlayers.find(p => p.id === currentSelectionId) as any;
 
     if (selectedActive && selectedActive.slotIndex !== undefined) {
+      const sportName = this.team()?.sport?.name;
+      const posB = getPositionFromSlot(slotIndex, sportName);
+
       // Move active player to new slot
       this.stateService.pushEvent({
         type: 'POSITION_SWAP',
         slotIndexA: selectedActive.slotIndex,
         slotIndexB: slotIndex,
+        playerIdA: selectedActive.id,
+        positionNameA: posB,
         timestamp: Date.now(),
         minuteOccurred: this.clockService.currentMinute(),
         gameTimeMs: this.clockService.elapsedMs(),
@@ -949,6 +962,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     if (!tId || !eId) return;
 
     try {
+      const currentEv = this.event();
       // 1. Create the guest player
       const guest = await firstValueFrom(
         this.playersService.addPlayer(tId, {
@@ -956,6 +970,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
           lastName,
           jerseyNumber,
           isGuest: true,
+          leagueId: currentEv?.leagueId || undefined,
         } as any)
       );
 

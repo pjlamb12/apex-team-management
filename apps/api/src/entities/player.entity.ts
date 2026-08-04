@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { TeamEntity } from './team.entity';
+import { LeagueEntity } from './league.entity';
 
 @Entity('players')
 export class PlayerEntity {
@@ -24,6 +25,13 @@ export class PlayerEntity {
   @Column({ name: 'is_guest', type: 'boolean', default: false })
   isGuest: boolean;
 
+  @ManyToOne(() => LeagueEntity, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'league_id' })
+  league: LeagueEntity | null;
+
+  @Column({ name: 'league_id', nullable: true })
+  leagueId: string | null;
+
   @ManyToOne(() => TeamEntity)
   @JoinColumn({ name: 'team_id' })
   team: TeamEntity;
@@ -31,3 +39,4 @@ export class PlayerEntity {
   @Column({ name: 'team_id' })
   teamId: string;
 }
+

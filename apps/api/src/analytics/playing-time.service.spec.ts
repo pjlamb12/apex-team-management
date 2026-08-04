@@ -144,6 +144,38 @@ describe('PlayingTimeService', () => {
       expect(result[p2].positionSeconds['DEF']).toBe(70 * 60);
     });
 
+    it('should correctly calculate position time when POSITION_SWAP uses slotIndexA and slotIndexB', async () => {
+      const p1 = 'player-1';
+      const p2 = 'player-2';
+
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue({ id: eventId, status: 'completed', durationMinutes: 90 } as any);
+      vi.spyOn(lineupRepo, 'find').mockResolvedValue([
+        { playerId: p1, status: 'starting', slotIndex: 1, positionName: 'DEF' },
+        { playerId: p2, status: 'starting', slotIndex: 8, positionName: 'MID' },
+      ] as any);
+
+      // Swap slots 1 (DEF) and 8 (MID) at 30:00 without explicit player IDs
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([
+        {
+          eventType: 'POSITION_SWAP',
+          minuteOccurred: 31,
+          payload: { slotIndexA: 1, slotIndexB: 8, positionNameA: 'MID', positionNameB: 'DEF', gameTimeMs: 30 * 60 * 1000 },
+        },
+      ] as any);
+
+      const result = await service.calculateForEvent(eventId);
+
+      // p1: 30m in DEF, 60m in MID
+      expect(result[p1].totalSeconds).toBe(90 * 60);
+      expect(result[p1].positionSeconds['DEF']).toBe(30 * 60);
+      expect(result[p1].positionSeconds['MID']).toBe(60 * 60);
+
+      // p2: 30m in MID, 60m in DEF
+      expect(result[p2].totalSeconds).toBe(90 * 60);
+      expect(result[p2].positionSeconds['MID']).toBe(30 * 60);
+      expect(result[p2].positionSeconds['DEF']).toBe(60 * 60);
+    });
+
     it('should handle duplicate sub ins without losing playing time', async () => {
       vi.spyOn(eventRepo, 'findOne').mockResolvedValue({ id: eventId, status: 'completed', durationMinutes: 90 } as any);
       vi.spyOn(lineupRepo, 'find').mockResolvedValue([

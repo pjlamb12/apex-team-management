@@ -33,19 +33,28 @@ export class PlayersService {
       .sort((a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity));
   }
 
-  async create(teamId: string, data: CreatePlayerDto & { seasonId?: string }): Promise<PlayerEntity> {
+  async findAllForLeague(leagueId: string): Promise<PlayerEntity[]> {
+    return this.playerRepo.find({
+      where: { leagueId, isGuest: true },
+      order: { jerseyNumber: 'ASC', lastName: 'ASC' },
+    });
+  }
+
+  async create(teamId: string, data: CreatePlayerDto & { seasonId?: string; leagueId?: string }): Promise<PlayerEntity> {
+    const isGuest = data.leagueId ? true : (data.isGuest ?? false);
     const player = this.playerRepo.create({ 
       firstName: data.firstName,
       lastName: data.lastName,
       jerseyNumber: data.jerseyNumber,
       parentEmail: data.parentEmail,
       preferredPosition: data.preferredPosition,
-      isGuest: data.isGuest ?? false,
+      isGuest,
+      leagueId: data.leagueId ?? null,
       teamId 
     });
     const savedPlayer = await this.playerRepo.save(player);
 
-    if (data.seasonId) {
+    if (data.seasonId && !isGuest) {
       await this.addPlayerToSeason(data.seasonId, savedPlayer.id);
     }
 

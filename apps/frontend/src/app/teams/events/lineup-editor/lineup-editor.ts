@@ -275,9 +275,19 @@ export class LineupEditor implements OnInit {
       this.attendance.set(attendance);
       this.team.set(team);
 
-      // Merge players from the lineup (e.g. guest players) into the players list
+      let leagueGuests: PlayerEntity[] = [];
+      if (event.leagueId) {
+        try {
+          leagueGuests = await firstValueFrom(this.playersService.getGuestPlayersForLeague(teamId, event.leagueId));
+        } catch (e) {
+          console.error('Failed to load league guest players', e);
+        }
+      }
+
+      // Merge players from the lineup and competition guest players into the players list
       const allPlayersMap = new Map<string, PlayerEntity>();
       players.forEach((p) => allPlayersMap.set(p.id, p));
+      leagueGuests.forEach((gp) => allPlayersMap.set(gp.id, gp));
       lineup.forEach((entry) => {
         if (entry.player && !allPlayersMap.has(entry.player.id)) {
           allPlayersMap.set(entry.player.id, {
@@ -575,12 +585,14 @@ export class LineupEditor implements OnInit {
 
   private async performAddGuestPlayer(firstName: string, lastName: string, jerseyNumber: number): Promise<void> {
     try {
+      const leagueId = this.event()?.leagueId || undefined;
       const guest = await firstValueFrom(
         this.playersService.addPlayer(this.teamId, {
           firstName,
           lastName,
           jerseyNumber,
-          isGuest: true
+          isGuest: true,
+          leagueId,
         })
       );
 

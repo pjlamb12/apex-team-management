@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Player, LineupEntry, StagedSub } from '@apex-team/shared/util/models';
+import { Player, LineupEntry, StagedSub, getPositionFromSlot } from '@apex-team/shared/util/models';
 
 export interface GameEvent {
   id?: string;
@@ -249,16 +249,27 @@ export class LiveGameStateService {
       ) {
         const playerA = slotMap.get(event.slotIndexA);
         const playerB = slotMap.get(event.slotIndexB);
+        const sport = this._sportName();
 
         if (playerA && playerB) {
           const temp = { ...playerA };
-          if (this._sportName() === 'Volleyball') {
+          if (sport === 'Volleyball') {
             slotMap.set(event.slotIndexA, { ...playerB });
             slotMap.set(event.slotIndexB, { ...temp });
           } else {
-            slotMap.set(event.slotIndexA, { ...playerB, position: playerA.position });
-            slotMap.set(event.slotIndexB, { ...temp, position: playerB.position });
+            const posA = (event as any).positionNameB || getPositionFromSlot(event.slotIndexA, sport);
+            const posB = (event as any).positionNameA || getPositionFromSlot(event.slotIndexB, sport);
+            slotMap.set(event.slotIndexA, { ...playerB, position: posA });
+            slotMap.set(event.slotIndexB, { ...temp, position: posB });
           }
+        } else if (playerA && !playerB) {
+          const posB = (event as any).positionNameA || getPositionFromSlot(event.slotIndexB, sport);
+          slotMap.set(event.slotIndexB, { ...playerA, position: posB });
+          slotMap.delete(event.slotIndexA);
+        } else if (!playerA && playerB) {
+          const posA = (event as any).positionNameB || getPositionFromSlot(event.slotIndexA, sport);
+          slotMap.set(event.slotIndexA, { ...playerB, position: posA });
+          slotMap.delete(event.slotIndexB);
         }
       }
     });
