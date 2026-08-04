@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, ParseUUIDPipe, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { SeasonsService } from './seasons.service';
 import { CreateSeasonDto } from './dto/create-season.dto';
@@ -49,7 +49,8 @@ export class SeasonsController {
   getStats(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('seasonId', ParseUUIDPipe) seasonId: string,
+    @Query('leagueId') leagueId?: string,
   ) {
-    return this.seasonsService.getSeasonStats(teamId, seasonId);
+    return this.seasonsService.getSeasonStats(teamId, seasonId, leagueId);
   }
 }

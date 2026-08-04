@@ -51,7 +51,7 @@ import {
 } from '@apex-team/client/data-access/team';
 import { ModalController } from '@ionic/angular/standalone';
 import { ExportModalComponent, ExportOptions } from './export-modal/export-modal';
-import { League } from '@apex-team/shared/util/models';
+import { League, SeasonStats } from '@apex-team/shared/util/models';
 
 @Component({
   selector: 'app-team-analytics',
@@ -103,6 +103,7 @@ export class TeamAnalytics {
   protected performanceMetrics = signal<PlayerPerformanceMetrics[]>([]);
   protected participationStats = signal<ParticipationStats[]>([]);
   protected playingTime = signal<Record<string, PlayerPlaytime>>({});
+  protected teamStats = signal<SeasonStats | null>(null);
   protected activeSegment = signal<'performance' | 'participation' | 'playtime'>('performance');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
@@ -113,6 +114,15 @@ export class TeamAnalytics {
   protected selectedLeagueId = signal<string | null>(null);
   protected selectedEventType = signal<'game' | 'practice' | 'all'>('game');
   protected sportName = signal<string>('Soccer');
+
+  protected getRecordScopeLabel(): string {
+    const leagueId = this.selectedLeagueId();
+    if (!leagueId) {
+      return 'Overall Record (All Competitions)';
+    }
+    const league = this.leagues().find(l => l.id === leagueId);
+    return league ? `${league.name} Record` : 'Competition Record';
+  }
 
   protected topScorers = computed(() => {
     return [...this.performanceMetrics()]
@@ -297,16 +307,18 @@ export class TeamAnalytics {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [performance, participation, playingTime, team] = await Promise.all([
+      const [performance, participation, playingTime, team, stats] = await Promise.all([
         firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId, seasonId, leagueId, eventType)),
         firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId, leagueId)),
         firstValueFrom(this.analyticsService.getTeamPlayingTime(teamId, seasonId, leagueId)),
-        this.teamService.getTeam(teamId)
+        this.teamService.getTeam(teamId),
+        firstValueFrom(this.seasonsService.getSeasonStats(teamId, seasonId, leagueId ?? undefined)).catch(() => null)
       ]);
       this.performanceMetrics.set(performance);
       this.participationStats.set(participation);
       this.playingTime.set(playingTime);
       this.sportName.set(team.sport?.name || 'Soccer');
+      this.teamStats.set(stats);
     } catch {
       this.errorMessage.set('Failed to load team analytics.');
     } finally {

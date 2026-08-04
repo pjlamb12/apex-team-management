@@ -173,5 +173,19 @@ describe('SeasonsService', () => {
         goalDifference: 2,
       });
     });
+
+    it('filters by leagueId if leagueId parameter is passed', async () => {
+      mockSeasonRepo.findOne.mockResolvedValue({ id: seasonId, teamId });
+      mockEventRepo.find.mockResolvedValue([
+        { goalsFor: 2, goalsAgainst: 1 }, // Win
+      ]);
+
+      const result = await service.getSeasonStats(teamId, seasonId, 'league-99');
+
+      expect(mockEventRepo.find).toHaveBeenCalledWith({
+        where: { seasonId, type: 'game', leagueId: 'league-99' },
+      });
+      expect(result.wins).toBe(1);
+    });
   });
 });

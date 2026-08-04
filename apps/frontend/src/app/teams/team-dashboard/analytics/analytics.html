@@ -92,6 +92,65 @@
         <p>{{ errorMessage() }}</p>
       </div>
     } @else {
+      <!-- Team Record Summary Card -->
+      <ion-card class="m-0 border border-ap-border shadow-none">
+        <ion-card-header class="px-6 pt-6 pb-2">
+          <div class="flex items-center justify-between">
+            <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+              <ion-icon name="trophy-outline" class="text-amber-500"></ion-icon>
+              {{ getRecordScopeLabel() }}
+            </ion-card-title>
+            @if (teamStats(); as stats) {
+              <div class="text-xs font-bold text-ap-muted">
+                {{ stats.wins + stats.losses + stats.draws }} {{ (stats.wins + stats.losses + stats.draws) === 1 ? 'Game' : 'Games' }} Recorded
+              </div>
+            }
+          </div>
+        </ion-card-header>
+        <ion-card-content class="px-6 pb-6 pt-2">
+          @if (teamStats(); as stats) {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-center">
+              <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                <div class="text-2xl font-black text-emerald-500">{{ stats.wins }}</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-emerald-400/80 mt-1">Wins</div>
+              </div>
+              <div class="bg-rose-500/10 border border-rose-500/20 rounded-xl p-3">
+                <div class="text-2xl font-black text-rose-500">{{ stats.losses }}</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-rose-400/80 mt-1">Losses</div>
+              </div>
+              <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                <div class="text-2xl font-black text-amber-500">{{ stats.draws }}</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-amber-400/80 mt-1">Draws</div>
+              </div>
+              <div class="bg-ap-surface-raised border border-ap-border rounded-xl p-3">
+                <div class="text-2xl font-black text-ap-text">{{ stats.goalsFor }}</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mt-1">
+                  {{ sportName() === 'Volleyball' ? 'Points For' : 'Goals For' }}
+                </div>
+              </div>
+              <div class="bg-ap-surface-raised border border-ap-border rounded-xl p-3">
+                <div class="text-2xl font-black text-ap-text">{{ stats.goalsAgainst }}</div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mt-1">
+                  {{ sportName() === 'Volleyball' ? 'Points Against' : 'Goals Against' }}
+                </div>
+              </div>
+              <div class="bg-ap-surface-raised border border-ap-border rounded-xl p-3">
+                <div class="text-2xl font-black" [class.text-emerald-500]="stats.goalDifference > 0" [class.text-rose-500]="stats.goalDifference < 0" [class.text-ap-text]="stats.goalDifference === 0">
+                  {{ stats.goalDifference > 0 ? '+' + stats.goalDifference : stats.goalDifference }}
+                </div>
+                <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mt-1">
+                  {{ sportName() === 'Volleyball' ? 'Point Diff' : 'Goal Diff' }}
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="py-6 text-center text-ap-muted italic text-sm">
+              No game record available for this filter.
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+
       @if (activeSegment() === 'performance') {
         @if (sportName() === 'Volleyball') {
           <!-- Key Performance Indicators Row (Volleyball) -->
