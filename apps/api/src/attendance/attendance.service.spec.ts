@@ -86,7 +86,7 @@ describe('AttendanceService', () => {
 
   describe('getParticipationStats', () => {
     it('should calculate percentages correctly', async () => {
-      const players = [{ id: 'p1', firstName: 'John', lastName: 'Doe' }];
+      const players = [{ id: 'p1', firstName: 'John', lastName: 'Doe', jerseyNumber: 10, isGuest: true }];
       const attendance = [
         { id: 'a1', eventId: 'e1', playerId: 'p1', status: 'present', event: { seasonId: 's1' } },
         { id: 'a2', eventId: 'e2', playerId: 'p1', status: 'absent', event: { seasonId: 's1' } },
@@ -98,6 +98,8 @@ describe('AttendanceService', () => {
       expect(stats[0].totalEvents).toBe(2);
       expect(stats[0].present).toBe(1);
       expect(stats[0].percentage).toBe(50);
+      expect(stats[0].jerseyNumber).toBe(10);
+      expect(stats[0].isGuest).toBe(true);
     });
 
     it('should ignore injured status in calculations', async () => {

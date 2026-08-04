@@ -43,9 +43,11 @@ export interface ParticipationStats {
   playerId: string;
   firstName: string;
   lastName: string;
+  jerseyNumber?: number;
   totalEvents: number;
   present: number;
   percentage: number;
+  isGuest?: boolean;
 }
 
 export interface PlayerHistoryEntry {

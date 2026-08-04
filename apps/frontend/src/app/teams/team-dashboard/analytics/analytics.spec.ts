@@ -88,4 +88,16 @@ describe('TeamAnalytics', () => {
 
     expect((component as any).getRecordScopeLabel()).toBe('Tournament Cup Record');
   });
+
+  it('should exclude guest players from mostCommitted list', () => {
+    (component as any).participationStats.set([
+      { playerId: 'p1', firstName: 'Regular', lastName: 'Player', percentage: 90, totalEvents: 10, present: 9, isGuest: false },
+      { playerId: 'p2', firstName: 'Guest', lastName: 'Player', percentage: 100, totalEvents: 1, present: 1, isGuest: true },
+      { playerId: 'p3', firstName: 'Another', lastName: 'Regular', percentage: 80, totalEvents: 10, present: 8 },
+    ]);
+
+    const committed = (component as any).mostCommitted();
+    expect(committed.length).toBe(2);
+    expect(committed.map((p: any) => p.playerId)).toEqual(['p1', 'p3']);
+  });
 });

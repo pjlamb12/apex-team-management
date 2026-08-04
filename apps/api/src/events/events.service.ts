@@ -275,9 +275,30 @@ export class EventsService {
   }
 
   async getGameEvents(eventId: string): Promise<GameEventEntity[]> {
-    return this.gameEventRepo.find({
+    const events = await this.gameEventRepo.find({
       where: { eventId },
       order: { createdAt: 'ASC' },
+    });
+
+    return events.sort((a, b) => {
+      const payloadA = (a.payload as any) || {};
+      const payloadB = (b.payload as any) || {};
+
+      const pA = payloadA.period ?? 1;
+      const pB = payloadB.period ?? 1;
+      if (pA !== pB) return pA - pB;
+
+      const tA = payloadA.gameTimeMs ?? ((a.minuteOccurred || 1) - 1) * 60000;
+      const tB = payloadB.gameTimeMs ?? ((b.minuteOccurred || 1) - 1) * 60000;
+      if (tA !== tB) return tA - tB;
+
+      const tsA = payloadA.timestamp ?? (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+      const tsB = payloadB.timestamp ?? (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      if (tsA !== tsB) return tsA - tsB;
+
+      const cA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const cB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return cA - cB;
     });
   }
 
