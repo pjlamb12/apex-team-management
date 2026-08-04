@@ -168,8 +168,17 @@ export class TeamAnalytics {
 
   protected mostCommitted = computed(() => {
     return [...this.participationStats()]
+      .filter(p => !p.isGuest)
       .sort((a, b) => b.percentage - a.percentage)
       .slice(0, 5);
+  });
+
+  protected rosterParticipationStats = computed(() => {
+    return this.participationStats().filter(p => !p.isGuest);
+  });
+
+  protected guestParticipationStats = computed(() => {
+    return this.participationStats().filter(p => p.isGuest);
   });
 
   protected teamAverage = computed(() => {

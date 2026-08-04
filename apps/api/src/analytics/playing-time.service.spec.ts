@@ -176,6 +176,51 @@ describe('PlayingTimeService', () => {
       expect(result[p2].positionSeconds['DEF']).toBe(60 * 60);
     });
 
+    it('should correctly sort POSITION_SWAP events when createdAt is later than game events (out-of-order / backfilled)', async () => {
+      const p1 = 'player-1';
+      const p2 = 'player-2';
+
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue({ id: eventId, status: 'completed', durationMinutes: 90, periodLengthMinutes: 45 } as any);
+      vi.spyOn(lineupRepo, 'find').mockResolvedValue([
+        { playerId: p1, status: 'starting', slotIndex: 1, positionName: 'DEF' },
+        { playerId: p2, status: 'starting', slotIndex: 7, positionName: 'MID' },
+      ] as any);
+
+      // PERIOD_END created earlier, but POSITION_SWAP inserted later via SQL query with gameTimeMs: 0 in period 2
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([
+        {
+          eventType: 'PERIOD_END',
+          minuteOccurred: 45,
+          payload: { period: 1, gameTimeMs: 45 * 60 * 1000 },
+          createdAt: new Date('2026-08-04T01:00:00Z'),
+        },
+        {
+          eventType: 'PERIOD_END',
+          minuteOccurred: 45,
+          payload: { period: 2, gameTimeMs: 45 * 60 * 1000 },
+          createdAt: new Date('2026-08-04T01:45:00Z'),
+        },
+        {
+          eventType: 'POSITION_SWAP',
+          minuteOccurred: 1,
+          payload: { period: 2, gameTimeMs: 0, slotIndexA: 1, slotIndexB: 7, playerIdA: p1, playerIdB: p2, positionNameA: 'MID', positionNameB: 'DEF' },
+          createdAt: new Date('2026-08-04T03:57:00Z'), // Inserted hours later!
+        },
+      ] as any);
+
+      const result = await service.calculateForEvent(eventId);
+
+      // p1: 45m in DEF in P1; 45m in MID in P2 (after swap at P2 gameTimeMs 0)
+      expect(result[p1].totalSeconds).toBe(90 * 60);
+      expect(result[p1].positionSeconds['DEF']).toBe(45 * 60);
+      expect(result[p1].positionSeconds['MID']).toBe(45 * 60);
+
+      // p2: 45m in MID in P1; 45m in DEF in P2 (after swap at P2 gameTimeMs 0)
+      expect(result[p2].totalSeconds).toBe(90 * 60);
+      expect(result[p2].positionSeconds['MID']).toBe(45 * 60);
+      expect(result[p2].positionSeconds['DEF']).toBe(45 * 60);
+    });
+
     it('should handle duplicate sub ins without losing playing time', async () => {
       vi.spyOn(eventRepo, 'findOne').mockResolvedValue({ id: eventId, status: 'completed', durationMinutes: 90 } as any);
       vi.spyOn(lineupRepo, 'find').mockResolvedValue([

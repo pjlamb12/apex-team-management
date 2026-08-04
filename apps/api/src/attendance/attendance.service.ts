@@ -132,9 +132,11 @@ export class AttendanceService {
         playerId: player.id,
         firstName: player.firstName,
         lastName: player.lastName,
+        jerseyNumber: player.jerseyNumber,
         totalEvents,
         present,
         percentage: totalEvents > 0 ? Math.round((present / totalEvents) * 100) : 0,
+        isGuest: player.isGuest,
       });
     }
 
