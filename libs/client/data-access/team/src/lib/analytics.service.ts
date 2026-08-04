@@ -7,7 +7,9 @@ export interface PlayerPerformanceMetrics {
   playerId: string;
   firstName: string;
   lastName: string;
+  jerseyNumber?: number | null;
   preferredPosition: string | null;
+  isGuest?: boolean;
   goals: number;
   assists: number;
   yellowCards: number;

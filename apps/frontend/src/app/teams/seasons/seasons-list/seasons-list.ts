@@ -25,6 +25,7 @@ import {
   chevronUpOutline,
   chevronDownOutline,
   trophyOutline,
+  peopleOutline,
 } from 'ionicons/icons';
 import { SeasonsService, LeaguesService, PlayersService, SeasonChecklistService } from '@apex-team/client/data-access/team';
 import { Season, League, SeasonChecklistItem, SeasonChecklistValue } from '@apex-team/shared/util/models';
@@ -90,6 +91,7 @@ export class SeasonsList {
       chevronUpOutline,
       chevronDownOutline,
       trophyOutline,
+      peopleOutline,
     });
 
     // Load seasons whenever teamId changes
@@ -336,6 +338,59 @@ export class SeasonsList {
       const msg = error?.error?.message || 'Failed to update checklist status.';
       this.errorMessage.set(msg);
       void this.loadSeasons(this.teamId);
+    }
+  }
+
+  protected async manageGuestPlayers(season: SeasonWithLeagues, league: League): Promise<void> {
+    const tId = this.teamId;
+    if (!tId || !league.id) return;
+
+    try {
+      const guests = await firstValueFrom(this.playersService.getGuestPlayersForLeague(tId, league.id));
+      const guestListMsg = guests.length > 0
+        ? 'Current guest players:\n' + guests.map(g => `#${g.jerseyNumber ?? '?'} ${g.firstName} ${g.lastName}`).join('\n')
+        : 'No guest players assigned to this competition yet.';
+
+      const alert = await this.alertCtrl.create({
+        header: `Guest Players: ${league.name}`,
+        message: guestListMsg,
+        inputs: [
+          { name: 'firstName', type: 'text', placeholder: 'First Name' },
+          { name: 'lastName', type: 'text', placeholder: 'Last Name' },
+          { name: 'jerseyNumber', type: 'number', placeholder: 'Jersey #' },
+        ],
+        buttons: [
+          { text: 'Close', role: 'cancel' },
+          {
+            text: 'Add Guest',
+            handler: (data) => {
+              if (!data.firstName || !data.lastName || !data.jerseyNumber) {
+                return false;
+              }
+              void this.addGuestPlayerToLeague(tId, league.id, data.firstName, data.lastName, +data.jerseyNumber);
+              return true;
+            }
+          }
+        ]
+      });
+      await alert.present();
+    } catch (err) {
+      console.error('Failed to load guest players for competition', err);
+    }
+  }
+
+  private async addGuestPlayerToLeague(teamId: string, leagueId: string, firstName: string, lastName: string, jerseyNumber: number): Promise<void> {
+    try {
+      await firstValueFrom(this.playersService.addGuestPlayerToLeague(teamId, leagueId, {
+        firstName,
+        lastName,
+        jerseyNumber,
+        isGuest: true,
+        leagueId,
+      }));
+      void this.loadSeasons(teamId);
+    } catch (err) {
+      console.error('Failed to add guest player to league', err);
     }
   }
 }

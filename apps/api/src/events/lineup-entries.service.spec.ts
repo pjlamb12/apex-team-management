@@ -18,7 +18,10 @@ describe('LineupEntriesService', () => {
           useValue: {
             create: vi.fn().mockImplementation((dto) => dto),
             save: vi.fn().mockImplementation((entries) => Promise.resolve(entries)),
-            find: vi.fn(),
+            find: vi.fn().mockImplementation(() => Promise.resolve([
+              { playerId: 'p1', status: 'starting', positionName: 'GK', eventId: 'event-1' },
+              { playerId: 'p2', status: 'bench', eventId: 'event-1' },
+            ])),
             delete: vi.fn(),
           },
         },

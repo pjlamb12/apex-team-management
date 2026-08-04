@@ -10,7 +10,9 @@ export interface PlayerPerformanceMetrics {
   playerId: string;
   firstName: string;
   lastName: string;
+  jerseyNumber?: number | null;
   preferredPosition: string | null;
+  isGuest?: boolean;
   goals: number;
   assists: number;
   yellowCards: number;
@@ -253,7 +255,9 @@ export class PerformanceMetricsService {
       playerId: player.id,
       firstName: player.firstName,
       lastName: player.lastName,
+      jerseyNumber: player.jerseyNumber,
       preferredPosition: player.preferredPosition,
+      isGuest: player.isGuest,
       goals: 0,
       assists: 0,
       yellowCards: 0,

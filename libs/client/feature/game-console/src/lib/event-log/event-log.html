@@ -37,6 +37,16 @@
               <p>
                 {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
               </p>
+            } @else if (event.type === 'POSITION_SWAP') {
+              <p>
+                @if ((event['playerIdA'] || event.payload?.playerIdA) && (event['playerIdB'] || event.payload?.playerIdB)) {
+                  {{ getPlayerName(event['playerIdA'] || event.payload?.playerIdA) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event['playerIdB'] || event.payload?.playerIdB) }}
+                } @else if (event['playerIdA'] || event.payload?.playerIdA) {
+                  {{ getPlayerName(event['playerIdA'] || event.payload?.playerIdA) }} moved to {{ event['positionNameA'] || event.payload?.positionNameA || 'new position' }}
+                } @else {
+                  Position Swap
+                }
+              </p>
             }
             @if (event.type === 'GOAL') {
               <p>

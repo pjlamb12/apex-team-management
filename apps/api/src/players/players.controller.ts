@@ -19,9 +19,23 @@ export class PlayersController {
     return this.playersService.findAllForSeason(seasonId);
   }
 
+  @Get('leagues/:leagueId')
+  findAllForLeague(@Param('leagueId') leagueId: string) {
+    return this.playersService.findAllForLeague(leagueId);
+  }
+
   @Post()
-  create(@Param('teamId') teamId: string, @Body() data: CreatePlayerDto & { seasonId?: string }) {
+  create(@Param('teamId') teamId: string, @Body() data: CreatePlayerDto & { seasonId?: string; leagueId?: string }) {
     return this.playersService.create(teamId, data);
+  }
+
+  @Post('leagues/:leagueId')
+  createForLeague(
+    @Param('teamId') teamId: string,
+    @Param('leagueId') leagueId: string,
+    @Body() data: CreatePlayerDto,
+  ) {
+    return this.playersService.create(teamId, { ...data, leagueId, isGuest: true });
   }
 
   @Post('seasons/:seasonId/:playerId')

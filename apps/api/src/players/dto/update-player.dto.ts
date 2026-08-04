@@ -28,4 +28,9 @@ export class UpdatePlayerDto {
   @IsBoolean()
   @IsOptional()
   isGuest?: boolean;
+
+  @IsString()
+  @IsOptional()
+  leagueId?: string;
 }
+

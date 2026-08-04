@@ -12,6 +12,7 @@ export interface PlayerEntity {
   parentEmail?: string;
   teamId: string;
   isGuest?: boolean;
+  leagueId?: string | null;
 }
 
 export interface CreatePlayerDto {
@@ -21,6 +22,7 @@ export interface CreatePlayerDto {
   parentEmail?: string;
   seasonId?: string; // Optional: add to season roster immediately
   isGuest?: boolean;
+  leagueId?: string;
 }
 
 export interface UpdatePlayerDto {
@@ -30,6 +32,7 @@ export interface UpdatePlayerDto {
   preferredPosition?: string;
   parentEmail?: string;
   isGuest?: boolean;
+  leagueId?: string;
 }
 
 @Injectable({
@@ -51,8 +54,16 @@ export class PlayersService {
     return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/seasons/${seasonId}`);
   }
 
+  getGuestPlayersForLeague(teamId: string, leagueId: string): Observable<PlayerEntity[]> {
+    return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/leagues/${leagueId}`);
+  }
+
   addPlayer(teamId: string, data: CreatePlayerDto): Observable<PlayerEntity> {
     return this.http.post<PlayerEntity>(`${this.apiUrl}/teams/${teamId}/players`, data);
+  }
+
+  addGuestPlayerToLeague(teamId: string, leagueId: string, data: CreatePlayerDto): Observable<PlayerEntity> {
+    return this.http.post<PlayerEntity>(`${this.apiUrl}/teams/${teamId}/players/leagues/${leagueId}`, data);
   }
 
   addPlayerToSeason(teamId: string, seasonId: string, playerId: string): Observable<any> {

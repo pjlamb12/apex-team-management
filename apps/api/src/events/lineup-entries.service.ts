@@ -23,8 +23,9 @@ export class LineupEntriesService {
       }),
     );
 
-    // 3. Save all new entries.
-    return this.lineupRepo.save(entries);
+    // 3. Save all new entries and return with populated player relation.
+    await this.lineupRepo.save(entries);
+    return this.findByGame(eventId);
   }
 
   async findByGame(eventId: string): Promise<LineupEntryEntity[]> {
