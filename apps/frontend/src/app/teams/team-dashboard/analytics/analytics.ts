@@ -124,65 +124,93 @@ export class TeamAnalytics {
     return league ? `${league.name} Record` : 'Competition Record';
   }
 
+  protected participationEventType = signal<'game' | 'practice' | 'all'>('all');
+  protected selectedPlaytimePosition = signal<string>('all');
+
+  protected filteredPerformanceMetrics = computed(() => {
+    const metrics = this.performanceMetrics();
+    const isFiltered = !!(this.selectedSeasonId() || this.selectedLeagueId());
+    if (isFiltered) {
+      return metrics.filter(m => !m.isGuest || m.gamesPlayed > 0);
+    }
+    return metrics;
+  });
+
+  protected rosterPerformanceMetrics = computed(() => {
+    return this.filteredPerformanceMetrics().filter(m => !m.isGuest);
+  });
+
+  protected guestPerformanceMetrics = computed(() => {
+    return this.filteredPerformanceMetrics().filter(m => m.isGuest);
+  });
+
   protected topScorers = computed(() => {
-    return [...this.performanceMetrics()]
+    return [...this.filteredPerformanceMetrics()]
       .filter(m => m.goals > 0)
       .sort((a, b) => b.goals - a.goals)
       .slice(0, 5);
   });
 
   protected topAssistors = computed(() => {
-    return [...this.performanceMetrics()]
+    return [...this.filteredPerformanceMetrics()]
       .filter(m => m.assists > 0)
       .sort((a, b) => b.assists - a.assists)
       .slice(0, 5);
   });
 
   protected topKills = computed(() => {
-    return [...this.performanceMetrics()]
+    return [...this.filteredPerformanceMetrics()]
       .filter(m => (m.kills ?? 0) > 0)
       .sort((a, b) => (b.kills ?? 0) - (a.kills ?? 0))
       .slice(0, 5);
   });
 
   protected topAces = computed(() => {
-    return [...this.performanceMetrics()]
+    return [...this.filteredPerformanceMetrics()]
       .filter(m => (m.aces ?? 0) > 0)
       .sort((a, b) => (b.aces ?? 0) - (a.aces ?? 0))
       .slice(0, 5);
   });
 
   protected topBlocks = computed(() => {
-    return [...this.performanceMetrics()]
+    return [...this.filteredPerformanceMetrics()]
       .filter(m => (m.blocks ?? 0) > 0)
       .sort((a, b) => (b.blocks ?? 0) - (a.blocks ?? 0))
       .slice(0, 5);
   });
 
   protected topDigs = computed(() => {
-    return [...this.performanceMetrics()]
+    return [...this.filteredPerformanceMetrics()]
       .filter(m => (m.digs ?? 0) > 0)
       .sort((a, b) => (b.digs ?? 0) - (a.digs ?? 0))
       .slice(0, 5);
   });
 
+  protected filteredParticipationStats = computed(() => {
+    const stats = this.participationStats();
+    const isFiltered = !!(this.selectedSeasonId() || this.selectedLeagueId());
+    if (isFiltered) {
+      return stats.filter(p => !p.isGuest || p.present > 0 || p.totalEvents > 0);
+    }
+    return stats;
+  });
+
+  protected rosterParticipationStats = computed(() => {
+    return this.filteredParticipationStats().filter(p => !p.isGuest);
+  });
+
+  protected guestParticipationStats = computed(() => {
+    return this.filteredParticipationStats().filter(p => p.isGuest);
+  });
+
   protected mostCommitted = computed(() => {
-    return [...this.participationStats()]
-      .filter(p => !p.isGuest)
+    return [...this.rosterParticipationStats()]
       .sort((a, b) => b.percentage - a.percentage)
       .slice(0, 5);
   });
 
-  protected rosterParticipationStats = computed(() => {
-    return this.participationStats().filter(p => !p.isGuest);
-  });
-
-  protected guestParticipationStats = computed(() => {
-    return this.participationStats().filter(p => p.isGuest);
-  });
-
   protected teamAverage = computed(() => {
-    const stats = this.participationStats();
+    const stats = this.filteredParticipationStats();
     const activePlayers = stats.filter(s => s.totalEvents > 0);
     if (activePlayers.length === 0) return 100;
     
@@ -190,11 +218,88 @@ export class TeamAnalytics {
     return Math.round(sum / activePlayers.length);
   });
 
-  protected topWorkhorses = computed(() => {
+  protected availablePlaytimePositions = computed(() => {
     const pt = this.playingTime();
-    return Object.values(pt)
-      .sort((a, b) => b.totalSeconds - a.totalSeconds);
+    const posSet = new Set<string>();
+    Object.values(pt).forEach(p => {
+      Object.keys(p.positionSeconds || {}).forEach(pos => posSet.add(pos));
+    });
+    return Array.from(posSet).sort();
   });
+
+  protected rosterPlaytime = computed(() => {
+    const pt = this.playingTime();
+    const metrics = this.performanceMetrics();
+    const isFiltered = !!(this.selectedSeasonId() || this.selectedLeagueId());
+    const targetPos = this.selectedPlaytimePosition();
+
+    return Object.values(pt)
+      .filter(p => {
+        const m = metrics.find(m => m.playerId === p.playerId);
+        const isGuest = m?.isGuest ?? false;
+        if (isGuest) return false;
+        if (isFiltered && p.totalSeconds === 0) return false;
+        if (targetPos !== 'all' && (p.positionSeconds[targetPos] || 0) === 0) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (targetPos !== 'all') {
+          return (b.positionSeconds[targetPos] || 0) - (a.positionSeconds[targetPos] || 0);
+        }
+        return b.totalSeconds - a.totalSeconds;
+      });
+  });
+
+  protected guestPlaytime = computed(() => {
+    const pt = this.playingTime();
+    const metrics = this.performanceMetrics();
+    const isFiltered = !!(this.selectedSeasonId() || this.selectedLeagueId());
+    const targetPos = this.selectedPlaytimePosition();
+
+    return Object.values(pt)
+      .filter(p => {
+        const m = metrics.find(m => m.playerId === p.playerId);
+        const isGuest = m?.isGuest ?? false;
+        if (!isGuest) return false;
+        if (isFiltered && p.totalSeconds === 0) return false;
+        if (targetPos !== 'all' && (p.positionSeconds[targetPos] || 0) === 0) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (targetPos !== 'all') {
+          return (b.positionSeconds[targetPos] || 0) - (a.positionSeconds[targetPos] || 0);
+        }
+        return b.totalSeconds - a.totalSeconds;
+      });
+  });
+
+  protected getPlayerMinutes(playerId: string): number {
+    const pt = this.playingTime()[playerId];
+    return pt ? Math.round(pt.totalSeconds / 60) : 0;
+  }
+
+  protected getPlayerMPG(playerId: string, gamesPlayed: number): string {
+    if (gamesPlayed === 0) return '0m';
+    const totalMinutes = this.getPlayerMinutes(playerId);
+    return `${Math.round(totalMinutes / gamesPlayed)}m`;
+  }
+
+  protected getGoalsPerGame(goals: number, gamesPlayed: number): string {
+    if (gamesPlayed === 0) return '.00';
+    return (goals / gamesPlayed).toFixed(2);
+  }
+
+  protected onParticipationTypeChange(type: 'all' | 'game' | 'practice'): void {
+    this.participationEventType.set(type);
+    const id = this._teamId();
+    const seasonId = this.selectedSeasonId();
+    const leagueId = this.selectedLeagueId();
+    if (id && seasonId) {
+      firstValueFrom(this.analyticsService.getParticipationStats(id, seasonId, leagueId ?? undefined, type))
+        .then(stats => this.participationStats.set(stats))
+        .catch(() => {});
+    }
+  }
 
   protected maxPoints = computed(() => {
     const pt = this.playingTime();
@@ -318,7 +423,7 @@ export class TeamAnalytics {
     try {
       const [performance, participation, playingTime, team, stats] = await Promise.all([
         firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId, seasonId, leagueId, eventType)),
-        firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId, leagueId)),
+        firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId, leagueId, this.participationEventType())),
         firstValueFrom(this.analyticsService.getTeamPlayingTime(teamId, seasonId, leagueId)),
         this.teamService.getTeam(teamId),
         firstValueFrom(this.seasonsService.getSeasonStats(teamId, seasonId, leagueId ?? undefined)).catch(() => null)

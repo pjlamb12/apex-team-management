@@ -75,7 +75,12 @@ export class AttendanceService {
     }
   }
 
-  async getParticipationStats(teamId: string, seasonId?: string, leagueId?: string): Promise<any> {
+  async getParticipationStats(
+    teamId: string, 
+    seasonId?: string, 
+    leagueId?: string, 
+    eventType?: 'game' | 'practice' | 'all'
+  ): Promise<any> {
     const players = await this.playerRepo.find({ where: { teamId } });
     if (players.length === 0) {
       return [];
@@ -87,11 +92,14 @@ export class AttendanceService {
       relations: ['event'],
     });
 
-    // Filter by completed games and past practices/tryouts, as well as season/league
+    // Filter by completed games and past practices/tryouts, as well as season/league/eventType
     const now = new Date();
     const filtered = attendance.filter(a => {
       if (!a.event) return false;
       
+      if (eventType === 'game' && a.event.type !== 'game') return false;
+      if (eventType === 'practice' && a.event.type !== 'practice') return false;
+
       // Future/unplayed events filter
       if (a.event.type === 'game') {
         if (a.event.status !== 'completed') return false;
@@ -108,6 +116,7 @@ export class AttendanceService {
 
     // Determine the unique set of tracked event IDs (those that have at least one attendance record)
     const trackedEventIds = new Set(filtered.map(a => a.eventId));
+    const isFiltered = !!(seasonId || leagueId);
 
     const stats = [];
     for (const player of players) {
@@ -126,6 +135,12 @@ export class AttendanceService {
             }
           }
         }
+      }
+
+      // Guest player filter rule:
+      // If a competition/season filter is set, guest players only show if they participated in the filtered competition
+      if (isFiltered && player.isGuest && present === 0) {
+        continue;
       }
 
       stats.push({

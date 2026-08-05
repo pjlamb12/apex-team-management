@@ -39,7 +39,8 @@ export class AttendanceController {
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
     @Query('leagueId') leagueId?: string,
+    @Query('eventType') eventType?: 'game' | 'practice' | 'all',
   ) {
-    return this.attendanceService.getParticipationStats(teamId, seasonId, leagueId);
+    return this.attendanceService.getParticipationStats(teamId, seasonId, leagueId, eventType);
   }
 }

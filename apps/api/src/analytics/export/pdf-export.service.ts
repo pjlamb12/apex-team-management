@@ -93,30 +93,44 @@ export class PdfExportService {
         }
       }
 
-      browser = await puppeteer.launch({
+      const launchOptions: puppeteer.PuppeteerLaunchOptions = {
         headless: true,
-        executablePath,
         args: [
           '--no-sandbox', 
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--font-render-hinting=none'
         ],
-      });
+      };
+
+      if (executablePath) {
+        launchOptions.executablePath = executablePath;
+      }
+
+      try {
+        browser = await puppeteer.launch(launchOptions);
+      } catch (launchError) {
+        this.logger.warn(`Failed launching browser with custom path '${executablePath}', attempting default launch`, launchError);
+        delete launchOptions.executablePath;
+        browser = await puppeteer.launch(launchOptions);
+      }
+
       const page = await browser.newPage();
       
       // Set viewport for better rendering
       await page.setViewport({ width: 1200, height: 800 });
       
-      await page.setContent(html, { waitUntil: 'load' });
+      await page.setContent(html, { waitUntil: 'domcontentloaded' });
       
-      // Add Tailwind CSS
-      await page.addStyleTag({
-        url: 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css',
-      });
-
-      // Wait a bit for Tailwind to be applied
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Try loading external Tailwind CSS with safety fallback
+      try {
+        await page.addStyleTag({
+          url: 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css',
+        });
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (cssError) {
+        this.logger.warn('Could not load external Tailwind CSS for PDF generation', cssError);
+      }
 
       const pdfBuffer = await page.pdf({
         format: 'A4',

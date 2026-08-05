@@ -119,10 +119,11 @@ export class AnalyticsService {
     return this.http.get<Record<string, PlayerPlaytime>>(`${this.apiUrl}/teams/${teamId}/analytics/playing-time`, { params });
   }
 
-  getParticipationStats(teamId: string, seasonId?: string, leagueId?: string): Observable<ParticipationStats[]> {
+  getParticipationStats(teamId: string, seasonId?: string, leagueId?: string, eventType?: 'game' | 'practice' | 'all'): Observable<ParticipationStats[]> {
     const params: any = {};
     if (seasonId) params.seasonId = seasonId;
     if (leagueId) params.leagueId = leagueId;
+    if (eventType) params.eventType = eventType;
     return this.http.get<ParticipationStats[]>(`${this.apiUrl}/teams/${teamId}/participation`, { params });
   }
 

@@ -88,13 +88,19 @@ export class PerformanceMetricsService {
       ]);
       events = [...games, ...practices];
     }
-    
+    const isFiltered = !!(seasonId || leagueId);
+    let result: PlayerPerformanceMetrics[] = [];
     if (events.length === 0) {
       const players = await this.playerRepo.find({ where: { teamId } });
-      return players.map(p => this.initializeMetrics(p));
+      result = players.map(p => this.initializeMetrics(p));
+    } else {
+      result = await this.getMetricsForEvents(teamId, events.map(e => e.id));
     }
 
-    return this.getMetricsForEvents(teamId, events.map(e => e.id));
+    if (isFiltered) {
+      return result.filter(m => !m.isGuest || m.gamesPlayed > 0);
+    }
+    return result;
   }
 
   async getEventMetrics(teamId: string, eventId: string): Promise<PlayerPerformanceMetrics[]> {
