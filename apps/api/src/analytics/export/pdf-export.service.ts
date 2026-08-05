@@ -93,7 +93,7 @@ export class PdfExportService {
         }
       }
 
-      const launchOptions: puppeteer.PuppeteerLaunchOptions = {
+      const launchOptions: Parameters<typeof puppeteer.launch>[0] = {
         headless: true,
         args: [
           '--no-sandbox', 
