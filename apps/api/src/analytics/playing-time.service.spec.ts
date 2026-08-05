@@ -113,6 +113,75 @@ describe('PlayingTimeService', () => {
       expect(result[player1].totalSeconds).toBe(90 * 60);
     });
 
+    it('should ignore duplicate PERIOD_END events for the same period without double counting playing time', async () => {
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue({ id: eventId, status: 'completed', durationMinutes: 50, periodLengthMinutes: 25 } as any);
+      vi.spyOn(lineupRepo, 'find').mockResolvedValue([
+        { playerId: player1, status: 'starting', positionName: 'MID' },
+      ] as any);
+
+      // Period 1 ends at 25m, Period 2 ends at 25m, and a duplicate PERIOD_END for period 2 exists 7 seconds later
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([
+        {
+          eventType: 'PERIOD_END',
+          minuteOccurred: 25,
+          payload: { period: 1, gameTimeMs: 25 * 60 * 1000 },
+        },
+        {
+          eventType: 'PERIOD_END',
+          minuteOccurred: 25,
+          payload: { period: 2, gameTimeMs: 25 * 60 * 1000 },
+        },
+        {
+          eventType: 'PERIOD_END',
+          minuteOccurred: 25,
+          payload: { period: 2, gameTimeMs: (25 * 60 + 7) * 1000 },
+        },
+      ] as any);
+
+      const result = await service.calculateForEvent(eventId);
+      // P1 (25m) + P2 (25m) = 50m total (3000s), NOT 75m (4500s)
+      expect(result[player1].totalSeconds).toBe(50 * 60);
+    });
+
+    it('should correctly assign halftime substitution events logged after period 1 end to period 2', async () => {
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue({ id: eventId, status: 'completed', durationMinutes: 50, periodLengthMinutes: 25 } as any);
+      vi.spyOn(lineupRepo, 'find').mockResolvedValue([
+        { playerId: player1, status: 'starting', positionName: 'MID' },
+        { playerId: player2, status: 'bench', positionName: 'MID' },
+      ] as any);
+
+      const pe1Time = new Date('2026-08-04T22:09:44Z');
+      const halftimeSubTime = new Date('2026-08-04T22:15:24Z');
+
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([
+        {
+          eventType: 'PERIOD_END',
+          minuteOccurred: 25,
+          payload: { period: 1, gameTimeMs: 25 * 60 * 1000, timestamp: pe1Time.getTime() },
+          createdAt: pe1Time,
+        },
+        // Halftime sub created 6 min after P1 end, carrying period 1 and gameTimeMs 0
+        {
+          eventType: 'SUB',
+          minuteOccurred: 1,
+          payload: { period: 1, gameTimeMs: 0, outPlayerId: player1, inPlayerId: player2, positionName: 'MID', timestamp: halftimeSubTime.getTime() },
+          createdAt: halftimeSubTime,
+        },
+        {
+          eventType: 'PERIOD_END',
+          minuteOccurred: 25,
+          payload: { period: 2, gameTimeMs: 25 * 60 * 1000, timestamp: pe1Time.getTime() + 30 * 60 * 1000 },
+          createdAt: new Date(pe1Time.getTime() + 30 * 60 * 1000),
+        },
+      ] as any);
+
+      const result = await service.calculateForEvent(eventId);
+      // player1 started P1 and played all 25 mins of P1; was subbed off for P2 at halftime -> 25 mins (1500s)
+      expect(result[player1].totalSeconds).toBe(25 * 60);
+      // player2 played all 25 mins of P2 -> 25 mins (1500s)
+      expect(result[player2].totalSeconds).toBe(25 * 60);
+    });
+
     it('should handle position swaps', async () => {
       const p1 = 'p1';
       const p2 = 'p2';

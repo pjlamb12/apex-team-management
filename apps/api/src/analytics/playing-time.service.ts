@@ -55,6 +55,36 @@ export class PlayingTimeService {
       order: { createdAt: 'ASC' },
     });
 
+    // Normalize events logged during halftime (within 30m after PERIOD_END for period P) that still carry period <= P
+    const periodEnds = gameEvents
+      .filter((ge) => ge.eventType === 'PERIOD_END')
+      .map((ge) => {
+        const payload = (ge.payload as any) || {};
+        const p = payload.period ?? 1;
+        const time = payload.timestamp ?? (ge.createdAt ? new Date(ge.createdAt).getTime() : 0);
+        return { period: p, timestamp: time };
+      })
+      .sort((a, b) => a.period - b.period);
+
+    gameEvents.forEach((ge) => {
+      if (ge.eventType === 'PERIOD_END') return;
+      const payload = (ge.payload as any) || {};
+      const currentPayloadPeriod = payload.period ?? 1;
+      const geTime = payload.timestamp ?? (ge.createdAt ? new Date(ge.createdAt).getTime() : 0);
+
+      const matchingPe = periodEnds.find((pe) => pe.period === currentPayloadPeriod);
+      if (matchingPe && geTime > matchingPe.timestamp) {
+        const diffMs = geTime - matchingPe.timestamp;
+        if (diffMs <= 30 * 60 * 1000) {
+          const nextPe = periodEnds.find((pe) => pe.period === currentPayloadPeriod + 1);
+          if (!nextPe || geTime < nextPe.timestamp) {
+            payload.period = currentPayloadPeriod + 1;
+            ge.payload = payload;
+          }
+        }
+      }
+    });
+
     gameEvents.sort((a, b) => {
       const payloadA = (a.payload as any) || {};
       const payloadB = (b.payload as any) || {};
@@ -200,17 +230,23 @@ export class PlayingTimeService {
     });
 
     let currentPeriod = 1;
+    const endedPeriods = new Set<number>();
 
     gameEvents.forEach((ge) => {
       const payload = ge.payload as any;
       const eventTimeMs = payload.gameTimeMs ?? (ge.minuteOccurred - 1) * 60000;
 
       if (ge.eventType === 'PERIOD_END') {
+        const periodNum = payload.period ?? currentPeriod;
+        if (endedPeriods.has(periodNum)) {
+          return;
+        }
+        endedPeriods.add(periodNum);
         onField.forEach((pid) => {
           closeStint(pid, eventTimeMs);
           stintStartMs[pid] = 0; // Stints reset at period start
         });
-        currentPeriod++;
+        currentPeriod = Math.max(currentPeriod, periodNum + 1);
       } else if (ge.eventType === 'SUB') {
         const outId = payload.outPlayerId || payload.playerIdOut;
         const inId = payload.inPlayerId || payload.playerIdIn;

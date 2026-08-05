@@ -634,13 +634,17 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     const elapsedMs = this.clockService.elapsedMs();
     const currentMinute = this.clockService.currentMinute();
 
-    // 1. Log a final PERIOD_END event so all active player stints are closed at the correct timestamp
-    this.stateService.pushEvent({
-      type: 'PERIOD_END',
-      timestamp: Date.now(),
-      minuteOccurred: currentMinute,
-      gameTimeMs: elapsedMs,
-    });
+    // 1. Log a final PERIOD_END event so all active player stints are closed at the correct timestamp (if not already logged)
+    const activeEvents = this.stateService.events().filter((e) => e.status !== 'deleted');
+    const lastEvent = activeEvents[activeEvents.length - 1];
+    if (!lastEvent || lastEvent.type !== 'PERIOD_END') {
+      this.stateService.pushEvent({
+        type: 'PERIOD_END',
+        timestamp: Date.now(),
+        minuteOccurred: currentMinute,
+        gameTimeMs: elapsedMs,
+      });
+    }
 
     await this.clockService.stop();
     this.stateService.endGame();
@@ -672,13 +676,17 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     const elapsedMs = this.clockService.elapsedMs();
     const currentMinute = this.clockService.currentMinute();
 
-    // Log a final PERIOD_END event so all active player stints are closed at the correct timestamp
-    this.stateService.pushEvent({
-      type: 'PERIOD_END',
-      timestamp: Date.now(),
-      minuteOccurred: currentMinute,
-      gameTimeMs: elapsedMs,
-    });
+    // Log a final PERIOD_END event so all active player stints are closed at the correct timestamp (if not already logged)
+    const activeEvents = this.stateService.events().filter((e) => e.status !== 'deleted');
+    const lastEvent = activeEvents[activeEvents.length - 1];
+    if (!lastEvent || lastEvent.type !== 'PERIOD_END') {
+      this.stateService.pushEvent({
+        type: 'PERIOD_END',
+        timestamp: Date.now(),
+        minuteOccurred: currentMinute,
+        gameTimeMs: elapsedMs,
+      });
+    }
 
     await this.clockService.stop();
     this.stateService.endGame();
