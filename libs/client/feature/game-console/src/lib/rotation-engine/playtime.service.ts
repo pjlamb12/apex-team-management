@@ -31,17 +31,26 @@ export class PlaytimeService {
       }
     });
 
+    const endedPeriods = new Set<number>();
+    let currentPeriod = 1;
+
     // Process event log
     events.forEach(event => {
       const eventTimeMs = event.gameTimeMs ?? (event.minuteOccurred - 1) * 60000;
+      const periodNum = (event as any).period ?? (event as any).payload?.period ?? currentPeriod;
 
       if (event.type === 'PERIOD_END') {
+        if (endedPeriods.has(periodNum)) {
+          return;
+        }
+        endedPeriods.add(periodNum);
         // Close all stints at the end of the period
         onField.forEach(playerId => {
           const start = stintStartMs[playerId] ?? 0;
           totalsMs[playerId] = (totalsMs[playerId] || 0) + Math.max(0, eventTimeMs - start);
           stintStartMs[playerId] = 0; // Reset for next period start
         });
+        currentPeriod = Math.max(currentPeriod, periodNum + 1);
       } else if (event.type === 'SUB') {
         if (event.playerIdOut) {
           const start = stintStartMs[event.playerIdOut] ?? 0;
