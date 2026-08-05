@@ -22,10 +22,12 @@ export class ExportOptionsDto {
   format: ExportFormat;
 
   @IsOptional()
+  @Transform(({ value }) => value === '' || value === 'null' || value === 'undefined' ? undefined : value)
   @IsUUID()
   seasonId?: string;
 
   @IsOptional()
+  @Transform(({ value }) => value === '' || value === 'null' || value === 'undefined' ? undefined : value)
   @IsUUID()
   leagueId?: string;
 

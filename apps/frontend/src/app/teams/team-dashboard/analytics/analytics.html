@@ -304,14 +304,13 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-ap-border">
-                  @for (m of performanceMetrics(); track m.playerId) {
+                  @for (m of rosterPerformanceMetrics(); track m.playerId) {
                     <tr class="hover:bg-ap-surface-raised transition-colors">
                       <td class="px-4 py-3 font-bold text-ap-text player-cell">
                         {{ m.firstName }} {{ m.lastName }}
-                        @if (m.isGuest) {
-                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                        @if (m.preferredPosition) {
+                          <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
                         }
-                        <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition || 'No Position' }}</span>
                       </td>
                       <td class="px-2 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
                       <td class="px-2 py-3 text-center font-bold text-ap-text tabular-nums">{{ m.kills || 0 }}</td>
@@ -336,6 +335,52 @@
                       <td class="px-2 py-3 text-center text-ap-text pr-4 tabular-nums">{{ m.blockTouches || 0 }}</td>
                     </tr>
                   }
+
+                  @if (guestPerformanceMetrics().length > 0) {
+                    <tr class="bg-ap-surface-raised border-y border-ap-border">
+                      <td colspan="16" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-purple-400">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2">
+                            <span>Guest Players</span>
+                            <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
+                          </div>
+                          <span class="text-[10px] font-bold text-ap-muted">{{ guestPerformanceMetrics().length }} player{{ guestPerformanceMetrics().length > 1 ? 's' : '' }}</span>
+                        </div>
+                      </td>
+                    </tr>
+                    @for (m of guestPerformanceMetrics(); track m.playerId) {
+                      <tr class="hover:bg-ap-surface-raised transition-colors">
+                        <td class="px-4 py-3 font-bold text-ap-text player-cell">
+                          {{ m.firstName }} {{ m.lastName }}
+                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                          @if (m.preferredPosition) {
+                            <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
+                          }
+                        </td>
+                        <td class="px-2 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
+                        <td class="px-2 py-3 text-center font-bold text-ap-text tabular-nums">{{ m.kills || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.hits || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-red-500 tabular-nums">{{ m.hittingErrors || 0 }}</td>
+                        <td class="px-2 py-3 text-center font-black tabular-nums"
+                            [class.text-green-500]="((m.kills || 0) - (m.hittingErrors || 0)) > 0"
+                            [class.text-red-500]="((m.kills || 0) - (m.hittingErrors || 0)) < 0">
+                          {{ getHittingPct(m.kills || 0, m.hittingErrors || 0, m.hits || 0) }}
+                        </td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.setAttempts || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.setAssists || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-red-500 tabular-nums">{{ m.setErrors || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.passCount || 0 }}</td>
+                        <td class="px-2 py-3 text-center font-bold text-ap-primary tabular-nums">
+                          {{ getPassAverage(m.passCount || 0, m.passScoreSum || 0) }}
+                        </td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.aces || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-orange-500 tabular-nums">{{ m.serviceErrors || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.digs || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.blocks || 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text pr-4 tabular-nums">{{ m.blockTouches || 0 }}</td>
+                      </tr>
+                    }
+                  }
                 </tbody>
               </table>
             </ion-card-content>
@@ -357,7 +402,12 @@
                     <ion-item>
                       <ion-label>
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-ap-text">{{ m.firstName }} {{ m.lastName }}</span>
+                          <span class="font-bold text-ap-text">
+                            {{ m.firstName }} {{ m.lastName }}
+                            @if (m.isGuest) {
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                            }
+                          </span>
                           <div class="flex items-center gap-2">
                             <span class="text-xl font-black text-blue-500">{{ m.goals }}</span>
                             <span class="text-[10px] font-bold text-ap-muted uppercase">Goals</span>
@@ -387,7 +437,12 @@
                     <ion-item>
                       <ion-label>
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-ap-text">{{ m.firstName }} {{ m.lastName }}</span>
+                          <span class="font-bold text-ap-text">
+                            {{ m.firstName }} {{ m.lastName }}
+                            @if (m.isGuest) {
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                            }
+                          </span>
                           <div class="flex items-center gap-2">
                             <span class="text-xl font-black text-amber-500">{{ m.assists }}</span>
                             <span class="text-[10px] font-bold text-ap-muted uppercase">Assists</span>
@@ -415,52 +470,63 @@
                   <tr>
                     <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted">Player</th>
                     <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">GP</th>
+                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">MIN</th>
+                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">MPG</th>
                     <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-blue-500">G</th>
                     <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-amber-500">A</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">BS</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">BPK</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">YC</th>
-                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">RC</th>
+                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-purple-400">PTS</th>
+                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">G/G</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-ap-border">
-                  @for (m of performanceMetrics(); track m.playerId) {
+                  @for (m of rosterPerformanceMetrics(); track m.playerId) {
                     <tr class="hover:bg-ap-surface-raised transition-colors">
                       <td class="px-4 py-3 font-bold text-ap-text player-cell">
                         {{ m.firstName }} {{ m.lastName }}
-                        @if (m.isGuest) {
-                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
-                        }
-                        <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition || 'No Position' }}</span>
-                      </td>
-                      <td class="px-4 py-3 text-center text-ap-muted">{{ m.gamesPlayed }}</td>
-                      <td class="px-4 py-3 text-center font-black text-blue-500">{{ m.goals }}</td>
-                      <td class="px-4 py-3 text-center font-black text-amber-500">{{ m.assists }}</td>
-                      <td class="px-4 py-3 text-center font-black text-emerald-500">
-                        @if (m.preferredPosition === 'Goalkeeper') {
-                          {{ m.blockedShots }}
-                        } @else {
-                          <span class="opacity-10 font-normal">-</span>
+                        @if (m.preferredPosition) {
+                          <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
                         }
                       </td>
-                      <td class="px-4 py-3 text-center font-black text-emerald-500">
-                        @if (m.preferredPosition === 'Goalkeeper') {
-                          {{ m.blockedPenaltyKicks }}
-                        } @else {
-                          <span class="opacity-10 font-normal">-</span>
-                        }
-                      </td>
-                      <td class="px-4 py-3 text-center">
-                        @if (m.yellowCards > 0) {
-                          <span class="px-2 py-0.5 bg-yellow-400 text-black text-[10px] font-black rounded">{{ m.yellowCards }}</span>
-                        } @else { <span class="opacity-10">0</span> }
-                      </td>
-                      <td class="px-4 py-3 text-center">
-                        @if (m.redCards > 0) {
-                          <span class="px-2 py-0.5 bg-red-600 text-white text-[10px] font-black rounded">{{ m.redCards }}</span>
-                        } @else { <span class="opacity-10">0</span> }
+                      <td class="px-4 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
+                      <td class="px-4 py-3 text-center font-bold text-emerald-500 tabular-nums">{{ getPlayerMinutes(m.playerId) }}m</td>
+                      <td class="px-4 py-3 text-center font-bold text-emerald-500 tabular-nums">{{ getPlayerMPG(m.playerId, m.gamesPlayed) }}</td>
+                      <td class="px-4 py-3 text-center font-black text-blue-500 tabular-nums">{{ m.goals }}</td>
+                      <td class="px-4 py-3 text-center font-black text-amber-500 tabular-nums">{{ m.assists }}</td>
+                      <td class="px-4 py-3 text-center font-black text-purple-400 tabular-nums">{{ m.goals + m.assists }}</td>
+                      <td class="px-4 py-3 text-center font-semibold text-ap-muted tabular-nums">{{ getGoalsPerGame(m.goals, m.gamesPlayed) }}</td>
+                    </tr>
+                  }
+
+                  @if (guestPerformanceMetrics().length > 0) {
+                    <tr class="bg-ap-surface-raised border-y border-ap-border">
+                      <td colspan="8" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-purple-400">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2">
+                            <span>Guest Players</span>
+                            <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
+                          </div>
+                          <span class="text-[10px] font-bold text-ap-muted">{{ guestPerformanceMetrics().length }} player{{ guestPerformanceMetrics().length > 1 ? 's' : '' }}</span>
+                        </div>
                       </td>
                     </tr>
+                    @for (m of guestPerformanceMetrics(); track m.playerId) {
+                      <tr class="hover:bg-ap-surface-raised transition-colors">
+                        <td class="px-4 py-3 font-bold text-ap-text player-cell">
+                          {{ m.firstName }} {{ m.lastName }}
+                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                          @if (m.preferredPosition) {
+                            <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
+                          }
+                        </td>
+                        <td class="px-4 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
+                        <td class="px-4 py-3 text-center font-bold text-emerald-500 tabular-nums">{{ getPlayerMinutes(m.playerId) }}m</td>
+                        <td class="px-4 py-3 text-center font-bold text-emerald-500 tabular-nums">{{ getPlayerMPG(m.playerId, m.gamesPlayed) }}</td>
+                        <td class="px-4 py-3 text-center font-black text-blue-500 tabular-nums">{{ m.goals }}</td>
+                        <td class="px-4 py-3 text-center font-black text-amber-500 tabular-nums">{{ m.assists }}</td>
+                        <td class="px-4 py-3 text-center font-black text-purple-400 tabular-nums">{{ m.goals + m.assists }}</td>
+                        <td class="px-4 py-3 text-center font-semibold text-ap-muted tabular-nums">{{ getGoalsPerGame(m.goals, m.gamesPlayed) }}</td>
+                      </tr>
+                    }
                   }
                 </tbody>
               </table>
@@ -516,8 +582,36 @@
           <!-- Roster Participation List -->
           <div class="md:col-span-2">
             <ion-card class="m-0 border border-ap-border shadow-none">
-              <ion-card-header class="px-6 pt-6 pb-4">
-                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted">Attendance Breakdown</ion-card-title>
+              <ion-card-header class="px-6 pt-6 pb-4 border-b border-ap-border">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted">Attendance Breakdown</ion-card-title>
+                  <div class="inline-flex rounded-lg bg-ap-surface-raised p-1 border border-ap-border">
+                    <button
+                      type="button"
+                      (click)="onParticipationTypeChange('all')"
+                      [class]="participationEventType() === 'all' ? 'bg-ap-surface text-ap-text font-bold shadow-sm' : 'text-ap-muted font-medium'"
+                      class="px-2.5 py-1 rounded-md transition-all text-[11px]"
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      (click)="onParticipationTypeChange('game')"
+                      [class]="participationEventType() === 'game' ? 'bg-ap-surface text-ap-text font-bold shadow-sm' : 'text-ap-muted font-medium'"
+                      class="px-2.5 py-1 rounded-md transition-all text-[11px]"
+                    >
+                      Games
+                    </button>
+                    <button
+                      type="button"
+                      (click)="onParticipationTypeChange('practice')"
+                      [class]="participationEventType() === 'practice' ? 'bg-ap-surface text-ap-text font-bold shadow-sm' : 'text-ap-muted font-medium'"
+                      class="px-2.5 py-1 rounded-md transition-all text-[11px]"
+                    >
+                      Practices
+                    </button>
+                  </div>
+                </div>
               </ion-card-header>
               <ion-card-content class="p-0">
                 <ion-list lines="full">
@@ -543,6 +637,8 @@
                         </div>
                       </ion-label>
                     </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic text-sm">No attendance records found.</div>
                   }
 
                   @if (guestParticipationStats().length > 0) {
@@ -591,17 +687,37 @@
       @if (activeSegment() === 'playtime') {
         <!-- Playing Time Aggregation -->
         <ion-card class="m-0 border border-ap-border shadow-none">
-          <ion-card-header class="px-6 pt-6 pb-4">
-            <div class="flex items-center justify-between">
+          <ion-card-header class="px-6 pt-6 pb-4 border-b border-ap-border">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
                 <ion-icon name="time-outline" class="text-blue-400"></ion-icon>
                 {{ sportName() === 'Volleyball' ? 'Points Distribution' : 'Minutes Distribution' }}
               </ion-card-title>
+
+              @if (availablePlaytimePositions().length > 0) {
+                <div class="w-full sm:w-auto min-w-[200px]">
+                  <ion-item lines="none" class="bg-ap-surface-raised rounded-lg border border-ap-border min-h-[38px]">
+                    <ion-select
+                      label="Position"
+                      labelPlacement="start"
+                      [value]="selectedPlaytimePosition()"
+                      (ionChange)="selectedPlaytimePosition.set($event.detail.value)"
+                      interface="popover"
+                      class="w-full text-xs"
+                    >
+                      <ion-select-option value="all">All Positions</ion-select-option>
+                      @for (pos of availablePlaytimePositions(); track pos) {
+                        <ion-select-option [value]="pos">{{ pos }}</ion-select-option>
+                      }
+                    </ion-select>
+                  </ion-item>
+                </div>
+              }
             </div>
           </ion-card-header>
           <ion-card-content class="p-0">
             <ion-list lines="full">
-              @for (pt of topWorkhorses(); track pt.playerId) {
+              @for (pt of rosterPlaytime(); track pt.playerId) {
                 <ion-item>
                   <ion-label>
                     <div class="flex items-center justify-between mb-2">
@@ -636,7 +752,56 @@
                   </ion-label>
                 </ion-item>
               } @empty {
-                <div class="py-20 text-center text-ap-muted italic">No playing time data available for this team.</div>
+                <div class="py-20 text-center text-ap-muted italic">No playing time data available for this selection.</div>
+              }
+
+              @if (guestPlaytime().length > 0) {
+                <div class="px-6 py-2.5 bg-ap-surface-raised border-y border-ap-border flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-purple-400">Guest Players</span>
+                    <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
+                  </div>
+                  <span class="text-[10px] font-bold text-ap-muted">{{ guestPlaytime().length }} player{{ guestPlaytime().length > 1 ? 's' : '' }}</span>
+                </div>
+
+                @for (pt of guestPlaytime(); track pt.playerId) {
+                  <ion-item>
+                    <ion-label>
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-ap-text text-sm">
+                          {{ getPlayerName(pt.playerId) }}
+                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                        </span>
+                        <div class="text-right">
+                          @if (sportName() === 'Volleyball') {
+                            <span class="text-lg font-black text-blue-400">{{ pt.totalSeconds }}</span>
+                            <span class="text-[10px] text-ap-muted uppercase ml-1 font-bold">pts ({{ Math.round((pt.totalSeconds / (maxPoints() || 1)) * 100) }}%)</span>
+                          } @else {
+                            <span class="text-lg font-black text-blue-400">{{ formatMinutes(pt.totalSeconds) }}</span>
+                            <span class="text-[10px] text-ap-muted uppercase ml-1 font-bold">Total</span>
+                          }
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        @for (pos of pt.positionSeconds | keyvalue; track pos.key) {
+                          <div class="flex flex-col gap-1 flex-1">
+                             <div class="text-[8px] font-black uppercase text-ap-muted truncate chart-label">
+                               {{ pos.key }}
+                               @if (sportName() === 'Volleyball') {
+                                 <span class="text-blue-400 ml-1">({{ pos.value }} pts)</span>
+                               }
+                             </div>
+                             <ion-progress-bar 
+                               [value]="pos.value / pt.totalSeconds" 
+                               [class]="getHeatmapClass(pos.value, pt.totalSeconds)"
+                               class="h-1 rounded-full opacity-80">
+                             </ion-progress-bar>
+                          </div>
+                        }
+                      </div>
+                    </ion-label>
+                  </ion-item>
+                }
               }
             </ion-list>
           </ion-card-content>

@@ -396,6 +396,17 @@ export class PlayingTimeService {
       });
     }
 
+    const isFiltered = !!(seasonId || leagueId);
+    if (isFiltered && Object.keys(teamResult).length > 0) {
+      const players = await this.eventRepo.manager.getRepository('PlayerEntity').find({ where: { teamId } });
+      const guestIds = new Set((players as any[]).filter(p => p.isGuest).map(p => p.id));
+      Object.keys(teamResult).forEach(pid => {
+        if (guestIds.has(pid) && teamResult[pid].totalSeconds === 0) {
+          delete teamResult[pid];
+        }
+      });
+    }
+
     return teamResult;
   }
 }
