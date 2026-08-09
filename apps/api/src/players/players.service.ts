@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PlayerEntity } from '../entities/player.entity';
 import { SeasonPlayerEntity } from '../entities/season-player.entity';
 import { CreatePlayerDto } from './dto/create-player.dto';
@@ -15,16 +15,24 @@ export class PlayersService {
     private readonly seasonPlayerRepo: Repository<SeasonPlayerEntity>,
   ) {}
 
-  findAllForTeam(teamId: string): Promise<PlayerEntity[]> {
+  findAllForTeam(teamId: string, includeInactive = false): Promise<PlayerEntity[]> {
+    const where: any = { teamId, isGuest: false };
+    if (!includeInactive) {
+      where.isActive = true;
+    }
     return this.playerRepo.find({
-      where: { teamId, isGuest: false },
+      where,
       order: { jerseyNumber: 'ASC', lastName: 'ASC' },
     });
   }
 
-  async findAllForSeason(seasonId: string): Promise<PlayerEntity[]> {
+  async findAllForSeason(seasonId: string, includeInactive = false): Promise<PlayerEntity[]> {
+    const playerWhere: any = { isGuest: false };
+    if (!includeInactive) {
+      playerWhere.isActive = true;
+    }
     const seasonPlayers = await this.seasonPlayerRepo.find({
-      where: { seasonId, player: { isGuest: false } },
+      where: { seasonId, player: playerWhere },
       relations: ['player'],
     });
     return seasonPlayers
@@ -35,13 +43,14 @@ export class PlayersService {
 
   async findAllForLeague(leagueId: string): Promise<PlayerEntity[]> {
     return this.playerRepo.find({
-      where: { leagueId, isGuest: true },
+      where: { leagueId, isGuest: true, isActive: true },
       order: { jerseyNumber: 'ASC', lastName: 'ASC' },
     });
   }
 
   async create(teamId: string, data: CreatePlayerDto & { seasonId?: string; leagueId?: string }): Promise<PlayerEntity> {
     const isGuest = data.leagueId ? true : (data.isGuest ?? false);
+    const isActive = data.isActive ?? true;
     const player = this.playerRepo.create({ 
       firstName: data.firstName,
       lastName: data.lastName,
@@ -49,6 +58,7 @@ export class PlayersService {
       parentEmail: data.parentEmail,
       preferredPosition: data.preferredPosition,
       isGuest,
+      isActive,
       leagueId: data.leagueId ?? null,
       teamId 
     });

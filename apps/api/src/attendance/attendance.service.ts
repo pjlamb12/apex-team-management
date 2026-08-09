@@ -152,6 +152,7 @@ export class AttendanceService {
         present,
         percentage: totalEvents > 0 ? Math.round((present / totalEvents) * 100) : 0,
         isGuest: player.isGuest,
+        isActive: player.isActive,
       });
     }
 

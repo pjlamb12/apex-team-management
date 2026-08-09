@@ -28,5 +28,9 @@ export class CreatePlayerDto {
   @IsString()
   @IsOptional()
   leagueId?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }
 

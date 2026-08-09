@@ -10,6 +10,7 @@ export interface PlayerPerformanceMetrics {
   jerseyNumber?: number | null;
   preferredPosition: string | null;
   isGuest?: boolean;
+  isActive?: boolean;
   goals: number;
   assists: number;
   yellowCards: number;
@@ -48,6 +49,7 @@ export interface ParticipationStats {
   present: number;
   percentage: number;
   isGuest?: boolean;
+  isActive?: boolean;
 }
 
 export interface PlayerHistoryEntry {
@@ -76,6 +78,7 @@ export interface PlayerProfileAnalytics {
     lastName: string;
     jerseyNumber: number | null;
     preferredPosition: string | null;
+    isActive?: boolean;
   };
   totalGamesPlayed: number;
   totalGoals: number;

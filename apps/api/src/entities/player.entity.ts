@@ -25,6 +25,9 @@ export class PlayerEntity {
   @Column({ name: 'is_guest', type: 'boolean', default: false })
   isGuest: boolean;
 
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive: boolean;
+
   @ManyToOne(() => LeagueEntity, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'league_id' })
   league: LeagueEntity | null;

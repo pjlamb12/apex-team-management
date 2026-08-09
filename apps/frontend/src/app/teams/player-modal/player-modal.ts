@@ -12,6 +12,7 @@ import {
   IonInput,
   IonSelect,
   IonSelectOption,
+  IonToggle,
 } from '@ionic/angular/standalone';
 import { PlayerEntity } from '@apex-team/client/data-access/team';
 
@@ -30,6 +31,7 @@ import { PlayerEntity } from '@apex-team/client/data-access/team';
     IonInput,
     IonSelect,
     IonSelectOption,
+    IonToggle,
   ],
   templateUrl: './player-modal.html',
   styleUrl: './player-modal.scss',
@@ -47,6 +49,7 @@ export class PlayerModal implements OnInit {
     jerseyNumber: [null as number | null, [Validators.required, Validators.min(0), Validators.max(999)]],
     preferredPosition: [''],
     parentEmail: ['', [Validators.email]],
+    isActive: [true],
   });
 
   ngOnInit(): void {
@@ -57,6 +60,7 @@ export class PlayerModal implements OnInit {
         jerseyNumber: this.player.jerseyNumber,
         preferredPosition: this.player.preferredPosition ?? '',
         parentEmail: this.player.parentEmail ?? '',
+        isActive: this.player.isActive !== false,
       });
     }
   }
@@ -82,6 +86,7 @@ export class PlayerModal implements OnInit {
         jerseyNumber: value.jerseyNumber ?? undefined,
         preferredPosition: value.preferredPosition || undefined,
         parentEmail: value.parentEmail || undefined,
+        isActive: value.isActive ?? true,
       },
       'confirm'
     );

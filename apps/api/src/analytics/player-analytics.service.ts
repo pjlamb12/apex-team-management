@@ -34,6 +34,7 @@ export interface PlayerProfileAnalytics {
     lastName: string;
     jerseyNumber: number | null;
     preferredPosition: string | null;
+    isActive?: boolean;
   };
   totalGamesPlayed: number;
   totalGoals: number;
@@ -250,7 +251,8 @@ export class PlayerAnalyticsService {
         firstName: player.firstName,
         lastName: player.lastName,
         jerseyNumber: player.jerseyNumber,
-        preferredPosition: player.preferredPosition
+        preferredPosition: player.preferredPosition,
+        isActive: player.isActive,
       },
       totalGamesPlayed: gamesPlayed,
       totalGoals,

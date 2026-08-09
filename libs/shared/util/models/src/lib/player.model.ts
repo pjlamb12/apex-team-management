@@ -7,4 +7,5 @@ export interface Player {
   jerseyNumber?: number;
   preferredPosition?: string;
   isGuest?: boolean;
+  isActive?: boolean;
 }

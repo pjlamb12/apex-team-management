@@ -19,6 +19,8 @@ import {
   IonSelectOption,
   IonButton,
   IonButtons,
+  IonSegment,
+  IonSegmentButton,
   ModalController,
   AlertController,
 } from '@ionic/angular/standalone';
@@ -30,7 +32,11 @@ import {
   statsChartOutline, 
   buildOutline, 
   peopleOutline, 
-  personCircleOutline 
+  personCircleOutline,
+  checkmarkCircleOutline,
+  pauseCircleOutline,
+  refreshOutline,
+  removeCircleOutline,
 } from 'ionicons/icons';
 import { 
   AnalyticsService, 
@@ -70,6 +76,8 @@ import { ManageSeasonRosterModal } from './manage-roster-modal/manage-roster-mod
     IonSelectOption,
     IonButton,
     IonButtons,
+    IonSegment,
+    IonSegmentButton,
   ],
   templateUrl: './roster.html',
 })
@@ -93,8 +101,21 @@ export class Roster {
 
   protected players = signal<PlayerEntity[]>([]);
   protected positions = signal<string[]>([]);
+  protected activeFilter = signal<'active' | 'inactive' | 'all'>('active');
+
+  protected activePlayerCount = computed(() => this.players().filter(p => p.isActive !== false).length);
+  protected inactivePlayerCount = computed(() => this.players().filter(p => p.isActive === false).length);
+
   protected sortedPlayers = computed(() => {
-    return [...this.players()].sort((a, b) => {
+    const filter = this.activeFilter();
+    let list = this.players();
+    if (filter === 'active') {
+      list = list.filter(p => p.isActive !== false);
+    } else if (filter === 'inactive') {
+      list = list.filter(p => p.isActive === false);
+    }
+
+    return [...list].sort((a, b) => {
       const aNum = a.jerseyNumber !== null && a.jerseyNumber !== undefined ? a.jerseyNumber : Infinity;
       const bNum = b.jerseyNumber !== null && b.jerseyNumber !== undefined ? b.jerseyNumber : Infinity;
       return aNum - bNum;
@@ -114,7 +135,11 @@ export class Roster {
       statsChartOutline, 
       buildOutline, 
       peopleOutline, 
-      personCircleOutline 
+      personCircleOutline,
+      checkmarkCircleOutline,
+      pauseCircleOutline,
+      refreshOutline,
+      removeCircleOutline,
     });
 
     // Load players whenever teamId or selectedSeasonId changes
@@ -138,6 +163,13 @@ export class Roster {
     this.seasonsService.selectedSeasonId.set(event.detail.value);
   }
 
+  protected onFilterChange(event: any): void {
+    const val = event.detail.value as 'active' | 'inactive' | 'all';
+    if (val) {
+      this.activeFilter.set(val);
+    }
+  }
+
   protected async loadPlayers(teamId: string, seasonId: string | null): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
@@ -146,9 +178,9 @@ export class Roster {
     try {
       let playersReq;
       if (seasonId) {
-        playersReq = firstValueFrom(this.playersService.getPlayersForSeason(teamId, seasonId));
+        playersReq = firstValueFrom(this.playersService.getPlayersForSeason(teamId, seasonId, true));
       } else {
-        playersReq = firstValueFrom(this.playersService.getPlayers(teamId));
+        playersReq = firstValueFrom(this.playersService.getPlayers(teamId, true));
       }
 
       const [players, stats, team] = await Promise.all([
@@ -185,6 +217,64 @@ export class Roster {
     return 'danger';
   }
 
+  protected async deactivatePlayer(player: PlayerEntity): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Player Stepping Away?',
+      message: `Remove ${player.firstName} ${player.lastName} from active roster? They will stop appearing on attendance screens and substitute lists, but their past game history and statistics will be preserved.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Step Away',
+          role: 'confirm',
+          handler: async () => {
+            try {
+              const updated = await firstValueFrom(this.playersService.deactivatePlayer(teamId, player.id));
+              this.players.update((list) =>
+                list.map((p) => (p.id === player.id ? { ...p, ...updated, isActive: false } : p))
+              );
+            } catch {
+              this.errorMessage.set('Failed to update player status. Please try again.');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  protected async reactivatePlayer(player: PlayerEntity): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Reactivate Player?',
+      message: `Add ${player.firstName} ${player.lastName} back to the active roster?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Reactivate',
+          role: 'confirm',
+          handler: async () => {
+            try {
+              const updated = await firstValueFrom(this.playersService.reactivatePlayer(teamId, player.id));
+              this.players.update((list) =>
+                list.map((p) => (p.id === player.id ? { ...p, ...updated, isActive: true } : p))
+              );
+            } catch {
+              this.errorMessage.set('Failed to reactivate player. Please try again.');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
   protected async deletePlayer(playerId: string): Promise<void> {
     const teamId = this.teamId;
     const seasonId = this.selectedSeasonId();
@@ -194,11 +284,11 @@ export class Roster {
       header: seasonId ? 'Remove from Season?' : 'Delete Player?',
       message: seasonId 
         ? 'This will remove the player from this season but keep them in your roster pool.' 
-        : 'This action is permanent and will delete the player profile.',
+        : 'This action is permanent and will delete the player profile and historical records.',
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
-          text: seasonId ? 'Remove' : 'Delete',
+          text: seasonId ? 'Remove' : 'Delete Permanently',
           role: 'confirm',
           handler: async () => {
             try {

@@ -24,6 +24,7 @@ import {
   IonButton,
   IonSelect,
   IonSelectOption,
+  IonToggle,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -80,6 +81,7 @@ import { League, SeasonStats } from '@apex-team/shared/util/models';
     IonButton,
     IonSelect,
     IonSelectOption,
+    IonToggle,
   ],
   templateUrl: './analytics.html',
   styleUrl: './analytics.scss',
@@ -107,6 +109,7 @@ export class TeamAnalytics {
   protected activeSegment = signal<'performance' | 'participation' | 'playtime'>('performance');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
+  protected includeInactive = signal<boolean>(false);
 
   protected seasons = this.seasonsService.seasons;
   protected selectedSeasonId = this.seasonsService.selectedSeasonId;
@@ -130,10 +133,12 @@ export class TeamAnalytics {
   protected filteredPerformanceMetrics = computed(() => {
     const metrics = this.performanceMetrics();
     const isFiltered = !!(this.selectedSeasonId() || this.selectedLeagueId());
-    if (isFiltered) {
-      return metrics.filter(m => !m.isGuest || m.gamesPlayed > 0);
-    }
-    return metrics;
+    const showInactive = this.includeInactive();
+    return metrics.filter(m => {
+      if (m.isGuest && isFiltered && m.gamesPlayed === 0) return false;
+      if (m.isActive === false && !showInactive && m.gamesPlayed === 0) return false;
+      return true;
+    });
   });
 
   protected rosterPerformanceMetrics = computed(() => {
@@ -189,10 +194,12 @@ export class TeamAnalytics {
   protected filteredParticipationStats = computed(() => {
     const stats = this.participationStats();
     const isFiltered = !!(this.selectedSeasonId() || this.selectedLeagueId());
-    if (isFiltered) {
-      return stats.filter(p => !p.isGuest || p.present > 0 || p.totalEvents > 0);
-    }
-    return stats;
+    const showInactive = this.includeInactive();
+    return stats.filter(p => {
+      if (p.isGuest && isFiltered && p.present === 0 && p.totalEvents === 0) return false;
+      if (p.isActive === false && !showInactive && p.present === 0 && p.totalEvents === 0) return false;
+      return true;
+    });
   });
 
   protected rosterParticipationStats = computed(() => {
@@ -232,12 +239,14 @@ export class TeamAnalytics {
     const metrics = this.performanceMetrics();
     const isFiltered = !!(this.selectedSeasonId() || this.selectedLeagueId());
     const targetPos = this.selectedPlaytimePosition();
+    const showInactive = this.includeInactive();
 
     return Object.values(pt)
       .filter(p => {
         const m = metrics.find(m => m.playerId === p.playerId);
         const isGuest = m?.isGuest ?? false;
         if (isGuest) return false;
+        if (m?.isActive === false && !showInactive && p.totalSeconds === 0) return false;
         if (isFiltered && p.totalSeconds === 0) return false;
         if (targetPos !== 'all' && (p.positionSeconds[targetPos] || 0) === 0) return false;
         return true;
@@ -249,6 +258,11 @@ export class TeamAnalytics {
         return b.totalSeconds - a.totalSeconds;
       });
   });
+
+  protected isPlayerInactive(playerId: string): boolean {
+    const metric = this.performanceMetrics().find(m => m.playerId === playerId);
+    return metric?.isActive === false;
+  }
 
   protected guestPlaytime = computed(() => {
     const pt = this.playingTime();
@@ -297,7 +311,9 @@ export class TeamAnalytics {
     if (id && seasonId) {
       firstValueFrom(this.analyticsService.getParticipationStats(id, seasonId, leagueId ?? undefined, type))
         .then(stats => this.participationStats.set(stats))
-        .catch(() => {});
+        .catch(() => {
+          // ignore error
+        });
     }
   }
 

@@ -81,5 +81,18 @@
         <p class="error-text">Please enter a valid email address.</p>
       }
     </div>
+
+    <div class="field-group mt-4">
+      <ion-item lines="none" class="rounded-xl border border-ap-border bg-ap-surface">
+        <ion-toggle formControlName="isActive" justify="space-between">
+          <div class="py-1">
+            <span class="font-bold text-ap-text block text-sm">Active on Roster</span>
+            <span class="text-xs text-ap-muted block mt-0.5">
+              Turn off if player stepped away. Keeps their past match history & statistics intact.
+            </span>
+          </div>
+        </ion-toggle>
+      </ion-item>
+    </div>
   </form>
 </ion-content>

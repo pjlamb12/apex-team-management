@@ -12,6 +12,7 @@ export interface PlayerEntity {
   parentEmail?: string;
   teamId: string;
   isGuest?: boolean;
+  isActive?: boolean;
   leagueId?: string | null;
 }
 
@@ -22,6 +23,7 @@ export interface CreatePlayerDto {
   parentEmail?: string;
   seasonId?: string; // Optional: add to season roster immediately
   isGuest?: boolean;
+  isActive?: boolean;
   leagueId?: string;
 }
 
@@ -32,6 +34,7 @@ export interface UpdatePlayerDto {
   preferredPosition?: string;
   parentEmail?: string;
   isGuest?: boolean;
+  isActive?: boolean;
   leagueId?: string;
 }
 
@@ -46,12 +49,14 @@ export class PlayersService {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
-  getPlayers(teamId: string): Observable<PlayerEntity[]> {
-    return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players`);
+  getPlayers(teamId: string, includeInactive = false): Observable<PlayerEntity[]> {
+    const params = includeInactive ? '?includeInactive=true' : '';
+    return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players${params}`);
   }
 
-  getPlayersForSeason(teamId: string, seasonId: string): Observable<PlayerEntity[]> {
-    return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/seasons/${seasonId}`);
+  getPlayersForSeason(teamId: string, seasonId: string, includeInactive = false): Observable<PlayerEntity[]> {
+    const params = includeInactive ? '?includeInactive=true' : '';
+    return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/seasons/${seasonId}${params}`);
   }
 
   getGuestPlayersForLeague(teamId: string, leagueId: string): Observable<PlayerEntity[]> {
@@ -83,6 +88,14 @@ export class PlayersService {
       `${this.apiUrl}/teams/${teamId}/players/${playerId}`,
       data
     );
+  }
+
+  deactivatePlayer(teamId: string, playerId: string): Observable<PlayerEntity> {
+    return this.updatePlayer(teamId, playerId, { isActive: false });
+  }
+
+  reactivatePlayer(teamId: string, playerId: string): Observable<PlayerEntity> {
+    return this.updatePlayer(teamId, playerId, { isActive: true });
   }
 
   deletePlayer(teamId: string, playerId: string): Observable<void> {
