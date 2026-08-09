@@ -201,14 +201,20 @@ export class PracticeStatsTab implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private loadPlayers() {
-    this.playersService.getPlayers(this.teamId).subscribe((list) => {
-      const sorted = [...list].sort((a, b) => {
-        if (a.jerseyNumber !== undefined && b.jerseyNumber !== undefined) {
-          return a.jerseyNumber - b.jerseyNumber;
-        }
-        return (a.lastName || '').localeCompare(b.lastName || '');
+    this.eventsService.getEvent(this.teamId, this.eventId).subscribe((event) => {
+      const players$ = event?.seasonId
+        ? this.playersService.getPlayersForSeason(this.teamId, event.seasonId)
+        : this.playersService.getPlayers(this.teamId);
+
+      players$.subscribe((list) => {
+        const sorted = [...list].sort((a, b) => {
+          if (a.jerseyNumber !== undefined && b.jerseyNumber !== undefined) {
+            return a.jerseyNumber - b.jerseyNumber;
+          }
+          return (a.lastName || '').localeCompare(b.lastName || '');
+        });
+        this.players.set(sorted);
       });
-      this.players.set(sorted);
     });
   }
 

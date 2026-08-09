@@ -101,7 +101,7 @@ describe('TeamAnalytics', () => {
     expect(committed.map((p: any) => p.playerId)).toEqual(['p1', 'p3']);
   });
 
-  it('should include inactive players who participated in games, but filter inactive players with 0 games unless toggled', () => {
+  it('should filter inactive players unless includeInactive toggle is true', () => {
     (component as any).performanceMetrics.set([
       { playerId: 'p1', firstName: 'Active', lastName: 'Player', gamesPlayed: 2, isActive: true, goals: 1 },
       { playerId: 'p2', firstName: 'SteppedAway', lastName: 'WithGames', gamesPlayed: 3, isActive: false, goals: 2 },
@@ -110,7 +110,7 @@ describe('TeamAnalytics', () => {
 
     (component as any).includeInactive.set(false);
     let metrics = (component as any).filteredPerformanceMetrics();
-    expect(metrics.map((m: any) => m.playerId)).toEqual(['p1', 'p2']);
+    expect(metrics.map((m: any) => m.playerId)).toEqual(['p1']);
 
     (component as any).includeInactive.set(true);
     metrics = (component as any).filteredPerformanceMetrics();

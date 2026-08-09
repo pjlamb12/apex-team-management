@@ -275,31 +275,25 @@ export class Roster {
     await alert.present();
   }
 
-  protected async deletePlayer(playerId: string): Promise<void> {
+  protected async removeFromSeason(player: PlayerEntity): Promise<void> {
     const teamId = this.teamId;
     const seasonId = this.selectedSeasonId();
-    if (!teamId) return;
+    if (!teamId || !seasonId) return;
 
     const alert = await this.alertCtrl.create({
-      header: seasonId ? 'Remove from Season?' : 'Delete Player?',
-      message: seasonId 
-        ? 'This will remove the player from this season but keep them in your roster pool.' 
-        : 'This action is permanent and will delete the player profile and historical records.',
+      header: 'Remove from Season?',
+      message: `Remove ${player.firstName} ${player.lastName} from this season's roster? They will remain in your overall team roster pool.`,
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
-          text: seasonId ? 'Remove' : 'Delete Permanently',
+          text: 'Remove',
           role: 'confirm',
           handler: async () => {
             try {
-              if (seasonId) {
-                await firstValueFrom(this.playersService.removePlayerFromSeason(teamId, seasonId, playerId));
-              } else {
-                await firstValueFrom(this.playersService.deletePlayer(teamId, playerId));
-              }
-              this.players.update((list) => list.filter((p) => p.id !== playerId));
+              await firstValueFrom(this.playersService.removePlayerFromSeason(teamId, seasonId, player.id));
+              this.players.update((list) => list.filter((p) => p.id !== player.id));
             } catch {
-              this.errorMessage.set('Failed to remove player. Please try again.');
+              this.errorMessage.set('Failed to remove player from season. Please try again.');
             }
           },
         },
@@ -307,6 +301,42 @@ export class Roster {
     });
 
     await alert.present();
+  }
+
+  protected async deletePermanently(player: PlayerEntity): Promise<void> {
+    const teamId = this.teamId;
+    if (!teamId) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Player Permanently?',
+      message: `This action is permanent and will delete ${player.firstName} ${player.lastName}'s profile and all historical records.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Delete Permanently',
+          role: 'confirm',
+          handler: async () => {
+            try {
+              await firstValueFrom(this.playersService.deletePlayer(teamId, player.id));
+              this.players.update((list) => list.filter((p) => p.id !== player.id));
+            } catch {
+              this.errorMessage.set('Failed to delete player. Please try again.');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  protected async deletePlayer(playerId: string): Promise<void> {
+    const player = this.players().find((p) => p.id === playerId);
+    if (!player) return;
+    if (this.selectedSeasonId()) {
+      return this.removeFromSeason(player);
+    }
+    return this.deletePermanently(player);
   }
 
   protected async openPlayerModal(player?: PlayerEntity): Promise<void> {
@@ -362,9 +392,12 @@ export class Roster {
       
       this.isLoading.set(true);
       try {
-        // 1. Add historical players to season
+        // 1. Add historical / pool players to season and reactivate if inactive
         for (const p of players) {
           await firstValueFrom(this.playersService.addPlayerToSeason(this.teamId, seasonId, p.id));
+          if (p.isActive === false) {
+            await firstValueFrom(this.playersService.reactivatePlayer(this.teamId, p.id));
+          }
         }
 
         // 2. Promote candidates to season
