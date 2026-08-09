@@ -240,6 +240,20 @@ export class EventLogViewComponent {
     if (event.id) {
       this.stateService.deleteEvent(event.id);
       
+      if (event.type === 'PERIOD_END') {
+        const teamId = this.stateService.teamId();
+        const eventId = this.stateService.eventId();
+        if (teamId && eventId) {
+          try {
+            await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
+              currentPeriod: this.stateService.currentPeriod()
+            }));
+          } catch (err) {
+            console.error('Failed to sync reverted period to backend', err);
+          }
+        }
+      }
+
       const toast = await this.toastController.create({
         message: `Deleted: ${event.type.replace('_', ' ')}`,
         duration: 2000,

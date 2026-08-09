@@ -2,6 +2,7 @@ import { Injectable, inject, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LiveGameStateService, GameEvent } from './live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
+import { SocketService } from '@apex-team/client/shared/services';
 import { catchError, retry, throwError } from 'rxjs';
 
 @Injectable({
@@ -11,6 +12,7 @@ export class EventSyncService {
   private http = inject(HttpClient);
   private stateService = inject(LiveGameStateService);
   private config = inject(RuntimeConfigLoaderService);
+  private socketService = inject(SocketService);
 
   private syncingIds = new Set<string>();
   private isSyncing = false;
@@ -30,13 +32,17 @@ export class EventSyncService {
 
       this.processNext();
     });
+
+    this.socketService.reconnected$.subscribe(() => {
+      this.processNext();
+    });
   }
 
   private getEventTempId(event: GameEvent, index: number): string {
     return `${event.timestamp}-${index}`;
   }
 
-  private processNext(): void {
+  public processNext(): void {
     if (this.isSyncing) {
       return;
     }

@@ -257,17 +257,17 @@ export class LiveGameStateService {
             slotMap.set(event.slotIndexA, { ...playerB });
             slotMap.set(event.slotIndexB, { ...temp });
           } else {
-            const posA = (event as any).positionNameB || getPositionFromSlot(event.slotIndexA, sport);
-            const posB = (event as any).positionNameA || getPositionFromSlot(event.slotIndexB, sport);
+            const posA = (event as any).positionNameB || playerA.position || getPositionFromSlot(event.slotIndexA, sport);
+            const posB = (event as any).positionNameA || playerB.position || getPositionFromSlot(event.slotIndexB, sport);
             slotMap.set(event.slotIndexA, { ...playerB, position: posA });
             slotMap.set(event.slotIndexB, { ...temp, position: posB });
           }
         } else if (playerA && !playerB) {
-          const posB = (event as any).positionNameA || getPositionFromSlot(event.slotIndexB, sport);
+          const posB = (event as any).positionNameA || playerA.position || getPositionFromSlot(event.slotIndexB, sport);
           slotMap.set(event.slotIndexB, { ...playerA, position: posB });
           slotMap.delete(event.slotIndexA);
         } else if (!playerA && playerB) {
-          const posA = (event as any).positionNameB || getPositionFromSlot(event.slotIndexA, sport);
+          const posA = (event as any).positionNameB || playerB.position || getPositionFromSlot(event.slotIndexA, sport);
           slotMap.set(event.slotIndexA, { ...playerB, position: posA });
           slotMap.delete(event.slotIndexB);
         }
@@ -646,12 +646,7 @@ export class LiveGameStateService {
           return dateA - dateB;
         });
         this._events.set(mapped);
-        
-        // Recover current period from last event if possible
-        const lastEvent = mapped.filter((e: any) => e.status !== 'deleted').pop();
-        if (lastEvent?.period) {
-          this._currentPeriod.set(lastEvent.period);
-        }
+        this.recomputePeriodFromEvents();
       } catch (e) {
         console.error('Failed to parse stored events', e);
         this._events.set([]);
@@ -694,25 +689,35 @@ export class LiveGameStateService {
     this.saveRotationState();
   }
 
+  private recomputePeriodFromEvents(): void {
+    const activePeriodEnds = this._events().filter(
+      (e) => e.status !== 'deleted' && e.type === 'PERIOD_END'
+    );
+    this._currentPeriod.set(activePeriodEnds.length + 1);
+  }
+
   public pushEvent(event: GameEvent): void {
     this._events.update((prev) => [
       ...prev,
       this.mapEvent({ ...event, status: 'active', period: this._currentPeriod() }),
     ]);
+    this.recomputePeriodFromEvents();
     this.save();
     this.cleanStagedSubs();
   }
 
   public pushEvents(events: GameEvent[]): void {
+    const currentPeriod = this._currentPeriod();
     const decoratedEvents = events.map((e, index) => 
       this.mapEvent({
         ...e,
         timestamp: (e.timestamp || Date.now()) + index,
         status: 'active' as const,
-        period: this._currentPeriod(),
+        period: currentPeriod,
       })
     );
     this._events.update((prev) => [...prev, ...decoratedEvents]);
+    this.recomputePeriodFromEvents();
     this.save();
     this.cleanStagedSubs();
   }
@@ -738,14 +743,117 @@ export class LiveGameStateService {
     });
     this._events.set(mapped);
     
-    // Recover current period from last active event if possible
-    const lastEvent = mapped.filter((e) => e.status !== 'deleted').pop();
-    if (lastEvent && lastEvent['period']) {
-      this._currentPeriod.set(lastEvent['period']);
-    }
+    this.recomputePeriodFromEvents();
 
     // Recover liberoId from last active LIBERO_CHANGED event if possible
     const lastLiberoEvent = mapped
+      .filter((e) => e.type === 'LIBERO_CHANGED' && e.status !== 'deleted')
+      .pop();
+    if (lastLiberoEvent) {
+      const payload = lastLiberoEvent['payload'] || {};
+      const lId = payload.liberoId || lastLiberoEvent['liberoId'];
+      this._liberoId.set(lId || null);
+    }
+
+    this.save();
+    this.cleanStagedSubs();
+  }
+
+  public reconcileBackendEvents(backendEvents: any[]): void {
+    const mappedBackend = backendEvents.map(be => this.mapEvent({
+      id: be.id,
+      type: be.eventType,
+      minuteOccurred: be.minuteOccurred,
+      timestamp: be.payload?.timestamp || (be.createdAt ? new Date(be.createdAt).getTime() : Date.now()),
+      createdAt: be.createdAt,
+      synced: true,
+      status: 'active' as const,
+      payload: be.payload,
+      ...be.payload
+    }));
+
+    this._events.update((prev) => {
+      const backendIdMap = new Map<string, GameEvent>();
+      mappedBackend.forEach(be => {
+        if (be.id) backendIdMap.set(be.id, be);
+      });
+
+      const updated = [...prev];
+      const matchedBackendIds = new Set<string>();
+
+      // 1. Update or mark deleted existing local events
+      for (let i = 0; i < updated.length; i++) {
+        const local = updated[i];
+        if (local.id && backendIdMap.has(local.id)) {
+          matchedBackendIds.add(local.id);
+          const remote = backendIdMap.get(local.id)!;
+          const status = local.status === 'deleted' ? 'deleted' : 'active';
+          const synced = local.status === 'deleted' ? local.synced : true;
+          updated[i] = {
+            ...local,
+            ...remote,
+            status,
+            synced,
+            timestamp: local.timestamp
+          };
+        } else if (local.id && local.synced && local.status === 'active') {
+          // Existed in local synced active, but missing in backend -> remotely deleted
+          updated[i] = { ...local, status: 'deleted' };
+        }
+      }
+
+      // 2. Add backend events not present locally
+      for (const remote of mappedBackend) {
+        if (remote.id && !matchedBackendIds.has(remote.id)) {
+          // Check if there is an unsynced local event matching this remote event
+          const unsyncedIndex = updated.findIndex(e => {
+            if (e.synced || e.status === 'deleted') return false;
+            if (e.type !== remote.type) return false;
+            const timeMatches = (e.gameTimeMs !== undefined && remote.gameTimeMs !== undefined)
+              ? Math.abs(e.gameTimeMs - (remote.gameTimeMs as number)) < 1000
+              : e.minuteOccurred === remote.minuteOccurred;
+            return timeMatches;
+          });
+
+          if (unsyncedIndex > -1) {
+            const local = updated[unsyncedIndex];
+            updated[unsyncedIndex] = {
+              ...local,
+              ...remote,
+              id: remote.id,
+              synced: true,
+              timestamp: local.timestamp
+            };
+          } else {
+            updated.push(remote);
+          }
+        }
+      }
+
+      updated.sort((a, b) => {
+        const timeA = a.timestamp;
+        const timeB = b.timestamp;
+        if (Math.abs(timeA - timeB) > 10) {
+          return timeA - timeB;
+        }
+        if (
+          a.type === 'POSITION_SWAP' &&
+          b.type === 'POSITION_SWAP' &&
+          a['gameTimeMs'] === b['gameTimeMs']
+        ) {
+          return (a['slotIndexA'] ?? 0) - (b['slotIndexA'] ?? 0);
+        }
+        const dateA = a['createdAt'] ? new Date(a['createdAt']).getTime() : 0;
+        const dateB = b['createdAt'] ? new Date(b['createdAt']).getTime() : 0;
+        return dateA - dateB;
+      });
+
+      return updated;
+    });
+
+    this.recomputePeriodFromEvents();
+
+    const lastLiberoEvent = this._events()
       .filter((e) => e.type === 'LIBERO_CHANGED' && e.status !== 'deleted')
       .pop();
     if (lastLiberoEvent) {
@@ -829,11 +937,6 @@ export class LiveGameStateService {
 
       const lastActive = activeEvents[activeEvents.length - 1];
 
-      // If we are undoing a PERIOD_END, revert the period back
-      if (lastActive.type === 'PERIOD_END') {
-        this._currentPeriod.set(lastActive['period'] || 1);
-      }
-
       if (lastActive.type === 'POSITION_SWAP') {
         const toDelete = new Set<any>();
         for (let i = activeEvents.length - 1; i >= 0; i--) {
@@ -852,6 +955,7 @@ export class LiveGameStateService {
         e === lastActive ? { ...e, status: 'deleted', synced: false } : e
       );
     });
+    this.recomputePeriodFromEvents();
     this.save();
     this.cleanStagedSubs();
   }
@@ -862,6 +966,7 @@ export class LiveGameStateService {
         e.id === id ? { ...e, status: 'deleted', synced: false } : e
       )
     );
+    this.recomputePeriodFromEvents();
     this.save();
   }
 
@@ -1026,6 +1131,7 @@ export class LiveGameStateService {
       this._liberoId.set(lId || null);
     }
 
+    this.recomputePeriodFromEvents();
     this.save();
     this.cleanStagedSubs();
   }
@@ -1034,6 +1140,7 @@ export class LiveGameStateService {
     this._events.update((prev) =>
       prev.filter(e => e.id !== data.id)
     );
+    this.recomputePeriodFromEvents();
     this.save();
   }
 

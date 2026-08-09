@@ -229,12 +229,15 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected lineup = toSignal(this.combinedData$.pipe(map(d => d.lineup)));
 
   protected isRunning = this.clockService.isRunning;
+  protected isTransitioningPeriod = signal(false);
 
   protected isShootoutActive = signal(false);
   protected rotationAlertVisible = signal(false);
   protected selectedPlayerId = signal<string | null>(null);
   protected actionPlayer = signal<Player | null>(null);
   protected popoverEvent = signal<Event | null>(null);
+
+  private reconnectedSub?: import('rxjs').Subscription;
 
   protected stagedInIds = computed(() => {
     return new Set(this.stateService.stagedSubs().map(s => s.inPlayerId));
@@ -301,10 +304,13 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Initialization logic if needed
+    this.reconnectedSub = this.socketService.reconnected$.subscribe(() => {
+      void this.refreshState();
+    });
   }
 
   ngOnDestroy(): void {
+    this.reconnectedSub?.unsubscribe();
     const eventId = this.eventId();
     if (eventId) {
       this.socketService.offEvent('gameEventLogged');
@@ -312,6 +318,45 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       this.socketService.offEvent('gameStatusUpdated');
       this.socketService.offEvent('eventUpdated');
       this.socketService.leaveEvent(eventId);
+    }
+  }
+
+  public async refreshState(): Promise<void> {
+    const teamId = this.teamId();
+    const eventId = this.eventId();
+    if (!teamId || !eventId) return;
+
+    try {
+      const [event, backendEvents, lineup] = await Promise.all([
+        firstValueFrom(this.http.get<EventEntity>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`)),
+        firstValueFrom(this.eventsService.getGameEvents(teamId, eventId)),
+        firstValueFrom(this.http.get<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`)),
+      ]);
+
+      if (event?.status === 'completed') {
+        void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
+        return;
+      }
+
+      if (event) {
+        this.clockService.syncFromRemote(
+          event.clockStartTime,
+          event.clockAccumulatedMs || 0
+        );
+        this.stateService.handleRemoteStatusUpdate(event);
+      }
+
+      if (backendEvents) {
+        this.stateService.reconcileBackendEvents(backendEvents);
+      }
+
+      if (lineup) {
+        this.stateService.updateInitialLineup(lineup);
+      }
+
+      this.syncService.processNext();
+    } catch (err) {
+      console.error('Failed to refresh state after reconnect/resume', err);
     }
   }
 
@@ -560,30 +605,36 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   private async executeNextPeriod(): Promise<void> {
-    this.stateService.clearForceCompleted();
+    if (this.isTransitioningPeriod()) return;
+    this.isTransitioningPeriod.set(true);
 
-    const gameTimeMs = this.clockService.elapsedMs();
-    this.stateService.pushEvent({
-      type: 'PERIOD_END',
-      timestamp: Date.now(),
-      minuteOccurred: this.clockService.currentMinute(),
-      gameTimeMs,
-    });
+    try {
+      this.stateService.clearForceCompleted();
 
-    await this.clockService.stop();
-    await this.clockService.reset();
-    this.stateService.nextPeriod();
-    this.stateService.setLastIntervalTriggered(0);
-    
-    // Sync currentPeriod and reset clock to backend
-    const teamId = this.teamId();
-    const eventId = this.eventId();
-    if (teamId && eventId) {
-      await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
-        currentPeriod: this.stateService.currentPeriod(),
-        clockStartTime: null,
-        clockAccumulatedMs: 0
-      }));
+      const gameTimeMs = this.clockService.elapsedMs();
+      this.stateService.pushEvent({
+        type: 'PERIOD_END',
+        timestamp: Date.now(),
+        minuteOccurred: this.clockService.currentMinute(),
+        gameTimeMs,
+      });
+
+      await this.clockService.stop();
+      await this.clockService.reset();
+      this.stateService.setLastIntervalTriggered(0);
+      
+      // Sync currentPeriod and reset clock to backend
+      const teamId = this.teamId();
+      const eventId = this.eventId();
+      if (teamId && eventId) {
+        await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
+          currentPeriod: this.stateService.currentPeriod(),
+          clockStartTime: null,
+          clockAccumulatedMs: 0
+        }));
+      }
+    } finally {
+      this.isTransitioningPeriod.set(false);
     }
   }
 
