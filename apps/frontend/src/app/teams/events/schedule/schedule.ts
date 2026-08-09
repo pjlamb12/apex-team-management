@@ -22,7 +22,6 @@ import {
   IonSelect,
   IonSelectOption,
   ActionSheetController,
-  IonBadge,
   IonButton,
   ModalController,
   IonListHeader,
@@ -44,6 +43,7 @@ import {
   addCircleOutline,
   trophyOutline,
   buildOutline,
+  cloudUploadOutline,
 } from 'ionicons/icons';
 import { EventsService, EventEntity, SeasonsService, LeaguesService } from '@apex-team/client/data-access/team';
 import { Season, League } from '@apex-team/shared/util/models';
@@ -77,7 +77,6 @@ interface GroupedEvents {
     IonFabButton,
     IonSelect,
     IonSelectOption,
-    IonBadge,
     IonButton,
     IonListHeader,
     IonRefresher,
@@ -175,6 +174,7 @@ export class Schedule implements OnDestroy {
       addCircleOutline,
       trophyOutline,
       buildOutline,
+      cloudUploadOutline,
     });
 
     // Load events whenever teamId, scope, selectedSeasonId, selectedLeagueId, or refreshTrigger changes
@@ -312,6 +312,31 @@ export class Schedule implements OnDestroy {
     }
   }
 
+  protected async presentImportModal(leagueId?: string | null): Promise<void> {
+    const seasonId = this.selectedSeasonId();
+    if (!seasonId) return;
+
+    const modal = await this.modalCtrl.create({
+      component: (await import('./schedule-import-modal/schedule-import-modal')).ScheduleImportModal,
+      componentProps: {
+        teamId: this.teamId,
+        defaultSeasonId: seasonId,
+        defaultLeagueId: leagueId !== undefined ? leagueId : this.selectedLeagueId(),
+        seasons: this.seasons(),
+        leagues: this.leagues(),
+      }
+    });
+    await modal.present();
+
+    const { role } = await modal.onWillDismiss();
+    if (role === 'confirm') {
+      const id = this._teamId();
+      if (id && seasonId) {
+        void this.loadEvents(id, this.scope(), seasonId, this.selectedLeagueId() ?? undefined);
+      }
+    }
+  }
+
   protected async manageLeagues(): Promise<void> {
     const seasonId = this.selectedSeasonId();
     if (!seasonId) return;
@@ -319,6 +344,13 @@ export class Schedule implements OnDestroy {
     const sheet = await this.actionSheetCtrl.create({
       header: 'Manage Competitions',
       buttons: [
+        {
+          text: 'Import Schedule (AI / JSON)',
+          icon: 'cloud-upload-outline',
+          handler: () => {
+            void this.presentImportModal();
+          }
+        },
         {
           text: 'Add New League / Tournament',
           icon: 'add-outline',
@@ -504,6 +536,13 @@ export class Schedule implements OnDestroy {
           icon: 'calendar-outline',
           handler: () => {
             void this.router.navigate(['/teams', this.teamId, 'schedule', 'new']);
+          },
+        },
+        {
+          text: 'Import Schedule (AI / JSON)',
+          icon: 'cloud-upload-outline',
+          handler: () => {
+            void this.presentImportModal();
           },
         },
         {

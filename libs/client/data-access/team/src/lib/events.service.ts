@@ -77,6 +77,12 @@ export interface CreateEventDto {
   recurrenceRule?: string;
 }
 
+export interface CreateBulkEventsDto {
+  events: CreateEventDto[];
+  leagueId?: string;
+  seasonId?: string;
+}
+
 export interface UpdateEventDto {
   type?: 'game' | 'practice' | 'tryout';
   leagueId?: string;
@@ -179,6 +185,10 @@ export class EventsService {
 
   createEvent(teamId: string, data: CreateEventDto): Observable<EventEntity> {
     return this.http.post<EventEntity>(`${this.apiUrl}/teams/${teamId}/events`, data);
+  }
+
+  bulkCreateEvents(teamId: string, data: CreateBulkEventsDto): Observable<EventEntity[]> {
+    return this.http.post<EventEntity[]>(`${this.apiUrl}/teams/${teamId}/events/bulk`, data);
   }
 
   getEvent(teamId: string, eventId: string): Observable<EventEntity> {

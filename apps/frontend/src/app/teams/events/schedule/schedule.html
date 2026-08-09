@@ -61,7 +61,10 @@
                   </ion-select>
                 </ion-item>
               </div>
-              <ion-button fill="clear" color="medium" (click)="manageLeagues()" class="ion-no-margin h-12">
+              <ion-button fill="clear" color="primary" (click)="presentImportModal()" title="Import Schedule (AI / JSON)" class="ion-no-margin h-12">
+                <ion-icon name="cloud-upload-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" color="medium" (click)="manageLeagues()" title="Manage Competitions" class="ion-no-margin h-12">
                 <ion-icon name="trophy-outline" slot="icon-only"></ion-icon>
               </ion-button>
             </div>

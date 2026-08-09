@@ -16,6 +16,7 @@ import { EventsService } from './events.service';
 import { LineupEntriesService } from './lineup-entries.service';
 import { WeatherService } from './weather.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { CreateBulkEventsDto } from './dto/create-bulk-events.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { SaveLineupDto } from './dto/save-lineup.dto';
 import { CreateGameEventDto } from './dto/create-game-event.dto';
@@ -42,6 +43,15 @@ export class EventsController {
     @Param('eventId', ParseUUIDPipe) eventId: string,
   ) {
     return this.weatherService.getForecastForEvent(eventId, undefined, true);
+  }
+
+  @Post('bulk')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  createBulk(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Body() dto: CreateBulkEventsDto,
+  ) {
+    return this.eventsService.createBulk(teamId, dto);
   }
 
   @Post()

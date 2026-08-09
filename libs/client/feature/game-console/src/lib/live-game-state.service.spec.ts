@@ -307,8 +307,90 @@ describe('LiveGameStateService', () => {
       });
 
       const updatedEvent = service.events().find(e => e.timestamp === timestamp)!;
-      expect(updatedEvent.status).toBe('deleted'); // must NOT be revived to active!
-      expect(updatedEvent.synced).toBe(false); // synced must still be false to allow syncDelete to process
+      expect(updatedEvent.status).toBe('deleted');
+      expect(updatedEvent.synced).toBe(false);
+    });
+
+    it('should correctly revert period on double period end undo back to P2 and P1', () => {
+      service.initialize('event-123', mockLineup, 'team-123', 2);
+      expect(service.currentPeriod()).toBe(1);
+
+      // Period 1 ends -> enters Period 2
+      service.pushEvent({ type: 'PERIOD_END', timestamp: 1000, minuteOccurred: 25 });
+      expect(service.currentPeriod()).toBe(2);
+
+      // In Period 2, a goal is scored
+      service.pushEvent({ type: 'GOAL', timestamp: 2000, minuteOccurred: 30, playerId: 'p1' });
+      expect(service.currentPeriod()).toBe(2);
+
+      // Period 2 ends -> enters Period 3
+      service.pushEvent({ type: 'PERIOD_END', timestamp: 3000, minuteOccurred: 50 });
+      expect(service.currentPeriod()).toBe(3);
+
+      // Accidental double period end -> enters Period 4
+      service.pushEvent({ type: 'PERIOD_END', timestamp: 4000, minuteOccurred: 50 });
+      expect(service.currentPeriod()).toBe(4);
+
+      // 1st Undo: removes the second Period End -> back to Period 3
+      service.undo();
+      expect(service.currentPeriod()).toBe(3);
+
+      // 2nd Undo: removes the first Period End -> back to Period 2!
+      service.undo();
+      expect(service.currentPeriod()).toBe(2);
+
+      // 3rd Undo: removes the Goal in Period 2 -> still in Period 2
+      service.undo();
+      expect(service.currentPeriod()).toBe(2);
+
+      // 4th Undo: removes Period 1 End -> back to Period 1!
+      service.undo();
+      expect(service.currentPeriod()).toBe(1);
+    });
+
+    it('should revert period when a PERIOD_END is removed via deleteEvent', () => {
+      service.initialize('event-123', mockLineup, 'team-123', 2);
+      
+      service.pushEvent({ id: 'pe-1', type: 'PERIOD_END', timestamp: 1000, minuteOccurred: 25, synced: true });
+      service.pushEvent({ id: 'pe-2', type: 'PERIOD_END', timestamp: 2000, minuteOccurred: 50, synced: true });
+      expect(service.currentPeriod()).toBe(3);
+
+      service.deleteEvent('pe-2');
+      expect(service.currentPeriod()).toBe(2);
+
+      service.deleteEvent('pe-1');
+      expect(service.currentPeriod()).toBe(1);
+    });
+
+    it('should reconcile backend events accurately (adding missed events and removing remotely deleted events)', () => {
+      service.initialize('event-123', mockLineup, 'team-123', 2);
+
+      // Local initial event
+      service.pushEvent({ id: 'e1', type: 'SHOT', timestamp: 1000, minuteOccurred: 5, synced: true });
+      
+      // An unsynced local event that is pending
+      service.pushEvent({ type: 'CORNER_KICK', timestamp: 2000, minuteOccurred: 10, synced: false });
+
+      expect(service.events().length).toBe(2);
+
+      // Backend returns e1 plus two missed events (e2: OPPONENT_GOAL, e3: SHOT)
+      const backendEvents = [
+        { id: 'e1', eventType: 'SHOT', minuteOccurred: 5, payload: { timestamp: 1000 } },
+        { id: 'e2', eventType: 'OPPONENT_GOAL', minuteOccurred: 15, payload: { timestamp: 3000 } },
+        { id: 'e3', eventType: 'SHOT', minuteOccurred: 20, payload: { timestamp: 4000 } }
+      ];
+
+      service.reconcileBackendEvents(backendEvents);
+
+      const activeEvents = service.events().filter(e => e.status !== 'deleted');
+      // Should contain e1, unsynced corner kick, e2 (OPPONENT_GOAL), and e3 (SHOT)
+      expect(activeEvents.length).toBe(4);
+      expect(activeEvents.some(e => e.id === 'e2' && e.type === 'OPPONENT_GOAL')).toBe(true);
+      expect(activeEvents.some(e => e.id === 'e3' && e.type === 'SHOT')).toBe(true);
+      expect(activeEvents.some(e => e.type === 'CORNER_KICK' && !e.synced)).toBe(true);
+
+      // Score should reflect the opponent goal
+      expect(service.score().opponent).toBe(1);
     });
   });
 });

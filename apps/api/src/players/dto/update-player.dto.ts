@@ -32,5 +32,9 @@ export class UpdatePlayerDto {
   @IsString()
   @IsOptional()
   leagueId?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }
 

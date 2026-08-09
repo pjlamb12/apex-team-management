@@ -74,10 +74,10 @@ export class ManageSeasonRosterModal implements OnInit {
       
       const currentRosterSet = new Set(this.currentRosterPlayerIds);
       
-      // Filter out players already on current season roster
+      // Filter out players already on current season roster or inactive
       this.historicalPlayers.set(
         allPlayers
-          .filter(p => !currentRosterSet.has(p.id))
+          .filter(p => p.isActive !== false && !currentRosterSet.has(p.id))
           .sort((a, b) => a.lastName.localeCompare(b.lastName))
       );
       

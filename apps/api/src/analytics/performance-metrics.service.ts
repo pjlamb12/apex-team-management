@@ -13,6 +13,7 @@ export interface PlayerPerformanceMetrics {
   jerseyNumber?: number | null;
   preferredPosition: string | null;
   isGuest?: boolean;
+  isActive?: boolean;
   goals: number;
   assists: number;
   yellowCards: number;
@@ -145,7 +146,7 @@ export class PerformanceMetricsService {
         if (assistorId && metricsMap[assistorId]) {
           metricsMap[assistorId].assists++;
         }
-      } else if (ge.eventType === 'ASSIST' || ge.eventType === 'SET_ASSIST') {
+      } else if (ge.eventType === 'ASSIST') {
         const assistorId = payload.assistorId || payload.playerId;
         if (assistorId && metricsMap[assistorId]) {
           metricsMap[assistorId].assists++;
@@ -237,6 +238,7 @@ export class PerformanceMetricsService {
         const playerId = payload.playerId;
         if (playerId && metricsMap[playerId]) {
           metricsMap[playerId].setAssists = (metricsMap[playerId].setAssists || 0) + 1;
+          metricsMap[playerId].assists++;
         }
       } else if (ge.eventType === 'SET_ERROR') {
         const playerId = payload.playerId;
@@ -264,6 +266,7 @@ export class PerformanceMetricsService {
       jerseyNumber: player.jerseyNumber,
       preferredPosition: player.preferredPosition,
       isGuest: player.isGuest,
+      isActive: player.isActive,
       goals: 0,
       assists: 0,
       yellowCards: 0,

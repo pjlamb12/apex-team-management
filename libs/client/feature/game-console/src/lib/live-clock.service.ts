@@ -77,7 +77,7 @@ export class LiveClockService {
   /**
    * Synchronizes the local clock from a remote update.
    */
-  public syncFromRemote(remoteStartTime: string | Date | null, remoteAccumulatedMs: number): void {
+  public syncFromRemote(remoteStartTime: string | Date | null | undefined, remoteAccumulatedMs: number): void {
     const parsedStart = remoteStartTime ? new Date(remoteStartTime).getTime() : null;
     
     const currentLocalStart = this.startTime();

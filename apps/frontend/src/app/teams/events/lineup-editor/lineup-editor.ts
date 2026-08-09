@@ -375,6 +375,7 @@ export class LineupEditor implements OnInit {
   }
 
   protected availablePlayers(currentSlotIndex: number): PlayerEntity[] {
+    const currentSlotPlayerId = this.slots().find(s => s.slotIndex === currentSlotIndex)?.playerId;
     const otherAssignedIds = new Set(
       this.slots()
         .filter((s) => s.slotIndex !== currentSlotIndex)
@@ -382,7 +383,7 @@ export class LineupEditor implements OnInit {
         .filter((id): id is string => !!id)
     );
     const absent = this.absentPlayerIds();
-    return this.players().filter((p) => !otherAssignedIds.has(p.id) && !absent.has(p.id));
+    return this.players().filter((p) => !otherAssignedIds.has(p.id) && !absent.has(p.id) && (p.isActive !== false || p.id === currentSlotPlayerId));
   }
 
   protected updateSlot(

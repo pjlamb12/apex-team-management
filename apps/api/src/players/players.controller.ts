@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PlayersService } from './players.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
@@ -10,13 +10,13 @@ export class PlayersController {
   constructor(private readonly playersService: PlayersService) {}
 
   @Get()
-  findAll(@Param('teamId') teamId: string) {
-    return this.playersService.findAllForTeam(teamId);
+  findAll(@Param('teamId') teamId: string, @Query('includeInactive') includeInactive?: string) {
+    return this.playersService.findAllForTeam(teamId, includeInactive === 'true');
   }
 
   @Get('seasons/:seasonId')
-  findAllForSeason(@Param('seasonId') seasonId: string) {
-    return this.playersService.findAllForSeason(seasonId);
+  findAllForSeason(@Param('seasonId') seasonId: string, @Query('includeInactive') includeInactive?: string) {
+    return this.playersService.findAllForSeason(seasonId, includeInactive === 'true');
   }
 
   @Get('leagues/:leagueId')

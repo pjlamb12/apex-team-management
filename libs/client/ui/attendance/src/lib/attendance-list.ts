@@ -113,13 +113,15 @@ export class AttendanceList {
     const players = this.players();
     const attendance = this.attendance();
     
-    return players.map(p => {
-      const record = attendance.find(a => a.playerId === p.id);
-      return {
-        ...p,
-        status: record?.status || null,
-      };
-    });
+    return players
+      .filter(p => p.isActive !== false || attendance.some(a => a.playerId === p.id))
+      .map(p => {
+        const record = attendance.find(a => a.playerId === p.id);
+        return {
+          ...p,
+          status: record?.status || null,
+        };
+      });
   });
 
   constructor() {
@@ -145,7 +147,7 @@ export class AttendanceList {
     this.isLoading.set(true);
     try {
       const [players, attendance] = await Promise.all([
-        firstValueFrom(this.playersService.getPlayers(teamId)),
+        firstValueFrom(this.playersService.getPlayers(teamId, true)),
         firstValueFrom(this.attendanceService.getAttendance(teamId, eventId))
       ]);
       this.players.set(players);

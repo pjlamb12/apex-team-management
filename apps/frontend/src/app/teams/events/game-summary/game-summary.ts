@@ -578,6 +578,14 @@ export class GameSummary implements OnDestroy {
         void this.loadData(tId, eId);
       }
     });
+
+    this.socketService.reconnected$.subscribe(() => {
+      const tId = this._teamId();
+      const eId = this._eventId();
+      if (tId && eId) {
+        void this.loadData(tId, eId, true);
+      }
+    });
   }
 
   protected async loadData(teamId: string, eventId: string, silent = false): Promise<void> {

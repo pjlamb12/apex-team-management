@@ -93,7 +93,7 @@ export class TeamsService {
     return this.teamRepo.save(team);
   }
 
-  async seedDemo(userId: string, sportName: string = 'Soccer'): Promise<TeamEntity> {
+  async seedDemo(userId: string, sportName = 'Soccer'): Promise<TeamEntity> {
     return this.dataSource.transaction(async (manager) => {
       // 1. Find the sport
       const sport = await manager.findOne(SportEntity, {

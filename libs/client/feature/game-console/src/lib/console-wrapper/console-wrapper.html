@@ -158,7 +158,7 @@
               End Game
             </ion-button>
           } @else {
-            <ion-button size="small" color="warning" fill="solid" (click)="nextPeriod()">
+            <ion-button size="small" color="warning" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
               <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
               Start Next Set
             </ion-button>
@@ -197,7 +197,7 @@
               </ion-button>
             }
 
-            <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
+            <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
               <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
               Next Set
             </ion-button>
@@ -219,7 +219,7 @@
               </ion-button>
             }
 
-            <ion-button color="tertiary" fill="solid" (click)="nextPeriod()">
+            <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
               <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
               Next Period
             </ion-button>
