@@ -11,6 +11,7 @@ import { GameEventEntity } from '../entities/game-event.entity';
 import { EventNoteEntity } from '../entities/event-note.entity';
 import { LeagueEntity } from '../entities/league.entity';
 import { CreateEventDto } from './dto/create-event.dto';
+import { CreateBulkEventsDto } from './dto/create-bulk-events.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UpdateGameEventDto } from './dto/update-game-event.dto';
 import { ApplyPlayingTimeCorrectionsDto } from './dto/apply-playing-time-corrections.dto';
@@ -106,6 +107,78 @@ export class EventsService {
     const savedEvent = await this.eventRepo.save(event);
     this.socketGateway.server.to(`team:${teamId}`).emit('eventCreated', savedEvent);
     return savedEvent;
+  }
+
+  async createBulk(teamId: string, dto: CreateBulkEventsDto): Promise<EventEntity[]> {
+    const team = await this.teamRepo.findOne({ where: { id: teamId } });
+    if (!team) throw new NotFoundException('Team not found');
+
+    let targetSeason: SeasonEntity | null = null;
+    if (dto.seasonId) {
+      targetSeason = await this.seasonRepo.findOne({ where: { id: dto.seasonId, teamId } });
+    }
+
+    if (!targetSeason) {
+      targetSeason = await this.seasonRepo.findOne({
+        where: { teamId, isActive: true },
+      });
+    }
+
+    if (!targetSeason) {
+      targetSeason = this.seasonRepo.create({
+        teamId,
+        name: 'Default Season',
+        isActive: true,
+      });
+      targetSeason = await this.seasonRepo.save(targetSeason);
+    }
+
+    let defaultLeague: LeagueEntity | null = null;
+    if (dto.leagueId) {
+      defaultLeague = await this.leagueRepo.findOne({ where: { id: dto.leagueId } });
+    }
+
+    const createdEvents: EventEntity[] = [];
+
+    for (const item of dto.events) {
+      const leagueId = item.leagueId ?? dto.leagueId ?? null;
+      let league = defaultLeague;
+      if (leagueId && (!league || league.id !== leagueId)) {
+        league = await this.leagueRepo.findOne({ where: { id: leagueId } });
+      }
+
+      const defaultPeriodCount = league?.periodCount ?? (targetSeason as any).periodCount ?? null;
+      const defaultPeriodLengthMinutes = league?.periodLengthMinutes ?? (targetSeason as any).periodLengthMinutes ?? null;
+      const defaultPlayersOnField = league?.playersOnField ?? (targetSeason as any).playersOnField ?? null;
+      const isHome = item.isHomeGame ?? true;
+      const defaultLocation = isHome ? (league?.defaultHomeVenue ?? null) : null;
+      const defaultUniformColor = isHome ? (league?.defaultHomeColor ?? null) : (league?.defaultAwayColor ?? null);
+
+      const event = this.eventRepo.create({
+        ...item,
+        type: item.type ?? 'game',
+        seasonId: targetSeason.id,
+        leagueId,
+        locationId: item.locationId ?? (isHome ? (league?.homeLocationId ?? null) : null),
+        location: item.location ?? defaultLocation,
+        uniformColor: item.uniformColor ?? defaultUniformColor,
+        status: 'scheduled',
+        isHomeGame: isHome,
+        periodCount: item.periodCount ?? defaultPeriodCount,
+        periodLengthMinutes: item.periodLengthMinutes ?? defaultPeriodLengthMinutes,
+        playersOnField: item.playersOnField ?? defaultPlayersOnField,
+      });
+
+      if (event.type === 'game' && event.periodCount && event.periodLengthMinutes) {
+        event.durationMinutes = item.durationMinutes ?? (event.periodCount * event.periodLengthMinutes);
+      }
+
+      const saved = await this.eventRepo.save(event);
+      createdEvents.push(saved);
+      this.socketGateway.server.to(`team:${teamId}`).emit('eventCreated', saved);
+    }
+
+    return createdEvents;
   }
 
   async findAllForTeam(

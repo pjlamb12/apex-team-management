@@ -276,6 +276,60 @@ describe('EventsService', () => {
     });
   });
 
+  describe('createBulk', () => {
+    const teamId = 'team-1';
+
+    it('should create multiple events in bulk and return them', async () => {
+      vi.spyOn(teamRepo, 'findOne').mockResolvedValue({ id: teamId } as any);
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1', teamId, isActive: true } as any);
+
+      const bulkDto = {
+        events: [
+          { opponent: 'Team A', scheduledAt: '2026-09-10T10:00:00Z', isHomeGame: true },
+          { opponent: 'Team B', scheduledAt: '2026-09-12T14:00:00Z', isHomeGame: false },
+        ],
+        leagueId: 'league-1',
+      };
+
+      const results = await service.createBulk(teamId, bulkDto as any);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].opponent).toBe('Team A');
+      expect(results[0].leagueId).toBe('league-1');
+      expect(results[1].opponent).toBe('Team B');
+      expect(socketGateway.server.emit).toHaveBeenCalledWith('eventCreated', expect.anything());
+    });
+
+    it('should inherit competition defaults for home/away games', async () => {
+      vi.spyOn(teamRepo, 'findOne').mockResolvedValue({ id: teamId } as any);
+      vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1', teamId, isActive: true } as any);
+      vi.spyOn(service['leagueRepo'], 'findOne').mockResolvedValue({
+        id: 'league-1',
+        defaultHomeVenue: 'Home Field',
+        defaultHomeColor: 'Navy',
+        defaultAwayColor: 'White',
+        periodCount: 2,
+        periodLengthMinutes: 30,
+        playersOnField: 7,
+      } as any);
+
+      const bulkDto = {
+        events: [
+          { opponent: 'Team A', scheduledAt: '2026-09-10T10:00:00Z', isHomeGame: true },
+          { opponent: 'Team B', scheduledAt: '2026-09-12T14:00:00Z', isHomeGame: false },
+        ],
+        leagueId: 'league-1',
+      };
+
+      const results = await service.createBulk(teamId, bulkDto as any);
+
+      expect(results[0].location).toBe('Home Field');
+      expect(results[0].uniformColor).toBe('Navy');
+      expect(results[0].durationMinutes).toBe(60);
+      expect(results[1].uniformColor).toBe('White');
+    });
+  });
+
   describe('findAllForTeam', () => {
     it('should return upcoming events by default', async () => {
       vi.spyOn(seasonRepo, 'findOne').mockResolvedValue({ id: 'season-1' } as any);

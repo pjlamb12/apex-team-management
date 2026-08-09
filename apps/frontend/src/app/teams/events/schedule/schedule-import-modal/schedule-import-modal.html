@@ -1,0 +1,312 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="border-b border-ap-border bg-ap-bg">
+    <ion-buttons slot="start">
+      <ion-button (click)="dismiss()" color="medium">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title class="font-black text-sm uppercase tracking-wider text-ap-text">Import Schedule</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        (click)="importSchedule()"
+        [disabled]="parsedGames().length === 0 || isImporting()"
+        color="primary"
+        class="font-bold"
+      >
+        @if (isImporting()) {
+          <ion-spinner name="crescent" size="small"></ion-spinner>
+        } @else {
+          Import {{ parsedGames().length > 0 ? '(' + parsedGames().length + ')' : '' }}
+        }
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg" [fullscreen]="true" style="--padding-bottom: calc(56px + var(--ion-safe-area-bottom, 24px));">
+  <div class="max-w-3xl mx-auto p-4 pb-20 flex flex-col gap-5">
+    
+    <!-- Target Competition & Season Selector -->
+    <div class="bg-ap-surface rounded-xl p-4 border border-ap-border flex flex-col gap-3 shadow-md">
+      <div class="flex items-center gap-2">
+        <ion-icon name="calendar-outline" class="text-ap-accent text-base shrink-0 self-center"></ion-icon>
+        <h3 class="text-xs font-black uppercase tracking-widest text-ap-text leading-none m-0 self-center">Target Scope</h3>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Season Selector -->
+        <ion-item lines="none" class="bg-ap-surface-raised rounded-lg border border-ap-border">
+          <ion-select
+            label="Season"
+            labelPlacement="floating"
+            [(ngModel)]="selectedSeasonId"
+            interface="action-sheet"
+            class="w-full text-sm font-medium text-ap-text"
+          >
+            @for (season of seasons; track season.id) {
+              <ion-select-option [value]="season.id">
+                {{ season.name }}{{ season.isActive ? ' (Active)' : '' }}
+              </ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+
+        <!-- League / Competition Selector -->
+        <ion-item lines="none" class="bg-ap-surface-raised rounded-lg border border-ap-border">
+          <ion-select
+            label="Competition / League"
+            labelPlacement="floating"
+            [(ngModel)]="selectedLeagueId"
+            interface="action-sheet"
+            placeholder="Main / Unassigned"
+            class="w-full text-sm font-medium text-ap-text"
+          >
+            <ion-select-option [value]="null">Main Schedule (No Competition)</ion-select-option>
+            @for (league of leagues; track league.id) {
+              <ion-select-option [value]="league.id">{{ league.name }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+      </div>
+
+      @if (selectedLeague(); as league) {
+        <div class="flex items-center gap-2 px-1 pt-1 text-xs text-ap-muted">
+          <ion-icon name="information-circle-outline" class="text-sm text-ap-accent shrink-0"></ion-icon>
+          <span>
+            Games will automatically inherit default rules from <strong class="text-ap-text font-bold">{{ league.name }}</strong> ({{ league.periodCount }}x{{ league.periodLengthMinutes }}m, {{ league.playersOnField }}v{{ league.playersOnField }}).
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- Gemini / AI Prompt Helper Card -->
+    <div class="bg-indigo-50 dark:bg-indigo-950/40 rounded-xl p-4 border border-indigo-200 dark:border-indigo-500/30 flex flex-col gap-3 shadow-md ring-1 ring-indigo-500/10">
+      <div class="flex items-center justify-between cursor-pointer" (click)="togglePromptGuide()">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-300 dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
+            <ion-icon name="sparkles-outline" class="text-xl"></ion-icon>
+          </div>
+          <div>
+            <h3 class="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-200">Screenshot to Schedule with Gemini</h3>
+            <p class="text-xs text-indigo-700 dark:text-indigo-300 font-medium">Extract match details directly from an image or screenshot</p>
+          </div>
+        </div>
+        <ion-button fill="clear" size="small" color="medium" class="ion-no-margin">
+          <ion-icon [name]="showPromptGuide() ? 'chevron-up-outline' : 'chevron-down-outline'" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+
+      @if (showPromptGuide()) {
+        <div class="flex flex-col gap-3 pt-3 border-t border-indigo-200 dark:border-indigo-500/20">
+          <ol class="text-xs text-indigo-950 dark:text-slate-200 space-y-2 list-decimal list-inside pl-1 leading-relaxed">
+            <li>Take a screenshot of the schedule on your phone, computer, or tournament flyer.</li>
+            <li>Click <strong class="text-indigo-900 dark:text-white font-bold">Copy Gemini Prompt</strong> below to grab the exact format instructions.</li>
+            <li>Open Gemini, attach your screenshot, and paste the prompt.</li>
+            <li>Copy Gemini's JSON reply and paste it into the box below!</li>
+          </ol>
+
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <ion-button
+              (click)="copyPrompt()"
+              size="small"
+              [color]="copiedPrompt() ? 'success' : 'primary'"
+              class="gemini-prompt-btn font-bold text-xs ion-no-margin"
+            >
+              <ion-icon [name]="copiedPrompt() ? 'checkmark-outline' : 'copy-outline'" slot="start"></ion-icon>
+              {{ copiedPrompt() ? 'Copied Prompt!' : 'Copy Gemini Prompt' }}
+            </ion-button>
+
+            <ion-button
+              (click)="loadSample()"
+              size="small"
+              fill="outline"
+              color="medium"
+              class="gemini-prompt-btn font-bold text-xs ion-no-margin"
+            >
+              <ion-icon name="document-text-outline" slot="start"></ion-icon>
+              Load Sample JSON
+            </ion-button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- JSON Input Area -->
+    <div class="bg-ap-surface rounded-xl p-4 border border-ap-border flex flex-col gap-3 shadow-md">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <ion-icon name="document-text-outline" class="text-ap-accent text-base shrink-0 self-center"></ion-icon>
+          <h3 class="text-xs font-black uppercase tracking-widest text-ap-text leading-none m-0 self-center">Paste JSON Schedule</h3>
+        </div>
+
+        @if (parsedGames().length > 0) {
+          <ion-badge color="success" class="px-2.5 py-1 text-xs font-bold">
+            ✓ {{ parsedGames().length }} Game{{ parsedGames().length === 1 ? '' : 's' }} Detected
+          </ion-badge>
+        } @else if (parseError()) {
+          <ion-badge color="danger" class="px-2.5 py-1 text-xs font-bold">
+            Invalid Format
+          </ion-badge>
+        }
+      </div>
+
+      <ion-item lines="none" class="bg-ap-surface-raised rounded-lg border border-ap-border font-mono text-xs">
+        <ion-textarea
+          [value]="jsonInput()"
+          (ionInput)="onJsonChange($event)"
+          placeholder='[&#10;  {&#10;    "opponent": "Rivals FC",&#10;    "scheduledAt": "2026-09-12T10:00:00",&#10;    "isHomeGame": true,&#10;    "location": "Field 1"&#10;  }&#10;]'
+          [autoGrow]="true"
+          rows="5"
+          class="font-mono text-xs text-emerald-600 dark:text-emerald-400"
+        ></ion-textarea>
+      </ion-item>
+
+      @if (parseError()) {
+        <p class="text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 p-2.5 rounded-lg border border-rose-200 dark:border-rose-700/50">
+          ⚠️ {{ parseError() }}
+        </p>
+      }
+    </div>
+
+    <!-- Parsed Games Preview & Edit List -->
+    @if (parsedGames().length > 0) {
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-xs font-black uppercase tracking-widest text-ap-accent">
+            Review & Edit Games ({{ parsedGames().length }})
+          </h3>
+          <span class="text-xs text-ap-muted">Click fields to adjust before importing</span>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          @for (game of parsedGames(); track game.tempId; let i = $index) {
+            <div class="bg-ap-surface rounded-xl p-4 border border-ap-border flex flex-col gap-3 shadow-md relative group hover:border-ap-accent/40 transition-all">
+              
+              <!-- Header Bar of Game Card -->
+              <div class="flex items-center justify-between border-b border-ap-border pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-ap-surface-raised border border-ap-border flex items-center justify-center text-xs font-black text-ap-muted">
+                    {{ i + 1 }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="toggleHomeAway(game)"
+                    [class.bg-emerald-500/10]="game.isHomeGame"
+                    [class.dark:bg-emerald-500/20]="game.isHomeGame"
+                    [class.text-emerald-700]="game.isHomeGame"
+                    [class.dark:text-emerald-400]="game.isHomeGame"
+                    [class.border-emerald-500/30]="game.isHomeGame"
+                    [class.dark:border-emerald-500/40]="game.isHomeGame"
+                    [class.bg-blue-500/10]="!game.isHomeGame"
+                    [class.dark:bg-blue-500/20]="!game.isHomeGame"
+                    [class.text-blue-700]="!game.isHomeGame"
+                    [class.dark:text-blue-400]="!game.isHomeGame"
+                    [class.border-blue-500/30]="!game.isHomeGame"
+                    [class.dark:border-blue-500/40]="!game.isHomeGame"
+                    class="px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider border transition-colors cursor-pointer"
+                  >
+                    {{ game.isHomeGame ? 'HOME' : 'AWAY' }}
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <ion-button
+                    fill="clear"
+                    color="danger"
+                    size="small"
+                    (click)="removeGame(game.tempId)"
+                    class="ion-no-margin h-8 w-8"
+                  >
+                    <ion-icon slot="icon-only" name="trash-outline" class="text-base"></ion-icon>
+                  </ion-button>
+                </div>
+              </div>
+
+              <!-- Editable Fields Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Opponent -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Opponent</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="game.opponent"
+                    placeholder="Opponent Name"
+                    class="bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-sm text-ap-text font-bold focus:outline-none focus:border-ap-accent"
+                  />
+                </div>
+
+                <!-- Date & Time -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    [(ngModel)]="game.scheduledAt"
+                    class="bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-sm text-ap-text font-medium focus:outline-none focus:border-ap-accent"
+                  />
+                </div>
+
+                <!-- Location / Field -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Location / Field</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="game.location"
+                    placeholder="e.g. Field 4 or Sunset Park"
+                    class="bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-xs text-ap-text focus:outline-none focus:border-ap-accent"
+                  />
+                </div>
+
+                <!-- Uniform Color -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Uniform Color</label>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="text"
+                      [(ngModel)]="game.uniformColor"
+                      placeholder="e.g. Navy or White"
+                      class="flex-1 bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-xs text-ap-text focus:outline-none focus:border-ap-accent"
+                    />
+                    @if (game.uniformColor) {
+                      <div class="w-6 h-6 rounded-full border border-ap-border shrink-0" [style.background]="game.uniformColor"></div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Notes / Context (Full Width) -->
+                <div class="flex flex-col gap-1 sm:col-span-2">
+                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Notes / Round Details</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="game.notes"
+                    placeholder="e.g. Quarterfinal, Check-in 30 mins early"
+                    class="bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-xs text-ap-text focus:outline-none focus:border-ap-accent"
+                  />
+                </div>
+              </div>
+
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Bottom Action Button -->
+    @if (parsedGames().length > 0) {
+      <div class="pt-4 pb-12">
+        <ion-button
+          expand="block"
+          (click)="importSchedule()"
+          [disabled]="isImporting()"
+          color="primary"
+          class="font-black text-sm uppercase tracking-wider h-12 shadow-xl"
+        >
+          @if (isImporting()) {
+            <ion-spinner name="crescent" size="small"></ion-spinner>
+          } @else {
+            <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+            Import {{ parsedGames().length }} Game{{ parsedGames().length === 1 ? '' : 's' }} to Schedule
+          }
+        </ion-button>
+      </div>
+    }
+
+  </div>
+</ion-content>
