@@ -136,7 +136,7 @@ export class TeamAnalytics {
     const showInactive = this.includeInactive();
     return metrics.filter(m => {
       if (m.isGuest && isFiltered && m.gamesPlayed === 0) return false;
-      if (m.isActive === false && !showInactive && m.gamesPlayed === 0) return false;
+      if (m.isActive === false && !showInactive) return false;
       return true;
     });
   });
@@ -197,7 +197,7 @@ export class TeamAnalytics {
     const showInactive = this.includeInactive();
     return stats.filter(p => {
       if (p.isGuest && isFiltered && p.present === 0 && p.totalEvents === 0) return false;
-      if (p.isActive === false && !showInactive && p.present === 0 && p.totalEvents === 0) return false;
+      if (p.isActive === false && !showInactive) return false;
       return true;
     });
   });
@@ -246,7 +246,7 @@ export class TeamAnalytics {
         const m = metrics.find(m => m.playerId === p.playerId);
         const isGuest = m?.isGuest ?? false;
         if (isGuest) return false;
-        if (m?.isActive === false && !showInactive && p.totalSeconds === 0) return false;
+        if (m?.isActive === false && !showInactive) return false;
         if (isFiltered && p.totalSeconds === 0) return false;
         if (targetPos !== 'all' && (p.positionSeconds[targetPos] || 0) === 0) return false;
         return true;

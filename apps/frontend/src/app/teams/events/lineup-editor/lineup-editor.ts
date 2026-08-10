@@ -262,9 +262,13 @@ export class LineupEditor implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [event, players, lineup, attendance, team, gameEvents] = await Promise.all([
-        firstValueFrom(this.eventsService.getEvent(teamId, eventId)),
-        firstValueFrom(this.playersService.getPlayers(teamId)),
+      const event = await firstValueFrom(this.eventsService.getEvent(teamId, eventId));
+      const playersReq = event.seasonId 
+        ? this.playersService.getPlayersForSeason(teamId, event.seasonId) 
+        : this.playersService.getPlayers(teamId);
+
+      const [players, lineup, attendance, team, gameEvents] = await Promise.all([
+        firstValueFrom(playersReq),
         firstValueFrom(this.eventsService.getLineup(teamId, eventId)),
         firstValueFrom(this.attendanceService.getAttendance(teamId, eventId)),
         this.teamService.getTeam(teamId),

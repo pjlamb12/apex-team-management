@@ -21,7 +21,7 @@ import {
   swapHorizontalOutline,
   peopleOutline
 } from 'ionicons/icons';
-import { AttendanceService, AttendanceRecord, PlayersService } from '@apex-team/client/data-access/team';
+import { AttendanceService, AttendanceRecord, PlayersService, EventsService } from '@apex-team/client/data-access/team';
 
 @Component({
   selector: 'app-attendance-list',
@@ -104,6 +104,7 @@ export class AttendanceList {
 
   private readonly attendanceService = inject(AttendanceService);
   private readonly playersService = inject(PlayersService);
+  private readonly eventsService = inject(EventsService);
 
   protected players = signal<any[]>([]);
   protected attendance = signal<AttendanceRecord[]>([]);
@@ -146,10 +147,14 @@ export class AttendanceList {
   protected async loadData(teamId: string, eventId: string) {
     this.isLoading.set(true);
     try {
-      const [players, attendance] = await Promise.all([
-        firstValueFrom(this.playersService.getPlayers(teamId, true)),
+      const [event, attendance] = await Promise.all([
+        firstValueFrom(this.eventsService.getEvent(teamId, eventId)),
         firstValueFrom(this.attendanceService.getAttendance(teamId, eventId))
       ]);
+      const playersReq = event?.seasonId
+        ? this.playersService.getPlayersForSeason(teamId, event.seasonId, true)
+        : this.playersService.getPlayers(teamId, true);
+      const players = await firstValueFrom(playersReq);
       this.players.set(players);
       this.attendance.set(attendance);
     } finally {

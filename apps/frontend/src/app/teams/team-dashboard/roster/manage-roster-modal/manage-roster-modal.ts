@@ -68,16 +68,16 @@ export class ManageSeasonRosterModal implements OnInit {
     this.isLoading.set(true);
     try {
       const [allPlayers, candidates] = await Promise.all([
-        firstValueFrom(this.playersService.getPlayers(this.teamId)),
+        firstValueFrom(this.playersService.getPlayers(this.teamId, true)),
         firstValueFrom(this.candidatesService.getCandidates(this.teamId))
       ]);
       
       const currentRosterSet = new Set(this.currentRosterPlayerIds);
       
-      // Filter out players already on current season roster or inactive
+      // Filter out players already on current season roster
       this.historicalPlayers.set(
         allPlayers
-          .filter(p => p.isActive !== false && !currentRosterSet.has(p.id))
+          .filter(p => !currentRosterSet.has(p.id))
           .sort((a, b) => a.lastName.localeCompare(b.lastName))
       );
       
@@ -99,20 +99,28 @@ export class ManageSeasonRosterModal implements OnInit {
     }
   }
 
-  protected togglePlayer(playerId: string) {
+  protected togglePlayer(playerId: string, isChecked?: boolean) {
     this.selectedPlayerIds.update(set => {
       const newSet = new Set(set);
-      if (newSet.has(playerId)) newSet.delete(playerId);
-      else newSet.add(playerId);
+      const shouldAdd = isChecked !== undefined ? isChecked : !newSet.has(playerId);
+      if (shouldAdd) {
+        newSet.add(playerId);
+      } else {
+        newSet.delete(playerId);
+      }
       return newSet;
     });
   }
 
-  protected toggleCandidate(candidateId: string) {
+  protected toggleCandidate(candidateId: string, isChecked?: boolean) {
     this.selectedCandidateIds.update(set => {
       const newSet = new Set(set);
-      if (newSet.has(candidateId)) newSet.delete(candidateId);
-      else newSet.add(candidateId);
+      const shouldAdd = isChecked !== undefined ? isChecked : !newSet.has(candidateId);
+      if (shouldAdd) {
+        newSet.add(candidateId);
+      } else {
+        newSet.delete(candidateId);
+      }
       return newSet;
     });
   }

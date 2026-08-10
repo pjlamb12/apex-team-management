@@ -156,22 +156,28 @@
                 <ion-item-option color="success" (click)="reactivatePlayer(player)">
                   <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
                 </ion-item-option>
-                <ion-item-option color="danger" (click)="deletePlayer(player.id)">
-                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-                </ion-item-option>
+                @if (selectedSeasonId()) {
+                  <ion-item-option color="danger" (click)="removeFromSeason(player)">
+                    <ion-icon slot="icon-only" name="remove-circle-outline"></ion-icon>
+                  </ion-item-option>
+                } @else {
+                  <ion-item-option color="danger" (click)="deletePermanently(player)">
+                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  </ion-item-option>
+                }
               } @else {
                 <ion-item-option color="primary" (click)="openPlayerModal(player)">
                   <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
                 </ion-item-option>
+                <ion-item-option color="warning" (click)="deactivatePlayer(player)">
+                  <ion-icon slot="icon-only" name="pause-circle-outline"></ion-icon>
+                </ion-item-option>
                 @if (selectedSeasonId()) {
-                  <ion-item-option color="warning" (click)="deletePlayer(player.id)">
+                  <ion-item-option color="danger" (click)="removeFromSeason(player)">
                     <ion-icon slot="icon-only" name="remove-circle-outline"></ion-icon>
                   </ion-item-option>
                 } @else {
-                  <ion-item-option color="warning" (click)="deactivatePlayer(player)">
-                    <ion-icon slot="icon-only" name="pause-circle-outline"></ion-icon>
-                  </ion-item-option>
-                  <ion-item-option color="danger" (click)="deletePlayer(player.id)">
+                  <ion-item-option color="danger" (click)="deletePermanently(player)">
                     <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
                   </ion-item-option>
                 }
