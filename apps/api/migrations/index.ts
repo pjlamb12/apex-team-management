@@ -49,6 +49,7 @@ import { CreateSeasonChecklist1784100000000 } from './1784100000000-CreateSeason
 import { AddIgnorePlayingTimeAndGuestPlayers1784200000000 } from './1784200000000-AddIgnorePlayingTimeAndGuestPlayers';
 import { AddLeagueToGuestPlayers1784300000000 } from './1784300000000-AddLeagueToGuestPlayers';
 import { AddIsActiveToPlayers1784400000000 } from './1784400000000-AddIsActiveToPlayers';
+import { UpdatePositionSwapPayloadSchema1784500000000 } from './1784500000000-UpdatePositionSwapPayloadSchema';
 
 
 export const ALL_MIGRATIONS = [
@@ -103,6 +104,7 @@ export const ALL_MIGRATIONS = [
   AddIgnorePlayingTimeAndGuestPlayers1784200000000,
   AddLeagueToGuestPlayers1784300000000,
   AddIsActiveToPlayers1784400000000,
+  UpdatePositionSwapPayloadSchema1784500000000,
 ];
 
 

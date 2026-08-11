@@ -659,6 +659,54 @@ describe('EventsService', () => {
       expect(gameEventRepo.save).toHaveBeenCalled();
     });
 
+    it('should allow logging POSITION_SWAP event with only playerIdA and playerIdB without slot indices', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: {
+          team: {
+            coachId: userId,
+            sport: {
+              eventDefinitions: [
+                {
+                  type: 'POSITION_SWAP',
+                  payloadSchema: {
+                    type: 'object',
+                    properties: {
+                      playerIdA: { type: 'string', format: 'uuid' },
+                      playerIdB: { type: 'string', format: 'uuid' },
+                      slotIndexA: { type: 'integer' },
+                      slotIndexB: { type: 'integer' },
+                      positionNameA: { type: 'string' },
+                      positionNameB: { type: 'string' },
+                    },
+                    required: ['playerIdA'],
+                    additionalProperties: true,
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+
+      const swapDto = {
+        eventType: 'POSITION_SWAP',
+        payload: {
+          playerIdA: '11111111-1111-1111-1111-111111111111',
+          playerIdB: '22222222-2222-2222-2222-222222222222',
+          positionNameA: 'MID',
+          positionNameB: 'FWD',
+        },
+      };
+
+      const result = await service.logEvent(eventId, swapDto as any, userId);
+
+      expect(result).toBeDefined();
+      expect(result.eventType).toBe('POSITION_SWAP');
+      expect(gameEventRepo.save).toHaveBeenCalled();
+    });
+
     it('should throw ForbiddenException if user is on team but not coach/assistant role', async () => {
       const mockEvent = {
         id: eventId,
