@@ -632,7 +632,32 @@
                               @if (event.eventType === 'SUB') {
                                 <span class="text-blue-400 font-normal block text-xs mt-0.5">
                                   In: {{ getPlayerName(event.payload?.inPlayerId) }} | Out: {{ getPlayerName(event.payload?.outPlayerId) }}
-                                  <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 ml-1">{{ event.payload?.positionName }}</ion-badge>
+                                  @if (event.payload?.positionName) {
+                                    <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 ml-1">{{ event.payload?.positionName }}</ion-badge>
+                                  }
+                                </span>
+                              } @else if (event.eventType === 'POSITION_SWAP') {
+                                <span class="text-indigo-400 font-normal block text-xs mt-0.5">
+                                  @if ((event.payload?.playerIdA || event.playerIdA) && (event.payload?.playerIdB || event.playerIdB)) {
+                                    {{ getPlayerName(event.payload?.playerIdA || event.playerIdA) }}
+                                    @if (event.payload?.positionNameA || event.positionNameA) {
+                                      <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 mx-0.5">{{ event.payload?.positionNameA || event.positionNameA }}</ion-badge>
+                                    }
+                                    <ion-icon name="swap-horizontal-outline" class="align-middle mx-1"></ion-icon>
+                                    {{ getPlayerName(event.payload?.playerIdB || event.playerIdB) }}
+                                    @if (event.payload?.positionNameB || event.positionNameB) {
+                                      <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 mx-0.5">{{ event.payload?.positionNameB || event.positionNameB }}</ion-badge>
+                                    }
+                                  } @else if (event.payload?.playerIdA || event.playerIdA) {
+                                    {{ getPlayerName(event.payload?.playerIdA || event.playerIdA) }}
+                                    @if (event.payload?.positionNameA || event.positionNameA) {
+                                      moved to <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 ml-0.5">{{ event.payload?.positionNameA || event.positionNameA }}</ion-badge>
+                                    } @else {
+                                      moved to new position
+                                    }
+                                  } @else {
+                                    Position Swap
+                                  }
                                 </span>
                               } @else if (event.eventType === 'GOAL') {
                                 <span class="text-emerald-400 font-normal block text-xs mt-0.5">
@@ -730,6 +755,7 @@
                   <ion-select-option value="POSITION_SWAP">Position Swap</ion-select-option>
                 } @else {
                   <ion-select-option value="SUB">Substitution (SUB)</ion-select-option>
+                  <ion-select-option value="POSITION_SWAP">Position Swap (SWAP)</ion-select-option>
                   <ion-select-option value="GOAL">Goal (GOAL)</ion-select-option>
                   <ion-select-option value="ASSIST">Assist (ASSIST)</ion-select-option>
                   <ion-select-option value="OWN_GOAL">Own Goal (OWN_GOAL)</ion-select-option>
@@ -790,6 +816,71 @@
                 }
               </ion-select>
             </ion-item>
+          } @else if ((!isCreateMode() && editEvent()?.eventType === 'POSITION_SWAP') || (isCreateMode() && createEventType() === 'POSITION_SWAP')) {
+            <!-- Player A -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Player A</ion-label>
+              <ion-select [value]="editPlayerA()" (ionChange)="editPlayerA.set($event.detail.value)" class="text-ap-text" placeholder="Select Player">
+                @for (p of lineup(); track p.playerId) {
+                  <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+
+            <!-- Position for Player A -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">New Position for Player A (Optional)</ion-label>
+              <ion-select [value]="editPositionA()" (ionChange)="editPositionA.set($event.detail.value)" class="text-ap-text" placeholder="Select Position (Optional)">
+                <ion-select-option [value]="null">Auto / Retain Position</ion-select-option>
+                @if (sportName() === 'Volleyball') {
+                  <ion-select-option value="Setter">Setter</ion-select-option>
+                  <ion-select-option value="Outside Hitter">Outside Hitter</ion-select-option>
+                  <ion-select-option value="Opposite Hitter">Opposite Hitter</ion-select-option>
+                  <ion-select-option value="Middle Blocker">Middle Blocker</ion-select-option>
+                  <ion-select-option value="Libero">Libero</ion-select-option>
+                  <ion-select-option value="Defensive Specialist">Defensive Specialist</ion-select-option>
+                } @else {
+                  <ion-select-option value="GK">Goalkeeper</ion-select-option>
+                  <ion-select-option value="DEF">Defender</ion-select-option>
+                  <ion-select-option value="MID">Midfielder</ion-select-option>
+                  <ion-select-option value="FWD">Forward</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+
+            <!-- Player B -->
+            <ion-item class="bg-ap-surface rounded-lg">
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Player B (Swapped With - Optional)</ion-label>
+              <ion-select [value]="editPlayerB()" (ionChange)="editPlayerB.set($event.detail.value)" class="text-ap-text" placeholder="Select Player or Leave Empty">
+                <ion-select-option [value]="null">None (Solo Position Change)</ion-select-option>
+                @for (p of lineup(); track p.playerId) {
+                  <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+
+            @if (editPlayerB()) {
+              <!-- Position for Player B -->
+              <ion-item class="bg-ap-surface rounded-lg">
+                <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">New Position for Player B (Optional)</ion-label>
+                <ion-select [value]="editPositionB()" (ionChange)="editPositionB.set($event.detail.value)" class="text-ap-text" placeholder="Select Position (Optional)">
+                  <ion-select-option [value]="null">Auto / Retain Position</ion-select-option>
+                  @if (sportName() === 'Volleyball') {
+                    <ion-select-option value="Setter">Setter</ion-select-option>
+                    <ion-select-option value="Outside Hitter">Outside Hitter</ion-select-option>
+                    <ion-select-option value="Opposite Hitter">Opposite Hitter</ion-select-option>
+                    <ion-select-option value="Middle Blocker">Middle Blocker</ion-select-option>
+                    <ion-select-option value="Libero">Libero</ion-select-option>
+                    <ion-select-option value="Defensive Specialist">Defensive Specialist</ion-select-option>
+                  } @else {
+                    <ion-select-option value="GK">Goalkeeper</ion-select-option>
+                    <ion-select-option value="DEF">Defender</ion-select-option>
+                    <ion-select-option value="MID">Midfielder</ion-select-option>
+                    <ion-select-option value="FWD">Forward</ion-select-option>
+                  }
+                </ion-select>
+              </ion-item>
+            }
           } @else if ((!isCreateMode() && isGoalEvent(editEvent()?.eventType)) || (isCreateMode() && createEventType() === 'GOAL')) {
             <!-- Scorer -->
             <ion-item class="bg-ap-surface rounded-lg">

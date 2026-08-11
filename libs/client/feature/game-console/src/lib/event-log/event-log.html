@@ -40,9 +40,22 @@
             } @else if (event.type === 'POSITION_SWAP') {
               <p>
                 @if ((event['playerIdA'] || event.payload?.playerIdA) && (event['playerIdB'] || event.payload?.playerIdB)) {
-                  {{ getPlayerName(event['playerIdA'] || event.payload?.playerIdA) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event['playerIdB'] || event.payload?.playerIdB) }}
+                  {{ getPlayerName(event['playerIdA'] || event.payload?.playerIdA) }}
+                  @if (event['positionNameA'] || event.payload?.positionNameA) {
+                    <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 mx-0.5">{{ event['positionNameA'] || event.payload?.positionNameA }}</ion-badge>
+                  }
+                  <ion-icon name="swap-horizontal-outline"></ion-icon>
+                  {{ getPlayerName(event['playerIdB'] || event.payload?.playerIdB) }}
+                  @if (event['positionNameB'] || event.payload?.positionNameB) {
+                    <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 mx-0.5">{{ event['positionNameB'] || event.payload?.positionNameB }}</ion-badge>
+                  }
                 } @else if (event['playerIdA'] || event.payload?.playerIdA) {
-                  {{ getPlayerName(event['playerIdA'] || event.payload?.playerIdA) }} moved to {{ event['positionNameA'] || event.payload?.positionNameA || 'new position' }}
+                  {{ getPlayerName(event['playerIdA'] || event.payload?.playerIdA) }}
+                  @if (event['positionNameA'] || event.payload?.positionNameA) {
+                    moved to <ion-badge color="primary" mode="ios" class="text-[8px] px-1 py-0 ml-0.5">{{ event['positionNameA'] || event.payload?.positionNameA }}</ion-badge>
+                  } @else {
+                    moved to new position
+                  }
                 } @else {
                   Position Swap
                 }

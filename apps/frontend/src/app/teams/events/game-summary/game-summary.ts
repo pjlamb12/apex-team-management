@@ -169,13 +169,15 @@ export class GameSummary implements OnDestroy {
       if (type === 'POSITION_SWAP') {
         const group = [e];
         const gameTime = payload.gameTimeMs;
-        while (
-          i + 1 < sorted.length &&
-          (sorted[i + 1].eventType || sorted[i + 1].type) === 'POSITION_SWAP' &&
-          (sorted[i + 1].payload?.gameTimeMs === gameTime || sorted[i + 1].payload?.['gameTimeMs'] === gameTime)
-        ) {
-          group.push(sorted[i + 1]);
-          i++;
+        if (gameTime !== undefined && gameTime !== null) {
+          while (
+            i + 1 < sorted.length &&
+            (sorted[i + 1].eventType || sorted[i + 1].type) === 'POSITION_SWAP' &&
+            (sorted[i + 1].payload?.gameTimeMs === gameTime || sorted[i + 1].payload?.['gameTimeMs'] === gameTime)
+          ) {
+            group.push(sorted[i + 1]);
+            i++;
+          }
         }
 
         if (group.length >= 4) {
@@ -218,6 +220,10 @@ export class GameSummary implements OnDestroy {
   protected editScorerId = signal<string | null>(null);
   protected editAssistorId = signal<string | null>(null);
   protected editPlayerId = signal<string | null>(null);
+  protected editPlayerA = signal<string | null>(null);
+  protected editPlayerB = signal<string | null>(null);
+  protected editPositionA = signal<string | null>(null);
+  protected editPositionB = signal<string | null>(null);
 
   // Create event state signals
   protected isCreateMode = signal(false);
@@ -669,6 +675,10 @@ export class GameSummary implements OnDestroy {
     this.editScorerId.set(null);
     this.editAssistorId.set(null);
     this.editPlayerId.set(null);
+    this.editPlayerA.set(null);
+    this.editPlayerB.set(null);
+    this.editPositionA.set(null);
+    this.editPositionB.set(null);
     this.isEditModalOpen.set(true);
   }
 
@@ -683,6 +693,10 @@ export class GameSummary implements OnDestroy {
     this.editScorerId.set(payload.scorerId || event.playerId || null);
     this.editAssistorId.set(payload.assistorId || null);
     this.editPlayerId.set(payload.playerId || payload.assistorId || event.playerId || null);
+    this.editPlayerA.set(payload.playerIdA || event.playerIdA || null);
+    this.editPlayerB.set(payload.playerIdB || event.playerIdB || null);
+    this.editPositionA.set(payload.positionNameA || event.positionNameA || null);
+    this.editPositionB.set(payload.positionNameB || event.positionNameB || null);
     this.isEditModalOpen.set(true);
   }
 
@@ -690,6 +704,10 @@ export class GameSummary implements OnDestroy {
     this.isEditModalOpen.set(false);
     this.editEvent.set(null);
     this.isCreateMode.set(false);
+    this.editPlayerA.set(null);
+    this.editPlayerB.set(null);
+    this.editPositionA.set(null);
+    this.editPositionB.set(null);
   }
 
   protected onEditMinuteChange(event: any): void {
@@ -735,6 +753,25 @@ export class GameSummary implements OnDestroy {
       payload['inPlayerId'] = this.editPlayerIn();
       payload['outPlayerId'] = this.editPlayerOut();
       payload['positionName'] = this.editPosition();
+    } else if (type === 'POSITION_SWAP') {
+      payload['playerIdA'] = this.editPlayerA();
+      const entryA = this.lineup().find(l => l.playerId === this.editPlayerA());
+      if (entryA && entryA.slotIndex !== undefined && entryA.slotIndex !== null) {
+        payload['slotIndexA'] = entryA.slotIndex;
+      }
+      if (this.editPlayerB()) {
+        payload['playerIdB'] = this.editPlayerB();
+        const entryB = this.lineup().find(l => l.playerId === this.editPlayerB());
+        if (entryB && entryB.slotIndex !== undefined && entryB.slotIndex !== null) {
+          payload['slotIndexB'] = entryB.slotIndex;
+        }
+      }
+      if (this.editPositionA()) {
+        payload['positionNameA'] = this.editPositionA();
+      }
+      if (this.editPositionB()) {
+        payload['positionNameB'] = this.editPositionB();
+      }
     } else if (type === 'GOAL') {
       payload['scorerId'] = this.editScorerId();
       payload['assistorId'] = this.editAssistorId() || undefined;
@@ -797,6 +834,32 @@ export class GameSummary implements OnDestroy {
       payload['inPlayerId'] = this.editPlayerIn();
       payload['outPlayerId'] = this.editPlayerOut();
       payload['positionName'] = this.editPosition();
+    } else if (event.eventType === 'POSITION_SWAP') {
+      payload['playerIdA'] = this.editPlayerA();
+      const entryA = this.lineup().find(l => l.playerId === this.editPlayerA());
+      if (entryA && entryA.slotIndex !== undefined && entryA.slotIndex !== null) {
+        payload['slotIndexA'] = entryA.slotIndex;
+      }
+      if (this.editPlayerB()) {
+        payload['playerIdB'] = this.editPlayerB();
+        const entryB = this.lineup().find(l => l.playerId === this.editPlayerB());
+        if (entryB && entryB.slotIndex !== undefined && entryB.slotIndex !== null) {
+          payload['slotIndexB'] = entryB.slotIndex;
+        }
+      } else {
+        delete payload['playerIdB'];
+        delete payload['slotIndexB'];
+      }
+      if (this.editPositionA()) {
+        payload['positionNameA'] = this.editPositionA();
+      } else {
+        delete payload['positionNameA'];
+      }
+      if (this.editPositionB()) {
+        payload['positionNameB'] = this.editPositionB();
+      } else {
+        delete payload['positionNameB'];
+      }
     } else if (event.eventType === 'GOAL') {
       payload['scorerId'] = this.editScorerId();
       payload['assistorId'] = this.editAssistorId() || undefined;

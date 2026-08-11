@@ -123,4 +123,23 @@ describe('EventLogViewComponent', () => {
     expect(events.length).toBe(1);
     expect(events[0].type).toBe('GOAL');
   });
+
+  it('should display POSITION_SWAP event with players', () => {
+    stateService.pushEvent({
+      type: 'POSITION_SWAP',
+      playerIdA: 'p1',
+      playerIdB: 'p2',
+      positionNameA: 'Forward',
+      positionNameB: 'Midfielder',
+      minuteOccurred: 18,
+      timestamp: Date.now(),
+    });
+    fixture.detectChanges();
+
+    const events = component['events']();
+    expect(events.length).toBe(1);
+    expect(events[0].type).toBe('POSITION_SWAP');
+    expect(events[0].playerIdA).toBe('p1');
+    expect(events[0].playerIdB).toBe('p2');
+  });
 });
