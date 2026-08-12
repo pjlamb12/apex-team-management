@@ -84,29 +84,30 @@ export class LlmExportService {
       order: { jerseyNumber: 'ASC', lastName: 'ASC', firstName: 'ASC' },
     });
 
-    // Query events (games, practices)
-    const eventWhere: any = {};
-    if (options.leagueId) {
-      eventWhere.leagueId = options.leagueId;
-    } else if (options.seasonId) {
-      eventWhere.seasonId = options.seasonId;
-    } else {
-      eventWhere.season = { teamId };
-    }
+    // Query seasons for team
+    const teamSeasons = await this.seasonRepo.find({ where: { teamId } });
+    const teamSeasonIds = teamSeasons.map((s) => s.id);
 
-    const allEvents = await this.eventRepo.find({
-      where: eventWhere,
-      relations: [
-        'league',
-        'locationRef',
-        'notesList',
-        'notesList.user',
-        'practiceDrills',
-        'practiceDrills.drill',
-        'practiceDrills.drill.tags',
-      ],
-      order: { scheduledAt: 'DESC' },
-    });
+    let allEvents: EventEntity[] = [];
+    if (options.leagueId) {
+      allEvents = await this.eventRepo.find({
+        where: { leagueId: options.leagueId },
+        relations: ['league', 'locationRef', 'season'],
+        order: { scheduledAt: 'DESC' },
+      });
+    } else if (options.seasonId) {
+      allEvents = await this.eventRepo.find({
+        where: { seasonId: options.seasonId },
+        relations: ['league', 'locationRef', 'season'],
+        order: { scheduledAt: 'DESC' },
+      });
+    } else if (teamSeasonIds.length > 0) {
+      allEvents = await this.eventRepo.find({
+        where: { seasonId: In(teamSeasonIds) },
+        relations: ['league', 'locationRef', 'season'],
+        order: { scheduledAt: 'DESC' },
+      });
+    }
 
     let games = allEvents.filter((e) => e.type === 'game');
     const practices = allEvents.filter((e) => e.type === 'practice');
@@ -124,22 +125,50 @@ export class LlmExportService {
 
     const eventIds = [...games.map((g) => g.id), ...practices.map((p) => p.id)];
 
+    // Fetch practice drills directly and attach to practices
+    const allPracticeDrills =
+      (eventIds.length > 0
+        ? await this.practiceDrillRepo.find({
+            where: { eventId: In(eventIds) },
+            relations: ['drill', 'drill.tags'],
+            order: { sequence: 'ASC' },
+          })
+        : []) || [];
+
+    practices.forEach((prac) => {
+      prac.practiceDrills = allPracticeDrills.filter((pd) => pd.eventId === prac.id);
+    });
+
+    // Fetch notes directly and attach to events
+    const allNotes =
+      (eventIds.length > 0
+        ? await this.eventNoteRepo.find({
+            where: { eventId: In(eventIds) },
+            relations: ['user'],
+            order: { createdAt: 'ASC' },
+          })
+        : []) || [];
+
+    [...games, ...practices].forEach((e) => {
+      e.notesList = allNotes.filter((n) => n.eventId === e.id);
+    });
+
     // Fetch game events
     const gameEvents =
-      eventIds.length > 0
+      (eventIds.length > 0
         ? await this.gameEventRepo.find({
             where: { eventId: In(eventIds) },
             order: { createdAt: 'ASC' },
           })
-        : [];
+        : []) || [];
 
     // Fetch attendance
     const attendance =
-      eventIds.length > 0
+      (eventIds.length > 0
         ? await this.attendanceRepo.find({
             where: { eventId: In(eventIds) },
           })
-        : [];
+        : []) || [];
 
     // Fetch metrics & playtime
     const playerMetrics = await this.performanceMetricsService.getTeamMetrics(

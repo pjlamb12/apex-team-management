@@ -41,7 +41,7 @@ describe('LlmExportService', () => {
         },
         {
           provide: getRepositoryToken(SeasonEntity),
-          useValue: { findOne: vi.fn() },
+          useValue: { findOne: vi.fn(), find: vi.fn() },
         },
         {
           provide: getRepositoryToken(LeagueEntity),
@@ -154,6 +154,7 @@ describe('LlmExportService', () => {
 
     beforeEach(() => {
       teamRepo.findOne.mockResolvedValue(mockTeam);
+      seasonRepo.find.mockResolvedValue([{ id: 's1', teamId: 'team-1', name: 'Fall 2026' }]);
       playerRepo.find.mockResolvedValue(mockPlayers);
       eventRepo.find.mockResolvedValue([...mockGames, ...mockPractices]);
       gameEventRepo.find.mockResolvedValue([
@@ -169,6 +170,19 @@ describe('LlmExportService', () => {
         { playerId: 'p1', eventId: 'g1', status: 'present' },
         { playerId: 'p2', eventId: 'g1', status: 'present' },
       ]);
+      practiceDrillRepo.find.mockResolvedValue([
+        {
+          id: 'pd1',
+          eventId: 'pr1',
+          sequence: 0,
+          customName: '3v1 Rondo',
+          durationMinutes: 15,
+          teamRating: 4,
+          notes: 'High intensity',
+          drill: { name: 'Rondo', tags: [{ name: 'passing' }, { name: 'possession' }] },
+        },
+      ]);
+      eventNoteRepo.find.mockResolvedValue([]);
       performanceMetricsService.getTeamMetrics.mockResolvedValue([
         { playerId: 'p1', goals: 1, assists: 0, gamesPlayed: 1 },
         { playerId: 'p2', goals: 0, assists: 0, gamesPlayed: 1 },

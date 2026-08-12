@@ -41,15 +41,18 @@ export class LlmExportOptionsDto {
   playerId?: string;
 
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' || value === 'null' || value === 'undefined' ? undefined : Number(value)))
   @IsNumber()
   limitGames?: number;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' || value === 'null' || value === 'undefined' ? undefined : value))
   @IsString()
   opponent?: string;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' || value === 'null' || value === 'undefined' ? undefined : value))
   @IsString()
   customInstructions?: string;
 }
+

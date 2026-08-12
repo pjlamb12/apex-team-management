@@ -19,7 +19,6 @@ import {
   IonFooter,
   IonIcon,
   IonSpinner,
-  IonBadge,
   IonToast,
   ModalController,
   Platform,
@@ -83,7 +82,6 @@ export interface PromptTemplateOption {
     IonFooter,
     IonIcon,
     IonSpinner,
-    IonBadge,
     IonToast,
   ],
   templateUrl: './ai-prompt-modal.html',
@@ -302,7 +300,8 @@ export class AiPromptModalComponent implements OnInit {
       this.promptResult.set(res);
     } catch (err: any) {
       console.error('Failed to generate prompt', err);
-      this.errorMessage.set('Failed to generate LLM prompt. Please verify connection and try again.');
+      const detail = err?.error?.message || err?.message || 'Unknown error';
+      this.errorMessage.set(`Failed to generate LLM prompt: ${detail}. Please check connection and try again.`);
     } finally {
       this.isLoading.set(false);
     }
