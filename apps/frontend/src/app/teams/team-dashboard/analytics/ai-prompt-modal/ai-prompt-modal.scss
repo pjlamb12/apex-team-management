@@ -2,6 +2,11 @@
   display: block;
 }
 
+ion-button {
+  --border-radius: 0.75rem;
+  font-weight: 700;
+}
+
 .prompt-grid {
   display: grid;
   grid-template-columns: 1fr;

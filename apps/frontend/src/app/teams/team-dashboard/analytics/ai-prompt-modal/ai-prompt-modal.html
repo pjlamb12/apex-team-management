@@ -186,26 +186,28 @@
           <p class="text-xs text-ap-muted mt-0.5">Ready to paste into ChatGPT, Claude, or Gemini</p>
         </div>
 
-        <div class="flex items-center gap-2.5">
-          <button
-            type="button"
+        <div class="flex items-center gap-2">
+          <ion-button
             (click)="copyPrompt()"
             [disabled]="isLoading() || !promptResult()?.prompt"
-            class="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
+            color="primary"
+            class="font-bold text-xs"
           >
-            <ion-icon [name]="isCopied() ? 'checkmark-outline' : 'copy-outline'" class="text-sm"></ion-icon>
-            <span>{{ isCopied() ? 'Copied!' : 'Copy Prompt' }}</span>
-          </button>
+            <ion-icon slot="start" [name]="isCopied() ? 'checkmark-outline' : 'copy-outline'"></ion-icon>
+            {{ isCopied() ? 'Copied!' : 'Copy Prompt' }}
+          </ion-button>
 
-          <button
-            type="button"
+          <ion-button
             (click)="downloadMarkdown()"
             [disabled]="isLoading() || !promptResult()?.prompt"
-            class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-ap-bg hover:bg-ap-border disabled:opacity-50 border border-ap-border text-ap-text font-bold text-xs transition-all active:scale-95 cursor-pointer"
+            fill="outline"
+            color="medium"
+            class="font-bold text-xs"
           >
-            <ion-icon name="download-outline" class="text-sm"></ion-icon>
+            <ion-icon slot="start" name="download-outline"></ion-icon>
             <span class="hidden sm:inline">Download .md</span>
-          </button>
+            <span class="sm:hidden">.md</span>
+          </ion-button>
         </div>
       </div>
 
