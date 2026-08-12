@@ -26,34 +26,30 @@
         <span class="text-xs text-ap-muted font-medium">{{ templates.length }} Presets Available</span>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+      <div class="prompt-grid">
         @for (tpl of templates; track tpl.id) {
           <button
             type="button"
             (click)="selectTemplate(tpl.id)"
-            [class.border-indigo-500]="selectedTemplate() === tpl.id"
-            [class.bg-indigo-500-10]="selectedTemplate() === tpl.id"
-            [class.ring-2]="selectedTemplate() === tpl.id"
-            [class.ring-indigo-500-30]="selectedTemplate() === tpl.id"
-            class="flex flex-col items-start p-4 sm:p-4.5 rounded-2xl border border-ap-border bg-ap-surface hover:border-ap-border-hover transition-all text-left group relative shadow-sm"
+            class="prompt-card"
+            [class.active]="selectedTemplate() === tpl.id"
           >
-            <div class="flex items-center justify-between w-full mb-2.5">
-              <div class="p-2 rounded-xl bg-ap-bg border border-ap-border group-hover:border-indigo-500/30 transition-colors">
+            <div class="card-top">
+              <div class="icon-wrapper">
                 <ion-icon
                   [name]="tpl.icon"
                   [class.text-indigo-400]="selectedTemplate() === tpl.id"
                   [class.text-ap-muted]="selectedTemplate() !== tpl.id"
-                  class="text-xl group-hover:text-indigo-400 transition-colors block"
                 ></ion-icon>
               </div>
               @if (selectedTemplate() === tpl.id) {
-                <span class="flex items-center gap-1 text-[11px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                <span class="flex items-center gap-1.5 text-[11px] font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">
                   <span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span> Active
                 </span>
               }
             </div>
-            <span class="text-sm font-bold text-ap-text leading-snug">{{ tpl.shortLabel }}</span>
-            <span class="text-xs text-ap-muted leading-relaxed mt-1.5">{{ tpl.description }}</span>
+            <div class="card-title">{{ tpl.shortLabel }}</div>
+            <div class="card-description">{{ tpl.description }}</div>
           </button>
         }
       </div>

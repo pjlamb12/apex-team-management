@@ -2,12 +2,96 @@
   display: block;
 }
 
+.prompt-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 860px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.prompt-card {
+  padding: 1.25rem 1.25rem !important;
+  border-radius: 1rem;
+  border: 1px solid var(--ap-border);
+  background-color: var(--ap-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  position: relative;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+
+  @media (min-width: 640px) {
+    padding: 1.35rem 1.35rem !important;
+  }
+
+  &:hover {
+    border-color: rgba(99, 102, 241, 0.35);
+    background-color: var(--ap-surface-raised);
+    transform: translateY(-1px);
+  }
+
+  &.active {
+    border-color: #6366f1 !important;
+    background-color: rgba(99, 102, 241, 0.08) !important;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.22);
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 0.875rem;
+  }
+
+  .icon-wrapper {
+    padding: 0.625rem;
+    border-radius: 0.75rem;
+    background-color: var(--ap-bg);
+    border: 1px solid var(--ap-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon {
+      font-size: 1.25rem;
+      display: block;
+    }
+  }
+
+  .card-title {
+    font-size: 0.925rem;
+    font-weight: 700;
+    color: var(--ap-text);
+    line-height: 1.35;
+    margin-bottom: 0.35rem;
+  }
+
+  .card-description {
+    font-size: 0.775rem;
+    color: var(--ap-muted);
+    line-height: 1.5;
+  }
+}
+
 .prompt-preview-container {
   scrollbar-width: thin;
   scrollbar-color: var(--ap-border) transparent;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 11.5px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.65;
+  padding: 1.25rem !important;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -21,12 +105,4 @@
     background-color: var(--ap-border);
     border-radius: 3px;
   }
-}
-
-.bg-indigo-500-10 {
-  background-color: rgba(99, 102, 241, 0.08);
-}
-
-.ring-indigo-500-30 {
-  --tw-ring-color: rgba(99, 102, 241, 0.3);
 }
