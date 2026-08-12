@@ -142,4 +142,70 @@ export class AnalyticsService {
       responseType: 'blob'
     });
   }
+
+  getLlmPrompt(teamId: string, options: LlmExportOptions): Observable<LlmPromptResponse> {
+    const params: any = { format: 'json' };
+    if (options.template) params.template = options.template;
+    if (options.seasonId) params.seasonId = options.seasonId;
+    if (options.leagueId) params.leagueId = options.leagueId;
+    if (options.playerId) params.playerId = options.playerId;
+    if (options.limitGames !== undefined && options.limitGames !== null) params.limitGames = options.limitGames.toString();
+    if (options.opponent) params.opponent = options.opponent;
+    if (options.customInstructions) params.customInstructions = options.customInstructions;
+
+    return this.http.get<LlmPromptResponse>(`${this.apiUrl}/teams/${teamId}/analytics/export/llm`, { params });
+  }
+
+  downloadLlmMarkdown(teamId: string, options: LlmExportOptions): Observable<Blob> {
+    const params: any = { format: 'markdown' };
+    if (options.template) params.template = options.template;
+    if (options.seasonId) params.seasonId = options.seasonId;
+    if (options.leagueId) params.leagueId = options.leagueId;
+    if (options.playerId) params.playerId = options.playerId;
+    if (options.limitGames !== undefined && options.limitGames !== null) params.limitGames = options.limitGames.toString();
+    if (options.opponent) params.opponent = options.opponent;
+    if (options.customInstructions) params.customInstructions = options.customInstructions;
+
+    return this.http.get(`${this.apiUrl}/teams/${teamId}/analytics/export/llm`, {
+      params,
+      responseType: 'blob',
+    });
+  }
 }
+
+export type LlmPromptTemplate =
+  | 'practice-plan'
+  | 'game-strategy'
+  | 'season-debrief'
+  | 'player-eval'
+  | 'drill-recommender'
+  | 'opponent-scouting'
+  | 'custom';
+
+export interface LlmExportOptions {
+  template?: LlmPromptTemplate;
+  format?: 'json' | 'markdown';
+  seasonId?: string;
+  leagueId?: string;
+  playerId?: string;
+  limitGames?: number;
+  opponent?: string;
+  customInstructions?: string;
+}
+
+export interface LlmPromptResponse {
+  prompt: string;
+  title: string;
+  template: LlmPromptTemplate;
+  metadata: {
+    teamName: string;
+    sport: string;
+    seasonName?: string;
+    leagueName?: string;
+    gameCount: number;
+    practiceCount: number;
+    playerCount: number;
+    generatedAt: string;
+  };
+}
+

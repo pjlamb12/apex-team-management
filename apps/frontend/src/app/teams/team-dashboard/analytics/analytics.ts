@@ -40,6 +40,7 @@ import {
   ribbonOutline,
   shieldOutline,
   handRightOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
 import { 
   AnalyticsService, 
@@ -48,11 +49,14 @@ import {
   PlayerPlaytime, 
   SeasonsService, 
   LeaguesService,
-  TeamService
+  TeamService,
+  LlmPromptTemplate,
 } from '@apex-team/client/data-access/team';
 import { ModalController } from '@ionic/angular/standalone';
 import { ExportModalComponent, ExportOptions } from './export-modal/export-modal';
+import { AiPromptModalComponent } from './ai-prompt-modal/ai-prompt-modal';
 import { League, SeasonStats } from '@apex-team/shared/util/models';
+
 
 @Component({
   selector: 'app-team-analytics',
@@ -338,14 +342,15 @@ export class TeamAnalytics {
       footballOutline, 
       peopleOutline, 
       timeOutline, 
-      trophyOutline,
-      trendingUpOutline,
-      alertCircleOutline,
-      downloadOutline,
-      flashOutline,
-      ribbonOutline,
-      shieldOutline,
+      trophyOutline, 
+      trendingUpOutline, 
+      alertCircleOutline, 
+      downloadOutline, 
+      flashOutline, 
+      ribbonOutline, 
+      shieldOutline, 
       handRightOutline,
+      sparklesOutline,
     });
 
     // Initialize seasons if not already done
@@ -412,6 +417,20 @@ export class TeamAnalytics {
     this.selectedEventType.set(event.detail.value);
   }
 
+  protected async openAiPromptModal(initialTemplate?: LlmPromptTemplate): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: AiPromptModalComponent,
+      componentProps: {
+        teamId: this.teamId,
+        seasonId: this.selectedSeasonId(),
+        leagueId: this.selectedLeagueId(),
+        initialTemplate,
+      },
+    });
+
+    await modal.present();
+  }
+
   protected async openExportModal(): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: ExportModalComponent,
@@ -429,6 +448,9 @@ export class TeamAnalytics {
 
     const { data } = await modal.onWillDismiss<ExportOptions>();
     if (data) {
+      if (data.openAiHub) {
+        await this.openAiPromptModal();
+      }
       console.log('Export data:', data);
     }
   }

@@ -63,6 +63,7 @@
       >
         <ion-select-option value="pdf">PDF Report</ion-select-option>
         <ion-select-option value="csv">CSV Data</ion-select-option>
+        <ion-select-option value="llm">AI Coach Prompt (.md)</ion-select-option>
       </ion-select>
     </ion-item>
 
@@ -96,7 +97,7 @@
           slot="end"
         ></ion-toggle>
       </ion-item>
-    } @else {
+    } @else if (options().format === 'csv') {
       <ion-item class="--background: transparent">
         <ion-label>
           <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1">Granularity</div>
@@ -116,15 +117,39 @@
     }
   </ion-list>
 
+  <!-- Interactive AI Hub Banner -->
+  <div class="mx-4 p-4 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400 shrink-0">
+        <ion-icon name="sparkles-outline" class="text-xl block"></ion-icon>
+      </div>
+      <div>
+        <div class="text-xs font-bold text-ap-text">Looking for AI Prompts?</div>
+        <div class="text-xs text-ap-muted">Preview, customize & copy prompts directly for LLMs.</div>
+      </div>
+    </div>
+    <ion-button
+      size="small"
+      color="primary"
+      (click)="openAiHub()"
+      class="font-bold text-xs shrink-0 ion-no-margin"
+    >
+      <ion-icon slot="start" name="sparkles-outline"></ion-icon>
+      Open AI Hub
+    </ion-button>
+  </div>
+
   <div class="p-4 text-xs text-ap-muted italic text-center">
     @if (options().format === 'pdf') {
       PDF reports are optimized for printing and sharing with parents/players.
-    } @else {
+    } @else if (options().format === 'csv') {
       CSV files are ideal for detailed analysis in Excel or other spreadsheets.
+    } @else {
+      AI Coach Dossier (.md) creates a structured Markdown file ready for Claude Projects, Custom GPTs, or Gemini Gems.
     }
   </div>
 
-  <div class="p-4 mt-4">
+  <div class="p-4 mt-2">
     <ion-button
       expand="block"
       color="primary"
@@ -145,3 +170,4 @@
   <!-- Extra bottom padding for sheet modal stability -->
   <div class="h-12"></div>
 </ion-content>
+

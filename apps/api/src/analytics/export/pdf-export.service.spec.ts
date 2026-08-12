@@ -1,8 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { PdfExportService } from './pdf-export.service';
 import { PerformanceMetricsService } from '../performance-metrics.service';
 import { PlayingTimeService } from '../playing-time.service';
 import { ExportOptionsDto, ExportFormat, ExportLayout } from '../dto/export-options.dto';
+import { TeamEntity } from '../../entities/team.entity';
+import { SeasonEntity } from '../../entities/season.entity';
+import { LeagueEntity } from '../../entities/league.entity';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('PdfExportService', () => {
@@ -14,6 +18,24 @@ describe('PdfExportService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PdfExportService,
+        {
+          provide: getRepositoryToken(TeamEntity),
+          useValue: {
+            findOne: vi.fn().mockResolvedValue({ id: 'team-1', name: 'Apex Raptors', sport: { name: 'Soccer' } }),
+          },
+        },
+        {
+          provide: getRepositoryToken(SeasonEntity),
+          useValue: {
+            findOne: vi.fn().mockResolvedValue({ id: 's1', name: 'Fall 2026' }),
+          },
+        },
+        {
+          provide: getRepositoryToken(LeagueEntity),
+          useValue: {
+            findOne: vi.fn().mockResolvedValue({ id: 'l1', name: 'State Cup' }),
+          },
+        },
         {
           provide: PerformanceMetricsService,
           useValue: {
@@ -27,6 +49,8 @@ describe('PdfExportService', () => {
                 yellowCards: 0,
                 redCards: 0,
                 gamesPlayed: 5,
+                blockedShots: 0,
+                blockedPenaltyKicks: 0,
               },
             ]),
           },
@@ -55,28 +79,35 @@ describe('PdfExportService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should generate a PDF buffer', async () => {
+  it('should generate a PDF buffer with enriched stats', async () => {
     const options: ExportOptionsDto = {
       format: ExportFormat.PDF,
       layout: ExportLayout.OVERVIEW,
       includeVisuals: true,
     };
 
-    // Mock generatePdf to avoid puppeteer dependency in tests
-    const pdfSpy = vi.spyOn(service as any, 'generatePdf').mockResolvedValue(Buffer.from('PDF_CONTENT'));
+    // Mock generatePdf to avoid puppeteer launch in unit tests
+    vi.spyOn(service as any, 'generatePdf').mockResolvedValue(Buffer.from('PDF_CONTENT'));
     const renderSpy = vi.spyOn(service as any, 'renderTemplate');
 
     const buffer = await service.generate('team-1', options);
-    
+
     expect(buffer).toBeDefined();
     expect(buffer.toString()).toBe('PDF_CONTENT');
     expect(renderSpy).toHaveBeenCalled();
-    
+
     const renderData = renderSpy.mock.calls[0][0];
     expect(renderData.teamId).toBe('team-1');
+    expect(renderData.teamName).toBe('Apex Raptors');
+    expect(renderData.sportName).toBe('Soccer');
     expect(renderData.isOverview).toBe(true);
     expect(renderData.players).toHaveLength(1);
     expect(renderData.players[0].firstName).toBe('John');
+    expect(renderData.players[0].goals).toBe(1);
+    expect(renderData.players[0].assists).toBe(2);
+    expect(renderData.players[0].points).toBe(3);
+    expect(renderData.players[0].minutes).toBe(60);
+    expect(renderData.players[0].mpg).toBe('12.0');
     expect(renderData.players[0].playtimeFormatted).toBe('60m 0s');
   });
 

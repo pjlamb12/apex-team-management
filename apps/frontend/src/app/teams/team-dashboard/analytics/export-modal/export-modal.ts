@@ -19,14 +19,14 @@ import {
   IonSpinner,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { closeOutline, downloadOutline, shareOutline, chevronDownOutline } from 'ionicons/icons';
+import { closeOutline, downloadOutline, shareOutline, chevronDownOutline, sparklesOutline } from 'ionicons/icons';
 import { ModalController, Platform } from '@ionic/angular/standalone';
 import { AnalyticsService, SeasonsService, LeaguesService } from '@apex-team/client/data-access/team';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Season, League } from '@apex-team/shared/util/models';
 
-export type ExportFormat = 'pdf' | 'csv';
+export type ExportFormat = 'pdf' | 'csv' | 'llm';
 export type ExportLayout = 'overview' | 'player-pack' | 'tabular';
 export type ExportGranularity = 'aggregated' | 'per-game';
 
@@ -37,6 +37,7 @@ export interface ExportOptions {
   includeVisuals: boolean;
   seasonId?: string;
   leagueId?: string;
+  openAiHub?: boolean;
 }
 
 @Component({
@@ -56,7 +57,6 @@ export interface ExportOptions {
     IonSelect,
     IonSelectOption,
     IonToggle,
-    IonFooter,
     IonIcon,
     IonSpinner,
   ],
@@ -85,7 +85,7 @@ export class ExportModalComponent implements OnInit {
   protected isExporting = signal(false);
 
   constructor() {
-    addIcons({ closeOutline, downloadOutline, shareOutline, chevronDownOutline });
+    addIcons({ closeOutline, downloadOutline, shareOutline, chevronDownOutline, sparklesOutline });
   }
 
   ngOnInit() {
@@ -122,12 +122,30 @@ export class ExportModalComponent implements OnInit {
     void this.modalCtrl.dismiss();
   }
 
+  protected openAiHub(): void {
+    void this.modalCtrl.dismiss({ openAiHub: true });
+  }
+
   protected async confirm(): Promise<void> {
     this.isExporting.set(true);
     try {
       const options = this.options();
-      const blob = await firstValueFrom(this.analyticsService.exportData(this.teamId, options));
-      const filename = `team-analytics-${this.teamId}-${new Date().getTime()}.${options.format}`;
+      let blob: Blob;
+      let filename: string;
+
+      if (options.format === 'llm') {
+        blob = await firstValueFrom(
+          this.analyticsService.downloadLlmMarkdown(this.teamId, {
+            seasonId: options.seasonId,
+            leagueId: options.leagueId,
+            template: 'practice-plan',
+          }),
+        );
+        filename = `ai-coach-dossier-${this.teamId}-${Date.now()}.md`;
+      } else {
+        blob = await firstValueFrom(this.analyticsService.exportData(this.teamId, options));
+        filename = `team-analytics-${this.teamId}-${new Date().getTime()}.${options.format}`;
+      }
 
       if (this.platform.is('capacitor')) {
         await this.exportMobile(blob, filename);
@@ -141,6 +159,7 @@ export class ExportModalComponent implements OnInit {
       this.isExporting.set(false);
     }
   }
+
 
   private exportWeb(blob: Blob, filename: string): void {
     const url = window.URL.createObjectURL(blob);
