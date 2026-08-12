@@ -426,9 +426,6 @@ export class TeamAnalytics {
         leagueId: this.selectedLeagueId(),
         initialTemplate,
       },
-      breakpoints: [0, 0.85, 1],
-      initialBreakpoint: 0.85,
-      handle: true,
     });
 
     await modal.present();
