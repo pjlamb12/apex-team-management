@@ -6,7 +6,9 @@ import { PerformanceMetricsService } from './performance-metrics.service';
 import { PlayerAnalyticsService } from './player-analytics.service';
 import { CsvExportService } from './export/csv-export.service';
 import { PdfExportService } from './export/pdf-export.service';
+import { LlmExportService } from './export/llm-export.service';
 import { ExportOptionsDto } from './dto/export-options.dto';
+import { LlmExportOptionsDto, LlmExportFormat } from './dto/llm-export-options.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('teams/:teamId')
@@ -17,6 +19,7 @@ export class AnalyticsController {
     private readonly playerAnalyticsService: PlayerAnalyticsService,
     private readonly csvExportService: CsvExportService,
     private readonly pdfExportService: PdfExportService,
+    private readonly llmExportService: LlmExportService,
   ) {}
 
   @Get('events/:eventId/analytics/playing-time')
@@ -86,4 +89,25 @@ export class AnalyticsController {
     
     return res.send(pdf);
   }
+
+  @Get('analytics/export/llm')
+  async exportLlm(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Query() options: LlmExportOptionsDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.llmExportService.generate(teamId, options);
+
+    if (options.format === LlmExportFormat.MARKDOWN) {
+      const filename = `ai-prompt-${result.template}-${teamId}.md`;
+      res.set({
+        'Content-Type': 'text/markdown; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      });
+      return res.send(result.prompt);
+    }
+
+    return res.json(result);
+  }
 }
+

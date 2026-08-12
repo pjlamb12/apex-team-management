@@ -5,13 +5,16 @@ import { PerformanceMetricsService } from './performance-metrics.service';
 import { PlayerAnalyticsService } from './player-analytics.service';
 import { CsvExportService } from './export/csv-export.service';
 import { PdfExportService } from './export/pdf-export.service';
+import { LlmExportService } from './export/llm-export.service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ExportLayout, ExportFormat } from './dto/export-options.dto';
+import { LlmExportFormat, LlmPromptTemplate } from './dto/llm-export-options.dto';
 import { Response } from 'express';
 
 describe('AnalyticsController', () => {
   let controller: AnalyticsController;
   let pdfExportService: PdfExportService;
+  let llmExportService: LlmExportService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,11 +30,23 @@ describe('AnalyticsController', () => {
             generate: vi.fn().mockResolvedValue(Buffer.from('PDF_CONTENT')),
           },
         },
+        {
+          provide: LlmExportService,
+          useValue: {
+            generate: vi.fn().mockResolvedValue({
+              prompt: '# Practice Plan Prompt',
+              title: 'Practice Plan Prompt',
+              template: LlmPromptTemplate.PRACTICE_PLAN,
+              metadata: { teamName: 'Apex Raptors' },
+            }),
+          },
+        },
       ],
     }).compile();
 
     controller = module.get<AnalyticsController>(AnalyticsController);
     pdfExportService = module.get<PdfExportService>(PdfExportService);
+    llmExportService = module.get<LlmExportService>(LlmExportService);
   });
 
   it('should be defined', () => {
@@ -58,4 +73,44 @@ describe('AnalyticsController', () => {
     }));
     expect(res.send).toHaveBeenCalledWith(Buffer.from('PDF_CONTENT'));
   });
+
+  it('exportLlm should return JSON when format is JSON', async () => {
+    const res = {
+      json: vi.fn(),
+    } as unknown as Response;
+
+    const options = {
+      template: LlmPromptTemplate.PRACTICE_PLAN,
+      format: LlmExportFormat.JSON,
+    };
+
+    await controller.exportLlm('team-1', options as any, res);
+
+    expect(llmExportService.generate).toHaveBeenCalledWith('team-1', options);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      prompt: '# Practice Plan Prompt',
+      template: LlmPromptTemplate.PRACTICE_PLAN,
+    }));
+  });
+
+  it('exportLlm should set markdown headers and send text when format is MARKDOWN', async () => {
+    const res = {
+      set: vi.fn(),
+      send: vi.fn(),
+    } as unknown as Response;
+
+    const options = {
+      template: LlmPromptTemplate.PRACTICE_PLAN,
+      format: LlmExportFormat.MARKDOWN,
+    };
+
+    await controller.exportLlm('team-1', options as any, res);
+
+    expect(res.set).toHaveBeenCalledWith(expect.objectContaining({
+      'Content-Type': 'text/markdown; charset=utf-8',
+      'Content-Disposition': expect.stringContaining('attachment; filename='),
+    }));
+    expect(res.send).toHaveBeenCalledWith('# Practice Plan Prompt');
+  });
 });
+

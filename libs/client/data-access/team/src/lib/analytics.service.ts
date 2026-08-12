@@ -142,4 +142,60 @@ export class AnalyticsService {
       responseType: 'blob'
     });
   }
+
+  getLlmPrompt(teamId: string, options: LlmExportOptions): Observable<LlmPromptResponse> {
+    const params: any = {
+      ...options,
+      format: 'json',
+    };
+    return this.http.get<LlmPromptResponse>(`${this.apiUrl}/teams/${teamId}/analytics/export/llm`, { params });
+  }
+
+  downloadLlmMarkdown(teamId: string, options: LlmExportOptions): Observable<Blob> {
+    const params: any = {
+      ...options,
+      format: 'markdown',
+    };
+    return this.http.get(`${this.apiUrl}/teams/${teamId}/analytics/export/llm`, {
+      params,
+      responseType: 'blob',
+    });
+  }
 }
+
+export type LlmPromptTemplate =
+  | 'practice-plan'
+  | 'game-strategy'
+  | 'season-debrief'
+  | 'player-eval'
+  | 'drill-recommender'
+  | 'opponent-scouting'
+  | 'custom';
+
+export interface LlmExportOptions {
+  template?: LlmPromptTemplate;
+  format?: 'json' | 'markdown';
+  seasonId?: string;
+  leagueId?: string;
+  playerId?: string;
+  limitGames?: number;
+  opponent?: string;
+  customInstructions?: string;
+}
+
+export interface LlmPromptResponse {
+  prompt: string;
+  title: string;
+  template: LlmPromptTemplate;
+  metadata: {
+    teamName: string;
+    sport: string;
+    seasonName?: string;
+    leagueName?: string;
+    gameCount: number;
+    practiceCount: number;
+    playerCount: number;
+    generatedAt: string;
+  };
+}
+

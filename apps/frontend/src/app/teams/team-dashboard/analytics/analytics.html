@@ -5,6 +5,10 @@
     </ion-buttons>
     <ion-title>Team Analytics</ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="openAiPromptModal()" color="primary" class="font-bold text-xs">
+        <ion-icon slot="start" name="sparkles-outline"></ion-icon>
+        <span class="hidden sm:inline">AI Prompts</span>
+      </ion-button>
       <ion-button (click)="openExportModal()">
         <ion-icon slot="icon-only" name="download-outline"></ion-icon>
       </ion-button>

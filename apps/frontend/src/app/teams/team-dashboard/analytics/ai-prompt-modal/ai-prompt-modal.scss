@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+.prompt-preview-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ap-border) transparent;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--ap-border);
+    border-radius: 3px;
+  }
+}
+
+.bg-indigo-500-10 {
+  background-color: rgba(99, 102, 241, 0.08);
+}
+
+.ring-indigo-500-30 {
+  --tw-ring-color: rgba(99, 102, 241, 0.3);
+}
