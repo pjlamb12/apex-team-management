@@ -21,7 +21,7 @@ export class PdfExportService {
     const playtime = await this.playingTimeService.calculateForTeam(teamId, options.seasonId);
 
     // Merge metrics and playtime
-    const reportData = metrics.map(m => {
+    const reportData = metrics.map((m) => {
       const p = playtime[m.playerId] || { totalSeconds: 0, positionSeconds: {} };
       return {
         ...m,
@@ -30,8 +30,8 @@ export class PdfExportService {
         positions: Object.entries(p.positionSeconds).map(([name, seconds]) => ({
           name,
           seconds,
-          formatted: this.formatSeconds(seconds)
-        }))
+          formatted: this.formatSeconds(seconds),
+        })),
       };
     });
 
@@ -52,9 +52,11 @@ export class PdfExportService {
   }
 
   private async renderTemplate(data: any): Promise<string> {
-    // Try both development path and potential production paths
     const possiblePaths = [
       path.join(__dirname, 'templates', 'report.hbs'),
+      path.join(__dirname, '..', 'templates', 'report.hbs'),
+      path.join(process.cwd(), 'templates', 'report.hbs'),
+      path.join(process.cwd(), 'dist/apps/api/templates/report.hbs'),
       path.join(process.cwd(), 'apps/api/src/analytics/export/templates/report.hbs'),
     ];
 
@@ -69,65 +71,37 @@ export class PdfExportService {
     }
 
     if (!found) {
-      throw new Error(`Template not found in any of: ${possiblePaths.join(', ')}`);
+      this.logger.warn(`Report template file not found on disk, using built-in template fallback.`);
+      templateSource = this.getFallbackTemplate();
     }
 
     const template = handlebars.compile(templateSource);
-    
+
     // Register helpers
     handlebars.registerHelper('formatDuration', (seconds: number) => this.formatSeconds(seconds));
     handlebars.registerHelper('eq', (a, b) => a === b);
-    
+
     return template(data);
   }
 
   private async generatePdf(html: string): Promise<Buffer> {
     let browser: puppeteer.Browser | null = null;
     try {
-      let executablePath = process.env['PUPPETEER_EXECUTABLE_PATH'];
-      
-      if (!executablePath) {
-        const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-        if (fs.existsSync(macPath)) {
-          executablePath = macPath;
-        }
-      }
-
-      const launchOptions: Parameters<typeof puppeteer.launch>[0] = {
-        headless: true,
-        args: [
-          '--no-sandbox', 
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--font-render-hinting=none'
-        ],
-      };
-
-      if (executablePath) {
-        launchOptions.executablePath = executablePath;
-      }
-
-      try {
-        browser = await puppeteer.launch(launchOptions);
-      } catch (launchError) {
-        this.logger.warn(`Failed launching browser with custom path '${executablePath}', attempting default launch`, launchError);
-        delete launchOptions.executablePath;
-        browser = await puppeteer.launch(launchOptions);
-      }
+      browser = await this.launchBrowser();
 
       const page = await browser.newPage();
-      
-      // Set viewport for better rendering
+
+      // Set viewport for consistent rendering
       await page.setViewport({ width: 1200, height: 800 });
-      
+
       await page.setContent(html, { waitUntil: 'domcontentloaded' });
-      
-      // Try loading external Tailwind CSS with safety fallback
+
+      // Load Tailwind CSS with safety fallback
       try {
         await page.addStyleTag({
           url: 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css',
         });
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
       } catch (cssError) {
         this.logger.warn('Could not load external Tailwind CSS for PDF generation', cssError);
       }
@@ -145,19 +119,128 @@ export class PdfExportService {
       });
 
       return Buffer.from(pdfBuffer);
-    } catch (error) {
-      this.logger.error(`Failed to generate PDF: ${error.message}`, error.stack);
+    } catch (error: any) {
+      this.logger.error(`Failed to generate PDF: ${error?.message || error}`, error?.stack);
       throw error;
     } finally {
       if (browser) {
-        await browser.close();
+        await browser.close().catch(() => {});
       }
     }
+  }
+
+  private async launchBrowser(): Promise<puppeteer.Browser> {
+    // List of candidate executable paths in order of preference
+    const candidates: Array<string | undefined> = [
+      process.env['PUPPETEER_EXECUTABLE_PATH'],
+      // macOS standard paths
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      '/Applications/Chromium.app/Contents/MacOS/Chromium',
+      '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+      '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+      process.env['HOME'] ? path.join(process.env['HOME'], 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome') : undefined,
+      // Linux / Docker / Container standard paths
+      '/usr/bin/chromium',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/google-chrome',
+      '/usr/bin/google-chrome-stable',
+      '/snap/bin/chromium',
+      // Puppeteer internal default
+      undefined,
+    ];
+
+    // Filter to existing paths (while preserving undefined as the final fallback)
+    const validCandidates = candidates.filter((c) => c === undefined || (typeof c === 'string' && fs.existsSync(c)));
+
+    const launchArgs = [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-extensions',
+      '--font-render-hinting=none',
+    ];
+
+    let lastError: any = null;
+
+    for (const execPath of validCandidates) {
+      try {
+        const options: Parameters<typeof puppeteer.launch>[0] = {
+          headless: true,
+          args: launchArgs,
+        };
+        if (execPath) {
+          options.executablePath = execPath;
+        }
+
+        const browser = await puppeteer.launch(options);
+        return browser;
+      } catch (err: any) {
+        this.logger.warn(`Browser launch attempt failed with candidate '${execPath || 'default'}': ${err?.message || err}`);
+        lastError = err;
+      }
+    }
+
+    throw new Error(`Failed to launch browser for PDF generation. Attempted ${validCandidates.length} paths. Last error: ${lastError?.message || 'Unknown'}`);
   }
 
   private formatSeconds(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
+  }
+
+  private getFallbackTemplate(): string {
+    return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Team Analytics Report</title>
+    <style>
+        @page { size: A4; margin: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact; padding: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 12px; }
+        th { background-color: #f8fafc; font-weight: 700; color: #475569; }
+        h1 { color: #1e293b; font-size: 24px; margin-bottom: 4px; }
+        .meta { color: #64748b; font-size: 12px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Apex Team Analytics Report</h1>
+    <div class="meta">Generated: {{generatedAt}} | Team ID: {{teamId}}</div>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Preferred Pos</th>
+                <th>Playing Time</th>
+                <th>Goals</th>
+                <th>Assists</th>
+                <th>Yellow</th>
+                <th>Red</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each players}}
+            <tr>
+                <td>{{jerseyNumber}}</td>
+                <td>{{firstName}} {{lastName}}</td>
+                <td>{{preferredPosition}}</td>
+                <td>{{playtimeFormatted}}</td>
+                <td>{{goals}}</td>
+                <td>{{assists}}</td>
+                <td>{{yellowCards}}</td>
+                <td>{{redCards}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</body>
+</html>`;
   }
 }
