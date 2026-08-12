@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as puppeteer from 'puppeteer';
 import * as handlebars from 'handlebars';
 import * as fs from 'fs';
@@ -6,6 +8,9 @@ import * as path from 'path';
 import { PerformanceMetricsService } from '../performance-metrics.service';
 import { PlayingTimeService } from '../playing-time.service';
 import { ExportOptionsDto, ExportLayout } from '../dto/export-options.dto';
+import { TeamEntity } from '../../entities/team.entity';
+import { SeasonEntity } from '../../entities/season.entity';
+import { LeagueEntity } from '../../entities/league.entity';
 
 @Injectable()
 export class PdfExportService {
@@ -14,34 +19,135 @@ export class PdfExportService {
   constructor(
     private readonly performanceMetricsService: PerformanceMetricsService,
     private readonly playingTimeService: PlayingTimeService,
+    @InjectRepository(TeamEntity)
+    private readonly teamRepo: Repository<TeamEntity>,
+    @InjectRepository(SeasonEntity)
+    private readonly seasonRepo: Repository<SeasonEntity>,
+    @InjectRepository(LeagueEntity)
+    private readonly leagueRepo: Repository<LeagueEntity>,
   ) {}
 
   async generate(teamId: string, options: ExportOptionsDto): Promise<Buffer> {
-    const metrics = await this.performanceMetricsService.getTeamMetrics(teamId, options.seasonId);
-    const playtime = await this.playingTimeService.calculateForTeam(teamId, options.seasonId);
+    const team = await this.teamRepo.findOne({
+      where: { id: teamId },
+      relations: ['sport'],
+    });
 
-    // Merge metrics and playtime
+    let season: SeasonEntity | null = null;
+    if (options.seasonId) {
+      season = await this.seasonRepo.findOne({ where: { id: options.seasonId, teamId } });
+    }
+
+    let league: LeagueEntity | null = null;
+    if (options.leagueId) {
+      league = await this.leagueRepo.findOne({ where: { id: options.leagueId } });
+    }
+
+    const metrics = await this.performanceMetricsService.getTeamMetrics(
+      teamId,
+      options.seasonId,
+      options.leagueId,
+    );
+    const playtime = await this.playingTimeService.calculateForTeam(
+      teamId,
+      options.seasonId,
+      options.leagueId,
+    );
+
+    let totalGoals = 0;
+    let totalAssists = 0;
+    let totalSeconds = 0;
+
+    // Merge metrics and playtime with full current stats
     const reportData = metrics.map((m) => {
       const p = playtime[m.playerId] || { totalSeconds: 0, positionSeconds: {} };
+      const playerSec = p.totalSeconds || 0;
+      const mins = Math.round(playerSec / 60);
+      const gp = m.gamesPlayed || 0;
+      const goals = m.goals || 0;
+      const assists = m.assists || 0;
+      const points = goals + assists;
+      const shotSaves = (m.blockedShots || 0) + (m.blockedPenaltyKicks || 0);
+
+      totalGoals += goals;
+      totalAssists += assists;
+      totalSeconds += playerSec;
+
+      const positions = Object.entries(p.positionSeconds || {}).map(([name, seconds]) => {
+        const sec = Number(seconds) || 0;
+        const pct = playerSec > 0 ? Math.round((sec / playerSec) * 100) : 0;
+        return {
+          name,
+          seconds: sec,
+          minutes: Math.round(sec / 60),
+          formatted: this.formatSeconds(sec),
+          percentage: pct,
+        };
+      });
+
       return {
         ...m,
-        playtime: p,
-        playtimeFormatted: this.formatSeconds(p.totalSeconds),
-        positions: Object.entries(p.positionSeconds).map(([name, seconds]) => ({
-          name,
-          seconds,
-          formatted: this.formatSeconds(seconds),
-        })),
+        jerseyNumber: m.jerseyNumber != null ? `#${m.jerseyNumber}` : '-',
+        preferredPosition: m.preferredPosition || 'Flexible',
+        isGuest: !!m.isGuest,
+        isActive: m.isActive !== false,
+        gamesPlayed: gp,
+        totalSeconds: playerSec,
+        minutes: mins,
+        playtimeFormatted: this.formatSeconds(playerSec),
+        mpg: gp > 0 ? (playerSec / 60 / gp).toFixed(1) : '0.0',
+        goals,
+        assists,
+        points,
+        goalsPerGame: gp > 0 ? (goals / gp).toFixed(2) : '0.00',
+        assistsPerGame: gp > 0 ? (assists / gp).toFixed(2) : '0.00',
+        shotSaves,
+        yellowCards: m.yellowCards || 0,
+        redCards: m.redCards || 0,
+        cardsFormatted: `${m.yellowCards || 0} / ${m.redCards || 0}`,
+        positions,
+        // Volleyball metrics
+        kills: m.kills || 0,
+        hits: m.hits || 0,
+        hittingErrors: m.hittingErrors || 0,
+        hittingPct:
+          m.hits && m.hits > 0 ? (((m.kills || 0) - (m.hittingErrors || 0)) / m.hits).toFixed(3) : '.000',
+        setAttempts: m.setAttempts || 0,
+        setAssists: m.setAssists || 0,
+        setErrors: m.setErrors || 0,
+        passCount: m.passCount || 0,
+        passAverage:
+          m.passCount && m.passCount > 0 ? ((m.passScoreSum || 0) / m.passCount).toFixed(2) : '-',
+        aces: m.aces || 0,
+        serviceErrors: m.serviceErrors || 0,
+        digs: m.digs || 0,
+        blocks: m.blocks || 0,
+        blockTouches: m.blockTouches || 0,
       };
     });
 
     // Sort by name
     reportData.sort((a, b) => a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName));
 
+    const scopeParts: string[] = [];
+    if (season) scopeParts.push(`Season: ${season.name}`);
+    if (league) scopeParts.push(`Tournament: ${league.name}`);
+
+    let layoutTitle = 'Team Overview';
+    if (options.layout === ExportLayout.PLAYER_PACK) layoutTitle = 'Full Player Pack';
+    if (options.layout === ExportLayout.TABULAR) layoutTitle = 'Tabular Summary';
+
     const html = await this.renderTemplate({
       teamId,
+      teamName: team?.name || 'Apex Team',
+      sportName: team?.sport?.name || 'Soccer',
+      scopeLabel: scopeParts.join(' • '),
+      layoutTitle,
       options,
       players: reportData,
+      totalGoals,
+      totalAssists,
+      totalMinutes: Math.round(totalSeconds / 60),
       generatedAt: new Date().toLocaleString(),
       isOverview: options.layout === ExportLayout.OVERVIEW,
       isPlayerPack: options.layout === ExportLayout.PLAYER_PACK,
@@ -110,9 +216,9 @@ export class PdfExportService {
         format: 'A4',
         printBackground: true,
         margin: {
-          top: '20mm',
+          top: '15mm',
           right: '10mm',
-          bottom: '20mm',
+          bottom: '15mm',
           left: '10mm',
         },
         timeout: 30000,
@@ -130,27 +236,26 @@ export class PdfExportService {
   }
 
   private async launchBrowser(): Promise<puppeteer.Browser> {
-    // List of candidate executable paths in order of preference
     const candidates: Array<string | undefined> = [
       process.env['PUPPETEER_EXECUTABLE_PATH'],
-      // macOS standard paths
       '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
       '/Applications/Chromium.app/Contents/MacOS/Chromium',
       '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
       '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
-      process.env['HOME'] ? path.join(process.env['HOME'], 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome') : undefined,
-      // Linux / Docker / Container standard paths
+      process.env['HOME']
+        ? path.join(process.env['HOME'], 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+        : undefined,
       '/usr/bin/chromium',
       '/usr/bin/chromium-browser',
       '/usr/bin/google-chrome',
       '/usr/bin/google-chrome-stable',
       '/snap/bin/chromium',
-      // Puppeteer internal default
       undefined,
     ];
 
-    // Filter to existing paths (while preserving undefined as the final fallback)
-    const validCandidates = candidates.filter((c) => c === undefined || (typeof c === 'string' && fs.existsSync(c)));
+    const validCandidates = candidates.filter(
+      (c) => c === undefined || (typeof c === 'string' && fs.existsSync(c)),
+    );
 
     const launchArgs = [
       '--no-sandbox',
@@ -179,12 +284,16 @@ export class PdfExportService {
         const browser = await puppeteer.launch(options);
         return browser;
       } catch (err: any) {
-        this.logger.warn(`Browser launch attempt failed with candidate '${execPath || 'default'}': ${err?.message || err}`);
+        this.logger.warn(
+          `Browser launch attempt failed with candidate '${execPath || 'default'}': ${err?.message || err}`,
+        );
         lastError = err;
       }
     }
 
-    throw new Error(`Failed to launch browser for PDF generation. Attempted ${validCandidates.length} paths. Last error: ${lastError?.message || 'Unknown'}`);
+    throw new Error(
+      `Failed to launch browser for PDF generation. Attempted ${validCandidates.length} paths. Last error: ${lastError?.message || 'Unknown'}`,
+    );
   }
 
   private formatSeconds(seconds: number): string {
@@ -217,12 +326,16 @@ export class PdfExportService {
             <tr>
                 <th>#</th>
                 <th>Player</th>
-                <th>Preferred Pos</th>
-                <th>Playing Time</th>
+                <th>Pos</th>
+                <th>GP</th>
+                <th>MIN</th>
+                <th>MPG</th>
                 <th>Goals</th>
                 <th>Assists</th>
-                <th>Yellow</th>
-                <th>Red</th>
+                <th>PTS</th>
+                <th>G/G</th>
+                <th>Saves</th>
+                <th>Cards (Y/R)</th>
             </tr>
         </thead>
         <tbody>
@@ -231,11 +344,15 @@ export class PdfExportService {
                 <td>{{jerseyNumber}}</td>
                 <td>{{firstName}} {{lastName}}</td>
                 <td>{{preferredPosition}}</td>
-                <td>{{playtimeFormatted}}</td>
+                <td>{{gamesPlayed}}</td>
+                <td>{{minutes}}m</td>
+                <td>{{mpg}}m</td>
                 <td>{{goals}}</td>
                 <td>{{assists}}</td>
-                <td>{{yellowCards}}</td>
-                <td>{{redCards}}</td>
+                <td>{{points}}</td>
+                <td>{{goalsPerGame}}</td>
+                <td>{{shotSaves}}</td>
+                <td>{{cardsFormatted}}</td>
             </tr>
             {{/each}}
         </tbody>
