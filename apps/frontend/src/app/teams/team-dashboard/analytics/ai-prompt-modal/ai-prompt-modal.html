@@ -136,7 +136,7 @@
               class="w-full text-xs font-medium"
             >
               <ion-select-option [value]="undefined">All Roster Players</ion-select-option>
-              @for (p of players(); track p.id) {
+              @for (p of availablePlayers(); track p.id) {
                 <ion-select-option [value]="p.id">
                   #{{ p.jerseyNumber || '-' }} {{ p.firstName }} {{ p.lastName }} ({{ p.preferredPosition || 'Flexible' }})
                 </ion-select-option>

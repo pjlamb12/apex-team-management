@@ -149,7 +149,9 @@ export class AnalyticsService {
     if (options.seasonId) params.seasonId = options.seasonId;
     if (options.leagueId) params.leagueId = options.leagueId;
     if (options.playerId) params.playerId = options.playerId;
-    if (options.limitGames !== undefined && options.limitGames !== null) params.limitGames = options.limitGames.toString();
+    if (options.limitGames !== undefined && options.limitGames !== null && !isNaN(Number(options.limitGames)) && Number(options.limitGames) > 0) {
+      params.limitGames = options.limitGames.toString();
+    }
     if (options.opponent) params.opponent = options.opponent;
     if (options.customInstructions) params.customInstructions = options.customInstructions;
 
@@ -162,7 +164,9 @@ export class AnalyticsService {
     if (options.seasonId) params.seasonId = options.seasonId;
     if (options.leagueId) params.leagueId = options.leagueId;
     if (options.playerId) params.playerId = options.playerId;
-    if (options.limitGames !== undefined && options.limitGames !== null) params.limitGames = options.limitGames.toString();
+    if (options.limitGames !== undefined && options.limitGames !== null && !isNaN(Number(options.limitGames)) && Number(options.limitGames) > 0) {
+      params.limitGames = options.limitGames.toString();
+    }
     if (options.opponent) params.opponent = options.opponent;
     if (options.customInstructions) params.customInstructions = options.customInstructions;
 

@@ -164,6 +164,14 @@ export class AiPromptModalComponent implements OnInit {
   protected leagues = signal<League[]>([]);
   protected players = signal<PlayerEntity[]>([]);
 
+  protected availablePlayers = computed(() => {
+    const list = this.players();
+    if (this.selectedTemplate() === 'season-debrief') {
+      return list;
+    }
+    return list.filter((p) => !p.isGuest && p.isActive !== false);
+  });
+
   protected isLoading = signal<boolean>(false);
   protected promptResult = signal<LlmPromptResponse | null>(null);
   protected errorMessage = signal<string | null>(null);
@@ -263,7 +271,11 @@ export class AiPromptModalComponent implements OnInit {
 
   protected onLimitGamesChange(event: any) {
     const val = event.detail.value;
-    this.limitGames.set(val ? Number(val) : undefined);
+    if (val === undefined || val === null || val === 'undefined' || val === '' || isNaN(Number(val))) {
+      this.limitGames.set(undefined);
+    } else {
+      this.limitGames.set(Number(val));
+    }
     void this.generatePrompt();
   }
 
