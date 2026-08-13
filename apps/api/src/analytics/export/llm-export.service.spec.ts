@@ -241,5 +241,35 @@ describe('LlmExportService', () => {
       expect(result.prompt).toContain('## Coach Focus & Specific Instructions');
       expect(result.prompt).toContain('Focus on defending corner kicks and aerial duels.');
     });
+
+    it('should exclude guest players for forward-looking practice plan prompts', async () => {
+      playerRepo.find.mockResolvedValue([
+        { id: 'p1', firstName: 'Leo', lastName: 'Messi', jerseyNumber: 10, preferredPosition: 'FWD', isGuest: false, isActive: true },
+        { id: 'p_guest', firstName: 'Guest', lastName: 'Player', jerseyNumber: 99, preferredPosition: 'FWD', isGuest: true, isActive: true },
+      ]);
+
+      const result = await service.generate('team-1', {
+        template: LlmPromptTemplate.PRACTICE_PLAN,
+      });
+
+      expect(result.prompt).toContain('Leo Messi');
+      expect(result.prompt).not.toContain('Guest Player');
+      expect(result.metadata.playerCount).toBe(1);
+    });
+
+    it('should include guest players for retrospective season-debrief prompts', async () => {
+      playerRepo.find.mockResolvedValue([
+        { id: 'p1', firstName: 'Leo', lastName: 'Messi', jerseyNumber: 10, preferredPosition: 'FWD', isGuest: false, isActive: true },
+        { id: 'p_guest', firstName: 'Guest', lastName: 'Player', jerseyNumber: 99, preferredPosition: 'FWD', isGuest: true, isActive: true },
+      ]);
+
+      const result = await service.generate('team-1', {
+        template: LlmPromptTemplate.SEASON_DEBRIEF,
+      });
+
+      expect(result.prompt).toContain('Leo Messi');
+      expect(result.prompt).toContain('Guest Player');
+      expect(result.metadata.playerCount).toBe(2);
+    });
   });
 });

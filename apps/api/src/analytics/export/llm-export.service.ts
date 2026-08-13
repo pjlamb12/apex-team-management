@@ -79,10 +79,18 @@ export class LlmExportService {
     }
 
     // Fetch all players on team
-    const players = await this.playerRepo.find({
+    const allTeamPlayers = await this.playerRepo.find({
       where: { teamId },
       order: { jerseyNumber: 'ASC', lastName: 'ASC', firstName: 'ASC' },
     });
+
+    const isRetrospective = template === LlmPromptTemplate.SEASON_DEBRIEF;
+
+    // For future considerations (practice plans, game strategy, player evals, drill recommenders),
+    // exclude guest players and inactive players from the roster and forward planning.
+    // For retrospective season debriefs, include guest players to evaluate full tournament match impact.
+    const activeRosterPlayers = allTeamPlayers.filter((p) => !p.isGuest && p.isActive !== false);
+    const playersForContext = isRetrospective ? allTeamPlayers : activeRosterPlayers;
 
     // Query seasons for team
     const teamSeasons = await this.seasonRepo.find({ where: { teamId } });
@@ -189,7 +197,8 @@ export class LlmExportService {
       team,
       season,
       league,
-      players,
+      players: playersForContext,
+      allTeamPlayers,
       games,
       practices,
       gameEvents,
@@ -213,7 +222,7 @@ export class LlmExportService {
         leagueName: league?.name,
         gameCount: games.length,
         practiceCount: practices.length,
-        playerCount: players.length,
+        playerCount: playersForContext.length,
         generatedAt: new Date().toISOString(),
       },
     };
@@ -244,6 +253,7 @@ export class LlmExportService {
     season: SeasonEntity | null;
     league: LeagueEntity | null;
     players: PlayerEntity[];
+    allTeamPlayers: PlayerEntity[];
     games: EventEntity[];
     practices: EventEntity[];
     gameEvents: GameEventEntity[];
@@ -309,7 +319,11 @@ export class LlmExportService {
         return `# System Role: Master Youth ${sportName} Tactical Coach & Technical Director
 
 You are an expert ${sportName.toLowerCase()} coach specializing in youth player development and match performance analysis.
-Review the match logs, goal timelines, coach notes, drill history with team ratings, and roster data below.
+Review the match logs, goal timelines, coach notes, drill history with team ratings, and active roster data below.
+
+## Roster Scope:
+- Target this practice plan and player numbers specifically for the active, permanent roster players listed below.
+- Do not plan drills or rotations around temporary guest players.
 
 ## Your Task:
 1. **Analyze Recent Match Breakdowns & Trends**: Identify the top 2-3 technical or tactical recurring weaknesses (e.g. conceding late in the second half, slow midfield ball progression, transitional defending).
@@ -327,6 +341,10 @@ Review the match logs, goal timelines, coach notes, drill history with team rati
 You are an expert game-day coach assistant for a youth ${sportName.toLowerCase()} team.
 Review the available roster, preferred positions, historical playing time balance, sub patterns, and opponent history below.
 
+## Roster Scope:
+- Only allocate starting spots and rotation minutes to the active, permanent roster players listed below.
+- Do not assign positions or playing time to temporary guest players.
+
 ## Your Task:
 1. **Starting Formation & Lineup**: Propose an optimal starting lineup that matches player positional strengths while maintaining tactical balance.
 2. **Minute-by-Minute Substitution Plan**:
@@ -342,7 +360,7 @@ Review the available roster, preferred positions, historical playing time balanc
         return `# System Role: Director of Coaching & Sports Analytics Specialist
 
 You are an elite youth sports director conducting a comprehensive season/tournament retrospective for ${ctx.team.name}.
-Review the match history, goal timing breakdowns, player minutes distribution, drill ratings, and coach qualitative notes below.
+Review the match history, goal timing breakdowns, player minutes distribution, drill ratings, coach notes, and full participation data (including tournament guest player contributions) below.
 
 ## Your Task:
 1. **Executive Performance Summary**: Overall record, goal differential patterns, and key milestones.
@@ -351,17 +369,20 @@ Review the match history, goal timing breakdowns, player minutes distribution, d
    - Set piece and transitional phase effectiveness.
 3. **Player Development & Playing Time Equity**:
    - Assessment of minutes distribution fairness and positional versatility.
-   - Individual standouts and players showing significant progression.
+   - Review impact of core roster players as well as temporary guest players who supplemented tournament matches.
 4. **Curriculum & Training Efficacy**:
    - Which practice drills translated to game day success.
    - Which training areas were underrepresented or received low drill ratings.
-5. **Action Plan for Next Season / Tournament**: 3 highest-priority focus areas.`;
+5. **Action Plan for Next Season / Tournament**: 3 highest-priority focus areas for long-term roster development.`;
 
       case LlmPromptTemplate.PLAYER_EVAL:
         return `# System Role: Youth Sports Development Coach & Player Mentor
 
 You are a supportive, insightful youth ${sportName.toLowerCase()} coach providing constructive player evaluations and developmental roadmaps.
 Review the detailed player profiles, minutes played, positions played, event logs, and coach notes below.
+
+## Roster Scope:
+- Evaluations are for permanent team roster players to support their multi-season development.
 
 ## Your Task:
 1. **Player Overview & Contributions**: Summarize what each player brings to the team (attitude, reliability, technical strengths).
@@ -394,7 +415,7 @@ Review previous encounter logs, scorelines, goal timelines, and coach observatio
 1. **Historical Matchup Analysis**: What patterns emerged in previous games against this team (strengths to neutralize, vulnerabilities to exploit).
 2. **Defensive Strategy**: How to organize the defensive block against their attacking threats.
 3. **Attacking Strategy**: How to break down their defense and create high-percentage scoring chances.
-4. **Matchday Checklist**: 3 non-negotiable team keys to victory.`;
+4. **Matchday Checklist**: 3 non-negotiable team keys to victory for the current active roster.`;
 
       case LlmPromptTemplate.CUSTOM:
       default:
@@ -410,8 +431,10 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
     season: SeasonEntity | null;
     league: LeagueEntity | null;
     players: PlayerEntity[];
+    allTeamPlayers: PlayerEntity[];
     games: EventEntity[];
     practices: EventEntity[];
+    template: LlmPromptTemplate;
   }): string {
     const sportName = ctx.team.sport?.name || 'Soccer';
     const lines: string[] = [];
@@ -425,14 +448,18 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
     lines.push(`- **Total Practices Analyzed**: ${ctx.practices.length}`);
     lines.push(`- **Roster Size**: ${ctx.players.length} players`);
 
-    lines.push(`\n### Active Roster`);
+    if (ctx.template !== LlmPromptTemplate.SEASON_DEBRIEF) {
+      lines.push(`- **Roster Scope**: Permanent active roster players only. Guest players from previous tournaments are excluded from future planning.`);
+    }
+
+    lines.push(`\n### ${ctx.template === LlmPromptTemplate.SEASON_DEBRIEF ? 'Team & Tournament Roster' : 'Active Team Roster'}`);
     lines.push(`| # | Player Name | Preferred Position | Status |`);
     lines.push(`| :---: | :--- | :--- | :---: |`);
 
     for (const p of ctx.players) {
       const num = p.jerseyNumber !== null && p.jerseyNumber !== undefined ? `#${p.jerseyNumber}` : '-';
       const pos = p.preferredPosition || 'Unspecified';
-      const status = p.isGuest ? 'Guest' : p.isActive === false ? 'Stepped Away' : 'Active';
+      const status = p.isGuest ? 'Guest (Tournament Only)' : p.isActive === false ? 'Stepped Away' : 'Active';
       lines.push(`| ${num} | ${p.firstName} ${p.lastName} | ${pos} | ${status} |`);
     }
 
@@ -443,6 +470,7 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
     games: EventEntity[];
     gameEvents: GameEventEntity[];
     players: PlayerEntity[];
+    allTeamPlayers: PlayerEntity[];
   }): string {
     const lines: string[] = [];
     lines.push(`## Match Logs & Event Timelines`);
@@ -470,24 +498,42 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
       else totalDraws++;
     });
 
-    lines.push(`**Overall Record in Sample**: ${totalWins}W - ${totalLosses}L - ${totalDraws}D | Goals: ${totalGoalsFor} For, ${totalGoalsAgainst} Against (Diff: ${totalGoalsFor - totalGoalsAgainst >= 0 ? '+' : ''}${totalGoalsFor - totalGoalsAgainst})\n`);
+    lines.push(
+      `**Overall Record in Sample**: ${totalWins}W - ${totalLosses}L - ${totalDraws}D | Goals: ${totalGoalsFor} For, ${totalGoalsAgainst} Against (Diff: ${totalGoalsFor - totalGoalsAgainst >= 0 ? '+' : ''}${totalGoalsFor - totalGoalsAgainst})\n`,
+    );
 
     sortedGames.forEach((game, idx) => {
-      const dateStr = game.scheduledAt ? new Date(game.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown Date';
+      const dateStr = game.scheduledAt
+        ? new Date(game.scheduledAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : 'Unknown Date';
       const opp = game.opponent || 'Unknown Opponent';
       const homeAway = game.isHomeGame ? 'Home' : 'Away';
-      const scoreStr = game.goalsFor !== null && game.goalsAgainst !== null ? `${game.goalsFor} - ${game.goalsAgainst}` : 'Incomplete / No Score';
-      const outcome = game.goalsFor !== null && game.goalsAgainst !== null
-        ? game.goalsFor > game.goalsAgainst
-          ? 'WIN'
-          : game.goalsFor < game.goalsAgainst
-            ? 'LOSS'
-            : 'DRAW'
-        : 'N/A';
+      const scoreStr =
+        game.goalsFor !== null && game.goalsAgainst !== null
+          ? `${game.goalsFor} - ${game.goalsAgainst}`
+          : 'Incomplete / No Score';
+      const outcome =
+        game.goalsFor !== null && game.goalsAgainst !== null
+          ? game.goalsFor > game.goalsAgainst
+            ? 'WIN'
+            : game.goalsFor < game.goalsAgainst
+              ? 'LOSS'
+              : 'DRAW'
+          : 'N/A';
 
       lines.push(`### Game ${idx + 1}: vs ${opp} (${outcome} ${scoreStr})`);
-      lines.push(`- **Date**: ${dateStr} | **Location**: ${game.location || game.locationRef?.name || 'TBD'} (${homeAway})`);
-      if (game.durationMinutes) lines.push(`- **Duration**: ${game.durationMinutes} min (${game.periodCount || 2} periods of ${game.periodLengthMinutes || 25} min)`);
+      lines.push(
+        `- **Date**: ${dateStr} | **Location**: ${game.location || game.locationRef?.name || 'TBD'} (${homeAway})`,
+      );
+      if (game.durationMinutes) {
+        lines.push(
+          `- **Duration**: ${game.durationMinutes} min (${game.periodCount || 2} periods of ${game.periodLengthMinutes || 25} min)`,
+        );
+      }
       if (game.weatherData?.condition || game.weatherData?.temperature) {
         lines.push(`- **Weather**: ${game.weatherData.temperature}°F, ${game.weatherData.condition || 'Clear'}`);
       }
@@ -499,10 +545,14 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
         events.forEach((ge) => {
           const payload = (ge.payload as any) || {};
           const min = ge.minuteOccurred ? `${ge.minuteOccurred}'` : `Period ${payload.period || 1}`;
-          const player = ctx.players.find((p) => p.id === (payload.scorerId || payload.playerId));
-          const assistor = payload.assistorId ? ctx.players.find((p) => p.id === payload.assistorId) : null;
-          const playerName = player ? `${player.firstName} ${player.lastName}` : 'Player';
-          const assistName = assistor ? ` (Assist: ${assistor.firstName} ${assistor.lastName})` : '';
+          const player = ctx.allTeamPlayers.find((p) => p.id === (payload.scorerId || payload.playerId));
+          const assistor = payload.assistorId ? ctx.allTeamPlayers.find((p) => p.id === payload.assistorId) : null;
+          const playerName = player
+            ? `${player.firstName} ${player.lastName}${player.isGuest ? ' (Guest)' : ''}`
+            : 'Player';
+          const assistName = assistor
+            ? ` (Assist: ${assistor.firstName} ${assistor.lastName}${assistor.isGuest ? ' - Guest' : ''})`
+            : '';
 
           if (ge.eventType === 'GOAL') {
             lines.push(`  - ⚽ **${min} GOAL**: Scored by ${playerName}${assistName}`);
@@ -564,7 +614,7 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
       const games = metric?.gamesPlayed || 0;
 
       lines.push(
-        `| ${p.firstName} ${p.lastName} | ${totalMin}m | ${gkPct}% | ${defPct}% | ${midPct}% | ${fwdPct}% | ${goals} | ${assists} | ${games} |`,
+        `| ${p.firstName} ${p.lastName}${p.isGuest ? ' (Guest)' : ''} | ${totalMin}m | ${gkPct}% | ${defPct}% | ${midPct}% | ${fwdPct}% | ${goals} | ${assists} | ${games} |`,
       );
     }
 
@@ -586,7 +636,13 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
     const tagCounts: Record<string, { minutes: number; count: number; ratingSum: number; ratingCount: number }> = {};
 
     sortedPractices.forEach((prac, idx) => {
-      const dateStr = prac.scheduledAt ? new Date(prac.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown Date';
+      const dateStr = prac.scheduledAt
+        ? new Date(prac.scheduledAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : 'Unknown Date';
       lines.push(`### Practice ${idx + 1}: ${dateStr} (${prac.durationMinutes || 60} min)`);
       if (prac.notes && prac.notes.trim().length > 0) {
         lines.push(`- **Session Focus / Note**: ${prac.notes.trim()}`);
@@ -667,7 +723,7 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
       const pct = totalEvents > 0 ? Math.round((totalAtt / totalEvents) * 100) : 100;
 
       lines.push(
-        `| ${p.firstName} ${p.lastName} | ${totalEvents} | ${pracAtt}/${ctx.practices.length} | ${gameAtt}/${ctx.games.length} | ${pct}% |`,
+        `| ${p.firstName} ${p.lastName}${p.isGuest ? ' (Guest)' : ''} | ${totalEvents} | ${pracAtt}/${ctx.practices.length} | ${gameAtt}/${ctx.games.length} | ${pct}% |`,
       );
     }
 
@@ -695,15 +751,18 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
       const totalMin = Math.round((pt.totalSeconds || 0) / 60);
       const metric = ctx.playerMetrics.find((m) => m.playerId === p.id);
       const posSec = pt.positionSeconds || {};
-      const posBreakdown = Object.entries(posSec)
-        .map(([pos, sec]) => `${pos}: ${Math.round((sec as number) / 60)}m`)
-        .join(', ') || 'No positional time logged';
+      const posBreakdown =
+        Object.entries(posSec)
+          .map(([pos, sec]) => `${pos}: ${Math.round((sec as number) / 60)}m`)
+          .join(', ') || 'No positional time logged';
 
-      lines.push(`### Player Dossier: ${p.firstName} ${p.lastName} (#${p.jerseyNumber || 'N/A'})`);
+      lines.push(`### Player Dossier: ${p.firstName} ${p.lastName} (#${p.jerseyNumber || 'N/A'}${p.isGuest ? ' - Guest Player' : ''})`);
       lines.push(`- **Preferred Position**: ${p.preferredPosition || 'Flexible / Unspecified'}`);
       lines.push(`- **Total Minutes Played**: ${totalMin} min across ${metric?.gamesPlayed || 0} games`);
       lines.push(`- **Positions Played**: ${posBreakdown}`);
-      lines.push(`- **Match Stats**: ${metric?.goals || 0} Goals, ${metric?.assists || 0} Assists, ${metric?.blockedShots || 0} Blocked Shots, ${metric?.yellowCards || 0} Yellow Cards`);
+      lines.push(
+        `- **Match Stats**: ${metric?.goals || 0} Goals, ${metric?.assists || 0} Assists, ${metric?.blockedShots || 0} Blocked Shots, ${metric?.yellowCards || 0} Yellow Cards`,
+      );
       lines.push('');
     }
 
