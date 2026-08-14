@@ -187,4 +187,19 @@ describe('GameSummary Event Sorting', () => {
       },
     });
   });
+
+  it('should present MatchRecapModalComponent when openAiRecapModal is called', async () => {
+    const modalCtrl = TestBed.inject(ModalController);
+    (component as any)._teamId.set('team-1');
+    (component as any)._eventId.set('event-1');
+
+    await (component as any).openAiRecapModal();
+
+    expect(modalCtrl.create).toHaveBeenCalledWith(expect.objectContaining({
+      componentProps: {
+        teamId: 'team-1',
+        eventId: 'event-1',
+      },
+    }));
+  });
 });

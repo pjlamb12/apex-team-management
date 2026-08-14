@@ -15,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { EventsService } from './events.service';
 import { LineupEntriesService } from './lineup-entries.service';
 import { WeatherService } from './weather.service';
+import { MatchRecapService } from './recap/match-recap.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { CreateBulkEventsDto } from './dto/create-bulk-events.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -22,6 +23,7 @@ import { SaveLineupDto } from './dto/save-lineup.dto';
 import { CreateGameEventDto } from './dto/create-game-event.dto';
 import { UpdateGameEventDto } from './dto/update-game-event.dto';
 import { ApplyPlayingTimeCorrectionsDto } from './dto/apply-playing-time-corrections.dto';
+import { GenerateMatchRecapDto } from './dto/generate-match-recap.dto';
 import { TeamRoleGuard } from '../auth/guards/team-role.guard';
 import { TeamRoles } from '../auth/decorators/team-role.decorator';
 import { TeamRole } from '@apex-team/shared/util/models';
@@ -35,6 +37,7 @@ export class EventsController {
     private readonly lineupEntriesService: LineupEntriesService,
     private readonly weatherService: WeatherService,
     private readonly playingTimeValidationService: PlayingTimeValidationService,
+    private readonly matchRecapService: MatchRecapService,
   ) {}
 
   @Post(':eventId/weather/refresh')
@@ -221,5 +224,26 @@ export class EventsController {
     @Request() req: { user: { sub: string } },
   ) {
     return this.eventsService.deleteNote(eventId, noteId, req.user.sub);
+  }
+
+  @Post(':eventId/recap/generate')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  generateRecap(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Body() dto: GenerateMatchRecapDto,
+  ) {
+    return this.matchRecapService.generateRecap(teamId, eventId, dto);
+  }
+
+  @Get(':eventId/recap/prompt')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  getRecapPrompt(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Query('tone') tone?: any,
+    @Query('format') format?: any,
+  ) {
+    return this.matchRecapService.getPromptOnly(teamId, eventId, { tone, format });
   }
 }

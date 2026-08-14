@@ -31,6 +31,7 @@ import {
   IonInput,
   AlertController,
   ToastController,
+  ModalController,
   IonToggle,
 } from '@ionic/angular/standalone';
 import { LiveGameStateService, ShootoutScorecardComponent, EventSyncService } from '@apex-team/client/feature/game-console';
@@ -57,12 +58,14 @@ import {
   trashOutline,
   listOutline,
   chevronUpOutline,
-  chevronDownOutline
+  chevronDownOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport, OpponentsService } from '@apex-team/client/data-access/team';
 import { OpponentWithStats } from '@apex-team/shared/util/models';
 import { SocketService } from '@apex-team/client/shared/services';
+import { MatchRecapModalComponent } from './match-recap-modal/match-recap-modal';
 
 
 @Component({
@@ -130,6 +133,7 @@ export class GameSummary implements OnDestroy {
   private readonly socketService = inject(SocketService);
   private readonly alertController = inject(AlertController);
   private readonly toastController = inject(ToastController);
+  private readonly modalCtrl = inject(ModalController);
 
   protected sportName = signal<string>('Soccer');
   protected game = signal<EventEntity | null>(null);
@@ -431,6 +435,19 @@ export class GameSummary implements OnDestroy {
     await this.loadData(this.teamId, this.eventId, true);
   }
 
+  protected async openAiRecapModal(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: MatchRecapModalComponent,
+      componentProps: {
+        teamId: this.teamId,
+        eventId: this.eventId,
+      },
+      breakpoints: [0, 0.7, 1.0],
+      initialBreakpoint: 1.0,
+    });
+    await modal.present();
+  }
+
   protected goals = computed(() => {
     const lineup = this.lineup();
     return this.gameEvents()
@@ -551,7 +568,8 @@ export class GameSummary implements OnDestroy {
       trashOutline,
       listOutline,
       chevronUpOutline,
-      chevronDownOutline
+      chevronDownOutline,
+      sparklesOutline,
     });
 
     effect(() => {

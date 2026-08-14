@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { Season, League, Opponent } from '@apex-team/shared/util/models';
+import { Season, League, Opponent, MatchRecapOptions, MatchRecapResponse } from '@apex-team/shared/util/models';
 
 export interface LocationEntity {
   id: string;
@@ -275,5 +275,30 @@ export class EventsService {
 
   deleteEventNote(teamId: string, eventId: string, noteId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/notes/${noteId}`);
+  }
+
+  generateMatchRecap(
+    teamId: string,
+    eventId: string,
+    options?: MatchRecapOptions,
+  ): Observable<MatchRecapResponse> {
+    return this.http.post<MatchRecapResponse>(
+      `${this.apiUrl}/teams/${teamId}/events/${eventId}/recap/generate`,
+      options || {},
+    );
+  }
+
+  getMatchRecapPrompt(
+    teamId: string,
+    eventId: string,
+    options?: MatchRecapOptions,
+  ): Observable<{ prompt: string; systemInstruction: string; context: any }> {
+    const params: Record<string, string> = {};
+    if (options?.tone) params['tone'] = options.tone;
+    if (options?.format) params['format'] = options.format;
+    return this.http.get<{ prompt: string; systemInstruction: string; context: any }>(
+      `${this.apiUrl}/teams/${teamId}/events/${eventId}/recap/prompt`,
+      { params },
+    );
   }
 }

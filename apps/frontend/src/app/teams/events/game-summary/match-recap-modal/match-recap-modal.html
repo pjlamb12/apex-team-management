@@ -1,0 +1,299 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-ap-surface border-b border-ap-border">
+    <div class="flex items-center gap-3 px-3 py-1.5">
+      <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+        <ion-icon name="sparkles-outline" class="text-xl"></ion-icon>
+      </div>
+      <div>
+        <ion-title class="p-0 text-base font-bold text-ap-text">AI Match Recap & Parent Update</ion-title>
+        <p class="text-xs text-ap-muted">Post-game communications and newsletters powered by Gemini</p>
+      </div>
+    </div>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" class="text-ap-muted hover:text-ap-text">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg" [fullscreen]="true">
+  <div class="max-w-4xl mx-auto p-4 sm:p-6 pb-28 sm:pb-36 flex flex-col gap-6">
+
+    <!-- 1. Coaching Tone & Voice Section -->
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center justify-between px-1">
+        <span class="text-xs font-bold uppercase tracking-wider text-ap-muted">1. Select Coaching Tone & Voice</span>
+        <span class="text-xs text-indigo-400 font-medium">Gemini 3.6 Flash</span>
+      </div>
+
+      <div class="prompt-grid">
+        @for (tone of toneOptions; track tone.id) {
+          <button
+            type="button"
+            (click)="setTone(tone.id)"
+            class="prompt-card"
+            [class.active]="selectedTone() === tone.id"
+          >
+            <div class="card-top">
+              <div class="icon-wrapper">
+                <ion-icon
+                  [name]="tone.icon"
+                  [class.text-indigo-400]="selectedTone() === tone.id"
+                  [class.text-ap-muted]="selectedTone() !== tone.id"
+                ></ion-icon>
+              </div>
+            </div>
+            <div class="card-title">{{ tone.label }}</div>
+            <div class="card-description">{{ tone.description }}</div>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- 2. Target Audience & Channel Format Section -->
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center justify-between px-1">
+        <span class="text-xs font-bold uppercase tracking-wider text-ap-muted">2. Target Audience & Channel Format</span>
+        <span class="text-xs text-ap-muted font-medium">{{ formatOptions.length }} Channels</span>
+      </div>
+
+      <div class="channel-grid">
+        @for (fmt of formatOptions; track fmt.id) {
+          <button
+            type="button"
+            (click)="setFormat(fmt.id)"
+            class="prompt-card"
+            [class.active]="selectedFormat() === fmt.id"
+          >
+            <div class="card-top">
+              <div class="icon-wrapper">
+                <ion-icon
+                  [name]="fmt.icon"
+                  [class.text-indigo-400]="selectedFormat() === fmt.id"
+                  [class.text-ap-muted]="selectedFormat() !== fmt.id"
+                ></ion-icon>
+              </div>
+            </div>
+            <div class="card-title">{{ fmt.shortLabel }}</div>
+            <div class="card-description">{{ fmt.channel }}</div>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- 3. Scope & Options Card -->
+    <div class="bg-ap-surface rounded-2xl border border-ap-border p-5 flex flex-col gap-4 shadow-sm">
+      <div class="flex items-center justify-between border-b border-ap-border pb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-ap-text">3. Content Options & Coach Notes</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="flex items-center justify-between p-3 rounded-xl bg-ap-bg border border-ap-border">
+          <div class="flex flex-col pr-2">
+            <span class="text-xs font-bold text-ap-text">Include Next Schedule</span>
+            <span class="text-[10px] text-ap-muted">Attach next practice or game date & uniform</span>
+          </div>
+          <ion-toggle [checked]="includeNextEvent()" (ionChange)="onToggleNextEvent($event)" color="primary"></ion-toggle>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-xl bg-ap-bg border border-ap-border">
+          <div class="flex flex-col pr-2">
+            <span class="text-xs font-bold text-ap-text">Include Player Highlights</span>
+            <span class="text-[10px] text-ap-muted">Recognize goal scorers & standout effort</span>
+          </div>
+          <ion-toggle [checked]="includePlayerShoutouts()" (ionChange)="onTogglePlayerShoutouts($event)" color="primary"></ion-toggle>
+        </div>
+      </div>
+
+      <!-- Custom Coach Note Input -->
+      <ion-accordion-group class="custom-accordion">
+        <ion-accordion value="custom-notes" class="rounded-xl border border-ap-border bg-ap-bg overflow-hidden">
+          <ion-item slot="header" class="custom-accordion-header" lines="none">
+            <ion-icon name="create-outline" slot="start" class="text-sm text-indigo-400"></ion-icon>
+            <ion-label class="text-xs font-bold text-ap-text">Add Coach's Custom Note or Shoutout (Optional)</ion-label>
+          </ion-item>
+          <div slot="content" class="p-3 bg-ap-surface">
+            <ion-textarea
+              placeholder="e.g. Super proud of Lucas filling in at center back during the 2nd half, and great defensive energy across the board!"
+              [value]="customCoachNotes()"
+              (ionInput)="onCustomNotesChange($any($event).detail.value)"
+              [autoGrow]="true"
+              rows="2"
+              class="bg-ap-bg rounded-lg border border-ap-border p-2 text-xs text-ap-text"
+            ></ion-textarea>
+          </div>
+        </ion-accordion>
+      </ion-accordion-group>
+
+      <!-- Primary Generate Action -->
+      <div class="pt-2 flex items-center justify-between gap-3">
+        <ion-button
+          (click)="generateRecap()"
+          [disabled]="isLoading()"
+          color="primary"
+          class="w-full sm:w-auto font-bold text-xs uppercase tracking-wider h-10 px-4"
+        >
+          @if (isLoading()) {
+            <ion-spinner name="crescent" size="small" class="mr-2"></ion-spinner>
+            <span>Generating with Gemini...</span>
+          } @else {
+            <ion-icon name="sparkles-outline" slot="start"></ion-icon>
+            <span>{{ recapResult() ? 'Regenerate AI Recap' : 'Generate AI Recap with Gemini' }}</span>
+          }
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Error Message Banner -->
+    @if (errorMessage()) {
+      <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3 text-red-400 text-xs">
+        <ion-icon name="alert-circle-outline" class="text-lg mt-0.5 shrink-0"></ion-icon>
+        <div class="flex-1">
+          <div class="font-bold">Generation Notice</div>
+          <div>{{ errorMessage() }}</div>
+        </div>
+      </div>
+    }
+
+    <!-- Result / Output Area -->
+    @if (recapResult()) {
+      <div class="bg-ap-surface rounded-2xl border border-ap-border p-5 flex flex-col gap-4 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-ap-border">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-ap-text">Generated Post-Match Update</span>
+            @if (recapResult()?.isAiGenerated) {
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <ion-icon name="sparkles-outline"></ion-icon>
+                Gemini 3.6 Flash
+              </span>
+            } @else {
+              <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                Structured Template
+              </span>
+            }
+          </div>
+
+          <!-- Mode Toggle (Preview vs Edit) -->
+          <button
+            type="button"
+            (click)="toggleEdit()"
+            class="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer transition-colors"
+          >
+            <ion-icon [name]="isEditing() ? 'eye-outline' : 'create-outline'"></ion-icon>
+            <span>{{ isEditing() ? 'Preview' : 'Edit Text' }}</span>
+          </button>
+        </div>
+
+        <!-- Text View / Editor -->
+        @if (isEditing()) {
+          <textarea
+            [(ngModel)]="editedRecapText"
+            rows="12"
+            class="w-full bg-ap-bg text-ap-text font-mono text-xs p-3.5 rounded-xl border border-ap-border focus:border-indigo-500 focus:outline-none resize-y leading-relaxed"
+          ></textarea>
+        } @else {
+          <div class="bg-ap-bg p-4 rounded-xl border border-ap-border text-xs text-ap-text leading-relaxed whitespace-pre-wrap select-all font-sans recap-content">
+            {{ editedRecapText() }}
+          </div>
+        }
+
+        <!-- Next Event Snippet Badge -->
+        @if (recapResult()?.nextEvent; as nextEv) {
+          <div class="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between text-xs text-indigo-950 dark:text-indigo-200 shadow-xs">
+            <div class="flex items-center gap-2">
+              <ion-icon name="calendar-outline" class="text-base text-indigo-600 dark:text-indigo-400"></ion-icon>
+              <span>Next {{ nextEv.type | titlecase }}: <strong class="font-bold text-indigo-950 dark:text-indigo-100">{{ nextEv.scheduledAt | date: 'EEEE, MMM d @ h:mm a' }}</strong></span>
+              @if (nextEv.location) {
+                <span class="text-indigo-700 dark:text-indigo-300">({{ nextEv.location }})</span>
+              }
+            </div>
+            @if (nextEv.uniformColor) {
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-500/30">
+                Jersey: {{ nextEv.uniformColor }}
+              </span>
+            }
+          </div>
+        }
+
+        <!-- Actions Row -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <div class="flex items-center gap-2.5">
+            <ion-button
+              size="default"
+              (click)="copyRecap()"
+              [color]="isCopied() ? 'success' : 'primary'"
+              class="font-bold text-xs uppercase h-10 tracking-wider copy-btn"
+            >
+              <ion-icon slot="start" [name]="isCopied() ? 'checkmark-outline' : 'copy-outline'"></ion-icon>
+              {{ isCopied() ? 'Copied!' : 'Copy to Clipboard' }}
+            </ion-button>
+
+            <ion-button
+              size="default"
+              fill="outline"
+              color="medium"
+              (click)="shareRecap()"
+              class="font-bold text-xs uppercase h-10"
+            >
+              <ion-icon slot="start" name="share-outline"></ion-icon>
+              Share
+            </ion-button>
+          </div>
+
+          <ion-button
+            size="small"
+            fill="clear"
+            color="medium"
+            (click)="generateRecap()"
+            class="text-xs font-semibold"
+          >
+            <ion-icon slot="start" name="refresh-outline"></ion-icon>
+            Regenerate
+          </ion-button>
+        </div>
+
+        <!-- Prompt Inspector Accordion (Optional External LLM Tooling) -->
+        <div class="pt-2 border-t border-ap-border/60">
+          <button
+            type="button"
+            (click)="togglePromptInspector()"
+            class="w-full flex items-center justify-between text-[11px] text-ap-muted hover:text-ap-text py-1 cursor-pointer"
+          >
+            <span class="flex items-center gap-1.5 font-semibold">
+              <ion-icon name="document-text-outline" class="text-indigo-400"></ion-icon>
+              View Raw AI Prompt (For ChatGPT / Claude / Gemini Web)
+            </span>
+            <ion-icon [name]="showPromptInspector() ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </button>
+
+          @if (showPromptInspector()) {
+            <div class="mt-2 p-3 bg-ap-bg rounded-xl border border-ap-border flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono text-ap-muted uppercase">Prompt Payload</span>
+                <button
+                  type="button"
+                  (click)="copyPrompt()"
+                  class="text-[10px] font-bold text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <ion-icon name="copy-outline"></ion-icon>
+                  Copy Prompt
+                </button>
+              </div>
+              <pre class="text-[10px] text-ap-muted font-mono whitespace-pre-wrap max-h-48 overflow-y-auto bg-black/20 p-2.5 rounded-lg leading-relaxed">{{ recapResult()?.prompt }}</pre>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <ion-toast
+    [isOpen]="isToastOpen()"
+    [message]="toastMessage()"
+    [duration]="2500"
+    (didDismiss)="closeToast()"
+    position="bottom"
+  ></ion-toast>
+</ion-content>

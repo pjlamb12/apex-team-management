@@ -4,9 +4,13 @@ import { EventsService } from './events.service';
 import { LineupEntriesService } from './lineup-entries.service';
 import { ICalService } from './ical.service';
 import { WeatherService } from './weather.service';
+import { GeminiService } from './recap/gemini.service';
+import { MatchRecapService } from './recap/match-recap.service';
 import { EventsController } from './events.controller';
 import { EventEntity } from '../entities/event.entity';
 import { EventNoteEntity } from '../entities/event-note.entity';
+import { OpponentEntity } from '../entities/opponent.entity';
+import { AttendanceEntity } from '../entities/attendance.entity';
 
 import { SeasonEntity } from '../entities/season.entity';
 import { TeamEntity } from '../entities/team.entity';
@@ -33,6 +37,8 @@ import { AnalyticsModule } from '../analytics/analytics.module';
       GameEventEntity,
       EventNoteEntity,
       LeagueEntity,
+      OpponentEntity,
+      AttendanceEntity,
     ]),
     SocketModule,
     LocationsModule,
@@ -41,7 +47,21 @@ import { AnalyticsModule } from '../analytics/analytics.module';
     AnalyticsModule,
   ],
   controllers: [EventsController],
-  providers: [EventsService, LineupEntriesService, ICalService, WeatherService],
-  exports: [EventsService, LineupEntriesService, ICalService, WeatherService],
+  providers: [
+    EventsService,
+    LineupEntriesService,
+    ICalService,
+    WeatherService,
+    GeminiService,
+    MatchRecapService,
+  ],
+  exports: [
+    EventsService,
+    LineupEntriesService,
+    ICalService,
+    WeatherService,
+    GeminiService,
+    MatchRecapService,
+  ],
 })
 export class EventsModule {}

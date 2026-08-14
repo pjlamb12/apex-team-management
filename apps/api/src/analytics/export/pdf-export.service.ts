@@ -230,7 +230,9 @@ export class PdfExportService {
       throw error;
     } finally {
       if (browser) {
-        await browser.close().catch(() => {});
+        await browser.close().catch((err) => {
+          this.logger.warn(`Failed closing browser: ${err?.message}`);
+        });
       }
     }
   }

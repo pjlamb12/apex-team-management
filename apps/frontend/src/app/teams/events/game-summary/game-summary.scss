@@ -83,3 +83,21 @@ ion-segment-button {
     }
   }
 }
+
+.ai-recap-header-btn {
+  --color: #818cf8;
+  font-weight: 700;
+}
+
+.gemini-recap-btn {
+  --border-radius: 8px;
+  height: 36px;
+  min-height: 36px;
+  font-weight: 700;
+  font-size: 0.75rem;
+
+  ion-icon {
+    margin-inline-end: 8px !important;
+    font-size: 1rem;
+  }
+}
