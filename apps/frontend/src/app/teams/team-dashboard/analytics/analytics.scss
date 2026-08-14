@@ -1,7 +1,14 @@
 :host {
-  display: flex;
-  flex-direction: column;
+  display: block;
   height: 100%;
+}
+
+ion-content {
+  --background: var(--ap-bg);
+  --padding-top: 1rem;
+  --padding-bottom: 5rem;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
 }
 
 ion-card {

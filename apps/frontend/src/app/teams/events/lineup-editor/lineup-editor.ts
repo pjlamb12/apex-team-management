@@ -38,9 +38,10 @@ import {
   AttendanceService,
   AttendanceRecord,
   TeamService,
+  OpponentsService,
 } from '@apex-team/client/data-access/team';
 import { SoccerPitchViewComponent, VolleyballCourtViewComponent } from '@apex-team/client/feature/game-console';
-import { Player } from '@apex-team/shared/util/models';
+import { Player, OpponentWithStats, ThreatLevel } from '@apex-team/shared/util/models';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 
 interface LineupSlot {
@@ -137,6 +138,7 @@ export class LineupEditor implements OnInit {
   private readonly playersService = inject(PlayersService);
   private readonly attendanceService = inject(AttendanceService);
   private readonly teamService = inject(TeamService);
+  private readonly opponentsService = inject(OpponentsService);
   private readonly router = inject(Router);
   private readonly alertCtrl = inject(AlertController);
 
@@ -145,6 +147,8 @@ export class LineupEditor implements OnInit {
   protected players = signal<PlayerEntity[]>([]);
   protected attendance = signal<AttendanceRecord[]>([]);
   protected slots = signal<LineupSlot[]>([]);
+  protected opponentDossier = signal<OpponentWithStats | null>(null);
+  protected showOpponentIntel = signal(false);
   protected isLoading = signal(true);
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
@@ -161,6 +165,25 @@ export class LineupEditor implements OnInit {
     if (!lId) return null;
     return { liberoId: lId, replacedId: '' };
   });
+
+  protected toggleOpponentIntel(): void {
+    this.showOpponentIntel.update((v) => !v);
+  }
+
+  protected getThreatBadgeClass(threatLevel?: ThreatLevel | null): string {
+    switch (threatLevel) {
+      case 'critical':
+        return 'bg-red-500/20 text-red-400 border border-red-500/30';
+      case 'high':
+        return 'bg-orange-500/20 text-orange-400 border border-orange-500/30';
+      case 'medium':
+        return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+      case 'low':
+        return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+      default:
+        return 'bg-slate-500/20 text-slate-400 border border-slate-500/30';
+    }
+  }
 
   protected setLiberoId(playerId: string | null): void {
     this.slots.update((prev) => {
@@ -278,6 +301,27 @@ export class LineupEditor implements OnInit {
       this.event.set(event);
       this.attendance.set(attendance);
       this.team.set(team);
+
+      // Load Opponent Dossier if available
+      if (event.opponentId) {
+        try {
+          const opp = await firstValueFrom(this.opponentsService.getOpponent(teamId, event.opponentId));
+          this.opponentDossier.set(opp);
+        } catch (e) {
+          console.warn('Failed to load opponent dossier', e);
+        }
+      } else if (event.opponent) {
+        try {
+          const opps = await firstValueFrom(this.opponentsService.getOpponents(teamId, event.opponent.trim()));
+          const found = opps.find((o) => o.name.toLowerCase() === event.opponent!.trim().toLowerCase());
+          if (found) {
+            const opp = await firstValueFrom(this.opponentsService.getOpponent(teamId, found.id));
+            this.opponentDossier.set(opp);
+          }
+        } catch (e) {
+          console.warn('Failed to load opponent dossier', e);
+        }
+      }
 
       let leagueGuests: PlayerEntity[] = [];
       if (event.leagueId) {

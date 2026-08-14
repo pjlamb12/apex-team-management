@@ -9,4 +9,5 @@ export * from './lib/players.service';
 export * from './lib/candidates.service';
 export * from './lib/scouting.service';
 export * from './lib/season-checklist.service';
+export * from './lib/opponents.service';
 

@@ -28,13 +28,14 @@ import {
   IonToggle,
   ModalController,
   AlertController,
+  IonTextarea,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, trashOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { EventsService, EventEntity, LocationService, LocationEntity, LeaguesService } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, LocationService, LocationEntity, LeaguesService, OpponentsService } from '@apex-team/client/data-access/team';
 import { LocationModal } from '@apex-team/client/ui/location-modal';
-import { League } from '@apex-team/shared/util/models';
+import { League, OpponentWithStats } from '@apex-team/shared/util/models';
 import { CommonModule } from '@angular/common';
 
 function toLocalISOString(date: Date): string {
@@ -71,6 +72,7 @@ function toLocalISOString(date: Date): string {
     IonSelect,
     IonSelectOption,
     IonToggle,
+    IonTextarea,
     ControlErrorsDisplayComponent,
   ],
   templateUrl: './edit-event.html',
@@ -93,6 +95,7 @@ export class EditEvent {
   private readonly eventsService = inject(EventsService);
   private readonly locationService = inject(LocationService);
   private readonly leaguesService = inject(LeaguesService);
+  private readonly opponentsService = inject(OpponentsService);
   private readonly modalCtrl = inject(ModalController);
   private readonly alertCtrl = inject(AlertController);
   protected readonly fb = inject(FormBuilder);
@@ -100,12 +103,14 @@ export class EditEvent {
   protected event = signal<EventEntity | null>(null);
   protected locations = signal<LocationEntity[]>([]);
   protected leagues = signal<League[]>([]);
+  protected opponents = signal<OpponentWithStats[]>([]);
   protected isLoading = signal(false);
   protected isSaving = signal(false);
   protected errorMessage = signal<string | null>(null);
 
   protected form = this.fb.group({
     opponent: ['', [Validators.required, Validators.minLength(2)]],
+    opponentId: [''],
     leagueId: ['', [Validators.required]],
     scheduledAt: ['', [Validators.required]],
     locationId: [''],
@@ -130,6 +135,7 @@ export class EditEvent {
       if (tId && eId) {
         void this.loadEvent(tId, eId);
         void this.loadLocations(tId);
+        void this.loadOpponents(tId);
       }
     });
 
@@ -150,6 +156,23 @@ export class EditEvent {
     } catch {
       console.error('Failed to load locations');
     }
+  }
+
+  protected async loadOpponents(teamId: string): Promise<void> {
+    if (!teamId) return;
+    try {
+      const opps = await firstValueFrom(this.opponentsService.getOpponents(teamId));
+      this.opponents.set(opps);
+    } catch {
+      console.error('Failed to load opponents');
+    }
+  }
+
+  protected selectOpponent(opp: OpponentWithStats): void {
+    this.form.patchValue({
+      opponent: opp.name,
+      opponentId: opp.id,
+    });
   }
 
   protected async loadLeagues(seasonId: string): Promise<void> {
@@ -193,6 +216,7 @@ export class EditEvent {
 
       this.form.patchValue({
         opponent: data.opponent ?? '',
+        opponentId: data.opponentId ?? '',
         leagueId: data.leagueId ?? '',
         scheduledAt: toLocalISOString(new Date(data.scheduledAt)),
         locationId: data.locationId ?? '',
@@ -267,14 +291,19 @@ export class EditEvent {
     this.errorMessage.set(null);
     try {
       const { 
-        opponent, leagueId, scheduledAt, locationId, locationName, uniformColor, 
+        opponent, opponentId, leagueId, scheduledAt, locationId, locationName, uniformColor, 
         isHomeGame, durationMinutes, notes, goalsFor, goalsAgainst, 
         periodCount, periodLengthMinutes, playersOnField 
       } = this.form.getRawValue();
+
+      const matchedOpp = this.opponents().find(
+        (o) => o.name.toLowerCase() === opponent?.trim().toLowerCase(),
+      );
       
       await firstValueFrom(
         this.eventsService.updateEvent(tId, eId, {
           opponent: opponent || undefined,
+          opponentId: opponentId || matchedOpp?.id || undefined,
           leagueId: leagueId || undefined,
           scheduledAt: new Date(scheduledAt!).toISOString(),
           location: locationName || undefined,

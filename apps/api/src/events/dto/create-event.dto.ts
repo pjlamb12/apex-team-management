@@ -11,6 +11,10 @@ export class CreateEventDto {
 
   @IsString()
   @IsOptional()
+  opponentId?: string;
+
+  @IsString()
+  @IsOptional()
   leagueId?: string;
 
   @IsDateString()

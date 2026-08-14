@@ -37,6 +37,21 @@
                 placeholder="e.g. Eagles SC"
               />
             </ion-item>
+            @if (opponents().length > 0) {
+              <div class="flex flex-wrap items-center gap-1.5 mt-1.5 px-1">
+                <span class="text-[10px] text-ap-muted uppercase font-bold py-0.5">Quick Select:</span>
+                @for (opp of opponents().slice(0, 5); track opp.id) {
+                  <button
+                    type="button"
+                    class="text-[11px] font-medium px-2 py-0.5 rounded-full border border-ap-border bg-ap-surface-raised text-ap-text hover:border-ap-accent cursor-pointer transition-colors"
+                    [class.border-ap-accent]="form.get('opponent')?.value?.toLowerCase() === opp.name.toLowerCase()"
+                    (click)="selectOpponent(opp)"
+                  >
+                    {{ opp.name }}
+                  </button>
+                }
+              </div>
+            }
           </ngx-control-errors-display>
 
           <ngx-control-errors-display class="block mt-3">

@@ -34,9 +34,9 @@ import {
 import { addIcons } from 'ionicons';
 import { addOutline } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
-import { EventsService, LocationEntity, LocationService, LeaguesService } from '@apex-team/client/data-access/team';
+import { EventsService, LocationEntity, LocationService, LeaguesService, OpponentsService } from '@apex-team/client/data-access/team';
 import { LocationModal } from '@apex-team/client/ui/location-modal';
-import { Season, League } from '@apex-team/shared/util/models';
+import { Season, League, OpponentWithStats } from '@apex-team/shared/util/models';
 
 function toLocalISOString(date: Date): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().replace('Z', '');
@@ -91,6 +91,7 @@ export class CreateEvent {
   private readonly eventsService = inject(EventsService);
   private readonly locationService = inject(LocationService);
   private readonly leaguesService = inject(LeaguesService);
+  private readonly opponentsService = inject(OpponentsService);
   private readonly modalCtrl = inject(ModalController);
   protected readonly fb = inject(FormBuilder);
 
@@ -98,11 +99,13 @@ export class CreateEvent {
   protected errorMessage = signal<string | null>(null);
   protected activeSeason = signal<Season | null>(null);
   protected leagues = signal<League[]>([]);
+  protected opponents = signal<OpponentWithStats[]>([]);
   
   protected locations = signal<LocationEntity[]>([]);
 
   protected form = this.fb.group({
     opponent: ['', [Validators.required, Validators.minLength(2)]],
+    opponentId: [''],
     leagueId: ['', [Validators.required]],
     scheduledAt: [toLocalISOString(new Date()), [Validators.required]],
     locationId: [''],
@@ -124,6 +127,7 @@ export class CreateEvent {
       if (id) {
         void this.loadSeason(id);
         void this.loadLocations(id);
+        void this.loadOpponents(id);
       }
     });
 
@@ -198,6 +202,22 @@ export class CreateEvent {
     }
   }
 
+  protected async loadOpponents(teamId: string): Promise<void> {
+    try {
+      const opps = await firstValueFrom(this.opponentsService.getOpponents(teamId));
+      this.opponents.set(opps);
+    } catch {
+      console.error('Failed to load opponents');
+    }
+  }
+
+  protected selectOpponent(opp: OpponentWithStats): void {
+    this.form.patchValue({
+      opponent: opp.name,
+      opponentId: opp.id,
+    });
+  }
+
   protected async presentLocationModal(): Promise<void> {
     const teamId = this.teamId;
     if (!teamId) return;
@@ -253,9 +273,14 @@ export class CreateEvent {
     this.errorMessage.set(null);
     try {
       const { 
-        opponent, leagueId, scheduledAt, locationId, locationName, uniformColor, 
+        opponent, opponentId, leagueId, scheduledAt, locationId, locationName, uniformColor, 
         isHomeGame, periodCount, periodLengthMinutes, playersOnField, repeat 
       } = this.form.getRawValue();
+
+      // Find matching opponent if opponentId is not explicitly set
+      const matchedOpp = this.opponents().find(
+        (o) => o.name.toLowerCase() === opponent?.trim().toLowerCase(),
+      );
 
       let recurrenceRule: string | undefined = undefined;
       if (repeat && repeat !== 'none') {
@@ -273,6 +298,7 @@ export class CreateEvent {
         this.eventsService.createEvent(teamId, {
           type: 'game',
           opponent: opponent!,
+          opponentId: opponentId || matchedOpp?.id || undefined,
           leagueId: leagueId || undefined,
           scheduledAt: new Date(scheduledAt!).toISOString(),
           location: locationName || undefined,

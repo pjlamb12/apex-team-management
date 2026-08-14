@@ -2,11 +2,6 @@ import { Component, inject, signal, effect, Input, computed } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonBackButton,
   IonContent,
   IonCard,
   IonCardHeader,
@@ -63,11 +58,6 @@ import { League, SeasonStats } from '@apex-team/shared/util/models';
   standalone: true,
   imports: [
     CommonModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonBackButton,
     IonContent,
     IonCard,
     IonCardHeader,

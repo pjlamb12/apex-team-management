@@ -11,6 +11,10 @@ export class UpdateEventDto {
 
   @IsString()
   @IsOptional()
+  opponentId?: string;
+
+  @IsString()
+  @IsOptional()
   leagueId?: string;
 
   @IsDateString()
