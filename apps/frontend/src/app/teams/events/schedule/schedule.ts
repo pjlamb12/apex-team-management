@@ -24,9 +24,10 @@ import {
   ActionSheetController,
   IonButton,
   ModalController,
-  IonListHeader,
   IonRefresher,
   IonRefresherContent,
+  IonAccordionGroup,
+  IonAccordion,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -78,9 +79,10 @@ interface GroupedEvents {
     IonSelect,
     IonSelectOption,
     IonButton,
-    IonListHeader,
     IonRefresher,
     IonRefresherContent,
+    IonAccordionGroup,
+    IonAccordion,
   ],
   templateUrl: './schedule.html',
   styleUrl: './schedule.scss',
@@ -94,6 +96,7 @@ export class Schedule implements OnDestroy {
   public get teamId(): string {
     return this._teamId() ?? '';
   }
+  protected openAccordionValues = signal<string[]>([]);
 
   private readonly eventsService = inject(EventsService);
   private readonly seasonsService = inject(SeasonsService);
@@ -208,9 +211,26 @@ export class Schedule implements OnDestroy {
       this.refreshTrigger.update(n => n + 1);
     };
 
+    // Auto-expand all accordion groups when grouped events change
+    effect(() => {
+      const groups = this.groupedEvents();
+      this.openAccordionValues.set(groups.map(g => g.leagueName));
+    });
+
     this.socketService.onEvent('eventCreated', handleRemoteChange);
     this.socketService.onEvent('eventUpdated', handleRemoteChange);
     this.socketService.onEvent('eventRemoved', handleRemoteChange);
+  }
+
+  protected onAccordionChange(event: CustomEvent): void {
+    const val = event.detail.value;
+    if (Array.isArray(val)) {
+      this.openAccordionValues.set(val);
+    } else if (typeof val === 'string') {
+      this.openAccordionValues.set([val]);
+    } else {
+      this.openAccordionValues.set([]);
+    }
   }
 
   ionViewWillEnter(): void {

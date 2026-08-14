@@ -1,0 +1,438 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/opponents'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ opponent()?.name ?? 'Opponent Dossier' }}</ion-title>
+    <ion-buttons slot="end">
+      @if (opponent()) {
+        <ion-button (click)="openEditModal()" aria-label="Edit Opponent">
+          <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+        </ion-button>
+        <ion-button color="danger" (click)="confirmDelete()" aria-label="Delete Opponent">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      }
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg" style="--padding-top: 1rem; --padding-bottom: 5rem; --padding-start: 1rem; --padding-end: 1rem;">
+  @if (isLoading()) {
+    <div class="flex justify-center items-center py-24">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="max-w-2xl mx-auto p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-ap-danger text-center m-4">
+      {{ errorMessage() }}
+    </div>
+  } @else if (opponent(); as opp) {
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-6 pb-20">
+      
+      <!-- HERO CARD: Team Overview & Profile -->
+      <div class="bg-ap-surface border border-ap-border rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-ap-surface-raised border border-ap-border flex items-center justify-center text-2xl shadow-inner font-bold text-ap-accent">
+            {{ opp.name.substring(0, 2).toUpperCase() }}
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 class="text-2xl font-bold text-ap-text tracking-tight">{{ opp.name }}</h1>
+              <span
+                class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
+                [ngClass]="getThreatBadgeClass(opp.threatLevel)"
+              >
+                {{ opp.threatLevel ?? 'medium' }} Threat
+              </span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 text-xs text-ap-muted mt-1.5">
+              @if (opp.coachName) {
+                <span class="flex items-center gap-1">
+                  <ion-icon name="people-outline"></ion-icon>
+                  Coach: <strong class="text-ap-text">{{ opp.coachName }}</strong>
+                </span>
+              }
+              @if (opp.contactInfo) {
+                <span class="text-ap-muted">({{ opp.contactInfo }})</span>
+              }
+              @if (opp.formation) {
+                <span class="px-2 py-0.5 rounded bg-ap-surface-raised border border-ap-border font-medium text-ap-text">
+                  Formation: {{ opp.formation }}
+                </span>
+              }
+              @if (opp.primaryColor) {
+                <span class="px-2 py-0.5 rounded bg-ap-surface-raised border border-ap-border font-medium text-ap-muted">
+                  Kit: {{ opp.primaryColor }}{{ opp.secondaryColor ? ' / ' + opp.secondaryColor : '' }}
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Action / Record Highlight -->
+        <div class="flex items-center gap-3 bg-ap-surface-raised p-3 rounded-xl border border-ap-border">
+          <div class="text-center px-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-ap-muted block">H2H Record</span>
+            <span class="text-xl font-bold text-ap-text">
+              {{ opp.headToHead.wins }}W - {{ opp.headToHead.draws }}D - {{ opp.headToHead.losses }}L
+            </span>
+          </div>
+          <div class="h-8 w-px bg-ap-border"></div>
+          <div class="text-center px-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-ap-muted block">Win Rate</span>
+            <span class="text-xl font-bold text-emerald-500">
+              {{ opp.headToHead.winPercentage }}%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN GRID: Tactical Intel + Analytics + Danger Players -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- LEFT 2 COLUMNS: Head-to-Head Analytics & Tactical Intel -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+          
+          <!-- H2H Detailed Metrics -->
+          <div class="bg-ap-surface border border-ap-border rounded-xl p-5 shadow-xs">
+            <h2 class="text-base font-bold text-ap-text flex items-center gap-2 mb-4">
+              <ion-icon name="trophy-outline" class="text-ap-accent"></ion-icon>
+              Head-to-Head Analytics vs {{ opp.name }}
+            </h2>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div class="p-3 bg-ap-surface-raised rounded-lg border border-ap-border text-center">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-ap-muted block">Total Games</span>
+                <span class="text-xl font-bold text-ap-text mt-0.5">{{ opp.headToHead.totalGames }}</span>
+              </div>
+
+              <div class="p-3 bg-ap-surface-raised rounded-lg border border-ap-border text-center">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-ap-muted block">Goals Scored (GF)</span>
+                <span class="text-xl font-bold text-emerald-500 mt-0.5">{{ opp.headToHead.goalsFor }}</span>
+                <span class="text-[10px] text-ap-muted block">Avg {{ opp.headToHead.avgGoalsFor }}/gm</span>
+              </div>
+
+              <div class="p-3 bg-ap-surface-raised rounded-lg border border-ap-border text-center">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-ap-muted block">Goals Conceded (GA)</span>
+                <span class="text-xl font-bold text-rose-500 mt-0.5">{{ opp.headToHead.goalsAgainst }}</span>
+                <span class="text-[10px] text-ap-muted block">Avg {{ opp.headToHead.avgGoalsAgainst }}/gm</span>
+              </div>
+
+              <div class="p-3 bg-ap-surface-raised rounded-lg border border-ap-border text-center">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-ap-muted block">Clean Sheets</span>
+                <span class="text-xl font-bold text-blue-500 mt-0.5">{{ opp.headToHead.cleanSheets }}</span>
+                <span class="text-[10px] text-ap-muted block">Zero goals conceded</span>
+              </div>
+            </div>
+
+            <!-- Home vs Away splits -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-ap-border">
+              <div class="flex items-center justify-between p-2.5 bg-ap-surface-raised/50 rounded-lg border border-ap-border text-xs">
+                <span class="text-ap-muted font-medium">🏠 Home Match Record</span>
+                <span class="font-bold text-ap-text">
+                  {{ opp.headToHead.homeRecord.wins }}W - {{ opp.headToHead.homeRecord.draws }}D - {{ opp.headToHead.homeRecord.losses }}L
+                  ({{ opp.headToHead.homeRecord.total }} games)
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between p-2.5 bg-ap-surface-raised/50 rounded-lg border border-ap-border text-xs">
+                <span class="text-ap-muted font-medium">✈️ Away Match Record</span>
+                <span class="font-bold text-ap-text">
+                  {{ opp.headToHead.awayRecord.wins }}W - {{ opp.headToHead.awayRecord.draws }}D - {{ opp.headToHead.awayRecord.losses }}L
+                  ({{ opp.headToHead.awayRecord.total }} games)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tactical Intel & Tendencies -->
+          <div class="bg-ap-surface border border-ap-border rounded-xl p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-bold text-ap-text flex items-center gap-2">
+                <ion-icon name="document-text-outline" class="text-ap-accent"></ion-icon>
+                Tactical Intel & Scouting Tendencies
+              </h2>
+              <ion-button fill="clear" size="small" (click)="openEditModal()">
+                <ion-icon name="create-outline" slot="start"></ion-icon>
+                Edit
+              </ion-button>
+            </div>
+
+            <div class="flex flex-col gap-4">
+              <!-- Tendencies Callout -->
+              <div class="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl">
+                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-500 mb-1.5">
+                  <ion-icon name="warning-outline"></ion-icon>
+                  Opponent Tactical Tendencies & Style of Play
+                </div>
+                <p class="text-sm text-ap-text leading-relaxed">
+                  {{ opp.tendencies || 'No specific tactical tendencies logged yet. Tap Edit to add play style notes, pressing patterns, or build-up tendencies.' }}
+                </p>
+              </div>
+
+              <!-- General Scouting Notes -->
+              @if (opp.notes) {
+                <div class="p-4 bg-ap-surface-raised rounded-xl border border-ap-border">
+                  <div class="text-xs font-bold uppercase tracking-wider text-ap-muted mb-1.5">
+                    General Coaching Overview & Scouting Notes
+                  </div>
+                  <p class="text-sm text-ap-text leading-relaxed whitespace-pre-line">
+                    {{ opp.notes }}
+                  </p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Chronological Match History Timeline -->
+          <div class="bg-ap-surface border border-ap-border rounded-xl p-5 shadow-xs">
+            <h2 class="text-base font-bold text-ap-text flex items-center gap-2 mb-4">
+              <ion-icon name="calendar-outline" class="text-ap-accent"></ion-icon>
+              Past Encounters & Match History Timeline
+            </h2>
+
+            @if (!opp.recentMatches || opp.recentMatches.length === 0) {
+              <div class="text-center py-8 text-ap-muted text-sm italic">
+                No past matches recorded against {{ opp.name }} yet.
+              </div>
+            } @else {
+              <div class="flex flex-col gap-3">
+                @for (match of opp.recentMatches; track match.id) {
+                  <div class="p-3.5 bg-ap-surface-raised rounded-xl border border-ap-border flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <!-- Result Pill -->
+                        @if (match.result === 'win') {
+                          <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-500 border border-emerald-500/30">
+                            WIN {{ match.goalsFor }} - {{ match.goalsAgainst }}
+                          </span>
+                        } @else if (match.result === 'loss') {
+                          <span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-500/20 text-rose-500 border border-rose-500/30">
+                            LOSS {{ match.goalsFor }} - {{ match.goalsAgainst }}
+                          </span>
+                        } @else if (match.result === 'draw') {
+                          <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                            DRAW {{ match.goalsFor }} - {{ match.goalsAgainst }}
+                          </span>
+                        } @else {
+                          <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-500/20 text-blue-500 border border-blue-500/30">
+                            SCHEDULED
+                          </span>
+                        }
+
+                        <span class="text-xs font-semibold text-ap-text">
+                          {{ match.isHomeGame ? 'vs' : '@' }} {{ opp.name }}
+                        </span>
+                      </div>
+
+                      <span class="text-xs text-ap-muted">
+                        {{ match.scheduledAt | date: 'mediumDate' }}
+                      </span>
+                    </div>
+
+                    <!-- League & Location info -->
+                    <div class="flex flex-wrap items-center gap-3 text-xs text-ap-muted">
+                      @if (match.leagueName) {
+                        <span>🏆 {{ match.leagueName }}</span>
+                      }
+                      @if (match.seasonName) {
+                        <span>📅 {{ match.seasonName }}</span>
+                      }
+                      @if (match.location) {
+                        <span class="flex items-center gap-0.5">
+                          <ion-icon name="location-outline"></ion-icon>
+                          {{ match.location }}
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Match Notes & Post-game reflections -->
+                    @if (match.notes) {
+                      <div class="text-xs bg-ap-surface p-2.5 rounded-lg border border-ap-border text-ap-text">
+                        <strong class="text-ap-muted uppercase text-[10px] block mb-0.5">Post-Match Coach Reflection:</strong>
+                        {{ match.notes }}
+                      </div>
+                    }
+
+                    <!-- Event Notes List -->
+                    @if (match.eventNotes && match.eventNotes.length > 0) {
+                      <div class="flex flex-col gap-1 mt-1">
+                        @for (en of match.eventNotes; track en.id) {
+                          <div class="text-xs bg-ap-surface/60 p-2 rounded border border-ap-border text-ap-muted">
+                            <span class="font-semibold text-ap-text">{{ en.authorName || 'Coach' }}:</span> {{ en.content }}
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <div class="flex justify-end pt-1">
+                      <a
+                        [routerLink]="['/teams', teamId, 'events', match.id, 'summary']"
+                        class="text-xs font-semibold text-ap-accent hover:underline flex items-center gap-1"
+                      >
+                        View Game Summary & Events →
+                      </a>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Dangerous Players Radar & Scouting Notes Log -->
+        <div class="flex flex-col gap-6">
+          
+          <!-- Dangerous Players Radar -->
+          <div class="bg-ap-surface border border-ap-border rounded-xl p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-base font-bold text-ap-text flex items-center gap-2">
+                <ion-icon name="warning-outline" class="text-amber-500"></ion-icon>
+                Key Dangerous Players
+              </h2>
+              <ion-button fill="clear" size="small" (click)="openAddDangerPlayerModal()">
+                <ion-icon name="add-outline" slot="start"></ion-icon>
+                Add Player
+              </ion-button>
+            </div>
+
+            @if (!opp.dangerPlayers || opp.dangerPlayers.length === 0) {
+              <div class="text-center py-6 text-ap-muted text-xs italic bg-ap-surface-raised rounded-xl p-4 border border-ap-border">
+                No danger players flagged yet.
+                <button
+                  type="button"
+                  (click)="openAddDangerPlayerModal()"
+                  class="block mx-auto mt-2 text-ap-accent font-semibold text-xs hover:underline cursor-pointer"
+                >
+                  + Flag First Dangerous Player
+                </button>
+              </div>
+            } @else {
+              <div class="flex flex-col gap-3">
+                @for (dp of opp.dangerPlayers; track dp.id) {
+                  <div class="p-3 bg-ap-surface-raised rounded-xl border border-ap-border flex flex-col gap-2">
+                    <div class="flex items-start justify-between">
+                      <div class="flex items-center gap-2">
+                        @if (dp.jerseyNumber) {
+                          <div class="w-7 h-7 rounded-lg bg-ap-surface border border-ap-border flex items-center justify-center font-bold text-xs text-ap-text">
+                            #{{ dp.jerseyNumber }}
+                          </div>
+                        }
+                        <div>
+                          <span class="text-sm font-bold text-ap-text block">{{ dp.name }}</span>
+                          @if (dp.position) {
+                            <span class="text-xs text-ap-muted">{{ dp.position }}</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="flex items-center gap-1">
+                        <span
+                          class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                          [ngClass]="getThreatBadgeClass(dp.threatLevel)"
+                        >
+                          {{ dp.threatLevel }}
+                        </span>
+                        <button
+                          type="button"
+                          class="text-ap-muted hover:text-ap-text p-1 cursor-pointer"
+                          (click)="openAddDangerPlayerModal(dp)"
+                          aria-label="Edit Player"
+                        >
+                          <ion-icon name="create-outline" class="text-sm"></ion-icon>
+                        </button>
+                        <button
+                          type="button"
+                          class="text-ap-muted hover:text-red-500 p-1 cursor-pointer"
+                          (click)="deleteDangerPlayer(dp.id)"
+                          aria-label="Remove Player"
+                        >
+                          <ion-icon name="trash-outline" class="text-sm"></ion-icon>
+                        </button>
+                      </div>
+                    </div>
+
+                    @if (dp.notes) {
+                      <p class="text-xs text-ap-text bg-ap-surface p-2 rounded-lg border border-ap-border">
+                        {{ dp.notes }}
+                      </p>
+                    }
+
+                    @if (dp.tags && dp.tags.length > 0) {
+                      <div class="flex flex-wrap gap-1">
+                        @for (tag of dp.tags; track tag) {
+                          <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-ap-surface border border-ap-border text-ap-muted">
+                            {{ tag }}
+                          </span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Quick Scouting Notes Feed -->
+          <div class="bg-ap-surface border border-ap-border rounded-xl p-5 shadow-xs">
+            <h2 class="text-base font-bold text-ap-text flex items-center gap-2 mb-3">
+              <ion-icon name="chatbox-ellipses-outline" class="text-ap-accent"></ion-icon>
+              Scouting Observation Log
+            </h2>
+
+            <!-- Quick Note Input -->
+            <div class="flex flex-col gap-2 mb-4">
+              <textarea
+                [(ngModel)]="newScoutingNoteContent"
+                rows="2"
+                placeholder="Log observation e.g. Coach makes early sub at min 20, vulnerable on left wing..."
+                class="w-full text-xs p-2.5 rounded-lg bg-ap-surface-raised border border-ap-border text-ap-text focus:outline-none focus:border-ap-accent"
+              ></textarea>
+              <div class="flex justify-end">
+                <ion-button
+                  size="small"
+                  (click)="addScoutingNote()"
+                  [disabled]="!newScoutingNoteContent().trim() || isAddingNote()"
+                >
+                  <ion-icon name="send-outline" slot="start"></ion-icon>
+                  Log Note
+                </ion-button>
+              </div>
+            </div>
+
+            <!-- Notes List -->
+            @if (!opp.scoutingNotes || opp.scoutingNotes.length === 0) {
+              <div class="text-center py-4 text-ap-muted text-xs italic">
+                No scouting observations logged yet.
+              </div>
+            } @else {
+              <div class="flex flex-col gap-2 max-h-96 overflow-y-auto pr-1">
+                @for (note of opp.scoutingNotes; track note.id) {
+                  <div class="p-2.5 bg-ap-surface-raised rounded-lg border border-ap-border flex flex-col gap-1">
+                    <div class="flex items-center justify-between text-[11px] text-ap-muted">
+                      <span class="font-semibold text-ap-text">{{ note.authorName || 'Coach' }}</span>
+                      <div class="flex items-center gap-2">
+                        <span>{{ note.date | date: 'shortDate' }}</span>
+                        <button
+                          type="button"
+                          class="text-ap-muted hover:text-red-500 cursor-pointer"
+                          (click)="deleteScoutingNote(note.id)"
+                        >
+                          <ion-icon name="trash-outline" class="text-xs"></ion-icon>
+                        </button>
+                      </div>
+                    </div>
+                    <p class="text-xs text-ap-text whitespace-pre-line leading-relaxed">
+                      {{ note.content }}
+                    </p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</ion-content>

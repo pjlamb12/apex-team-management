@@ -1,0 +1,129 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="border-b border-ap-border px-2">
+    <ion-title class="font-bold text-base">{{ player?.id ? 'Edit Danger Player' : 'Add Dangerous Opponent Player' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" aria-label="Close modal">
+        <ion-icon name="close-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg" [fullscreen]="true" style="--padding-top: 1.5rem; --padding-bottom: 5rem; --padding-start: 1.5rem; --padding-end: 1.5rem;">
+  <div class="w-full flex justify-center items-start min-h-full py-4 pb-20">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="w-full max-w-lg flex flex-col gap-4">
+      <!-- Jersey Number and Player Name -->
+      <div class="flex gap-3">
+        <div class="w-28 flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Jersey #</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              type="number"
+              formControlName="jerseyNumber"
+              placeholder="10"
+            ></ion-input>
+          </ion-item>
+        </div>
+
+        <div class="flex-1 flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Player Name *</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              formControlName="name"
+              placeholder="e.g. Alex (Tall Striker)"
+              required
+            ></ion-input>
+          </ion-item>
+        </div>
+      </div>
+
+      <!-- Position & Threat Level -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Position</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              formControlName="position"
+              placeholder="e.g. Center Forward, CAM, Goalie"
+            ></ion-input>
+          </ion-item>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Threat Level</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-select formControlName="threatLevel" interface="popover">
+              <ion-select-option value="low">🟢 Low Threat</ion-select-option>
+              <ion-select-option value="medium">🟡 Watch Out</ion-select-option>
+              <ion-select-option value="high">🟠 High Threat</ion-select-option>
+              <ion-select-option value="critical">🔴 Critical Key Player</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
+      </div>
+
+      <!-- Scouting Callouts & Tactical Notes -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Tactical Scouting Notes</label>
+        <ion-item class="rounded-lg border border-ap-border" lines="none">
+          <ion-textarea
+            formControlName="notes"
+            rows="3"
+            placeholder="e.g. Left-footed playmaker, dangerous shots outside 18-yard box. Press tightly on right side."
+          ></ion-textarea>
+        </ion-item>
+      </div>
+
+      <!-- Tags / Characteristics -->
+      <div class="flex flex-col gap-2">
+        <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Key Characteristics & Tags</label>
+        
+        <!-- Preset tag badges -->
+        <div class="flex flex-wrap gap-1.5 mb-1">
+          @for (tag of quickPresetTags; track tag) {
+            <button
+              type="button"
+              class="text-xs px-2.5 py-1 rounded-full border border-ap-border transition-colors hover:bg-ap-surface-raised cursor-pointer"
+              [class.bg-blue-500/20]="currentTags().includes(tag)"
+              [class.border-blue-500]="currentTags().includes(tag)"
+              (click)="currentTags().includes(tag) ? removeTag(tag) : addTag(tag)"
+            >
+              {{ currentTags().includes(tag) ? '✓ ' + tag : '+ ' + tag }}
+            </button>
+          }
+        </div>
+
+        <!-- Active tag chips -->
+        @if (currentTags().length > 0) {
+          <div class="flex flex-wrap gap-1.5 p-2 bg-ap-surface-raised rounded-lg border border-ap-border">
+            @for (tag of currentTags(); track tag) {
+              <span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded bg-ap-accent/20 text-ap-accent border border-ap-accent/30">
+                {{ tag }}
+                <ion-icon name="close-circle-outline" class="cursor-pointer text-sm" (click)="removeTag(tag)"></ion-icon>
+              </span>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3 pt-4 mb-6">
+        <ion-button
+          type="button"
+          fill="outline"
+          class="flex-1"
+          (click)="dismiss()"
+        >
+          Cancel
+        </ion-button>
+        <ion-button
+          type="submit"
+          class="flex-1"
+        >
+          <ion-icon name="save-outline" slot="start"></ion-icon>
+          Save Player
+        </ion-button>
+      </div>
+    </form>
+  </div>
+</ion-content>

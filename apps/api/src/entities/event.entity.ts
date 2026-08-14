@@ -4,6 +4,7 @@ import { PracticeDrillEntity } from './practice-drill.entity';
 import { LocationEntity } from './location.entity';
 import { LeagueEntity } from './league.entity';
 import { EventNoteEntity } from './event-note.entity';
+import { OpponentEntity } from './opponent.entity';
 
 
 @Entity('events')
@@ -33,6 +34,13 @@ export class EventEntity {
 
   @Column({ nullable: true })
   opponent: string;
+
+  @ManyToOne(() => OpponentEntity, (opponent) => opponent.events, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'opponent_id' })
+  opponentRef: OpponentEntity | null;
+
+  @Column({ name: 'opponent_id', nullable: true })
+  opponentId: string | null;
 
   @Column({ name: 'scheduled_at', type: 'timestamp', nullable: true })
   scheduledAt: Date;

@@ -60,7 +60,8 @@ import {
   chevronDownOutline
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
-import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport, OpponentsService } from '@apex-team/client/data-access/team';
+import { OpponentWithStats } from '@apex-team/shared/util/models';
 import { SocketService } from '@apex-team/client/shared/services';
 
 
@@ -124,6 +125,7 @@ export class GameSummary implements OnDestroy {
 
   private readonly eventsService = inject(EventsService);
   private readonly teamService = inject(TeamService);
+  private readonly opponentsService = inject(OpponentsService);
   private readonly router = inject(Router);
   private readonly socketService = inject(SocketService);
   private readonly alertController = inject(AlertController);
@@ -131,6 +133,7 @@ export class GameSummary implements OnDestroy {
 
   protected sportName = signal<string>('Soccer');
   protected game = signal<EventEntity | null>(null);
+  protected opponentDossier = signal<OpponentWithStats | null>(null);
   protected gameEvents = signal<any[]>([]);
   protected sortedGameEvents = computed(() => {
     // 1. Sort the raw events first
@@ -612,6 +615,27 @@ export class GameSummary implements OnDestroy {
       this.playingTime.set(playingTime);
       this.lineup.set(lineup);
       this.sportName.set(team.sport?.name || 'Soccer');
+
+      // Load Opponent Dossier
+      if (game.opponentId) {
+        try {
+          const opp = await firstValueFrom(this.opponentsService.getOpponent(teamId, game.opponentId));
+          this.opponentDossier.set(opp);
+        } catch {
+          // ignore
+        }
+      } else if (game.opponent) {
+        try {
+          const opps = await firstValueFrom(this.opponentsService.getOpponents(teamId, game.opponent.trim()));
+          const found = opps.find((o) => o.name.toLowerCase() === game.opponent!.trim().toLowerCase());
+          if (found) {
+            const opp = await firstValueFrom(this.opponentsService.getOpponent(teamId, found.id));
+            this.opponentDossier.set(opp);
+          }
+        } catch {
+          // ignore
+        }
+      }
     } catch {
       this.errorMessage.set('Failed to load game summary.');
     } finally {
@@ -619,6 +643,53 @@ export class GameSummary implements OnDestroy {
         this.isLoading.set(false);
       }
     }
+  }
+
+  protected async promptLogOpponentReflection(): Promise<void> {
+    const opp = this.opponentDossier();
+    if (!opp) return;
+
+    const alert = await this.alertController.create({
+      header: `Scouting Note: ${opp.name}`,
+      message: 'Log a post-match observation or tactical reflection to this opponent\'s dossier.',
+      inputs: [
+        {
+          name: 'content',
+          type: 'textarea',
+          placeholder: 'e.g. Good high press in 1st half. Vulnerable on deep crosses to far post...',
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Save Note',
+          handler: async (data) => {
+            if (data.content?.trim()) {
+              try {
+                await firstValueFrom(
+                  this.opponentsService.addScoutingNote(this.teamId, opp.id, {
+                    content: data.content.trim(),
+                  })
+                );
+                const toast = await this.toastController.create({
+                  message: 'Scouting note logged to opponent dossier!',
+                  duration: 2000,
+                  color: 'success',
+                });
+                await toast.present();
+              } catch {
+                console.error('Failed to save scouting note');
+              }
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 
   protected formatSeconds(seconds: number): string {

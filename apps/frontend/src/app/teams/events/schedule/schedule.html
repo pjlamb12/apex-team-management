@@ -1,10 +1,10 @@
-<ion-content class="bg-ap-bg">
+<ion-content class="bg-ap-bg" style="--padding-top: 1rem; --padding-bottom: 5rem; --padding-start: 1rem; --padding-end: 1rem;">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="flex flex-col">
-    <div class="px-4 mb-2">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-4 pb-24">
+    <div class="mb-1">
       @if (isLoadingSeasons()) {
         <div class="flex items-center justify-center py-4">
           <ion-spinner name="crescent" size="small"></ion-spinner>
@@ -87,103 +87,121 @@
         <ion-spinner name="crescent" />
       </div>
     } @else {
-      @for (group of groupedEvents(); track group.leagueName) {
-        <ion-list class="bg-transparent mb-4">
-          <ion-list-header class="min-h-[44px]">
-            <ion-label class="text-xs font-black uppercase tracking-widest text-ap-primary opacity-80">{{ group.leagueName }}</ion-label>
-          </ion-list-header>
-
-          @for (event of group.events; track (event.virtualId || event.id)) {
-            <ion-item-sliding>
-              <ion-item-options side="start">
-                <ion-item-option color="medium" (click)="refreshWeather(event)">
-                  <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
-                </ion-item-option>
-              </ion-item-options>
-
-              <ion-item 
-                [routerLink]="getEventLink(event)"
-                [button]="true"
-                class="schedule-item"
-              >
-                <ion-icon
-                  slot="start"
-                  [name]="getEventIcon(event)"
-                  [color]="event.type === 'game' ? 'primary' : 'tertiary'"
-                  class="mr-3"
-                ></ion-icon>
-                <ion-label>
-                  <div class="flex items-center gap-2">
-                    <h2 [class.opacity-70]="scope() === 'past'" class="font-bold">{{ getEventTitle(event) }}</h2>
-                    @if (event.recurrenceRule) {
-                      <ion-icon name="refresh-outline" class="text-xs" color="medium"></ion-icon>
-                    }
-                  </div>
-                  <p class="flex items-center gap-2 mt-0.5">
-                    <span class="text-ap-text font-medium">{{ event.scheduledAt | date: 'MMM d, h:mm a' }}</span>
-                    @if (event.durationMinutes) {
-                      <ion-note class="text-[10px] opacity-60">({{ event.durationMinutes }}m)</ion-note>
-                    }
-                  </p>
-                  <div class="flex items-center gap-3 mt-1">
-                    @if (event.location) {
-                      <p class="flex items-center gap-1 text-[11px] text-ap-muted">
-                        <ion-icon name="location-outline" class="text-[10px]"></ion-icon>
-                        {{ event.location }}
-                      </p>
-                    }
-                    
-                    @if (event.weatherData) {
-                      <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
-                        <img [src]="event.weatherData.icon" class="w-3.5 h-3.5" [alt]="event.weatherData.condition" />
-                        <span class="text-[10px] font-bold">{{ event.weatherData.temp_f }}°F</span>
-                        @if (event.weatherData.chance_of_rain > 0) {
-                          <span class="text-[10px] text-blue-400 font-bold">{{ event.weatherData.chance_of_rain }}% ☂</span>
-                        }
-                      </div>
-                    }
-                  </div>
-                </ion-label>
-                
-                <div slot="end" class="flex items-center gap-2">
-                  @if (event.type === 'game' && event.uniformColor) {
-                    <div class="w-3 h-3 rounded-full border border-black/30" [style.background]="event.uniformColor" title="Uniform Color"></div>
-                  }
-
-                  <!-- Desktop-only actions -->
-                  <div class="hidden sm:flex items-center gap-1">
-                    <ion-button fill="clear" color="medium" [routerLink]="getEventEditLink(event)" (click)="$event.stopPropagation()" class="h-8 w-8 ion-no-margin">
-                      <ion-icon slot="icon-only" name="pencil-outline" class="text-lg"></ion-icon>
-                    </ion-button>
-                    <ion-button fill="clear" color="danger" (click)="deleteEvent(event); $event.stopPropagation()" class="h-8 w-8 ion-no-margin">
-                      <ion-icon slot="icon-only" name="trash-outline" class="text-lg"></ion-icon>
-                    </ion-button>
-                  </div>
-
-                  <ion-icon name="chevron-forward-outline" color="medium" class="text-xs opacity-30"></ion-icon>
+      <ion-accordion-group [multiple]="true" [value]="openAccordionValues()" (ionChange)="onAccordionChange($event)">
+        @for (group of groupedEvents(); track group.leagueName) {
+          <ion-accordion [value]="group.leagueName" class="schedule-card mb-5">
+            <!-- League / Competition Header with Padding -->
+            <ion-item slot="header" lines="none" class="schedule-header-item">
+              <div class="flex items-center justify-between w-full py-2.5 pr-2">
+                <div class="flex items-center gap-2">
+                  <ion-icon name="trophy-outline" class="text-ap-accent text-sm"></ion-icon>
+                  <span class="text-xs font-bold uppercase tracking-wider text-ap-text">
+                    {{ group.leagueName }}
+                  </span>
                 </div>
-              </ion-item>
+                <span class="text-[11px] font-semibold text-ap-muted bg-ap-surface px-2.5 py-0.5 rounded-full border border-ap-border">
+                  {{ group.events.length }} {{ group.events.length === 1 ? 'event' : 'events' }}
+                </span>
+              </div>
+            </ion-item>
 
-              <ion-item-options side="end">
-                <ion-item-option color="primary" [routerLink]="getEventEditLink(event)">
-                  <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
-                </ion-item-option>
-                <ion-item-option color="danger" (click)="deleteEvent(event)">
-                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-                </ion-item-option>
-              </ion-item-options>
-            </ion-item-sliding>
-          }
-        </ion-list>
-      } @empty {
-        <ion-list>
-          <ion-item>
-            <ion-label class="text-center py-4 italic text-ap-muted">
-              No {{ scope() }} events for this season.
-            </ion-label>
-          </ion-item>
-        </ion-list>
-      }
+            <div slot="content" class="border-t border-ap-border">
+              <ion-list class="bg-transparent p-0">
+                @for (event of group.events; track (event.virtualId || event.id)) {
+                  <ion-item-sliding>
+                    <ion-item-options side="start">
+                      <ion-item-option color="medium" (click)="refreshWeather(event)">
+                        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+                      </ion-item-option>
+                    </ion-item-options>
+
+                    <ion-item 
+                      [routerLink]="getEventLink(event)"
+                      [button]="true"
+                      class="schedule-item"
+                      lines="none"
+                    >
+                      <ion-icon
+                        slot="start"
+                        [name]="getEventIcon(event)"
+                        [color]="event.type === 'game' ? 'primary' : 'tertiary'"
+                        class="mr-3"
+                      ></ion-icon>
+                      <ion-label>
+                        <div class="flex items-center gap-2">
+                          <h2 [class.opacity-70]="scope() === 'past'" class="font-bold">{{ getEventTitle(event) }}</h2>
+                          @if (event.recurrenceRule) {
+                            <ion-icon name="refresh-outline" class="text-xs" color="medium"></ion-icon>
+                          }
+                        </div>
+                        <p class="flex items-center gap-2 mt-0.5">
+                          <span class="text-ap-text font-medium">{{ event.scheduledAt | date: 'MMM d, h:mm a' }}</span>
+                          @if (event.durationMinutes) {
+                            <ion-note class="text-[10px] opacity-60">({{ event.durationMinutes }}m)</ion-note>
+                          }
+                        </p>
+                        <div class="flex items-center gap-3 mt-1">
+                          @if (event.location) {
+                            <p class="flex items-center gap-1 text-[11px] text-ap-muted">
+                              <ion-icon name="location-outline" class="text-[10px]"></ion-icon>
+                              {{ event.location }}
+                            </p>
+                          }
+                          
+                          @if (event.weatherData) {
+                            <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
+                              <img [src]="event.weatherData.icon" class="w-3.5 h-3.5" [alt]="event.weatherData.condition" />
+                              <span class="text-[10px] font-bold">{{ event.weatherData.temp_f }}°F</span>
+                              @if (event.weatherData.chance_of_rain > 0) {
+                                <span class="text-[10px] text-blue-400 font-bold">{{ event.weatherData.chance_of_rain }}% ☂</span>
+                              }
+                            </div>
+                          }
+                        </div>
+                      </ion-label>
+                      
+                      <div slot="end" class="flex items-center gap-2">
+                        @if (event.type === 'game' && event.uniformColor) {
+                          <div class="w-3 h-3 rounded-full border border-black/30" [style.background]="event.uniformColor" title="Uniform Color"></div>
+                        }
+
+                        <!-- Desktop-only actions -->
+                        <div class="hidden sm:flex items-center gap-1">
+                          <ion-button fill="clear" color="medium" [routerLink]="getEventEditLink(event)" (click)="$event.stopPropagation()" class="h-8 w-8 ion-no-margin">
+                            <ion-icon slot="icon-only" name="pencil-outline" class="text-lg"></ion-icon>
+                          </ion-button>
+                          <ion-button fill="clear" color="danger" (click)="deleteEvent(event); $event.stopPropagation()" class="h-8 w-8 ion-no-margin">
+                            <ion-icon slot="icon-only" name="trash-outline" class="text-lg"></ion-icon>
+                          </ion-button>
+                        </div>
+
+                        <ion-icon name="chevron-forward-outline" color="medium" class="text-xs opacity-30"></ion-icon>
+                      </div>
+                    </ion-item>
+
+                    <ion-item-options side="end">
+                      <ion-item-option color="primary" [routerLink]="getEventEditLink(event)">
+                        <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+                      </ion-item-option>
+                      <ion-item-option color="danger" (click)="deleteEvent(event)">
+                        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                      </ion-item-option>
+                    </ion-item-options>
+                  </ion-item-sliding>
+                }
+              </ion-list>
+            </div>
+          </ion-accordion>
+        } @empty {
+          <div class="schedule-card p-8 text-center">
+            <div class="w-12 h-12 rounded-full bg-ap-surface-raised border border-ap-border flex items-center justify-center mx-auto mb-3 text-ap-muted">
+              <ion-icon name="calendar-outline" class="text-2xl"></ion-icon>
+            </div>
+            <h3 class="text-sm font-bold text-ap-text mb-1">No {{ scope() }} events</h3>
+            <p class="text-xs text-ap-muted max-w-xs mx-auto">There are no {{ scope() }} games or practices scheduled for this season.</p>
+          </div>
+        }
+      </ion-accordion-group>
     }
   </div>
 

@@ -14,8 +14,8 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding bg-ap-bg">
-  <div class="max-w-4xl mx-auto flex flex-col gap-6 pt-4">
+<ion-content class="bg-ap-bg" style="--padding-top: 1rem; --padding-bottom: 5rem; --padding-start: 1rem; --padding-end: 1rem;">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-6 pb-20">
     @if (isLoading()) {
       <div class="flex items-center justify-center py-20">
         <ion-spinner name="crescent" color="primary"></ion-spinner>
@@ -139,6 +139,54 @@
               }
             </ion-card-content>
           </ion-card>
+
+          <!-- Opponent Dossier & Scouting Card -->
+          @if (opponentDossier(); as opp) {
+            <ion-card class="m-0 bg-ap-surface border border-ap-border shadow-xs">
+              <ion-card-header class="px-6 pt-5 pb-2 flex flex-row items-center justify-between">
+                <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-1.5">
+                  <ion-icon name="shield-outline" class="text-ap-accent text-sm"></ion-icon>
+                  Opponent Dossier
+                </ion-card-title>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">
+                  {{ opp.threatLevel || 'Medium' }}
+                </span>
+              </ion-card-header>
+              <ion-card-content class="px-6 pb-5 flex flex-col gap-3">
+                <div>
+                  <h3 class="font-bold text-ap-text text-base">{{ opp.name }}</h3>
+                  <div class="text-xs text-ap-muted mt-0.5 flex items-center gap-2">
+                    <span>H2H: <strong class="text-ap-text">{{ opp.headToHead.wins }}W - {{ opp.headToHead.draws }}D - {{ opp.headToHead.losses }}L</strong></span>
+                    <span>• {{ opp.headToHead.winPercentage }}% Win</span>
+                  </div>
+                </div>
+
+                @if (opp.tendencies) {
+                  <div class="p-2.5 bg-ap-surface-raised rounded-lg border border-ap-border text-xs text-ap-muted italic">
+                    "{{ opp.tendencies }}"
+                  </div>
+                }
+
+                <div class="flex flex-col gap-2 pt-2 border-t border-ap-border">
+                  <button
+                    type="button"
+                    (click)="promptLogOpponentReflection()"
+                    class="log-reflection-btn"
+                  >
+                    <ion-icon name="chatbox-ellipses-outline" class="text-sm"></ion-icon>
+                    <span>Log Tactical Reflection</span>
+                  </button>
+
+                  <a
+                    [routerLink]="['/teams', teamId, 'opponents', opp.id]"
+                    class="text-xs text-center text-ap-muted hover:text-ap-text font-semibold py-1"
+                  >
+                    View Full Opponent Dossier →
+                  </a>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          }
 
           <!-- Team Stats Card -->
           <ion-card class="m-0 border border-ap-border shadow-none">

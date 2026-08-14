@@ -18,7 +18,6 @@ import {
   IonSelect,
   IonSelectOption,
   IonButton,
-  IonButtons,
   IonSegment,
   IonSegmentButton,
   ModalController,
@@ -75,11 +74,11 @@ import { ManageSeasonRosterModal } from './manage-roster-modal/manage-roster-mod
     IonSelect,
     IonSelectOption,
     IonButton,
-    IonButtons,
     IonSegment,
     IonSegmentButton,
   ],
   templateUrl: './roster.html',
+  styleUrl: './roster.scss',
 })
 export class Roster {
   @Input() set id(val: string) {

@@ -50,6 +50,7 @@ import { AddIgnorePlayingTimeAndGuestPlayers1784200000000 } from './178420000000
 import { AddLeagueToGuestPlayers1784300000000 } from './1784300000000-AddLeagueToGuestPlayers';
 import { AddIsActiveToPlayers1784400000000 } from './1784400000000-AddIsActiveToPlayers';
 import { UpdatePositionSwapPayloadSchema1784500000000 } from './1784500000000-UpdatePositionSwapPayloadSchema';
+import { CreateOpponents1784600000000 } from './1784600000000-CreateOpponents';
 
 
 export const ALL_MIGRATIONS = [
@@ -105,6 +106,7 @@ export const ALL_MIGRATIONS = [
   AddLeagueToGuestPlayers1784300000000,
   AddIsActiveToPlayers1784400000000,
   UpdatePositionSwapPayloadSchema1784500000000,
+  CreateOpponents1784600000000,
 ];
 
 

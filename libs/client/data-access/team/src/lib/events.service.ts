@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { Season, League } from '@apex-team/shared/util/models';
+import { Season, League, Opponent } from '@apex-team/shared/util/models';
 
 export interface LocationEntity {
   id: string;
@@ -23,6 +23,8 @@ export interface EventEntity {
   leagueId?: string | null;
   league?: League | null;
   opponent?: string;
+  opponentId?: string | null;
+  opponentRef?: Opponent | null;
   scheduledAt: string;
   location: string | null;
   locationId?: string | null;
@@ -62,6 +64,7 @@ export interface CreateEventDto {
   type?: 'game' | 'practice' | 'tryout';
   leagueId?: string;
   opponent?: string;
+  opponentId?: string;
   scheduledAt?: string;
   location?: string;
   locationId?: string;
@@ -87,6 +90,7 @@ export interface UpdateEventDto {
   type?: 'game' | 'practice' | 'tryout';
   leagueId?: string;
   opponent?: string;
+  opponentId?: string;
   scheduledAt?: string;
   location?: string;
   locationId?: string;

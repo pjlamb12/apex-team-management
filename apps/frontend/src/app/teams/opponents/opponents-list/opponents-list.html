@@ -1,0 +1,256 @@
+<ion-content class="bg-ap-bg" style="--padding-top: 1rem; --padding-bottom: 4rem; --padding-start: 1rem; --padding-end: 1rem;">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-5 pb-16">
+    <!-- Header & Search Toolbar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-ap-text tracking-tight flex items-center gap-2">
+          <ion-icon name="shield-outline" class="text-ap-accent"></ion-icon>
+          Opponent Dossiers & Scouting Intel
+        </h1>
+        <p class="text-xs text-ap-muted mt-0.5">
+          Tactical profiles, head-to-head records, and key dangerous players for upcoming rivals.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <ion-button (click)="openNewOpponentModal()" class="font-semibold shadow-sm">
+          <ion-icon name="add-outline" slot="start"></ion-icon>
+          Add Opponent
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Stat Highlights Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="p-3.5 bg-ap-surface rounded-xl border border-ap-border shadow-xs flex flex-col">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-ap-muted">Rivals Tracked</span>
+        <span class="text-2xl font-bold text-ap-text mt-1">{{ totalOpponents() }}</span>
+        <span class="text-[11px] text-ap-muted mt-0.5">Scouted teams</span>
+      </div>
+
+      <div class="p-3.5 bg-ap-surface rounded-xl border border-ap-border shadow-xs flex flex-col">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-ap-muted">Total Encounters</span>
+        <span class="text-2xl font-bold text-ap-text mt-1">{{ totalMatches() }}</span>
+        <span class="text-[11px] text-ap-muted mt-0.5">{{ totalWins() }} Wins logged</span>
+      </div>
+
+      <div class="p-3.5 bg-ap-surface rounded-xl border border-ap-border shadow-xs flex flex-col">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-ap-muted">Overall Win Rate</span>
+        <span class="text-2xl font-bold text-emerald-500 mt-1">{{ overallWinPercentage() }}%</span>
+        <span class="text-[11px] text-ap-muted mt-0.5">Across all opponents</span>
+      </div>
+
+      <div class="p-3.5 bg-ap-surface rounded-xl border border-ap-border shadow-xs flex flex-col">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-ap-muted">Goal Differential</span>
+        <span class="text-2xl font-bold text-ap-accent mt-1">
+          {{ totalGoalsFor() - totalGoalsAgainst() > 0 ? '+' : '' }}{{ totalGoalsFor() - totalGoalsAgainst() }}
+        </span>
+        <span class="text-[11px] text-ap-muted mt-0.5">{{ totalGoalsFor() }} GF : {{ totalGoalsAgainst() }} GA</span>
+      </div>
+    </div>
+
+    <!-- Search & Threat Filter Bar -->
+    <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-ap-surface p-3.5 rounded-xl border border-ap-border shadow-xs">
+      <div class="flex-1 min-w-0">
+        <ion-searchbar
+          placeholder="Search opponents by name, coach, formation, or tactics..."
+          [value]="searchQuery()"
+          (ionInput)="onSearchChange($event)"
+          [debounce]="300"
+          class="custom-searchbar w-full"
+        ></ion-searchbar>
+      </div>
+
+      <!-- Threat Level Filter Pills -->
+      <div class="threat-filter-group pt-2 lg:pt-0 border-t lg:border-t-0 border-ap-border/60">
+        <span class="text-xs font-bold uppercase tracking-wider text-ap-muted mr-1 hidden sm:inline">Threat:</span>
+
+        <button
+          type="button"
+          class="threat-pill"
+          [class.active-all]="selectedThreatFilter() === 'all'"
+          (click)="setThreatFilter('all')"
+        >
+          <span>All</span>
+          <span class="count-badge">{{ opponents().length }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="threat-pill"
+          [class.active-critical]="selectedThreatFilter() === 'critical'"
+          (click)="setThreatFilter('critical')"
+        >
+          <span class="threat-dot bg-red-500"></span>
+          <span>Critical</span>
+        </button>
+
+        <button
+          type="button"
+          class="threat-pill"
+          [class.active-high]="selectedThreatFilter() === 'high'"
+          (click)="setThreatFilter('high')"
+        >
+          <span class="threat-dot bg-orange-500"></span>
+          <span>High</span>
+        </button>
+
+        <button
+          type="button"
+          class="threat-pill"
+          [class.active-medium]="selectedThreatFilter() === 'medium'"
+          (click)="setThreatFilter('medium')"
+        >
+          <span class="threat-dot bg-amber-500"></span>
+          <span>Medium</span>
+        </button>
+
+        <button
+          type="button"
+          class="threat-pill"
+          [class.active-low]="selectedThreatFilter() === 'low'"
+          (click)="setThreatFilter('low')"
+        >
+          <span class="threat-dot bg-emerald-500"></span>
+          <span>Low</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Opponent Cards Grid -->
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-20">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+    } @else if (filteredOpponents().length === 0) {
+      <div class="py-12 bg-ap-surface rounded-xl border border-ap-border p-6">
+        <ap-empty-state
+          icon="shield-outline"
+          [title]="searchQuery() || selectedThreatFilter() !== 'all' ? 'No matching opponents' : 'No Opponents Tracked Yet'"
+          [message]="searchQuery() || selectedThreatFilter() !== 'all' ? 'Try adjusting your search query or threat filter.' : 'Build tactical scouting dossiers, head-to-head records, and danger player callouts for your league rivals.'"
+          [actionLabel]="searchQuery() || selectedThreatFilter() !== 'all' ? 'Clear Filters' : 'Add First Opponent'"
+          (actionClick)="onEmptyStateAction()"
+        ></ap-empty-state>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (opp of filteredOpponents(); track opp.id) {
+          <div
+            (click)="navigateToDossier(opp.id)"
+            class="group relative bg-ap-surface hover:bg-ap-surface-raised border border-ap-border hover:border-ap-accent/40 rounded-xl p-4 transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer flex flex-col justify-between"
+          >
+            <div>
+              <!-- Top Row: Team Name & Threat Badge -->
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <h3 class="text-lg font-bold text-ap-text group-hover:text-ap-accent transition-colors flex items-center gap-2">
+                    {{ opp.name }}
+                  </h3>
+                  @if (opp.coachName) {
+                    <p class="text-xs text-ap-muted flex items-center gap-1 mt-0.5">
+                      <ion-icon name="people-outline" class="text-xs"></ion-icon>
+                      Coach: {{ opp.coachName }}
+                    </p>
+                  }
+                </div>
+
+                <!-- Threat Level Badge -->
+                <span
+                  class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                  [ngClass]="getThreatBadgeClass(opp.threatLevel)"
+                >
+                  {{ opp.threatLevel ?? 'medium' }}
+                </span>
+              </div>
+
+              <!-- Badges Row: Formation & Kit Colors -->
+              <div class="flex flex-wrap items-center gap-2 mb-3">
+                @if (opp.formation) {
+                  <span class="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded bg-ap-surface-raised border border-ap-border text-ap-text">
+                    ⚽ {{ opp.formation }}
+                  </span>
+                }
+                @if (opp.primaryColor) {
+                  <span class="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded bg-ap-surface-raised border border-ap-border text-ap-muted">
+                    Kit: {{ opp.primaryColor }}{{ opp.secondaryColor ? ' / ' + opp.secondaryColor : '' }}
+                  </span>
+                }
+                @if (opp.dangerPlayers && opp.dangerPlayers.length > 0) {
+                  <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-500 border border-amber-500/25">
+                    <ion-icon name="warning-outline" class="text-xs"></ion-icon>
+                    {{ opp.dangerPlayers.length }} Danger {{ opp.dangerPlayers.length === 1 ? 'Player' : 'Players' }}
+                  </span>
+                }
+              </div>
+
+              <!-- Head-to-Head Visual Card -->
+              <div class="bg-ap-surface-raised/80 rounded-lg p-2.5 border border-ap-border mb-3">
+                <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+                  <span class="text-ap-muted uppercase tracking-wider text-[10px]">Head-to-Head Record</span>
+                  <span class="text-ap-text">
+                    {{ opp.headToHead.wins }}W - {{ opp.headToHead.draws }}D - {{ opp.headToHead.losses }}L
+                  </span>
+                </div>
+
+                <!-- Win / Draw / Loss mini-progress bar -->
+                <div class="h-2 w-full bg-slate-700/20 rounded-full overflow-hidden flex">
+                  @if (opp.headToHead.totalGames > 0) {
+                    @if (opp.headToHead.wins > 0) {
+                      <div
+                        class="bg-emerald-500 h-full transition-all duration-300"
+                        [style.width.%]="(opp.headToHead.wins / opp.headToHead.totalGames) * 100"
+                      ></div>
+                    }
+                    @if (opp.headToHead.draws > 0) {
+                      <div
+                        class="bg-amber-500 h-full transition-all duration-300"
+                        [style.width.%]="(opp.headToHead.draws / opp.headToHead.totalGames) * 100"
+                      ></div>
+                    }
+                    @if (opp.headToHead.losses > 0) {
+                      <div
+                        class="bg-red-500 h-full transition-all duration-300"
+                        [style.width.%]="(opp.headToHead.losses / opp.headToHead.totalGames) * 100"
+                      ></div>
+                    }
+                  } @else {
+                    <div class="bg-slate-500/30 h-full w-full"></div>
+                  }
+                </div>
+
+                <div class="flex justify-between items-center text-[11px] text-ap-muted mt-1.5">
+                  <span>{{ opp.headToHead.goalsFor }} GF : {{ opp.headToHead.goalsAgainst }} GA</span>
+                  <span class="font-medium text-ap-text">{{ opp.headToHead.winPercentage }}% Win</span>
+                </div>
+              </div>
+
+              <!-- Tendencies / Intel Snippet -->
+              @if (opp.tendencies) {
+                <div class="text-xs text-ap-muted italic line-clamp-2 mb-2">
+                  "{{ opp.tendencies }}"
+                </div>
+              }
+            </div>
+
+            <!-- Footer: Last Encounter & Action link -->
+            <div class="pt-2 border-t border-ap-border flex items-center justify-between text-xs">
+              <span class="text-ap-muted flex items-center gap-1">
+                <ion-icon name="calendar-outline" class="text-xs"></ion-icon>
+                @if (opp.headToHead.lastPlayedDate) {
+                  Last played {{ opp.headToHead.lastPlayedDate | date: 'mediumDate' }}
+                } @else {
+                  No past matches
+                }
+              </span>
+
+              <span class="font-semibold text-ap-accent flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                View Dossier
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</ion-content>

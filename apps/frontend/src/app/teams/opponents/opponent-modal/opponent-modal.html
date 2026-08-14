@@ -1,0 +1,157 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="border-b border-ap-border px-2">
+    <ion-title class="font-bold text-base">{{ opponent?.id ? 'Edit Opponent Dossier' : 'New Opponent Profile' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" aria-label="Close modal">
+        <ion-icon name="close-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg" [fullscreen]="true" style="--padding-top: 1.5rem; --padding-bottom: 6rem; --padding-start: 1.5rem; --padding-end: 1.5rem;">
+  <div class="w-full flex justify-center items-start min-h-full py-4 pb-24">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="w-full max-w-xl flex flex-col gap-4">
+      @if (errorMessage()) {
+        <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-ap-danger text-sm font-medium">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- Opponent Name -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Opponent Team Name *</label>
+        <ngx-control-errors-display>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              formControlName="name"
+              placeholder="e.g. Thunder SC 2012B, Real Salt Lake Academy"
+              required
+            ></ion-input>
+          </ion-item>
+        </ngx-control-errors-display>
+      </div>
+
+      <!-- Threat Level & Formation Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Threat Level</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-select formControlName="threatLevel" interface="popover" placeholder="Select threat level">
+              <ion-select-option value="low">🟢 Low Threat</ion-select-option>
+              <ion-select-option value="medium">🟡 Moderate / Standard</ion-select-option>
+              <ion-select-option value="high">🟠 High Threat / Tough Rival</ion-select-option>
+              <ion-select-option value="critical">🔴 Critical / Top Seed</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Default Formation</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              formControlName="formation"
+              placeholder="e.g. 4-3-3, 3-5-2, 4-2-3-1"
+            ></ion-input>
+          </ion-item>
+        </div>
+      </div>
+
+      <!-- Jersey Colors Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Primary Kit Color</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              formControlName="primaryColor"
+              placeholder="e.g. Navy, Red, #1e3a8a"
+            ></ion-input>
+          </ion-item>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Secondary / Away Kit</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              formControlName="secondaryColor"
+              placeholder="e.g. White, Yellow, #fef08a"
+            ></ion-input>
+          </ion-item>
+        </div>
+      </div>
+
+      <!-- Coach & Contact Info -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Opposing Coach Name</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              formControlName="coachName"
+              placeholder="e.g. Coach David Miller"
+            ></ion-input>
+          </ion-item>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Coach Contact Info</label>
+          <ion-item class="rounded-lg border border-ap-border" lines="none">
+            <ion-input
+              formControlName="contactInfo"
+              placeholder="e.g. 555-0199 or coach@thunder.com"
+            ></ion-input>
+          </ion-item>
+        </div>
+      </div>
+
+      <!-- Tactical Tendencies -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Tactical Tendencies & Play Style</label>
+        <ion-item class="rounded-lg border border-ap-border" lines="none">
+          <ion-textarea
+            formControlName="tendencies"
+            rows="3"
+            placeholder="e.g. High pressing 3 forwards in 1st half. Direct long balls to speedy #9 on goal kicks. Vulnerable to switches of play."
+          ></ion-textarea>
+        </ion-item>
+      </div>
+
+      <!-- General Scouting Notes -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-ap-muted">Scouting Overview & Notes</label>
+        <ion-item class="rounded-lg border border-ap-border" lines="none">
+          <ion-textarea
+            formControlName="notes"
+            rows="3"
+            placeholder="e.g. Well-organized team, physical in midfield. Physical tournament rival from State Cup."
+          ></ion-textarea>
+        </ion-item>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3 pt-4 mb-6">
+        <ion-button
+          type="button"
+          fill="outline"
+          class="flex-1"
+          (click)="dismiss()"
+          [disabled]="isSaving()"
+        >
+          Cancel
+        </ion-button>
+        <ion-button
+          type="submit"
+          class="flex-1"
+          [disabled]="isSaving()"
+        >
+          @if (isSaving()) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            Saving...
+          } @else {
+            <ion-icon name="save-outline" slot="start"></ion-icon>
+            {{ opponent?.id ? 'Save Changes' : 'Create Dossier' }}
+          }
+        </ion-button>
+      </div>
+    </form>
+  </div>
+</ion-content>

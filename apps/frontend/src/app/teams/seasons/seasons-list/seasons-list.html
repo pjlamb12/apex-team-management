@@ -1,4 +1,4 @@
-<ion-content class="bg-ap-bg ion-padding">
+<ion-content class="bg-ap-bg" style="--padding-top: 1rem; --padding-bottom: 5rem; --padding-start: 1rem; --padding-end: 1rem;">
   @if (errorMessage()) {
     <ion-text color="danger">
       <p class="px-2">{{ errorMessage() }}</p>
@@ -10,7 +10,7 @@
       <ion-spinner></ion-spinner>
     </div>
   } @else {
-    <div class="max-w-4xl mx-auto space-y-6 px-4">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-6 pb-24">
       @for (season of seasons(); track season.id) {
         <div class="bg-card rounded-2xl border border-ap-border overflow-hidden">
           <!-- Season Header Row -->
@@ -47,9 +47,60 @@
 
           <!-- Competitions / Leagues Sub-List -->
           @if (season.isExpanded) {
-            <div class="p-4 space-y-3 bg-ap-bg/50">
+            <div class="p-4 space-y-4 bg-ap-bg/50">
+              <!-- Competitions Section -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xs font-bold uppercase tracking-widest text-ap-muted m-0">Competitions</h3>
+                  <ion-button fill="outline" size="small" (click)="addCompetition(season)" class="m-0">
+                    <ion-icon slot="start" name="add-outline"></ion-icon>
+                    Add Competition
+                  </ion-button>
+                </div>
+
+                <div class="px-0 sm:px-2">
+                  <ion-list lines="none" class="space-y-2 p-0" style="background: transparent;">
+                    @for (league of season.leagues; track league.id) {
+                      <ion-item class="rounded-xl border border-ap-border overflow-hidden" style="--background: var(--ap-surface); --min-height: 56px;">
+                        <ion-icon slot="start" name="trophy-outline" color="warning" class="text-lg mr-2"></ion-icon>
+                        <ion-label>
+                          <h4 class="font-bold flex items-center gap-2 m-0">
+                            {{ league.name }}
+                            @if (league.isActive) {
+                              <span class="inline-flex items-center rounded-full bg-blue-500/10 px-1.5 py-0.2 text-[10px] font-bold text-blue-500">
+                                Active
+                              </span>
+                            }
+                          </h4>
+                          <p class="text-[10px] uppercase font-semibold text-ap-muted tracking-wider m-0 mt-0.5">
+                            {{ league.type }} • Format: {{ league.playersOnField || 'N/A' }}v{{ league.playersOnField || 'N/A' }}
+                          </p>
+                        </ion-label>
+                        <ion-buttons slot="end">
+                          <ion-button fill="clear" color="tertiary" (click)="manageGuestPlayers(season, league)" size="small" title="Guest Players">
+                            <ion-icon slot="icon-only" name="people-outline" class="text-sm"></ion-icon>
+                          </ion-button>
+                          <ion-button fill="clear" color="primary" (click)="editCompetition(season, league)" size="small">
+                            <ion-icon slot="icon-only" name="create-outline" class="text-sm"></ion-icon>
+                          </ion-button>
+                          <ion-button fill="clear" color="danger" (click)="confirmDeleteCompetition(league)" size="small">
+                            <ion-icon slot="icon-only" name="trash-outline" class="text-sm"></ion-icon>
+                          </ion-button>
+                        </ion-buttons>
+                      </ion-item>
+                    } @empty {
+                      <div class="text-center py-4 text-xs text-ap-muted italic bg-transparent">
+                        No competitions defined for this season yet.
+                      </div>
+                    }
+                  </ion-list>
+                </div>
+              </div>
+
+              <div class="border-t border-ap-border my-4"></div>
+
               <!-- Checklist Section -->
-              <div class="space-y-3 pb-4">
+              <div class="space-y-3 pb-2">
                 <div class="flex items-center justify-between">
                   <h3 class="text-xs font-bold uppercase tracking-widest text-ap-muted m-0">Checklists</h3>
                   <ion-button fill="outline" size="small" (click)="addChecklistItem(season)" class="m-0">
@@ -122,54 +173,6 @@
                     No players rostered in this season yet. Go to the Roster tab to assign players to this season.
                   </div>
                 }
-              </div>
-
-              <div class="border-t border-ap-border my-4"></div>
-
-              <div class="flex items-center justify-between">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-ap-muted m-0">Competitions</h3>
-                <ion-button fill="outline" size="small" (click)="addCompetition(season)" class="m-0">
-                  <ion-icon slot="start" name="add-outline"></ion-icon>
-                  Add Competition
-                </ion-button>
-              </div>
-
-              <div class="px-2">
-                <ion-list lines="none" class="space-y-2 p-0" style="background: transparent;">
-                  @for (league of season.leagues; track league.id) {
-                    <ion-item class="rounded-xl border border-ap-border overflow-hidden" style="--background: var(--ap-surface); --min-height: 56px;">
-                      <ion-icon slot="start" name="trophy-outline" color="warning" class="text-lg mr-2"></ion-icon>
-                      <ion-label>
-                        <h4 class="font-bold flex items-center gap-2 m-0">
-                          {{ league.name }}
-                          @if (league.isActive) {
-                            <span class="inline-flex items-center rounded-full bg-blue-500/10 px-1.5 py-0.2 text-[10px] font-bold text-blue-500">
-                              Active
-                            </span>
-                          }
-                        </h4>
-                        <p class="text-[10px] uppercase font-semibold text-ap-muted tracking-wider m-0 mt-0.5">
-                          {{ league.type }} • Format: {{ league.playersOnField || 'N/A' }}v{{ league.playersOnField || 'N/A' }}
-                        </p>
-                      </ion-label>
-                      <ion-buttons slot="end">
-                        <ion-button fill="clear" color="tertiary" (click)="manageGuestPlayers(season, league)" size="small" title="Guest Players">
-                          <ion-icon slot="icon-only" name="people-outline" class="text-sm"></ion-icon>
-                        </ion-button>
-                        <ion-button fill="clear" color="primary" (click)="editCompetition(season, league)" size="small">
-                          <ion-icon slot="icon-only" name="create-outline" class="text-sm"></ion-icon>
-                        </ion-button>
-                        <ion-button fill="clear" color="danger" (click)="confirmDeleteCompetition(league)" size="small">
-                          <ion-icon slot="icon-only" name="trash-outline" class="text-sm"></ion-icon>
-                        </ion-button>
-                      </ion-buttons>
-                    </ion-item>
-                  } @empty {
-                    <div class="text-center py-4 text-xs text-ap-muted italic bg-transparent">
-                      No competitions defined for this season yet.
-                    </div>
-                  }
-                </ion-list>
               </div>
             </div>
           }

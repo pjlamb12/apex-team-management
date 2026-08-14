@@ -1,0 +1,49 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+ion-content {
+  --padding-top: 1rem;
+  --padding-bottom: 5rem;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+}
+
+.schedule-card {
+  background-color: var(--ap-surface);
+  border: 1px solid var(--ap-border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.schedule-header-item {
+  --background: var(--ap-surface-raised);
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --min-height: 48px;
+  cursor: pointer;
+}
+
+.schedule-item {
+  --background: transparent;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --inner-padding-end: 0;
+  border-bottom: none;
+}
+
+ion-item-sliding {
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--ap-border);
+  }
+
+  &:last-child {
+    border-bottom: none;
+
+    .schedule-item {
+      border-bottom: none;
+    }
+  }
+}

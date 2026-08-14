@@ -1,6 +1,6 @@
-<ion-content class="bg-ap-bg">
-  <div class="flex flex-col">
-    <div class="px-4 mb-2 flex items-center gap-2">
+<ion-content class="bg-ap-bg" style="--padding-top: 1rem; --padding-bottom: 5rem; --padding-start: 1rem; --padding-end: 1rem;">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-4 pb-24">
+    <div class="mb-1 flex items-center gap-2">
       <div class="flex-1">
         @if (seasons().length > 0) {
           <ion-item lines="none" class="bg-transparent rounded-lg border border-white/5">
@@ -30,7 +30,7 @@
     </div>
 
     @if (players().length > 0) {
-      <div class="px-4 mb-3">
+      <div class="mb-2">
         <ion-segment [value]="activeFilter()" (ionChange)="onFilterChange($event)" class="bg-ap-surface-raised rounded-xl p-1">
           <ion-segment-button value="active" class="font-bold text-xs">
             <ion-label>Active ({{ activePlayerCount() }})</ion-label>
@@ -98,11 +98,11 @@
         }
       </div>
     } @else {
-      <ion-list lines="full" class="bg-transparent px-2">
+      <ion-list lines="none" class="bg-transparent p-0">
         @for (player of sortedPlayers(); track player.id) {
-          <ion-item-sliding class="mb-2">
+          <ion-item-sliding class="mb-2 bg-transparent">
             <ion-item 
-              class="rounded-xl border shadow-none overflow-hidden" 
+              class="player-card-item rounded-xl border shadow-none overflow-hidden" 
               [class.border-ap-border]="player.isActive !== false"
               [class.border-red-500/20]="player.isActive === false"
               [class.opacity-80]="player.isActive === false"
@@ -111,30 +111,25 @@
               <ion-icon
                 slot="start"
                 name="person-circle-outline"
-                class="text-4xl text-ap-muted mr-2"
+                class="text-4xl text-ap-muted mr-3"
               ></ion-icon>
-              <ion-label (click)="openPlayerAnalytics(player)" class="cursor-pointer">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="flex items-center gap-2">
-                    <h2 class="text-lg font-black text-ap-text tracking-tight">
-                      {{ player.firstName }} {{ player.lastName }}
-                    </h2>
-                    @if (player.isActive === false) {
-                      <span class="text-[9px] font-black uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full">
-                        Stepped Away
-                      </span>
-                    }
-                  </div>
-                  @if (player.jerseyNumber !== null && player.jerseyNumber !== undefined) {
-                    <span class="text-ap-primary font-black text-xl italic pr-2">#{{ player.jerseyNumber }}</span>
+              <ion-label (click)="openPlayerAnalytics(player)" class="cursor-pointer py-0.5 flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-base sm:text-lg font-black text-ap-text tracking-tight">
+                    {{ player.firstName }} {{ player.lastName }}
+                  </h2>
+                  @if (player.isActive === false) {
+                    <span class="text-[9px] font-black uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full">
+                      Stepped Away
+                    </span>
                   }
                 </div>
                 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2.5">
                   @if (player.preferredPosition) {
                     <span class="text-[10px] text-ap-muted font-bold uppercase tracking-widest">{{ player.preferredPosition }}</span>
                   }
-                  <div class="flex items-center gap-1.5 bg-ap-surface-raised px-2 py-0.5 rounded-full border border-ap-border">
+                  <div class="flex items-center gap-1.5 bg-ap-surface-raised px-2.5 py-0.5 rounded-full border border-ap-border">
                     <div 
                       class="w-2 h-2 rounded-full" 
                       [style.background-color]="'var(--ion-color-' + getParticipationColor(player.id) + ')'"
@@ -144,11 +139,14 @@
                 </div>
               </ion-label>
 
-              <ion-buttons slot="end">
-                <ion-button fill="clear" color="medium" (click)="openPlayerAnalytics(player)">
+              <div slot="end" class="flex items-center gap-2 sm:gap-3">
+                @if (player.jerseyNumber !== null && player.jerseyNumber !== undefined) {
+                  <span class="text-ap-primary font-black text-xl italic tabular-nums">#{{ player.jerseyNumber }}</span>
+                }
+                <ion-button fill="clear" color="medium" (click)="openPlayerAnalytics(player)" class="h-9 w-9 ion-no-margin">
                   <ion-icon name="stats-chart-outline" slot="icon-only" class="text-lg"></ion-icon>
                 </ion-button>
-              </ion-buttons>
+              </div>
             </ion-item>
 
             <ion-item-options side="end">
