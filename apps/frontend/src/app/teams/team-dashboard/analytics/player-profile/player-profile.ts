@@ -41,9 +41,15 @@ import {
   flashOutline,
   ribbonOutline,
   shieldOutline,
-  handRightOutline
+  handRightOutline,
+  starOutline,
+  heartOutline,
+  flameOutline,
+  handLeftOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
-import { AnalyticsService, PlayerProfileAnalytics, TeamService } from '@apex-team/client/data-access/team';
+import { AnalyticsService, PlayerProfileAnalytics, TeamService, AwardsService } from '@apex-team/client/data-access/team';
+import { PlayerAward } from '@apex-team/shared/util/models';
 import { ModalController } from '@ionic/angular/standalone';
 
 @Component({
@@ -80,10 +86,12 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
   @Input({ required: true }) playerId!: string;
 
   private readonly analyticsService = inject(AnalyticsService);
+  private readonly awardsService = inject(AwardsService);
   private readonly teamService = inject(TeamService);
   private readonly modalCtrl = inject(ModalController);
 
   protected profile = signal<PlayerProfileAnalytics | null>(null);
+  protected playerAwards = signal<PlayerAward[]>([]);
   protected sportName = signal<string>('Soccer');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
@@ -107,6 +115,11 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
       ribbonOutline,
       shieldOutline,
       handRightOutline,
+      starOutline,
+      heartOutline,
+      flameOutline,
+      handLeftOutline,
+      sparklesOutline,
     });
   }
 
@@ -118,11 +131,13 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [profile, team] = await Promise.all([
+      const [profile, team, awards] = await Promise.all([
         firstValueFrom(this.analyticsService.getPlayerProfile(this.teamId, this.playerId)),
-        this.teamService.getTeam(this.teamId)
+        this.teamService.getTeam(this.teamId),
+        firstValueFrom(this.awardsService.getPlayerAwards(this.teamId, this.playerId)).catch(() => []),
       ]);
       this.profile.set(profile);
+      this.playerAwards.set(awards || []);
       this.sportName.set(team.sport?.name || 'Soccer');
     } catch {
       this.errorMessage.set('Failed to load player analytics.');

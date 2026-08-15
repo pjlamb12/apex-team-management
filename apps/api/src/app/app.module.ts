@@ -16,6 +16,7 @@ import { AttendanceModule } from '../attendance/attendance.module';
 import { CandidatesModule } from '../candidates/candidates.module';
 import { ScoutingModule } from '../scouting/scouting.module';
 import { OpponentsModule } from '../opponents/opponents.module';
+import { AwardsModule } from '../awards/awards.module';
 import { ALL_MIGRATIONS } from '../../migrations';
 
 @Module({
@@ -52,6 +53,7 @@ import { ALL_MIGRATIONS } from '../../migrations';
     CandidatesModule,
     ScoutingModule,
     OpponentsModule,
+    AwardsModule,
   ],
   controllers: [AppController],
 })

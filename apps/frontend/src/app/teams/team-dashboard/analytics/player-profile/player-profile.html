@@ -158,6 +158,59 @@
         </ion-card-content>
       </ion-card>
 
+      <!-- Trophy Case & Honors -->
+      <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
+        <ion-card-header class="px-4 pt-4 pb-2">
+          <div class="flex items-center justify-between">
+            <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+              <ion-icon name="trophy-outline" class="text-amber-400"></ion-icon>
+              Trophy Case & Honors
+            </ion-card-title>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              {{ playerAwards().length }} {{ playerAwards().length === 1 ? 'Award' : 'Awards' }}
+            </span>
+          </div>
+        </ion-card-header>
+        <ion-card-content class="px-4 pb-4 pt-2">
+          @if (playerAwards().length > 0) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              @for (award of playerAwards(); track award.id) {
+                <div class="p-3.5 rounded-xl bg-ap-bg border border-ap-border flex items-start gap-3 transition-all">
+                  <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 mt-0.5" [ngClass]="{
+                    'bg-amber-500/15 text-amber-400 border border-amber-500/30': award.color === 'amber',
+                    'bg-blue-500/15 text-blue-400 border border-blue-500/30': award.color === 'blue',
+                    'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': award.color === 'emerald',
+                    'bg-rose-500/15 text-rose-400 border border-rose-500/30': award.color === 'rose',
+                    'bg-purple-500/15 text-purple-400 border border-purple-500/30': award.color === 'purple',
+                    'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30': award.color === 'indigo',
+                    'bg-red-500/15 text-red-400 border border-red-500/30': award.color === 'red'
+                  }">
+                    <ion-icon [name]="award.icon"></ion-icon>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-1">
+                      <span class="text-xs font-bold text-ap-text uppercase tracking-wide">{{ award.title }}</span>
+                      <span class="text-[10px] text-ap-muted">{{ award.awardedAt | date:'mediumDate' }}</span>
+                    </div>
+                    @if (award.event?.opponent) {
+                      <div class="text-[11px] font-semibold text-ap-muted mt-0.5">vs {{ award.event?.opponent }}</div>
+                    }
+                    @if (award.notes) {
+                      <p class="text-[11px] text-ap-text/90 italic mt-1 leading-snug">"{{ award.notes }}"</p>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="py-8 text-center text-ap-muted italic text-xs flex flex-col items-center gap-2">
+              <ion-icon name="ribbon-outline" class="text-2xl opacity-40"></ion-icon>
+              <span>No honors or skill badges recorded yet this season.</span>
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+
       <!-- History Log -->
       <ion-card class="m-0 border border-ap-border shadow-none">
         <ion-card-header class="px-4 pt-4 pb-2">

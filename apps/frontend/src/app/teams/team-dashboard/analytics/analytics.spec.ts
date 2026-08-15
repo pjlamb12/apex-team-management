@@ -4,7 +4,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { TeamAnalytics } from './analytics';
-import { AnalyticsService, SeasonsService, LeaguesService, TeamService } from '@apex-team/client/data-access/team';
+import { AnalyticsService, SeasonsService, LeaguesService, TeamService, AwardsService } from '@apex-team/client/data-access/team';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { ModalController } from '@ionic/angular/standalone';
 import { signal } from '@angular/core';
@@ -33,6 +33,17 @@ describe('TeamAnalytics', () => {
     getTeamPlayingTime: vi.fn().mockReturnValue(of({})),
   };
 
+  const mockAwardsService = {
+    getSummary: vi.fn().mockReturnValue(of({
+      totalAwards: 5,
+      awardsByCategory: { mvp: 2, defense: 3 },
+      playerAwardCounts: [
+        { playerId: 'p1', firstName: 'Lucas', lastName: 'Silva', awardCount: 2, lastAwardDate: '2026-08-10' }
+      ],
+      recentAwards: []
+    })),
+  };
+
   const mockLeaguesService = {
     findAllForSeason: vi.fn().mockReturnValue(of([{ id: 'l1', name: 'Premier League' }])),
   };
@@ -54,6 +65,7 @@ describe('TeamAnalytics', () => {
         provideRouter([]),
         { provide: RuntimeConfigLoaderService, useValue: mockRuntimeConfig },
         { provide: AnalyticsService, useValue: mockAnalyticsService },
+        { provide: AwardsService, useValue: mockAwardsService },
         { provide: SeasonsService, useValue: mockSeasonsService },
         { provide: LeaguesService, useValue: mockLeaguesService },
         { provide: TeamService, useValue: mockTeamService },

@@ -4,6 +4,7 @@
   "projectType": "library",
   "sourceRoot": "libs/client/data-access/team/src",
   "prefix": "apex-team",
+  "tags": ["scope:client", "type:data-access"],
   "targets": {
     "test": {
       "executor": "@analogjs/vitest-angular:test",

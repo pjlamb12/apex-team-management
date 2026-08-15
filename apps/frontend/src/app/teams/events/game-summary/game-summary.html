@@ -7,6 +7,10 @@
     </ion-buttons>
     <ion-title>Game Summary</ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="openAwardBadgesModal()" class="match-awards-header-btn" color="warning">
+        <ion-icon slot="start" name="trophy-outline"></ion-icon>
+        <span class="font-bold text-xs">Honors</span>
+      </ion-button>
       <ion-button (click)="openAiRecapModal()" class="ai-recap-header-btn" color="primary">
         <ion-icon slot="start" name="sparkles-outline"></ion-icon>
         <span class="font-bold text-xs">AI Recap</span>
@@ -80,6 +84,91 @@
           Generate Recap
         </ion-button>
       </div>
+
+      <!-- Match Honors & Badges Section -->
+      @if (eventAwards().length > 0) {
+        <div class="bg-ap-surface rounded-xl p-4 sm:p-5 border border-ap-border flex flex-col gap-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <ion-icon name="trophy-outline" class="text-lg"></ion-icon>
+              </div>
+              <div>
+                <h3 class="text-xs font-black uppercase tracking-wider text-ap-text">Match Honors & Badges</h3>
+                <p class="text-[11px] text-ap-muted font-medium">{{ eventAwards().length }} {{ eventAwards().length === 1 ? 'player' : 'players' }} recognized</p>
+              </div>
+            </div>
+            <ion-button (click)="openAwardBadgesModal()" size="small" fill="outline" color="warning" class="font-bold text-xs ion-no-margin">
+              <ion-icon name="add-outline" slot="start"></ion-icon>
+              Award Badges
+            </ion-button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            @for (award of eventAwards(); track award.id) {
+              <div class="p-3.5 rounded-xl bg-ap-bg border border-ap-border flex items-start gap-3 transition-all hover:border-amber-500/30">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 mt-0.5" [ngClass]="{
+                  'bg-amber-500/15 text-amber-400 border border-amber-500/30': award.color === 'amber',
+                  'bg-blue-500/15 text-blue-400 border border-blue-500/30': award.color === 'blue',
+                  'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': award.color === 'emerald',
+                  'bg-rose-500/15 text-rose-400 border border-rose-500/30': award.color === 'rose',
+                  'bg-purple-500/15 text-purple-400 border border-purple-500/30': award.color === 'purple',
+                  'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30': award.color === 'indigo',
+                  'bg-red-500/15 text-red-400 border border-red-500/30': award.color === 'red'
+                }">
+                  <ion-icon [name]="award.icon"></ion-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="font-bold text-xs text-ap-text truncate">
+                      {{ award.player?.firstName }} {{ award.player?.lastName }}
+                      @if (award.player?.jerseyNumber !== null && award.player?.jerseyNumber !== undefined) {
+                        <span class="font-mono opacity-70">#{{ award.player?.jerseyNumber }}</span>
+                      }
+                    </span>
+                  </div>
+                  <div class="text-[11px] font-black tracking-wide uppercase mt-0.5" [ngClass]="{
+                    'text-amber-400': award.color === 'amber',
+                    'text-blue-400': award.color === 'blue',
+                    'text-emerald-400': award.color === 'emerald',
+                    'text-rose-400': award.color === 'rose',
+                    'text-purple-400': award.color === 'purple',
+                    'text-indigo-400': award.color === 'indigo',
+                    'text-red-400': award.color === 'red'
+                  }">
+                    {{ award.title }}
+                  </div>
+                  @if (award.notes) {
+                    <p class="text-[11px] text-ap-muted mt-1 leading-snug line-clamp-2">"{{ award.notes }}"</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <!-- Callout Banner when no badges yet awarded -->
+        <div class="bg-amber-50 dark:bg-amber-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shrink-0">
+              <ion-icon name="trophy-outline" class="text-xl"></ion-icon>
+            </div>
+            <div>
+              <h3 class="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200">Player of the Match & Skill Badges</h3>
+              <p class="text-xs text-amber-700 dark:text-amber-300 font-medium">Celebrate standout grit, defense, hustle, and teamwork for this game</p>
+            </div>
+          </div>
+          <ion-button
+            (click)="openAwardBadgesModal()"
+            size="small"
+            color="warning"
+            class="font-bold text-xs ion-no-margin shrink-0 w-full sm:w-auto"
+          >
+            <ion-icon name="trophy-outline" slot="start"></ion-icon>
+            Award Honors
+          </ion-button>
+        </div>
+      }
 
       <!-- Shootout Result Banner -->
       @if (sportName() !== 'Volleyball') {
