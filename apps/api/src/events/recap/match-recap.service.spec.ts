@@ -8,6 +8,7 @@ import { LineupEntryEntity } from '../../entities/lineup-entry.entity';
 import { PlayerEntity } from '../../entities/player.entity';
 import { AttendanceEntity } from '../../entities/attendance.entity';
 import { OpponentEntity } from '../../entities/opponent.entity';
+import { PlayerAwardEntity } from '../../entities/player-award.entity';
 import { PlayingTimeService } from '../../analytics/playing-time.service';
 import { GeminiService } from './gemini.service';
 
@@ -20,6 +21,7 @@ describe('MatchRecapService', () => {
   let playerRepo: Partial<Repository<PlayerEntity>>;
   let attendanceRepo: Partial<Repository<AttendanceEntity>>;
   let opponentRepo: Partial<Repository<OpponentEntity>>;
+  let awardRepo: Partial<Repository<PlayerAwardEntity>>;
   let playingTimeService: Partial<PlayingTimeService>;
   let geminiService: Partial<GeminiService>;
 
@@ -51,6 +53,31 @@ describe('MatchRecapService', () => {
     { id: 'p1', firstName: 'Leo', lastName: 'Messi', jerseyNumber: 10, teamId: mockTeamId },
     { id: 'p2', firstName: 'Julian', lastName: 'Alvarez', jerseyNumber: 9, teamId: mockTeamId },
     { id: 'p3', firstName: 'Emi', lastName: 'Martinez', jerseyNumber: 1, teamId: mockTeamId },
+  ];
+
+  const mockAwards: any[] = [
+    {
+      id: 'award-1',
+      teamId: mockTeamId,
+      playerId: 'p1',
+      player: { id: 'p1', firstName: 'Leo', lastName: 'Messi', jerseyNumber: 10 },
+      eventId: mockEventId,
+      title: 'Player of the Match',
+      category: 'mvp',
+      badgePresetId: 'potm',
+      notes: 'Spectacular opening goal and created 3 chances',
+    },
+    {
+      id: 'award-2',
+      teamId: mockTeamId,
+      playerId: 'p3',
+      player: { id: 'p3', firstName: 'Emi', lastName: 'Martinez', jerseyNumber: 1 },
+      eventId: mockEventId,
+      title: 'The Wall',
+      category: 'goalkeeping',
+      badgePresetId: 'golden_gloves',
+      notes: 'Crucial penalty save in the 40th minute',
+    },
   ];
 
   const mockGameEvents: any[] = [
@@ -133,6 +160,10 @@ describe('MatchRecapService', () => {
       findOne: vi.fn().mockResolvedValue(null),
     };
 
+    awardRepo = {
+      find: vi.fn().mockResolvedValue(mockAwards),
+    };
+
     playingTimeService = {
       calculateForEvent: vi.fn().mockResolvedValue({
         p1: { playerId: 'p1', totalSeconds: 3000, positionSeconds: {} },
@@ -143,7 +174,7 @@ describe('MatchRecapService', () => {
     geminiService = {
       isConfigured: vi.fn().mockReturnValue(true),
       generateText: vi.fn().mockResolvedValue({
-        text: 'Subject: Match Recap: Apex Strikers vs Storm FC\n\nGreat win today! Leo Messi and Julian Alvarez scored brilliant goals.',
+        text: 'Subject: Match Recap: Apex Strikers vs Storm FC\n\nGreat win today! Leo Messi won Player of the Match.',
         model: 'gemini-3.6-flash',
       }),
     };
@@ -156,6 +187,7 @@ describe('MatchRecapService', () => {
       playerRepo as Repository<PlayerEntity>,
       attendanceRepo as Repository<AttendanceEntity>,
       opponentRepo as Repository<OpponentEntity>,
+      awardRepo as Repository<PlayerAwardEntity>,
       playingTimeService as PlayingTimeService,
       geminiService as GeminiService,
     );
@@ -171,35 +203,45 @@ describe('MatchRecapService', () => {
 
     expect(result.isAiGenerated).toBe(true);
     expect(result.model).toBe('gemini-3.6-flash');
-    expect(result.recap).toContain('Apex Strikers vs Storm FC');
+    expect(result.recap).toContain('Player of the Match');
     expect(geminiService.generateText).toHaveBeenCalled();
+    expect(result.prompt).toContain('MATCH HONORS & COACH BADGES AWARDED');
+    expect(result.prompt).toContain('Leo Messi (#10): Awarded "Player of the Match"');
+    expect(result.prompt).toContain('The Wall');
     expect(result.nextEvent).toBeDefined();
     expect(result.nextEvent?.opponent).toBe('Thunder SC');
   });
 
-  it('should fall back to template generation when Gemini is not configured', async () => {
+  it('should fall back to template generation when Gemini is not configured and include honors', async () => {
     (geminiService.isConfigured as any).mockReturnValue(false);
 
     const result = await service.generateRecap(mockTeamId, mockEventId, {
       tone: 'youth_encouraging',
       format: 'email',
+      includePlayerShoutouts: true,
     });
 
     expect(result.isAiGenerated).toBe(false);
     expect(result.recap).toContain('Apex Strikers');
     expect(result.recap).toContain('Storm FC');
+    expect(result.recap).toContain('🏆 **Match Honors & Badges:**');
+    expect(result.recap).toContain('Leo Messi (#10) — **Player of the Match**');
+    expect(result.recap).toContain('Crucial penalty save');
     expect(result.prompt).toBeDefined();
   });
 
-  it('should return prompt and system instruction via getPromptOnly', async () => {
+  it('should return prompt and system instruction via getPromptOnly including honors context', async () => {
     const result = await service.getPromptOnly(mockTeamId, mockEventId, {
       tone: 'tactical_competitive',
       format: 'chat',
+      includePlayerShoutouts: true,
     });
 
     expect(result.prompt).toContain('Apex Strikers');
     expect(result.prompt).toContain('Storm FC');
+    expect(result.prompt).toContain('Player of the Match');
     expect(result.systemInstruction).toContain('WhatsApp');
     expect(result.context.teamName).toBe('Apex Strikers');
+    expect(result.context.awards).toHaveLength(2);
   });
 });

@@ -8,6 +8,7 @@ import { LineupEntryEntity } from '../../entities/lineup-entry.entity';
 import { PlayerEntity } from '../../entities/player.entity';
 import { AttendanceEntity } from '../../entities/attendance.entity';
 import { OpponentEntity } from '../../entities/opponent.entity';
+import { PlayerAwardEntity } from '../../entities/player-award.entity';
 import { PlayingTimeService } from '../../analytics/playing-time.service';
 import { GeminiService } from './gemini.service';
 import {
@@ -37,6 +38,13 @@ interface CompiledMatchContext {
     assistJersey?: number;
     isOpponent?: boolean;
     period?: number;
+  }>;
+  awards: Array<{
+    playerName: string;
+    playerJersey?: number;
+    title: string;
+    category: string;
+    notes?: string;
   }>;
   volleyballStats?: {
     kills: number;
@@ -84,6 +92,8 @@ export class MatchRecapService {
     private readonly attendanceRepo: Repository<AttendanceEntity>,
     @InjectRepository(OpponentEntity)
     private readonly opponentRepo: Repository<OpponentEntity>,
+    @InjectRepository(PlayerAwardEntity)
+    private readonly awardRepo: Repository<PlayerAwardEntity>,
     private readonly playingTimeService: PlayingTimeService,
     private readonly geminiService: GeminiService,
   ) {}
@@ -415,6 +425,20 @@ export class MatchRecapService {
       minute: '2-digit',
     });
 
+    // Match Honors & Badges
+    const matchAwards = await this.awardRepo.find({
+      where: { eventId },
+      relations: ['player'],
+      order: { createdAt: 'ASC' },
+    });
+    const awards = matchAwards.map((a) => ({
+      playerName: `${a.player?.firstName || ''} ${a.player?.lastName || ''}`.trim(),
+      playerJersey: a.player?.jerseyNumber ?? undefined,
+      title: a.title,
+      category: a.category,
+      notes: a.notes || undefined,
+    }));
+
     return {
       teamName,
       sportName,
@@ -433,6 +457,7 @@ export class MatchRecapService {
           }
         : undefined,
       goals,
+      awards,
       volleyballStats:
         sportName === 'Volleyball'
           ? { kills, aces, blocks, digs, errors: vbErrors }
@@ -468,7 +493,7 @@ export class MatchRecapService {
       email:
         'Format the output as a professional, well-structured Parent Email / Newsletter. Include a subject line at the top (e.g., "Subject: Match Recap - [Team] vs [Opponent]"), a friendly opening, clear match summary paragraphs with bold highlights for key moments/players, an upcoming schedule reminder section, and a warm coach sign-off.',
       chat:
-        'Format the output for a mobile team messaging app (WhatsApp, GroupMe, TeamSnap). Make it engaging, punchy, and scannable. Use appropriate sports emojis (⚽/🏐, 🔥, 🎯, 👏, 📅), bullet points for highlights, and a quick summary of the next upcoming practice/game at the bottom.',
+        'Format the output for a mobile team messaging app (WhatsApp, GroupMe, TeamSnap). Make it engaging, punchy, and scannable. Use appropriate sports emojis (⚽/🏐, 🔥, 🎯, 👏, 📅, 🏆), bullet points for highlights, and a quick summary of the next upcoming practice/game at the bottom.',
       sms:
         'Format the output as an ultra-concise SMS text alert (< 300 characters). Provide the score, one standout highlight or celebration sentence, and the next event date/time. Do not include lengthy paragraphs.',
       social:
@@ -498,6 +523,17 @@ export class MatchRecapService {
             })
             .join('\n')
         : '- No goals scored for our team';
+
+    const awardsSummary =
+      includePlayerShoutouts && context.awards.length > 0
+        ? `\nMATCH HONORS & COACH BADGES AWARDED:\n` +
+          context.awards
+            .map(
+              (a) =>
+                `- 🏆 ${a.playerName}${a.playerJersey ? ` (#${a.playerJersey})` : ''}: Awarded "${a.title}" (${a.category.toUpperCase()})${a.notes ? ` - Coach's Praise: "${a.notes}"` : ''}`,
+            )
+            .join('\n')
+        : '';
 
     let nextEventText = 'None scheduled';
     if (includeNextEvent && context.nextEvent) {
@@ -539,6 +575,7 @@ ${context.keyStats.saves > 0 ? `- Goalkeeper saves recorded: ${context.keyStats.
 
 TEAM HIGHLIGHTS & GOALS:
 ${goalSummary}
+${awardsSummary}
 
 ${
   context.volleyballStats
@@ -571,8 +608,9 @@ ${nextEventText}`
 REQUIREMENTS:
 1. Follow the ${tone.replace('_', ' ').toUpperCase()} tone and ${format.toUpperCase()} format.
 2. ${includePlayerShoutouts ? 'Recognize team members positively for teamwork, hustle, and key moments.' : 'Keep the summary team-focused without listing individual player names.'}
-3. ${includeNextEvent && context.nextEvent ? 'Include the upcoming event reminder clearly.' : 'Do not include future scheduling.'}
-4. Ensure the recap is immediately ready for the coach to copy and send to parents.
+3. If match honors or badges are listed above (like Player of the Match, Iron Defender, Relentless Motor, Ultimate Teammate, etc.), make sure to highlight and celebrate these specific honorees enthusiastically in the recap!
+4. ${includeNextEvent && context.nextEvent ? 'Include the upcoming event reminder clearly.' : 'Do not include future scheduling.'}
+5. Ensure the recap is immediately ready for the coach to copy and send to parents.
 `.trim();
   }
 
@@ -606,22 +644,30 @@ REQUIREMENTS:
       highlightsText += '\n• 🛡️ Tremendous defensive lockdown and clean sheet!';
     }
 
+    let awardsText = '';
+    if (includePlayerShoutouts && context.awards.length > 0) {
+      awardsText = '\n\n🏆 **Match Honors & Badges:**\n' + context.awards
+        .map((a) => `• 🌟 ${a.playerName}${a.playerJersey ? ` (#${a.playerJersey})` : ''} — **${a.title}**${a.notes ? `: "${a.notes}"` : ''}`)
+        .join('\n');
+    }
+
     const customNote = dto.customCoachNotes ? `\n\n"${dto.customCoachNotes}"` : '';
 
     if (format === 'sms') {
       const nextSnippet = context.nextEvent ? ` Next: ${new Date(context.nextEvent.scheduledAt).toLocaleDateString('en-US', { weekday: 'short' })}` : '';
-      return `${context.teamName} ${context.result === 'Win' ? 'wins' : context.result === 'Draw' ? 'draws' : 'falls'} ${scoreStr} vs ${context.opponentName}! Proud of the team's effort today.${nextSnippet}`;
+      const topHonoree = context.awards.length > 0 ? ` Congrats ${context.awards[0].playerName} on ${context.awards[0].title}!` : '';
+      return `${context.teamName} ${context.result === 'Win' ? 'wins' : context.result === 'Draw' ? 'draws' : 'falls'} ${scoreStr} vs ${context.opponentName}!${topHonoree} Proud of the team's effort today.${nextSnippet}`;
     }
 
     if (format === 'chat') {
-      return `⚽ **Game Recap: ${context.teamName} vs ${context.opponentName}** 🔥\n\nFinal Score: **${context.teamName} ${scoreStr} ${context.opponentName}** (${context.result.toUpperCase()})${highlightsText}${customNote}\n\nProud of everyone's hustle and teamwork today! 👏${nextEventSection}`;
+      return `⚽ **Game Recap: ${context.teamName} vs ${context.opponentName}** 🔥\n\nFinal Score: **${context.teamName} ${scoreStr} ${context.opponentName}** (${context.result.toUpperCase()})${highlightsText}${awardsText}${customNote}\n\nProud of everyone's hustle and teamwork today! 👏${nextEventSection}`;
     }
 
     if (format === 'social') {
-      return `Final from ${context.location}: ${context.teamName} with a ${outcomeWord} against ${context.opponentName} (${scoreStr})! ⚽🔥\n\nProud of the entire squad for the relentless work rate from whistle to whistle. 👏${highlightsText}\n\n#${context.teamName.replace(/\s+/g, '')} #ApexTeam #GameDay #Teamwork #YouthSports`;
+      return `Final from ${context.location}: ${context.teamName} with a ${outcomeWord} against ${context.opponentName} (${scoreStr})! ⚽🔥\n\nProud of the entire squad for the relentless work rate from whistle to whistle. 👏${highlightsText}${awardsText}\n\n#${context.teamName.replace(/\s+/g, '')} #ApexTeam #GameDay #Teamwork #YouthSports`;
     }
 
     // Default: Email format
-    return `Subject: Match Recap: ${context.teamName} vs ${context.opponentName} (${scoreStr})\n\nHi ${context.teamName} Families,\n\nThank you to everyone who came out to support the squad today against ${context.opponentName}. It was an exciting match from start to finish, ending in a ${outcomeWord} (${scoreStr}).\n\nThe players showed tremendous effort, teamwork, and resilience on the pitch. Every player contributed with great hustle and focus.${highlightsText}${customNote}\n\nThank you again for all the sideline encouragement and positive energy!${nextEventSection}\n\nBest regards,\nCoach & Coaching Staff`;
+    return `Subject: Match Recap: ${context.teamName} vs ${context.opponentName} (${scoreStr})\n\nHi ${context.teamName} Families,\n\nThank you to everyone who came out to support the squad today against ${context.opponentName}. It was an exciting match from start to finish, ending in a ${outcomeWord} (${scoreStr}).\n\nThe players showed tremendous effort, teamwork, and resilience on the pitch. Every player contributed with great hustle and focus.${highlightsText}${awardsText}${customNote}\n\nThank you again for all the sideline encouragement and positive energy!${nextEventSection}\n\nBest regards,\nCoach & Coaching Staff`;
   }
 }

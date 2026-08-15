@@ -19,6 +19,7 @@ import { EventNoteEntity } from '../entities/event-note.entity';
 import { TeamEntity } from '../entities/team.entity';
 import { SeasonEntity } from '../entities/season.entity';
 import { LeagueEntity } from '../entities/league.entity';
+import { PlayerAwardEntity } from '../entities/player-award.entity';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { LeagueEntity } from '../entities/league.entity';
       TeamEntity,
       SeasonEntity,
       LeagueEntity,
+      PlayerAwardEntity,
     ]),
   ],
   controllers: [AnalyticsController],

@@ -14,6 +14,7 @@ import { AttendanceEntity } from '../../entities/attendance.entity';
 import { PracticeDrillEntity } from '../../entities/practice-drill.entity';
 import { DrillEntity } from '../../entities/drill.entity';
 import { EventNoteEntity } from '../../entities/event-note.entity';
+import { PlayerAwardEntity } from '../../entities/player-award.entity';
 import { LlmPromptTemplate } from '../dto/llm-export-options.dto';
 
 describe('LlmExportService', () => {
@@ -28,6 +29,7 @@ describe('LlmExportService', () => {
   let practiceDrillRepo: any;
   let drillRepo: any;
   let eventNoteRepo: any;
+  let awardRepo: any;
   let playingTimeService: any;
   let performanceMetricsService: any;
 
@@ -76,6 +78,10 @@ describe('LlmExportService', () => {
           useValue: { find: vi.fn() },
         },
         {
+          provide: getRepositoryToken(PlayerAwardEntity),
+          useValue: { find: vi.fn().mockResolvedValue([]) },
+        },
+        {
           provide: PlayingTimeService,
           useValue: { calculateForTeam: vi.fn() },
         },
@@ -97,6 +103,7 @@ describe('LlmExportService', () => {
     practiceDrillRepo = module.get(getRepositoryToken(PracticeDrillEntity));
     drillRepo = module.get(getRepositoryToken(DrillEntity));
     eventNoteRepo = module.get(getRepositoryToken(EventNoteEntity));
+    awardRepo = module.get(getRepositoryToken(PlayerAwardEntity));
     playingTimeService = module.get(PlayingTimeService);
     performanceMetricsService = module.get(PerformanceMetricsService);
   });
@@ -270,6 +277,32 @@ describe('LlmExportService', () => {
       expect(result.prompt).toContain('Leo Messi');
       expect(result.prompt).toContain('Guest Player');
       expect(result.metadata.playerCount).toBe(2);
+    });
+
+    it('should include team honors and player awards in prompt exports', async () => {
+      playerRepo.find.mockResolvedValue(mockPlayers);
+      eventRepo.find.mockResolvedValue(mockGames);
+      awardRepo.find.mockResolvedValue([
+        {
+          id: 'aw-1',
+          teamId: 'team-1',
+          playerId: 'p1',
+          player: { id: 'p1', firstName: 'Leo', lastName: 'Messi' },
+          eventId: 'g1',
+          title: 'Player of the Match',
+          notes: 'Great match winner',
+        },
+      ]);
+
+      const result = await service.generate('team-1', {
+        template: LlmPromptTemplate.PLAYER_EVAL,
+      });
+
+      expect(result.prompt).toContain('Team Honors & Gamified Recognition');
+      expect(result.prompt).toContain('**Total Awards Conferred**: 1');
+      expect(result.prompt).toContain('Match Honors Awarded');
+      expect(result.prompt).toContain('Leo Messi — "Player of the Match"');
+      expect(result.prompt).toContain('Honors & Badges Earned (1)');
     });
   });
 });

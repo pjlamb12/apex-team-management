@@ -11,6 +11,7 @@ import { AttendanceEntity } from '../../entities/attendance.entity';
 import { PracticeDrillEntity } from '../../entities/practice-drill.entity';
 import { DrillEntity } from '../../entities/drill.entity';
 import { EventNoteEntity } from '../../entities/event-note.entity';
+import { PlayerAwardEntity } from '../../entities/player-award.entity';
 import { PlayingTimeService } from '../playing-time.service';
 import { PerformanceMetricsService, PlayerPerformanceMetrics } from '../performance-metrics.service';
 import { LlmExportOptionsDto, LlmPromptTemplate } from '../dto/llm-export-options.dto';
@@ -54,6 +55,8 @@ export class LlmExportService {
     private readonly drillRepo: Repository<DrillEntity>,
     @InjectRepository(EventNoteEntity)
     private readonly eventNoteRepo: Repository<EventNoteEntity>,
+    @InjectRepository(PlayerAwardEntity)
+    private readonly awardRepo: Repository<PlayerAwardEntity>,
     private readonly playingTimeService: PlayingTimeService,
     private readonly performanceMetricsService: PerformanceMetricsService,
   ) {}
@@ -192,6 +195,17 @@ export class LlmExportService {
       options.leagueId,
     );
 
+    // Fetch awards/honors for team and season
+    const awardsWhere: any = { teamId };
+    if (options.seasonId) {
+      awardsWhere.seasonId = options.seasonId;
+    }
+    const awards = await this.awardRepo.find({
+      where: awardsWhere,
+      relations: ['player'],
+      order: { awardedAt: 'ASC' },
+    });
+
     // Build markdown content
     const prompt = this.buildPromptDocument({
       team,
@@ -205,6 +219,7 @@ export class LlmExportService {
       attendance,
       playerMetrics,
       playtimeMap,
+      awards,
       options,
       template,
     });
@@ -260,6 +275,7 @@ export class LlmExportService {
     attendance: AttendanceEntity[];
     playerMetrics: PlayerPerformanceMetrics[];
     playtimeMap: Record<string, any>;
+    awards: PlayerAwardEntity[];
     options: LlmExportOptionsDto;
     template: LlmPromptTemplate;
   }): string {
@@ -434,6 +450,7 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
     allTeamPlayers: PlayerEntity[];
     games: EventEntity[];
     practices: EventEntity[];
+    awards: PlayerAwardEntity[];
     template: LlmPromptTemplate;
   }): string {
     const sportName = ctx.team.sport?.name || 'Soccer';
@@ -450,6 +467,24 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
 
     if (ctx.template !== LlmPromptTemplate.SEASON_DEBRIEF) {
       lines.push(`- **Roster Scope**: Permanent active roster players only. Guest players from previous tournaments are excluded from future planning.`);
+    }
+
+    if (ctx.awards.length > 0) {
+      lines.push(`\n### Team Honors & Gamified Recognition`);
+      lines.push(`- **Total Awards Conferred**: ${ctx.awards.length}`);
+      const uniqueHonorees = new Set(ctx.awards.map((a) => a.playerId)).size;
+      lines.push(`- **Roster Recognition Coverage**: ${uniqueHonorees} of ${ctx.players.length} players recognized`);
+      const countsByPlayer = ctx.awards.reduce((map, a) => {
+        const key = a.player ? `${a.player.firstName} ${a.player.lastName}`.trim() : 'Player';
+        map.set(key, (map.get(key) || 0) + 1);
+        return map;
+      }, new Map<string, number>());
+      const topList = Array.from(countsByPlayer.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count]) => `${name} (${count})`)
+        .join(', ');
+      lines.push(`- **Top Recognized Players**: ${topList}`);
     }
 
     lines.push(`\n### ${ctx.template === LlmPromptTemplate.SEASON_DEBRIEF ? 'Team & Tournament Roster' : 'Active Team Roster'}`);
@@ -471,6 +506,7 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
     gameEvents: GameEventEntity[];
     players: PlayerEntity[];
     allTeamPlayers: PlayerEntity[];
+    awards: PlayerAwardEntity[];
   }): string {
     const lines: string[] = [];
     lines.push(`## Match Logs & Event Timelines`);
@@ -536,6 +572,14 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
       }
       if (game.weatherData?.condition || game.weatherData?.temperature) {
         lines.push(`- **Weather**: ${game.weatherData.temperature}°F, ${game.weatherData.condition || 'Clear'}`);
+      }
+
+      // Honors awarded in this game
+      const gameAwards = ctx.awards.filter((a) => a.eventId === game.id);
+      if (gameAwards.length > 0) {
+        lines.push(
+          `- **Match Honors Awarded**: ${gameAwards.map((a) => `${a.player ? `${a.player.firstName} ${a.player.lastName}` : 'Player'} — "${a.title}"${a.notes ? ` ("${a.notes}")` : ''}`).join(', ')}`,
+        );
       }
 
       // Filter events for this game
@@ -738,6 +782,7 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
     attendance: AttendanceEntity[];
     games: EventEntity[];
     practices: EventEntity[];
+    awards: PlayerAwardEntity[];
   }): string {
     const lines: string[] = [];
     lines.push(`## Individual Player Development Profiles`);
@@ -763,6 +808,13 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
       lines.push(
         `- **Match Stats**: ${metric?.goals || 0} Goals, ${metric?.assists || 0} Assists, ${metric?.blockedShots || 0} Blocked Shots, ${metric?.yellowCards || 0} Yellow Cards`,
       );
+
+      const pAwards = ctx.awards.filter((a) => a.playerId === p.id);
+      if (pAwards.length > 0) {
+        lines.push(
+          `- **Honors & Badges Earned (${pAwards.length})**: ${pAwards.map((a) => `"${a.title}"${a.notes ? ` (Coach praise: "${a.notes}")` : ''}`).join(', ')}`,
+        );
+      }
       lines.push('');
     }
 
