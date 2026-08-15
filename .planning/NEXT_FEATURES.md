@@ -12,14 +12,14 @@ The following five features are prioritized for immediate planning and implement
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                                PRIORITY IMPLEMENTATION QUEUE                           │
 ├────┬─────────────────────────────┬─────────────────────────────────────────────────────┤
-│ #1 │ Opponent Dossier & History  │ Dedicated opponent profiles, head-to-head records,  │
-│    │ (Item 2)                    │ tactical notes, and scouting intel.                 │
+│ #1 │ Opponent Dossier & History  │ ✅ COMPLETED: Dedicated opponent profiles, H2H      │
+│    │ (Item 2)                    │ records, tactical notes, and scouting intel.        │
 ├────┼─────────────────────────────┼─────────────────────────────────────────────────────┤
-│ #2 │ AI Post-Match Recap         │ 1-click automated parent communications and recap   │
-│    │ (Item 11)                   │ generator based on match event stream.              │
+│ #2 │ AI Post-Match Recap         │ ✅ COMPLETED: 1-click automated parent comms & recap│
+│    │ (Item 11)                   │ generator via Gemini 3.6 Flash & match stream.      │
 ├────┼─────────────────────────────┼─────────────────────────────────────────────────────┤
-│ #3 │ "Player of the Match" &     │ Positive reinforcement badge system celebrating     │
-│    │ Skill Badges (Item 12)      │ effort, defense, sportsmanship, and playmaking.     │
+│ #3 │ "Player of the Match" &     │ ⏳ NEXT: Positive reinforcement badge system        │
+│    │ Skill Badges (Item 12)      │ celebrating effort, defense, and playmaking.        │
 ├────┼─────────────────────────────┼─────────────────────────────────────────────────────┤
 │ #4 │ Multi-Context Tactic Board  │ Digital interactive whiteboard & set piece library  │
 │    │ & Playbook (Item 1)         │ for games, practices, and team tactical sessions.   │
@@ -192,9 +192,9 @@ gantt
     title Coaching Features Implementation Roadmap
     dateFormat  YYYY-MM-DD
     section High Priority
-    Opponent Dossier & Match History (Item 2)        :active, p1, 2026-08-15, 14d
-    1-Click AI Match Recap & Parent Comms (Item 11)   :p2, after p1, 10d
-    Player of the Match & Skill Badges (Item 12)     :p3, after p2, 10d
+    Opponent Dossier & Match History (Item 2)        :done, p1, 2026-08-10, 3d
+    1-Click AI Match Recap & Parent Comms (Item 11)   :done, p2, 2026-08-13, 2d
+    Player of the Match & Skill Badges (Item 12)     :active, p3, 2026-08-15, 10d
     Multi-Context Digital Tactic Board (Item 1)      :p4, after p3, 18d
     Player IDPs & Goal Tracking (Item 6)             :p5, after p4, 14d
     section Medium Priority

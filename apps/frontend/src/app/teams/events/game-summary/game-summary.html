@@ -7,6 +7,10 @@
     </ion-buttons>
     <ion-title>Game Summary</ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="openAiRecapModal()" class="ai-recap-header-btn" color="primary">
+        <ion-icon slot="start" name="sparkles-outline"></ion-icon>
+        <span class="font-bold text-xs">AI Recap</span>
+      </ion-button>
       <ion-button [routerLink]="['/teams', teamId, 'schedule', eventId, 'edit']">
         <ion-icon slot="icon-only" name="settings-outline"></ion-icon>
       </ion-button>
@@ -54,6 +58,28 @@
           </div>
         </div>
       </ion-card>
+
+      <!-- 1-Click AI Match Recap Action Card -->
+      <div class="bg-indigo-50 dark:bg-indigo-950/40 rounded-xl p-4 border border-indigo-200 dark:border-indigo-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md ring-1 ring-indigo-500/10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-300 dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
+            <ion-icon name="sparkles-outline" class="text-xl"></ion-icon>
+          </div>
+          <div>
+            <h3 class="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-200">1-Click AI Match Recap with Gemini</h3>
+            <p class="text-xs text-indigo-700 dark:text-indigo-300 font-medium">Instant post-game updates for Parent Emails, Team Chat, and SMS</p>
+          </div>
+        </div>
+        <ion-button
+          (click)="openAiRecapModal()"
+          size="small"
+          color="primary"
+          class="gemini-recap-btn font-bold text-xs ion-no-margin shrink-0 w-full sm:w-auto"
+        >
+          <ion-icon name="sparkles-outline" slot="start"></ion-icon>
+          Generate Recap
+        </ion-button>
+      </div>
 
       <!-- Shootout Result Banner -->
       @if (sportName() !== 'Volleyball') {

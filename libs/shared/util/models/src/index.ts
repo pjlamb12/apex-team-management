@@ -11,4 +11,5 @@ export * from './lib/lineup-entry.model';
 export * from './lib/staged-sub.model';
 export * from './lib/season-checklist.model';
 export * from './lib/opponent.model';
+export * from './lib/match-recap.model';
 
