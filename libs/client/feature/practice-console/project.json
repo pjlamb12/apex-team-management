@@ -4,7 +4,7 @@
   "sourceRoot": "libs/client/feature/practice-console/src",
   "prefix": "lib",
   "projectType": "library",
-  "tags": [],
+  "tags": ["scope:client", "type:feature"],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint"

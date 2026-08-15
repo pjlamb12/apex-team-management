@@ -46,11 +46,12 @@ import {
   LeaguesService,
   TeamService,
   LlmPromptTemplate,
+  AwardsService,
 } from '@apex-team/client/data-access/team';
 import { ModalController } from '@ionic/angular/standalone';
 import { ExportModalComponent, ExportOptions } from './export-modal/export-modal';
 import { AiPromptModalComponent } from './ai-prompt-modal/ai-prompt-modal';
-import { League, SeasonStats } from '@apex-team/shared/util/models';
+import { League, SeasonStats, TeamAwardsSummary } from '@apex-team/shared/util/models';
 
 
 @Component({
@@ -91,6 +92,7 @@ export class TeamAnalytics {
   }
 
   private readonly analyticsService = inject(AnalyticsService);
+  private readonly awardsService = inject(AwardsService);
   private readonly seasonsService = inject(SeasonsService);
   private readonly leaguesService = inject(LeaguesService);
   private readonly teamService = inject(TeamService);
@@ -100,7 +102,8 @@ export class TeamAnalytics {
   protected participationStats = signal<ParticipationStats[]>([]);
   protected playingTime = signal<Record<string, PlayerPlaytime>>({});
   protected teamStats = signal<SeasonStats | null>(null);
-  protected activeSegment = signal<'performance' | 'participation' | 'playtime'>('performance');
+  protected awardsSummary = signal<TeamAwardsSummary | null>(null);
+  protected activeSegment = signal<'performance' | 'participation' | 'playtime' | 'awards'>('performance');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
   protected includeInactive = signal<boolean>(false);
@@ -318,6 +321,7 @@ export class TeamAnalytics {
   });
 
   protected Math = Math;
+  protected Object = Object;
 
   protected getPlayerName(playerId: string): string {
     const p = this.performanceMetrics().find(m => m.playerId === playerId);
@@ -449,18 +453,20 @@ export class TeamAnalytics {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [performance, participation, playingTime, team, stats] = await Promise.all([
+      const [performance, participation, playingTime, team, stats, awards] = await Promise.all([
         firstValueFrom(this.analyticsService.getPerformanceMetrics(teamId, seasonId, leagueId, eventType)),
         firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId, leagueId, this.participationEventType())),
         firstValueFrom(this.analyticsService.getTeamPlayingTime(teamId, seasonId, leagueId)),
         this.teamService.getTeam(teamId),
-        firstValueFrom(this.seasonsService.getSeasonStats(teamId, seasonId, leagueId ?? undefined)).catch(() => null)
+        firstValueFrom(this.seasonsService.getSeasonStats(teamId, seasonId, leagueId ?? undefined)).catch(() => null),
+        firstValueFrom(this.awardsService.getSummary(teamId, seasonId)).catch(() => null),
       ]);
       this.performanceMetrics.set(performance);
       this.participationStats.set(participation);
       this.playingTime.set(playingTime);
       this.sportName.set(team.sport?.name || 'Soccer');
       this.teamStats.set(stats);
+      this.awardsSummary.set(awards);
     } catch {
       this.errorMessage.set('Failed to load team analytics.');
     } finally {

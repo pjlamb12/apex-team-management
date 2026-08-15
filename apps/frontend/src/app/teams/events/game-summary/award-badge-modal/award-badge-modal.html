@@ -1,0 +1,193 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-ap-surface border-b border-ap-border">
+    <div class="flex items-center gap-3 px-3 py-1.5">
+      <div class="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+        <ion-icon name="trophy-outline" class="text-xl"></ion-icon>
+      </div>
+      <div>
+        <ion-title class="p-0 text-base font-bold text-ap-text">Award Match Badges & Honors</ion-title>
+        <p class="text-xs text-ap-muted">Recognize Player of the Match, grit, defense, and teamwork</p>
+      </div>
+    </div>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss(true)" class="text-ap-muted hover:text-ap-text">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg" [fullscreen]="true">
+  <div class="max-w-4xl mx-auto p-4 sm:p-6 pb-28 sm:pb-36 flex flex-col gap-6">
+
+    @if (isLoading()) {
+      <div class="flex items-center justify-center py-20">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+      </div>
+    } @else {
+      <!-- 1. Select Recipient Player -->
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between px-1">
+          <span class="text-xs font-bold uppercase tracking-wider text-ap-muted">1. Select Recipient Player</span>
+          <span class="text-xs text-ap-muted font-medium">{{ players().length }} Available</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          @for (p of players(); track p.id) {
+            <button
+              type="button"
+              (click)="selectPlayer(p.id)"
+              class="player-chip-btn"
+              [class.active]="selectedPlayerId() === p.id"
+            >
+              @if (p.jerseyNumber !== null && p.jerseyNumber !== undefined) {
+                <span class="font-mono text-xs opacity-75">#{{ p.jerseyNumber }}</span>
+              }
+              <span>{{ p.firstName }} {{ p.lastName }}</span>
+              @if (p.preferredPosition) {
+                <span class="text-[10px] opacity-60">({{ p.preferredPosition }})</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- 2. Select Badge / Honor -->
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between px-1">
+          <span class="text-xs font-bold uppercase tracking-wider text-ap-muted">2. Choose Honor / Badge</span>
+          <span class="text-xs text-indigo-400 font-medium">{{ badges.length }} Badges</span>
+        </div>
+
+        <div class="badge-grid">
+          @for (badge of badges; track badge.type) {
+            <button
+              type="button"
+              (click)="selectBadge(badge)"
+              class="badge-card"
+              [class.active]="selectedBadge().type === badge.type"
+            >
+              <div class="badge-icon-box" [ngClass]="{
+                'bg-amber-500/15 text-amber-400 border border-amber-500/30': badge.color === 'amber',
+                'bg-blue-500/15 text-blue-400 border border-blue-500/30': badge.color === 'blue',
+                'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': badge.color === 'emerald',
+                'bg-rose-500/15 text-rose-400 border border-rose-500/30': badge.color === 'rose',
+                'bg-purple-500/15 text-purple-400 border border-purple-500/30': badge.color === 'purple',
+                'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30': badge.color === 'indigo',
+                'bg-red-500/15 text-red-400 border border-red-500/30': badge.color === 'red'
+              }">
+                <ion-icon [name]="badge.icon"></ion-icon>
+              </div>
+              <div class="badge-card-title">{{ badge.title }}</div>
+              <div class="badge-card-description">{{ badge.description }}</div>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- 3. Coach's Praise Note & Action -->
+      <div class="bg-ap-surface rounded-2xl border border-ap-border p-5 flex flex-col gap-4 shadow-sm">
+        <div class="flex items-center justify-between border-b border-ap-border pb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-ap-text">3. Coach's Praise Note (Optional)</span>
+        </div>
+
+        <ion-textarea
+          placeholder="e.g. Incredible 1v1 defensive stops in the 2nd half, keeping the clean sheet intact!"
+          [(ngModel)]="coachNotes"
+          [autoGrow]="true"
+          rows="2"
+          class="bg-ap-bg rounded-xl border border-ap-border p-3 text-xs text-ap-text leading-relaxed"
+        ></ion-textarea>
+
+        <div class="pt-2 flex items-center justify-between gap-3">
+          <ion-button
+            (click)="submitAward()"
+            [disabled]="!selectedPlayerId() || isSubmitting()"
+            color="primary"
+            class="w-full sm:w-auto font-bold text-xs uppercase tracking-wider h-10 px-5"
+          >
+            @if (isSubmitting()) {
+              <ion-spinner name="crescent" size="small" class="mr-2"></ion-spinner>
+              <span>Awarding...</span>
+            } @else {
+              <ion-icon name="trophy-outline" slot="start"></ion-icon>
+              <span>Award Badge to Player</span>
+            }
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Honors Awarded for this match -->
+      @if (eventAwards().length > 0) {
+        <div class="bg-ap-surface rounded-2xl border border-ap-border p-5 flex flex-col gap-4 shadow-sm">
+          <div class="flex items-center justify-between border-b border-ap-border pb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-ap-text">Honors Awarded This Match ({{ eventAwards().length }})</span>
+          </div>
+
+          <div class="flex flex-col gap-2.5">
+            @for (award of eventAwards(); track award.id) {
+              <div class="flex items-center justify-between p-3 rounded-xl bg-ap-bg border border-ap-border">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0" [ngClass]="{
+                    'bg-amber-500/15 text-amber-400 border border-amber-500/30': award.color === 'amber',
+                    'bg-blue-500/15 text-blue-400 border border-blue-500/30': award.color === 'blue',
+                    'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': award.color === 'emerald',
+                    'bg-rose-500/15 text-rose-400 border border-rose-500/30': award.color === 'rose',
+                    'bg-purple-500/15 text-purple-400 border border-purple-500/30': award.color === 'purple',
+                    'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30': award.color === 'indigo',
+                    'bg-red-500/15 text-red-400 border border-red-500/30': award.color === 'red'
+                  }">
+                    <ion-icon [name]="award.icon"></ion-icon>
+                  </div>
+                  <div class="flex flex-col">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-xs text-ap-text">
+                        {{ award.player?.firstName }} {{ award.player?.lastName }}
+                        @if (award.player?.jerseyNumber) {
+                          (#{{ award.player?.jerseyNumber }})
+                        }
+                      </span>
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" [ngClass]="{
+                        'bg-amber-500/10 text-amber-400 border border-amber-500/20': award.color === 'amber',
+                        'bg-blue-500/10 text-blue-400 border border-blue-500/20': award.color === 'blue',
+                        'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20': award.color === 'emerald',
+                        'bg-rose-500/10 text-rose-400 border border-rose-500/20': award.color === 'rose',
+                        'bg-purple-500/10 text-purple-400 border border-purple-500/20': award.color === 'purple',
+                        'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20': award.color === 'indigo',
+                        'bg-red-500/10 text-red-400 border border-red-500/20': award.color === 'red'
+                      }">
+                        {{ award.title }}
+                      </span>
+                    </div>
+                    @if (award.notes) {
+                      <p class="text-[11px] text-ap-muted mt-1 leading-snug">"{{ award.notes }}"</p>
+                    }
+                  </div>
+                </div>
+
+                <ion-button
+                  (click)="deleteAward(award.id)"
+                  fill="clear"
+                  color="danger"
+                  size="small"
+                  class="ion-no-margin"
+                >
+                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+
+  </div>
+
+  <ion-toast
+    [isOpen]="isToastOpen()"
+    [message]="toastMessage()"
+    [duration]="2500"
+    (didDismiss)="closeToast()"
+    position="bottom"
+  ></ion-toast>
+</ion-content>

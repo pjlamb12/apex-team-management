@@ -4,7 +4,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { GameSummary } from './game-summary';
-import { EventsService, TeamService } from '@apex-team/client/data-access/team';
+import { EventsService, TeamService, AwardsService } from '@apex-team/client/data-access/team';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { ModalController, ActionSheetController, AlertController, ToastController } from '@ionic/angular/standalone';
 import { LiveGameStateService, EventSyncService } from '@apex-team/client/feature/game-console';
@@ -25,6 +25,10 @@ describe('GameSummary Event Sorting', () => {
       getLineup: vi.fn().mockReturnValue(of([])),
       updateGameEvent: vi.fn().mockReturnValue(of({})),
       logGameEvent: vi.fn().mockReturnValue(of({})),
+    };
+
+    const mockAwardsService = {
+      getEventAwards: vi.fn().mockReturnValue(of([])),
     };
 
     const mockTeamService = {
@@ -48,10 +52,11 @@ describe('GameSummary Event Sorting', () => {
         provideRouter([]),
         { provide: RuntimeConfigLoaderService, useValue: mockRuntimeConfig },
         { provide: EventsService, useValue: mockEventsService },
+        { provide: AwardsService, useValue: mockAwardsService },
         { provide: TeamService, useValue: mockTeamService },
         { provide: LiveGameStateService, useValue: mockLiveGameStateService },
         { provide: EventSyncService, useValue: mockEventSyncService },
-        { provide: ModalController, useValue: { create: vi.fn().mockResolvedValue({ present: vi.fn() }) } },
+        { provide: ModalController, useValue: { create: vi.fn().mockResolvedValue({ present: vi.fn(), onDidDismiss: vi.fn().mockResolvedValue({ data: null }) }) } },
         { provide: ActionSheetController, useValue: { create: vi.fn().mockResolvedValue({ present: vi.fn() }) } },
         { provide: AlertController, useValue: { create: vi.fn().mockResolvedValue({ present: vi.fn() }) } },
         { provide: ToastController, useValue: { create: vi.fn().mockResolvedValue({ present: vi.fn() }) } },
@@ -199,6 +204,22 @@ describe('GameSummary Event Sorting', () => {
       componentProps: {
         teamId: 'team-1',
         eventId: 'event-1',
+      },
+    }));
+  });
+
+  it('should present AwardBadgeModalComponent when openAwardBadgesModal is called', async () => {
+    const modalCtrl = TestBed.inject(ModalController);
+    (component as any)._teamId.set('team-1');
+    (component as any)._eventId.set('event-1');
+
+    await (component as any).openAwardBadgesModal();
+
+    expect(modalCtrl.create).toHaveBeenCalledWith(expect.objectContaining({
+      componentProps: {
+        teamId: 'team-1',
+        eventId: 'event-1',
+        seasonId: undefined,
       },
     }));
   });

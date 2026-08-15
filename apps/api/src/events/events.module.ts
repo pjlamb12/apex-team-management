@@ -19,6 +19,7 @@ import { LineupEntryEntity } from '../entities/lineup-entry.entity';
 import { PlayerEntity } from '../entities/player.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
 import { LeagueEntity } from '../entities/league.entity';
+import { PlayerAwardEntity } from '../entities/player-award.entity';
 import { SocketModule } from '../socket/socket.module';
 import { LocationsModule } from '../locations/locations.module';
 import { AttendanceModule } from '../attendance/attendance.module';
@@ -39,6 +40,7 @@ import { AnalyticsModule } from '../analytics/analytics.module';
       LeagueEntity,
       OpponentEntity,
       AttendanceEntity,
+      PlayerAwardEntity,
     ]),
     SocketModule,
     LocationsModule,

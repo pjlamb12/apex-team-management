@@ -4,7 +4,7 @@
   "sourceRoot": "libs/client/feature/game-console/src",
   "prefix": "lib",
   "projectType": "library",
-  "tags": ["domain:client", "type:feature"],
+  "tags": ["scope:client", "type:feature"],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint"

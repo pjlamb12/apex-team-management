@@ -62,10 +62,11 @@ import {
   sparklesOutline,
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
-import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport, OpponentsService } from '@apex-team/client/data-access/team';
-import { OpponentWithStats } from '@apex-team/shared/util/models';
-import { SocketService } from '@apex-team/client/shared/services';
+import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport, OpponentsService, AwardsService } from '@apex-team/client/data-access/team';
+import { OpponentWithStats, PlayerAward } from '@apex-team/shared/util/models';
+import { SocketService } from '../../../shared/services/socket.service';
 import { MatchRecapModalComponent } from './match-recap-modal/match-recap-modal';
+import { AwardBadgeModalComponent } from './award-badge-modal/award-badge-modal';
 
 
 @Component({
@@ -134,10 +135,12 @@ export class GameSummary implements OnDestroy {
   private readonly alertController = inject(AlertController);
   private readonly toastController = inject(ToastController);
   private readonly modalCtrl = inject(ModalController);
+  private readonly awardsService = inject(AwardsService);
 
   protected sportName = signal<string>('Soccer');
   protected game = signal<EventEntity | null>(null);
   protected opponentDossier = signal<OpponentWithStats | null>(null);
+  protected eventAwards = signal<PlayerAward[]>([]);
   protected gameEvents = signal<any[]>([]);
   protected sortedGameEvents = computed(() => {
     // 1. Sort the raw events first
@@ -448,6 +451,26 @@ export class GameSummary implements OnDestroy {
     await modal.present();
   }
 
+  protected async openAwardBadgesModal(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: AwardBadgeModalComponent,
+      componentProps: {
+        teamId: this.teamId,
+        eventId: this.eventId,
+        seasonId: this.game()?.seasonId,
+      },
+      breakpoints: [0, 0.85, 1.0],
+      initialBreakpoint: 1.0,
+    });
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    if (data?.awards) {
+      this.eventAwards.set(data.awards);
+    } else {
+      await this.loadData(this.teamId, this.eventId, true);
+    }
+  }
+
   protected goals = computed(() => {
     const lineup = this.lineup();
     return this.gameEvents()
@@ -621,17 +644,19 @@ export class GameSummary implements OnDestroy {
     }
     this.errorMessage.set(null);
     try {
-      const [game, events, playingTime, lineup] = await Promise.all([
+      const [game, events, playingTime, lineup, awards] = await Promise.all([
         firstValueFrom(this.eventsService.getEvent(teamId, eventId)),
         firstValueFrom(this.eventsService.getGameEvents(teamId, eventId)),
         firstValueFrom(this.eventsService.getPlayingTime(teamId, eventId)),
-        firstValueFrom(this.eventsService.getLineup(teamId, eventId))
+        firstValueFrom(this.eventsService.getLineup(teamId, eventId)),
+        firstValueFrom(this.awardsService.getEventAwards(teamId, eventId)).catch(() => []),
       ]);
       const team = await this.teamService.getTeam(teamId);
       this.game.set(game);
       this.gameEvents.set(events);
       this.playingTime.set(playingTime);
       this.lineup.set(lineup);
+      this.eventAwards.set(awards || []);
       this.sportName.set(team.sport?.name || 'Soccer');
 
       // Load Opponent Dossier

@@ -4,7 +4,7 @@
   "sourceRoot": "libs/client/ui/loading/src",
   "prefix": "apex-team",
   "projectType": "library",
-  "tags": [],
+  "tags": ["scope:client", "type:ui"],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint"
