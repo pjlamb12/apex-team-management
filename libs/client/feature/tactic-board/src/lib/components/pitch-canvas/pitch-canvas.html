@@ -353,10 +353,11 @@
             Edit Player / Token
           </h3>
           <button
-            class="text-ap-muted hover:text-ap-text p-1 rounded-lg cursor-pointer"
+            type="button"
+            class="btn-modal-close"
             (click)="editingToken.set(null)"
           >
-            <ion-icon name="close-outline" class="text-xl"></ion-icon>
+            <ion-icon name="close-outline"></ion-icon>
           </button>
         </div>
 
@@ -386,43 +387,28 @@
             <div class="grid grid-cols-4 gap-2">
               <button
                 type="button"
-                class="py-2.5 px-1 text-xs font-black rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
-                [class.bg-blue-600]="editTeam === 'home'"
-                [class.text-white]="editTeam === 'home'"
-                [class.border-blue-400]="editTeam === 'home'"
-                [class.bg-ap-surface-raised]="editTeam !== 'home'"
-                [class.text-ap-muted]="editTeam !== 'home'"
-                [class.border-ap-border]="editTeam !== 'home'"
+                class="token-team-tile"
+                [class.active-home]="editTeam === 'home'"
                 (click)="editTeam = 'home'"
               >
-                <div class="w-3.5 h-3.5 rounded-full bg-blue-500"></div>
+                <div class="team-dot dot-blue"></div>
                 <span>Home</span>
               </button>
 
               <button
                 type="button"
-                class="py-2.5 px-1 text-xs font-black rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
-                [class.bg-rose-600]="editTeam === 'away'"
-                [class.text-white]="editTeam === 'away'"
-                [class.border-rose-400]="editTeam === 'away'"
-                [class.bg-ap-surface-raised]="editTeam !== 'away'"
-                [class.text-ap-muted]="editTeam !== 'away'"
-                [class.border-ap-border]="editTeam !== 'away'"
+                class="token-team-tile"
+                [class.active-away]="editTeam === 'away'"
                 (click)="editTeam = 'away'"
               >
-                <div class="w-3.5 h-3.5 rounded-full bg-rose-500"></div>
+                <div class="team-dot dot-rose"></div>
                 <span>Away</span>
               </button>
 
               <button
                 type="button"
-                class="py-2.5 px-1 text-xs font-black rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
-                [class.bg-amber-600]="editTeam === 'ball'"
-                [class.text-white]="editTeam === 'ball'"
-                [class.border-amber-400]="editTeam === 'ball'"
-                [class.bg-ap-surface-raised]="editTeam !== 'ball'"
-                [class.text-ap-muted]="editTeam !== 'ball'"
-                [class.border-ap-border]="editTeam !== 'ball'"
+                class="token-team-tile"
+                [class.active-ball]="editTeam === 'ball'"
                 (click)="editTeam = 'ball'"
               >
                 <span>⚽</span>
@@ -431,16 +417,11 @@
 
               <button
                 type="button"
-                class="py-2.5 px-1 text-xs font-black rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer"
-                [class.bg-orange-600]="editTeam === 'cone'"
-                [class.text-white]="editTeam === 'cone'"
-                [class.border-orange-400]="editTeam === 'cone'"
-                [class.bg-ap-surface-raised]="editTeam !== 'cone'"
-                [class.text-ap-muted]="editTeam !== 'cone'"
-                [class.border-ap-border]="editTeam !== 'cone'"
+                class="token-team-tile"
+                [class.active-cone]="editTeam === 'cone'"
                 (click)="editTeam = 'cone'"
               >
-                <span class="text-orange-500">▲</span>
+                <span class="cone-icon">▲</span>
                 <span>Cone</span>
               </button>
             </div>
@@ -450,7 +431,7 @@
         <div class="flex items-center justify-between pt-2">
           <button
             type="button"
-            class="px-4 py-2 text-xs font-bold text-rose-500 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+            class="btn-delete-token"
             (click)="deleteToken(tok.id)"
           >
             <ion-icon name="trash-outline"></ion-icon>
@@ -459,7 +440,7 @@
 
           <button
             type="button"
-            class="px-5 py-2.5 text-xs font-black bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-md shadow-sky-500/25 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+            class="btn-save-token"
             (click)="saveTokenEdit()"
           >
             <ion-icon name="checkmark-outline"></ion-icon>

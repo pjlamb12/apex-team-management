@@ -395,3 +395,138 @@ html.dark .btn-action {
 }
 
 html.dark .phase-pill.active { color: #38bdf8 !important; }
+
+// === Token Edit Modal Controls ===
+.token-team-tile {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 10px 4px !important;
+  border-radius: 12px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  border: 1.5px solid var(--ap-border) !important;
+  background: var(--ap-surface-raised) !important;
+  color: var(--ap-muted) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+
+  &:hover {
+    color: var(--ap-text) !important;
+    border-color: rgba(56, 189, 248, 0.4) !important;
+    transform: translateY(-1px);
+  }
+
+  &.active-home {
+    background: #2563eb !important;
+    border-color: #60a5fa !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
+  }
+
+  &.active-away {
+    background: #dc2626 !important;
+    border-color: #f87171 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35) !important;
+  }
+
+  &.active-ball {
+    background: #d97706 !important;
+    border-color: #fbbf24 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35) !important;
+  }
+
+  &.active-cone {
+    background: #ea580c !important;
+    border-color: #fb923c !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35) !important;
+  }
+
+  .team-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    &.dot-blue { background: #3b82f6; }
+    &.dot-rose { background: #f43f5e; }
+  }
+
+  .cone-icon {
+    color: #ea580c;
+    font-size: 12px;
+  }
+}
+
+.btn-delete-token {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.35) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.22) !important;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.btn-save-token {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 18px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  background: #0284c7 !important;
+  border: 1.5px solid #38bdf8 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  &:hover {
+    background: #0369a1 !important;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.btn-modal-close {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--ap-muted) !important;
+  cursor: pointer !important;
+  font-size: 20px !important;
+  transition: all 0.15s ease !important;
+
+  &:hover {
+    color: var(--ap-text) !important;
+    background: var(--ap-surface-raised) !important;
+  }
+}
