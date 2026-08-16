@@ -95,16 +95,14 @@
       <!-- Current Mastery Stage -->
       <div class="flex flex-col gap-2">
         <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Starting / Current Mastery Stage</label>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
           <button
             type="button"
             (click)="masteryStage.set('emerging')"
-            class="p-3.5 rounded-2xl border-2 text-left sm:text-center flex sm:flex-col items-center sm:justify-center justify-between gap-1.5 transition-all cursor-pointer shadow-xs"
-            [ngClass]="masteryStage() === 'emerging' 
-              ? 'bg-amber-100 dark:bg-amber-500/20 border-amber-500 text-amber-900 dark:text-amber-200 shadow-sm' 
-              : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
+            class="mastery-stage-card"
+            [ngClass]="{ 'stage-emerging': masteryStage() === 'emerging' }"
           >
-            <div class="flex sm:flex-col items-center gap-1.5">
+            <div class="flex items-center gap-1.5">
               <span class="text-base sm:text-lg">🌱</span>
               <span class="text-xs font-black uppercase tracking-wider">Emerging</span>
             </div>
@@ -114,12 +112,10 @@
           <button
             type="button"
             (click)="masteryStage.set('developing')"
-            class="p-3.5 rounded-2xl border-2 text-left sm:text-center flex sm:flex-col items-center sm:justify-center justify-between gap-1.5 transition-all cursor-pointer shadow-xs"
-            [ngClass]="masteryStage() === 'developing' 
-              ? 'bg-blue-100 dark:bg-blue-500/20 border-blue-500 text-blue-900 dark:text-blue-200 shadow-sm' 
-              : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
+            class="mastery-stage-card"
+            [ngClass]="{ 'stage-developing': masteryStage() === 'developing' }"
           >
-            <div class="flex sm:flex-col items-center gap-1.5">
+            <div class="flex items-center gap-1.5">
               <span class="text-base sm:text-lg">🌿</span>
               <span class="text-xs font-black uppercase tracking-wider">Developing</span>
             </div>
@@ -129,12 +125,10 @@
           <button
             type="button"
             (click)="masteryStage.set('mastered')"
-            class="p-3.5 rounded-2xl border-2 text-left sm:text-center flex sm:flex-col items-center sm:justify-center justify-between gap-1.5 transition-all cursor-pointer shadow-xs"
-            [ngClass]="masteryStage() === 'mastered' 
-              ? 'bg-emerald-100 dark:bg-emerald-500/20 border-emerald-500 text-emerald-900 dark:text-emerald-200 shadow-sm' 
-              : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
+            class="mastery-stage-card"
+            [ngClass]="{ 'stage-mastered': masteryStage() === 'mastered' }"
           >
-            <div class="flex sm:flex-col items-center gap-1.5">
+            <div class="flex items-center gap-1.5">
               <span class="text-base sm:text-lg">🌟</span>
               <span class="text-xs font-black uppercase tracking-wider">Mastered</span>
             </div>
