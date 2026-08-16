@@ -143,7 +143,10 @@
                 @if (player.jerseyNumber !== null && player.jerseyNumber !== undefined) {
                   <span class="text-ap-primary font-black text-xl italic tabular-nums">#{{ player.jerseyNumber }}</span>
                 }
-                <ion-button fill="clear" color="medium" (click)="openPlayerAnalytics(player)" class="h-9 w-9 ion-no-margin">
+                <ion-button fill="clear" color="primary" (click)="openPlayerAnalytics(player, 'idp')" class="h-9 w-9 ion-no-margin" title="Player IDP & Goals">
+                  <ion-icon name="flag-outline" slot="icon-only" class="text-base"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" color="medium" (click)="openPlayerAnalytics(player, 'overview')" class="h-9 w-9 ion-no-margin" title="Player Analytics">
                   <ion-icon name="stats-chart-outline" slot="icon-only" class="text-lg"></ion-icon>
                 </ion-button>
               </div>
@@ -164,6 +167,9 @@
                   </ion-item-option>
                 }
               } @else {
+                <ion-item-option color="tertiary" (click)="openPlayerAnalytics(player, 'idp')">
+                  <ion-icon slot="icon-only" name="flag-outline"></ion-icon>
+                </ion-item-option>
                 <ion-item-option color="primary" (click)="openPlayerModal(player)">
                   <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
                 </ion-item-option>

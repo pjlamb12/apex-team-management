@@ -1,0 +1,191 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-ap-surface border-b border-ap-border">
+    <ion-title class="text-base font-black uppercase tracking-wider text-ap-text">
+      {{ isEditing() ? 'Edit Development Goal' : 'New Player Goal (IDP)' }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" class="text-ap-muted hover:text-ap-text">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg">
+  <div class="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-6">
+
+    <!-- Quick Presets Carousel / Chips (Only in create mode) -->
+    @if (!isEditing()) {
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-ap-muted">
+          <ion-icon name="sparkles-outline" class="text-amber-400"></ion-icon>
+          <span>Quick Goal Presets (1-Tap Select)</span>
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+          @for (preset of presets; track preset.title) {
+            <button
+              type="button"
+              (click)="applyPreset(preset)"
+              class="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-all text-left flex items-center gap-1.5 cursor-pointer"
+              [ngClass]="{
+                'bg-blue-500/15 border-blue-500/40 text-blue-400': preset.category === 'technical',
+                'bg-purple-500/15 border-purple-500/40 text-purple-400': preset.category === 'tactical',
+                'bg-emerald-500/15 border-emerald-500/40 text-emerald-400': preset.category === 'physical',
+                'bg-amber-500/15 border-amber-500/40 text-amber-400': preset.category === 'mental' || preset.category === 'positional'
+              }"
+            >
+              <ion-icon name="flag-outline" class="text-xs"></ion-icon>
+              <span>{{ preset.title }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Goal Form -->
+    <div class="bg-ap-surface border border-ap-border rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+      
+      <!-- Title Input -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Goal Title *</label>
+        <ion-input
+          [value]="title()"
+          (ionInput)="title.set($any($event.detail.value))"
+          placeholder="e.g., Weak-Foot Passing Accuracy"
+          class="border border-ap-border rounded-xl px-3 py-1 bg-ap-bg text-ap-text text-sm font-semibold focus:border-ap-accent"
+        ></ion-input>
+      </div>
+
+      <!-- Category & Timeframe Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Category -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Skill Category</label>
+          <ion-select
+            [value]="category()"
+            (ionChange)="category.set($event.detail.value)"
+            interface="popover"
+            class="border border-ap-border rounded-xl px-3 py-1 bg-ap-bg text-ap-text text-sm font-semibold"
+          >
+            <ion-select-option value="technical">Technical (Passing, Touch, Shooting)</ion-select-option>
+            <ion-select-option value="tactical">Tactical (Vision, Positioning, Pressing)</ion-select-option>
+            <ion-select-option value="physical">Physical (Stamina, Speed, Recovery)</ion-select-option>
+            <ion-select-option value="mental">Mental & Leadership (Talk, Composure)</ion-select-option>
+            <ion-select-option value="positional">Positional (GK Box Command, Striker Runs)</ion-select-option>
+            <ion-select-option value="general">General Growth</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Timeframe -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Target Timeframe</label>
+          <ion-select
+            [value]="timeframe()"
+            (ionChange)="timeframe.set($event.detail.value)"
+            interface="popover"
+            class="border border-ap-border rounded-xl px-3 py-1 bg-ap-bg text-ap-text text-sm font-semibold"
+          >
+            <ion-select-option value="pre_season">Pre-Season Target</ion-select-option>
+            <ion-select-option value="mid_season">Mid-Season Review</ion-select-option>
+            <ion-select-option value="post_season">End-of-Season Target</ion-select-option>
+            <ion-select-option value="full_season">Full Season Target</ion-select-option>
+            <ion-select-option value="custom">Custom Timeframe</ion-select-option>
+          </ion-select>
+        </div>
+      </div>
+
+      <!-- Current Mastery Stage -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Starting / Current Mastery Stage</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            (click)="masteryStage.set('emerging')"
+            class="py-2.5 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer"
+            [ngClass]="masteryStage() === 'emerging' ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-ap-bg border-ap-border text-ap-muted hover:border-ap-muted'"
+          >
+            <span>🌱 Emerging</span>
+            <span class="text-[9px] font-normal normal-case opacity-75">Learning basics</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="masteryStage.set('developing')"
+            class="py-2.5 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer"
+            [ngClass]="masteryStage() === 'developing' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-ap-bg border-ap-border text-ap-muted hover:border-ap-muted'"
+          >
+            <span>🌿 Developing</span>
+            <span class="text-[9px] font-normal normal-case opacity-75">Consistent in practice</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="masteryStage.set('mastered')"
+            class="py-2.5 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer"
+            [ngClass]="masteryStage() === 'mastered' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-ap-bg border-ap-border text-ap-muted hover:border-ap-muted'"
+          >
+            <span>🌟 Mastered</span>
+            <span class="text-[9px] font-normal normal-case opacity-75">Executes in matches</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Baseline Assessment -->
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Baseline Assessment / Initial Notes</label>
+          <span class="text-[10px] text-ap-muted">Optional</span>
+        </div>
+        <ion-textarea
+          [value]="baselineAssessment()"
+          (ionInput)="baselineAssessment.set($any($event.detail.value))"
+          rows="2"
+          placeholder="Where is the athlete starting at? e.g. Tends to trap exclusively with right foot under defensive pressure."
+          class="border border-ap-border rounded-xl px-3 py-2 bg-ap-bg text-ap-text text-sm focus:border-ap-accent"
+        ></ion-textarea>
+      </div>
+
+      <!-- Action Plan / Description -->
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Action Plan & Focus Drills</label>
+          <span class="text-[10px] text-ap-muted">Optional</span>
+        </div>
+        <ion-textarea
+          [value]="description()"
+          (ionInput)="description.set($any($event.detail.value))"
+          rows="2"
+          placeholder="Coaching cues, practice drills to emphasize, and key reminders for the player."
+          class="border border-ap-border rounded-xl px-3 py-2 bg-ap-bg text-ap-text text-sm focus:border-ap-accent"
+        ></ion-textarea>
+      </div>
+
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <ion-button fill="clear" color="medium" (click)="dismiss()" [disabled]="isSubmitting()">
+        Cancel
+      </ion-button>
+      <ion-button
+        color="primary"
+        class="font-black uppercase tracking-wider h-11 px-6 shadow-sm"
+        (click)="saveGoal()"
+        [disabled]="isSubmitting() || !title().trim()"
+      >
+        @if (isSubmitting()) {
+          <ion-spinner name="crescent" class="mr-2"></ion-spinner>
+        }
+        {{ isEditing() ? 'Update Goal' : 'Create Goal' }}
+      </ion-button>
+    </div>
+
+  </div>
+
+  <ion-toast
+    [isOpen]="isToastOpen()"
+    [message]="toastMessage()"
+    [duration]="2500"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>

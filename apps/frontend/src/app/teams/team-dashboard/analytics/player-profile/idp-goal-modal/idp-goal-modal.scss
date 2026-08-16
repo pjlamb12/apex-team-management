@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+ion-content {
+  --background: var(--ap-bg, #0f172a);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--ap-border, rgba(255, 255, 255, 0.1));
+  border-radius: 4px;
+}

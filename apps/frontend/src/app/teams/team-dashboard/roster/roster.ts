@@ -36,6 +36,7 @@ import {
   pauseCircleOutline,
   refreshOutline,
   removeCircleOutline,
+  flagOutline,
 } from 'ionicons/icons';
 import { 
   AnalyticsService, 
@@ -139,6 +140,7 @@ export class Roster {
       pauseCircleOutline,
       refreshOutline,
       removeCircleOutline,
+      flagOutline,
     });
 
     // Load players whenever teamId or selectedSeasonId changes
@@ -413,12 +415,17 @@ export class Roster {
     }
   }
 
-  protected async openPlayerAnalytics(player: PlayerEntity): Promise<void> {
+  protected async openPlayerAnalytics(
+    player: PlayerEntity,
+    tab: 'overview' | 'idp' | 'history' = 'overview',
+  ): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: PlayerProfileAnalyticsComponent,
       componentProps: { 
         teamId: this.teamId,
-        playerId: player.id
+        playerId: player.id,
+        initialTab: tab,
+        seasonId: this.selectedSeasonId() ?? undefined,
       },
     });
 

@@ -27,6 +27,10 @@ import { SeasonPlayerEntity } from './entities/season-player.entity';
 import { EventNoteEntity } from './entities/event-note.entity';
 import { SeasonChecklistItemEntity } from './entities/season-checklist-item.entity';
 import { SeasonChecklistValueEntity } from './entities/season-checklist-value.entity';
+import { OpponentEntity } from './entities/opponent.entity';
+import { PlayerAwardEntity } from './entities/player-award.entity';
+import { PlayerGoalEntity } from './entities/player-goal.entity';
+import { PlayerGoalNoteEntity } from './entities/player-goal-note.entity';
 
 import { ALL_MIGRATIONS } from '../migrations';
 
@@ -62,6 +66,10 @@ export default new DataSource({
     EventNoteEntity,
     SeasonChecklistItemEntity,
     SeasonChecklistValueEntity,
+    OpponentEntity,
+    PlayerAwardEntity,
+    PlayerGoalEntity,
+    PlayerGoalNoteEntity,
   ],
   migrations: ALL_MIGRATIONS,
   synchronize: false,
