@@ -93,37 +93,52 @@
       </div>
 
       <!-- Current Mastery Stage -->
-      <div class="flex flex-col gap-1.5">
+      <div class="flex flex-col gap-2">
         <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Starting / Current Mastery Stage</label>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <button
             type="button"
             (click)="masteryStage.set('emerging')"
-            class="py-2.5 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer"
-            [ngClass]="masteryStage() === 'emerging' ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-ap-bg border-ap-border text-ap-muted hover:border-ap-muted'"
+            class="p-3.5 rounded-2xl border-2 text-left sm:text-center flex sm:flex-col items-center sm:justify-center justify-between gap-1.5 transition-all cursor-pointer shadow-xs"
+            [ngClass]="masteryStage() === 'emerging' 
+              ? 'bg-amber-100 dark:bg-amber-500/20 border-amber-500 text-amber-900 dark:text-amber-200 shadow-sm' 
+              : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
           >
-            <span>🌱 Emerging</span>
-            <span class="text-[9px] font-normal normal-case opacity-75">Learning basics</span>
+            <div class="flex sm:flex-col items-center gap-1.5">
+              <span class="text-base sm:text-lg">🌱</span>
+              <span class="text-xs font-black uppercase tracking-wider">Emerging</span>
+            </div>
+            <span class="text-[10px] font-medium opacity-80">Learning basics</span>
           </button>
 
           <button
             type="button"
             (click)="masteryStage.set('developing')"
-            class="py-2.5 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer"
-            [ngClass]="masteryStage() === 'developing' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-ap-bg border-ap-border text-ap-muted hover:border-ap-muted'"
+            class="p-3.5 rounded-2xl border-2 text-left sm:text-center flex sm:flex-col items-center sm:justify-center justify-between gap-1.5 transition-all cursor-pointer shadow-xs"
+            [ngClass]="masteryStage() === 'developing' 
+              ? 'bg-blue-100 dark:bg-blue-500/20 border-blue-500 text-blue-900 dark:text-blue-200 shadow-sm' 
+              : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
           >
-            <span>🌿 Developing</span>
-            <span class="text-[9px] font-normal normal-case opacity-75">Consistent in practice</span>
+            <div class="flex sm:flex-col items-center gap-1.5">
+              <span class="text-base sm:text-lg">🌿</span>
+              <span class="text-xs font-black uppercase tracking-wider">Developing</span>
+            </div>
+            <span class="text-[10px] font-medium opacity-80">Consistent in drills</span>
           </button>
 
           <button
             type="button"
             (click)="masteryStage.set('mastered')"
-            class="py-2.5 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer"
-            [ngClass]="masteryStage() === 'mastered' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-ap-bg border-ap-border text-ap-muted hover:border-ap-muted'"
+            class="p-3.5 rounded-2xl border-2 text-left sm:text-center flex sm:flex-col items-center sm:justify-center justify-between gap-1.5 transition-all cursor-pointer shadow-xs"
+            [ngClass]="masteryStage() === 'mastered' 
+              ? 'bg-emerald-100 dark:bg-emerald-500/20 border-emerald-500 text-emerald-900 dark:text-emerald-200 shadow-sm' 
+              : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
           >
-            <span>🌟 Mastered</span>
-            <span class="text-[9px] font-normal normal-case opacity-75">Executes in matches</span>
+            <div class="flex sm:flex-col items-center gap-1.5">
+              <span class="text-base sm:text-lg">🌟</span>
+              <span class="text-xs font-black uppercase tracking-wider">Mastered</span>
+            </div>
+            <span class="text-[10px] font-medium opacity-80">Executes in matches</span>
           </button>
         </div>
       </div>

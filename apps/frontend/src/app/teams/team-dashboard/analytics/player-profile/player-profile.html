@@ -313,13 +313,13 @@
                 </div>
 
                 <!-- Mastery Progression Bar & Quick Toggles -->
-                <div class="flex flex-col gap-1.5 p-3 rounded-xl bg-ap-bg border border-ap-border">
+                <div class="flex flex-col gap-2 p-3.5 rounded-2xl bg-ap-bg border border-ap-border">
                   <div class="flex items-center justify-between text-xs">
                     <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Mastery Progression</span>
                     <span class="text-xs font-black uppercase" [ngClass]="{
-                      'text-amber-400': goal.masteryStage === 'emerging',
-                      'text-blue-400': goal.masteryStage === 'developing',
-                      'text-emerald-400': goal.masteryStage === 'mastered'
+                      'text-amber-700 dark:text-amber-300': goal.masteryStage === 'emerging',
+                      'text-blue-700 dark:text-blue-300': goal.masteryStage === 'developing',
+                      'text-emerald-700 dark:text-emerald-300': goal.masteryStage === 'mastered'
                     }">
                       @if (goal.masteryStage === 'mastered') { 🌟 Mastered }
                       @else if (goal.masteryStage === 'developing') { 🌿 Developing }
@@ -327,32 +327,41 @@
                     </span>
                   </div>
 
-                  <div class="grid grid-cols-3 gap-1.5 mt-1">
+                  <div class="grid grid-cols-3 gap-2 mt-1">
                     <button
                       type="button"
                       (click)="advanceStage(goal, 'emerging')"
-                      class="py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border"
-                      [ngClass]="goal.masteryStage === 'emerging' ? 'bg-amber-500/20 border-amber-500 text-amber-400 font-black' : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text'"
+                      class="py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-2 flex items-center justify-center gap-1.5"
+                      [ngClass]="goal.masteryStage === 'emerging' 
+                        ? 'bg-amber-100 dark:bg-amber-500/20 border-amber-500 text-amber-900 dark:text-amber-200 shadow-xs' 
+                        : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
                     >
-                      🌱 Emerging
+                      <span>🌱</span>
+                      <span class="truncate">Emerging</span>
                     </button>
 
                     <button
                       type="button"
                       (click)="advanceStage(goal, 'developing')"
-                      class="py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border"
-                      [ngClass]="goal.masteryStage === 'developing' ? 'bg-blue-500/20 border-blue-500 text-blue-400 font-black' : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text'"
+                      class="py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-2 flex items-center justify-center gap-1.5"
+                      [ngClass]="goal.masteryStage === 'developing' 
+                        ? 'bg-blue-100 dark:bg-blue-500/20 border-blue-500 text-blue-900 dark:text-blue-200 shadow-xs' 
+                        : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
                     >
-                      🌿 Developing
+                      <span>🌿</span>
+                      <span class="truncate">Developing</span>
                     </button>
 
                     <button
                       type="button"
                       (click)="advanceStage(goal, 'mastered')"
-                      class="py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border"
-                      [ngClass]="goal.masteryStage === 'mastered' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 font-black' : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text'"
+                      class="py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-2 flex items-center justify-center gap-1.5"
+                      [ngClass]="goal.masteryStage === 'mastered' 
+                        ? 'bg-emerald-100 dark:bg-emerald-500/20 border-emerald-500 text-emerald-900 dark:text-emerald-200 shadow-xs' 
+                        : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
                     >
-                      🌟 Mastered
+                      <span>🌟</span>
+                      <span class="truncate">Mastered</span>
                     </button>
                   </div>
                 </div>
