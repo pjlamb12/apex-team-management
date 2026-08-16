@@ -15,7 +15,7 @@ export interface SyncQueueItem {
 })
 export class OfflineStorageService {
   private readonly dbName = 'apex_team_offline_db';
-  private readonly dbVersion = 1;
+  private readonly dbVersion = 2;
   private dbPromise: Promise<IDBDatabase | null> | null = null;
 
   // In-memory fallback store for environments without IndexedDB (e.g. tests / SSR)
@@ -30,6 +30,8 @@ export class OfflineStorageService {
     TEAMS: 'teams',
     PLAYERS: 'players',
     EVENTS: 'events',
+    SEASONS: 'seasons',
+    LEAGUES: 'leagues',
     SYNC_QUEUE: 'sync_queue',
     KEY_VALUE: 'key_value',
   } as const;
@@ -81,6 +83,16 @@ export class OfflineStorageService {
           if (!db.objectStoreNames.contains(this.STORES.EVENTS)) {
             const eventStore = db.createObjectStore(this.STORES.EVENTS, { keyPath: 'id' });
             eventStore.createIndex('teamId', 'teamId', { unique: false });
+          }
+
+          if (!db.objectStoreNames.contains(this.STORES.SEASONS)) {
+            const seasonStore = db.createObjectStore(this.STORES.SEASONS, { keyPath: 'id' });
+            seasonStore.createIndex('teamId', 'teamId', { unique: false });
+          }
+
+          if (!db.objectStoreNames.contains(this.STORES.LEAGUES)) {
+            const leagueStore = db.createObjectStore(this.STORES.LEAGUES, { keyPath: 'id' });
+            leagueStore.createIndex('seasonId', 'seasonId', { unique: false });
           }
 
           if (!db.objectStoreNames.contains(this.STORES.SYNC_QUEUE)) {

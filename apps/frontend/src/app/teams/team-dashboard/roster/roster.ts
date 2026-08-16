@@ -175,27 +175,34 @@ export class Roster {
   protected async loadPlayers(teamId: string, seasonId: string | null): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.players.set([]);
-    this.participationStats.set({});
     try {
-      let playersReq;
+      let players: PlayerEntity[] = [];
       if (seasonId) {
-        playersReq = firstValueFrom(this.playersService.getPlayersForSeason(teamId, seasonId, true));
+        players = await firstValueFrom(this.playersService.getPlayersForSeason(teamId, seasonId, true));
       } else {
-        playersReq = firstValueFrom(this.playersService.getPlayers(teamId, true));
+        players = await firstValueFrom(this.playersService.getPlayers(teamId, true));
+      }
+      this.players.set(players || []);
+
+      try {
+        const team = await this.teamService.getTeam(teamId);
+        if (team?.sport?.positionTypes) {
+          this.positions.set(team.sport.positionTypes);
+        }
+      } catch {
+        // Ignored when offline
       }
 
-      const [players, stats, team] = await Promise.all([
-        playersReq,
-        firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId ?? undefined)),
-        this.teamService.getTeam(teamId)
-      ]);
-      this.players.set(players);
-      this.positions.set(team.sport?.positionTypes || []);
-      
-      const statsMap: Record<string, ParticipationStats> = {};
-      stats.forEach(s => statsMap[s.playerId] = s);
-      this.participationStats.set(statsMap);
+      try {
+        const stats = await firstValueFrom(this.analyticsService.getParticipationStats(teamId, seasonId ?? undefined));
+        if (stats && stats.length > 0) {
+          const statsMap: Record<string, ParticipationStats> = {};
+          stats.forEach(s => (statsMap[s.playerId] = s));
+          this.participationStats.set(statsMap);
+        }
+      } catch {
+        // Ignored when offline
+      }
     } catch {
       this.errorMessage.set('Failed to load roster. Please try again.');
     } finally {

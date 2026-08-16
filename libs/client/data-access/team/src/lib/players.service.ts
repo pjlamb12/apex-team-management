@@ -49,7 +49,7 @@ export class PlayersService {
   private readonly network = inject(NetworkStatusService);
 
   private get apiUrl(): string {
-    return this.config.getConfigObjectKey('apiBaseUrl') as string;
+    return (this.config.getConfigObjectKey('apiBaseUrl') as string) || 'http://localhost:3000/api';
   }
 
   getPlayers(teamId: string, includeInactive = false): Observable<PlayerEntity[]> {
@@ -64,7 +64,10 @@ export class PlayersService {
     const params = includeInactive ? '?includeInactive=true' : '';
     return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players${params}`).pipe(
       tap((players) => {
-        this.offlineStorage.saveAll(this.offlineStorage.STORES.PLAYERS, players);
+        if (players && players.length > 0) {
+          const playersWithTeam = players.map((p) => ({ ...p, teamId: p.teamId || teamId }));
+          this.offlineStorage.saveAll(this.offlineStorage.STORES.PLAYERS, playersWithTeam);
+        }
       }),
       catchError(() => {
         return from(this.offlineStorage.getAll<PlayerEntity>(this.offlineStorage.STORES.PLAYERS)).pipe(
@@ -88,7 +91,10 @@ export class PlayersService {
     const params = includeInactive ? '?includeInactive=true' : '';
     return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/seasons/${seasonId}${params}`).pipe(
       tap((players) => {
-        this.offlineStorage.saveAll(this.offlineStorage.STORES.PLAYERS, players);
+        if (players && players.length > 0) {
+          const playersWithTeam = players.map((p) => ({ ...p, teamId: p.teamId || teamId }));
+          this.offlineStorage.saveAll(this.offlineStorage.STORES.PLAYERS, playersWithTeam);
+        }
       }),
       catchError(() => {
         return from(this.offlineStorage.getAll<PlayerEntity>(this.offlineStorage.STORES.PLAYERS)).pipe(

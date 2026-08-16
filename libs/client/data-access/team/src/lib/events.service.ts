@@ -173,7 +173,7 @@ export class EventsService {
   private readonly network = inject(NetworkStatusService);
 
   private get apiUrl(): string {
-    return this.config.getConfigObjectKey('apiBaseUrl') as string;
+    return (this.config.getConfigObjectKey('apiBaseUrl') as string) || 'http://localhost:3000/api';
   }
 
   getEvents(teamId: string, scope: 'upcoming' | 'past' = 'upcoming', seasonId?: string): Observable<EventEntity[]> {
@@ -181,7 +181,8 @@ export class EventsService {
       return from(this.offlineStorage.getAll<EventEntity>(this.offlineStorage.STORES.EVENTS)).pipe(
         map((events) =>
           events.filter((e) => {
-            if (seasonId && e.seasonId !== seasonId) return false;
+            if ((e as any).teamId && (e as any).teamId !== teamId) return false;
+            if (seasonId && e.seasonId && e.seasonId !== seasonId) return false;
             return true;
           })
         )
@@ -196,13 +197,17 @@ export class EventsService {
       params
     }).pipe(
       tap((events) => {
-        this.offlineStorage.saveAll(this.offlineStorage.STORES.EVENTS, events);
+        if (events && events.length > 0) {
+          const eventsWithTeam = events.map((e) => ({ ...e, teamId: (e as any).teamId || teamId }));
+          this.offlineStorage.saveAll(this.offlineStorage.STORES.EVENTS, eventsWithTeam);
+        }
       }),
       catchError(() => {
         return from(this.offlineStorage.getAll<EventEntity>(this.offlineStorage.STORES.EVENTS)).pipe(
           map((events) =>
             events.filter((e) => {
-              if (seasonId && e.seasonId !== seasonId) return false;
+              if ((e as any).teamId && (e as any).teamId !== teamId) return false;
+              if (seasonId && e.seasonId && e.seasonId !== seasonId) return false;
               return true;
             })
           )
