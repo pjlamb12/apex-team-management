@@ -24,22 +24,16 @@
           </div>
           <span class="text-[10px] text-ap-muted font-bold">Swipe for more →</span>
         </div>
-        <div class="flex items-center gap-2.5 overflow-x-auto py-1 px-0.5 scrollbar-thin">
+        <div class="flex items-center gap-2.5 overflow-x-auto py-2 px-1 scrollbar-thin">
           @for (preset of presets; track preset.title) {
             <button
               type="button"
               (click)="applyPreset(preset)"
-              class="shrink-0 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-black border transition-all text-left cursor-pointer hover:brightness-110 active:scale-95 shadow-xs"
-              [ngClass]="{
-                'bg-blue-500/15 border-blue-500/30 text-blue-500 dark:text-blue-400': preset.category === 'technical',
-                'bg-purple-500/15 border-purple-500/30 text-purple-600 dark:text-purple-400': preset.category === 'tactical',
-                'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400': preset.category === 'physical',
-                'bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-400': preset.category === 'mental' || preset.category === 'positional',
-                'bg-slate-500/15 border-slate-500/30 text-slate-600 dark:text-slate-400': preset.category === 'general'
-              }"
+              class="preset-chip shrink-0"
+              [ngClass]="'preset-' + preset.category"
             >
               <ion-icon name="flag-outline" class="text-sm shrink-0"></ion-icon>
-              <span class="whitespace-nowrap">{{ preset.title }}</span>
+              <span>{{ preset.title }}</span>
             </button>
           }
         </div>
