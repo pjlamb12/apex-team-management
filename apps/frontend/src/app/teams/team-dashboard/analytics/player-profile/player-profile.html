@@ -441,7 +441,7 @@
           </div>
         } @else {
           <!-- Empty State: No Goals Yet -->
-          <div class="py-12 px-6 text-center bg-ap-surface border border-ap-border rounded-2xl flex flex-col items-center gap-4">
+          <div class="py-12 px-6 text-center flex flex-col items-center gap-4">
             <div class="w-16 h-16 rounded-2xl bg-ap-accent/15 border border-ap-accent/30 text-ap-accent flex items-center justify-center text-3xl">
               <ion-icon name="flag-outline"></ion-icon>
             </div>
@@ -451,14 +451,13 @@
                 Set 2–3 clear developmental focus areas with this athlete. Track qualitative coaching observations in practices and games to showcase tangible season growth!
               </p>
             </div>
-            <button
-              type="button"
+            <ion-button
               (click)="openAddGoalModal()"
-              class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer mt-2"
+              class="font-black uppercase tracking-wider mt-2"
             >
-              <ion-icon name="add-outline" class="text-base"></ion-icon>
-              <span>Set First IDP Goal</span>
-            </button>
+              <ion-icon name="add-outline" slot="start"></ion-icon>
+              Set First IDP Goal
+            </ion-button>
           </div>
         }
       }
