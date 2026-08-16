@@ -1,0 +1,493 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <div class="header-bar">
+      <!-- Title & Sport Selector -->
+      <div class="header-left">
+        <div class="app-brand">
+          <div class="brand-icon">
+            <ion-icon name="easel-outline"></ion-icon>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">Playbook & Tactics</h1>
+            <span class="brand-subtitle">Interactive Coaching Whiteboard</span>
+          </div>
+        </div>
+
+        <!-- Sport Toggle (Soccer vs Volleyball) -->
+        <div class="segment-pill-box">
+          <button
+            type="button"
+            class="sport-btn"
+            [class.active-soccer]="currentSport() === 'soccer'"
+            (click)="onSportChange('soccer')"
+          >
+            <span>⚽</span>
+            <span>Soccer</span>
+          </button>
+
+          <button
+            type="button"
+            class="sport-btn"
+            [class.active-volleyball]="currentSport() === 'volleyball'"
+            (click)="onSportChange('volleyball')"
+          >
+            <span>🏐</span>
+            <span>Volleyball</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mode Switcher (Board vs Playbook) & Actions -->
+      <div class="header-right">
+        <!-- View Segment -->
+        <div class="segment-pill-box">
+          <button
+            type="button"
+            class="view-btn"
+            [class.active-view]="viewMode() === 'board'"
+            (click)="viewMode.set('board')"
+          >
+            <ion-icon name="easel-outline"></ion-icon>
+            <span>Board</span>
+          </button>
+
+          <button
+            type="button"
+            class="view-btn"
+            [class.active-view]="viewMode() === 'playbook'"
+            (click)="viewMode.set('playbook')"
+          >
+            <ion-icon name="library-outline"></ion-icon>
+            <span>Playbook</span>
+            @if (tacticsService.filteredPlays().length > 0) {
+              <span class="count-badge">
+                {{ tacticsService.filteredPlays().length }}
+              </span>
+            }
+          </button>
+        </div>
+
+        <!-- Offline & Sync Status Indicator -->
+        @if (!tacticsService.network.isOnline()) {
+          <div class="offline-badge" title="Offline mode: Plays and whiteboard drawings are saved locally on this device.">
+            <span class="offline-dot"></span>
+            <span>Offline</span>
+            @if (tacticsService.network.pendingSyncCount() > 0) {
+              <span class="offline-pending-pill">{{ tacticsService.network.pendingSyncCount() }} pending</span>
+            }
+          </div>
+        } @else if (tacticsService.network.isSyncing()) {
+          <div class="syncing-badge" title="Syncing plays with the cloud...">
+            <ion-icon name="sync-outline" class="animate-spin"></ion-icon>
+            <span>Syncing...</span>
+          </div>
+        }
+
+        <!-- Presets Button -->
+        <button
+          type="button"
+          class="btn-action btn-warning"
+          (click)="openPresetsModal()"
+        >
+          <ion-icon name="flash-outline"></ion-icon>
+          <span>Presets</span>
+        </button>
+
+        <!-- Save Play Button -->
+        <button
+          type="button"
+          class="btn-action btn-primary"
+          (click)="openSavePlayModal()"
+        >
+          <ion-icon name="save-outline"></ion-icon>
+          <span>Save</span>
+        </button>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="tactic-container">
+    <!-- VIEW 1: TACTIC BOARD CANVAS VIEW -->
+    @if (viewMode() === 'board') {
+      <div class="board-view">
+        <!-- Secondary Pitch Bar (Pitch selector, tokens quick adder, undo/redo/reset) -->
+        <div class="action-bar">
+          <!-- Pitch Type selector -->
+          <div class="segment-pill-box">
+            @if (currentSport() === 'soccer') {
+              <button
+                type="button"
+                class="view-btn"
+                [class.active-view]="pitchType() === 'full_pitch'"
+                (click)="pitchType.set('full_pitch')"
+              >
+                Full Pitch
+              </button>
+              <button
+                type="button"
+                class="view-btn"
+                [class.active-view]="pitchType() === 'half_pitch'"
+                (click)="pitchType.set('half_pitch')"
+              >
+                Half Pitch / Box
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="view-btn"
+                [class.active-view]="pitchType() === 'full_court'"
+                (click)="pitchType.set('full_court')"
+              >
+                Full Court
+              </button>
+            }
+          </div>
+
+          <!-- Add Token Quick Tray (Pill chips with borders, rounded corners, padding) -->
+          <div class="token-tray">
+            <span class="tray-label">Add Token:</span>
+
+            <button
+              type="button"
+              class="token-chip token-home"
+              (click)="addPlayerToken('home')"
+            >
+              <span class="chip-dot dot-blue"></span>
+              <span>+ Home</span>
+            </button>
+
+            <button
+              type="button"
+              class="token-chip token-away"
+              (click)="addPlayerToken('away')"
+            >
+              <span class="chip-dot dot-rose"></span>
+              <span>+ Away</span>
+            </button>
+
+            <button
+              type="button"
+              class="token-chip token-ball"
+              (click)="addBallToken()"
+            >
+              <span>{{ currentSport() === 'soccer' ? '⚽' : '🏐' }}</span>
+              <span>+ Ball</span>
+            </button>
+
+            <button
+              type="button"
+              class="token-chip token-cone"
+              (click)="addConeToken()"
+            >
+              <span class="cone-symbol">▲</span>
+              <span>+ Cone</span>
+            </button>
+          </div>
+
+          <!-- Board Actions (Undo, Redo, Reset) -->
+          <div class="history-actions">
+            <button
+              type="button"
+              class="icon-btn"
+              title="Undo"
+              (click)="undo()"
+            >
+              <ion-icon name="arrow-undo-outline"></ion-icon>
+            </button>
+
+            <button
+              type="button"
+              class="icon-btn"
+              title="Redo"
+              (click)="redo()"
+            >
+              <ion-icon name="arrow-redo-outline"></ion-icon>
+            </button>
+
+            <button
+              type="button"
+              class="icon-btn btn-danger-icon"
+              title="Reset Board"
+              (click)="clearBoard()"
+            >
+              <ion-icon name="trash-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- MAIN INTERACTIVE PITCH CANVAS -->
+        <app-pitch-canvas
+          [sport]="currentSport()"
+          [pitchType]="pitchType()"
+          [tokens]="tokens()"
+          [drawings]="drawings()"
+          [activeTool]="activeTool()"
+          [activeColor]="activeColor()"
+          [strokeWidth]="strokeWidth()"
+          [isPlaying]="isPlayingAnimation()"
+          (tokensChange)="onTokensUpdated($event)"
+          (drawingsChange)="onDrawingsUpdated($event)"
+        ></app-pitch-canvas>
+
+        <!-- DRAWING TOOLS & PALETTE TOOLBAR -->
+        <div class="action-bar tools-bar">
+          <!-- Tool buttons -->
+          <div class="tools-group">
+            <button
+              type="button"
+              class="tool-btn"
+              [class.active]="activeTool() === 'select'"
+              (click)="activeTool.set('select')"
+            >
+              <span>👆</span>
+              <span>Move Token</span>
+            </button>
+
+            <button
+              type="button"
+              class="tool-btn"
+              [class.active]="activeTool() === 'run'"
+              (click)="activeTool.set('run')"
+            >
+              <span>🏃</span>
+              <span>Run Arrow</span>
+            </button>
+
+            <button
+              type="button"
+              class="tool-btn"
+              [class.active]="activeTool() === 'pass'"
+              (click)="activeTool.set('pass')"
+            >
+              <span>💨</span>
+              <span>Pass Line</span>
+            </button>
+
+            <button
+              type="button"
+              class="tool-btn"
+              [class.active]="activeTool() === 'dribble'"
+              (click)="activeTool.set('dribble')"
+            >
+              <span>〰️</span>
+              <span>Dribble</span>
+            </button>
+
+            <button
+              type="button"
+              class="tool-btn"
+              [class.active]="activeTool() === 'freehand'"
+              (click)="activeTool.set('freehand')"
+            >
+              <span>✏️</span>
+              <span>Free Draw</span>
+            </button>
+
+            <button
+              type="button"
+              class="tool-btn"
+              [class.active]="activeTool() === 'zone_rect'"
+              (click)="activeTool.set('zone_rect')"
+            >
+              <span>▢</span>
+              <span>Zone Space</span>
+            </button>
+
+            <button
+              type="button"
+              class="tool-btn btn-eraser"
+              [class.active]="activeTool() === 'eraser'"
+              (click)="activeTool.set('eraser')"
+            >
+              <span>🧹</span>
+              <span>Eraser</span>
+            </button>
+          </div>
+
+          <!-- Color palette & clear lines -->
+          <div class="palette-actions">
+            <div class="palette-tray">
+              @for (c of colorPalette; track c.value) {
+                <button
+                  type="button"
+                  class="color-dot"
+                  [style.background-color]="c.value"
+                  [class.selected]="activeColor() === c.value"
+                  [title]="c.label"
+                  (click)="activeColor.set(c.value)"
+                ></button>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="btn-action btn-outline"
+              (click)="clearDrawings()"
+            >
+              Clear Lines
+            </button>
+          </div>
+        </div>
+
+        <!-- MULTI-PHASE TIMELINE & ANIMATION BAR -->
+        <div class="action-bar timeline-bar">
+          <div class="phases-scroll">
+            <span class="phases-label">
+              <ion-icon name="layers-outline"></ion-icon>
+              Phases:
+            </span>
+
+            @for (phase of phases(); track phase.id; let i = $index) {
+              <div
+                class="phase-pill"
+                [class.active]="currentPhaseIndex() === i"
+                (click)="selectPhase(i)"
+              >
+                <span>{{ phase.name }}</span>
+
+                @if (phases().length > 1) {
+                  <button
+                    type="button"
+                    class="phase-close-btn"
+                    title="Remove phase"
+                    (click)="deletePhase(i, $event)"
+                  >
+                    <ion-icon name="close-outline"></ion-icon>
+                  </button>
+                }
+              </div>
+            }
+
+            <button
+              type="button"
+              class="btn-action btn-add-phase"
+              (click)="addPhase()"
+            >
+              <ion-icon name="add-outline"></ion-icon>
+              <span>Add Phase</span>
+            </button>
+          </div>
+
+          <!-- Play / Pause Animation -->
+          <button
+            type="button"
+            class="btn-action"
+            [class.btn-success]="!isPlayingAnimation()"
+            [class.btn-warning-solid]="isPlayingAnimation()"
+            (click)="togglePlayAnimation()"
+          >
+            <ion-icon [name]="isPlayingAnimation() ? 'pause-outline' : 'play-outline'"></ion-icon>
+            <span>{{ isPlayingAnimation() ? 'Pause Movement' : 'Play Movement' }}</span>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- VIEW 2: PLAYBOOK LIBRARY VIEW -->
+    @if (viewMode() === 'playbook') {
+      <div class="playbook-view">
+        <!-- Header Filter Banner -->
+        <div class="playbook-banner">
+          <div>
+            <div class="banner-title-row">
+              <span class="banner-icon">{{ currentSport() === 'soccer' ? '⚽' : '🏐' }}</span>
+              <h2 class="banner-title">
+                {{ currentSport() === 'soccer' ? 'Soccer' : 'Volleyball' }} Playbook & Formations
+              </h2>
+            </div>
+            <p class="banner-subtitle">
+              Only showing tactical plays, set pieces, and formations saved with the
+              <span class="sport-tag-highlight">#{{ currentSport() }}</span> sport tag.
+            </p>
+          </div>
+
+          <!-- Search input -->
+          <div class="search-box">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search plays by name or tag..."
+              [ngModel]="playbookSearch()"
+              (ngModelChange)="playbookSearch.set($event); tacticsService.setSearchQuery($event)"
+            />
+          </div>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="category-tray">
+          @for (cat of ['all', 'formation', 'set_piece', 'offensive', 'defensive', 'transition', 'drill_setup']; track cat) {
+            <button
+              type="button"
+              class="category-pill"
+              [class.active]="playbookCategory() === cat"
+              (click)="playbookCategory.set(cat); tacticsService.setCategory(cat)"
+            >
+              {{ cat === 'all' ? 'All Categories' : cat.replace('_', ' ') }}
+            </button>
+          }
+        </div>
+
+        <!-- Plays Grid -->
+        @if (tacticsService.isLoading()) {
+          <div class="loading-box">
+            <ion-spinner name="crescent" color="primary"></ion-spinner>
+            <span class="loading-label">Loading playbook...</span>
+          </div>
+        } @else if (tacticsService.filteredPlays().length > 0) {
+          <div class="playbook-grid">
+            @for (play of tacticsService.filteredPlays(); track play.id) {
+              <app-playbook-card
+                [play]="play"
+                [isSelected]="tacticsService.activePlay()?.id === play.id"
+                (loadPlay)="loadPlayOnBoard($event)"
+                (duplicatePlay)="duplicatePlay($event)"
+                (deletePlay)="deletePlay($event)"
+              ></app-playbook-card>
+            }
+          </div>
+        } @else {
+          <!-- Empty State -->
+          <div class="empty-box">
+            <div class="empty-icon-circle">
+              {{ currentSport() === 'soccer' ? '⚽' : '🏐' }}
+            </div>
+            <h3 class="empty-title">No {{ currentSport() }} Plays Found</h3>
+            <p class="empty-desc">
+              You haven't saved any formations or set pieces for {{ currentSport() }} yet, or no items match your search.
+            </p>
+
+            <div class="empty-buttons">
+              <button
+                type="button"
+                class="btn-action btn-primary"
+                (click)="viewMode.set('board')"
+              >
+                <ion-icon name="easel-outline"></ion-icon>
+                <span>Draw on Board</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn-action btn-warning"
+                (click)="seedStandardPresets()"
+              >
+                <ion-icon name="sparkles-outline"></ion-icon>
+                <span>Seed Starter Presets</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Toast feedback -->
+  @if (toastMessage(); as msg) {
+    <div class="toast-feedback">
+      <span class="toast-check">✓</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+</ion-content>

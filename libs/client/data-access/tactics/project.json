@@ -1,0 +1,20 @@
+{
+  "name": "client-data-access-tactics",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/client/data-access/tactics/src",
+  "prefix": "apex-team",
+  "projectType": "library",
+  "tags": ["scope:client", "type:data-access"],
+  "targets": {
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/libs/client/data-access/tactics"],
+      "options": {
+        "configFile": "libs/client/data-access/tactics/vitest.config.mts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

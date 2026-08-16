@@ -1,0 +1,100 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <div class="header-modal-row">
+      <div class="modal-title-group">
+        <div class="modal-badge-icon">
+          <ion-icon name="flash-outline"></ion-icon>
+        </div>
+        <div>
+          <h2 class="modal-heading">
+            Load {{ sport === 'soccer' ? 'Soccer' : 'Volleyball' }} Preset
+          </h2>
+          <p class="modal-subheading">Select standard formations, systems, and set pieces</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="modal-close-icon-btn"
+        (click)="cancel()"
+      >
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="preset-modal-content">
+    <!-- Category filter pills -->
+    <div class="preset-filter-row">
+      <button
+        type="button"
+        class="preset-filter-pill"
+        [class.active]="activeCategory === 'all'"
+        (click)="activeCategory = 'all'"
+      >
+        All Presets
+      </button>
+
+      <button
+        type="button"
+        class="preset-filter-pill"
+        [class.active]="activeCategory === 'formation'"
+        (click)="activeCategory = 'formation'"
+      >
+        Formations / Systems
+      </button>
+
+      <button
+        type="button"
+        class="preset-filter-pill"
+        [class.active]="activeCategory === 'set_piece'"
+        (click)="activeCategory = 'set_piece'"
+      >
+        Set Pieces & Routines
+      </button>
+    </div>
+
+    <!-- Presets Grid -->
+    <div class="preset-card-grid">
+      @for (preset of presets; track preset.id) {
+        <div
+          class="preset-card-item"
+          (click)="selectPreset(preset)"
+        >
+          <div>
+            <div class="preset-item-meta">
+              <span
+                class="preset-type-badge"
+                [class.badge-formation]="preset.category === 'formation'"
+                [class.badge-set-piece]="preset.category === 'set_piece'"
+                [class.badge-defensive]="preset.category === 'defensive'"
+              >
+                {{ preset.category.replace('_', ' ') }}
+              </span>
+              <span class="tokens-badge">
+                {{ preset.tokens.length }} Tokens
+              </span>
+            </div>
+
+            <h4 class="preset-item-title">
+              {{ preset.title }}
+            </h4>
+            <p class="preset-item-description">
+              {{ preset.description }}
+            </p>
+          </div>
+
+          <div class="preset-item-footer">
+            <span class="pitch-type-text">
+              {{ preset.pitchType === 'half_pitch' ? 'Half Pitch' : 'Full Pitch / Court' }}
+            </span>
+            <span class="load-preset-text">
+              Load Preset →
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>

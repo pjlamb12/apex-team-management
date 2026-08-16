@@ -1,0 +1,90 @@
+:host {
+  display: block;
+}
+
+.playbook-card {
+  user-select: none;
+  background: var(--ap-surface);
+  border: 1px solid var(--ap-border);
+  border-radius: 20px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    .card-title { color: #0284c7; }
+  }
+
+  &.selected-card {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
+  }
+}
+
+.card-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.badge-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.cat-badge {
+  padding: 3px 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; border-radius: 6px;
+  &.badge-formation { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+  &.badge-set-piece { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+  &.badge-offensive { background: rgba(14, 165, 233, 0.15); color: #0284c7; }
+  &.badge-defensive { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+  &.badge-transition { background: rgba(168, 85, 247, 0.15); color: #9333ea; }
+}
+
+.phases-badge {
+  padding: 3px 6px; font-size: 10px; font-weight: 700; border-radius: 6px; background: var(--ap-surface-raised);
+  color: var(--ap-muted); border: 1px solid var(--ap-border); display: inline-flex; align-items: center; gap: 4px;
+}
+
+.sport-icon { font-size: 14px; }
+
+.mini-pitch-box {
+  position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;
+  margin-bottom: 12px; border: 1px solid var(--ap-border); background: #030712;
+  .preview-svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.65; }
+}
+
+.mini-token {
+  position: absolute; width: 7px; height: 7px; border-radius: 9999px; transform: translate(-50%, -50%);
+  &.token-home { background: #60a5fa; }
+  &.token-away { background: #fb7185; }
+  &.token-ball { background: #fde047; }
+  &.token-cone { background: #fb923c; }
+}
+
+.card-title { font-size: 15px; font-weight: 800; color: var(--ap-text); margin: 0; line-height: 1.2; }
+.card-description { font-size: 11px; color: var(--ap-muted); margin-top: 5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.tags-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.tag-badge { padding: 2px 6px; font-size: 10px; font-weight: 600; border-radius: 4px; background: var(--ap-surface-raised); color: var(--ap-muted); border: 1px solid var(--ap-border); }
+
+.card-footer { padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--ap-border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.icon-group { display: flex; align-items: center; gap: 4px; }
+
+.card-icon-btn {
+  width: 30px !important; height: 30px !important; border-radius: 8px !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  border: 1px solid transparent !important; background: transparent !important; color: var(--ap-muted) !important;
+  cursor: pointer !important; font-size: 15px !important;
+
+  &:hover { color: #0284c7 !important; background: var(--ap-surface-raised) !important; }
+  &.btn-danger-icon:hover { color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; }
+}
+
+.load-btn {
+  display: inline-flex !important; align-items: center !important; gap: 6px !important;
+  padding: 7px 14px !important; border-radius: 12px !important; font-size: 12px !important; font-weight: 800 !important;
+  cursor: pointer !important; border: 1.5px solid rgba(56, 189, 248, 0.4) !important;
+  background: rgba(14, 165, 233, 0.12) !important; color: #0284c7 !important;
+
+  &:hover { background: #0284c7 !important; color: #fff !important; border-color: #38bdf8 !important; transform: translateY(-1px); }
+  &:active { transform: scale(0.96); }
+}

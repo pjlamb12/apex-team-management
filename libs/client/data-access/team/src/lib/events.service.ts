@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, from, tap, map, catchError } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { Season, League, Opponent, MatchRecapOptions, MatchRecapResponse } from '@apex-team/shared/util/models';
+import { OfflineStorageService, NetworkStatusService } from '@apex-team/client/data-access/offline';
 
 export interface LocationEntity {
   id: string;
@@ -168,19 +169,46 @@ export interface EventNote {
 export class EventsService {
   private readonly http = inject(HttpClient);
   private readonly config = inject(RuntimeConfigLoaderService);
+  private readonly offlineStorage = inject(OfflineStorageService);
+  private readonly network = inject(NetworkStatusService);
 
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
   }
 
   getEvents(teamId: string, scope: 'upcoming' | 'past' = 'upcoming', seasonId?: string): Observable<EventEntity[]> {
+    if (!this.network.isOnline()) {
+      return from(this.offlineStorage.getAll<EventEntity>(this.offlineStorage.STORES.EVENTS)).pipe(
+        map((events) =>
+          events.filter((e) => {
+            if (seasonId && e.seasonId !== seasonId) return false;
+            return true;
+          })
+        )
+      );
+    }
+
     const params: any = { scope };
     if (seasonId) {
       params.seasonId = seasonId;
     }
     return this.http.get<EventEntity[]>(`${this.apiUrl}/teams/${teamId}/events`, {
       params
-    });
+    }).pipe(
+      tap((events) => {
+        this.offlineStorage.saveAll(this.offlineStorage.STORES.EVENTS, events);
+      }),
+      catchError(() => {
+        return from(this.offlineStorage.getAll<EventEntity>(this.offlineStorage.STORES.EVENTS)).pipe(
+          map((events) =>
+            events.filter((e) => {
+              if (seasonId && e.seasonId !== seasonId) return false;
+              return true;
+            })
+          )
+        );
+      })
+    );
   }
 
   getActiveSeason(teamId: string): Observable<Season> {
@@ -188,23 +216,60 @@ export class EventsService {
   }
 
   createEvent(teamId: string, data: CreateEventDto): Observable<EventEntity> {
-    return this.http.post<EventEntity>(`${this.apiUrl}/teams/${teamId}/events`, data);
+    return this.http.post<EventEntity>(`${this.apiUrl}/teams/${teamId}/events`, data).pipe(
+      tap((created) => {
+        this.offlineStorage.save(this.offlineStorage.STORES.EVENTS, created);
+      })
+    );
   }
 
   bulkCreateEvents(teamId: string, data: CreateBulkEventsDto): Observable<EventEntity[]> {
-    return this.http.post<EventEntity[]>(`${this.apiUrl}/teams/${teamId}/events/bulk`, data);
+    return this.http.post<EventEntity[]>(`${this.apiUrl}/teams/${teamId}/events/bulk`, data).pipe(
+      tap((created) => {
+        this.offlineStorage.saveAll(this.offlineStorage.STORES.EVENTS, created);
+      })
+    );
   }
 
   getEvent(teamId: string, eventId: string): Observable<EventEntity> {
-    return this.http.get<EventEntity>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`);
+    if (!this.network.isOnline()) {
+      return from(this.offlineStorage.getById<EventEntity>(this.offlineStorage.STORES.EVENTS, eventId)).pipe(
+        map((event) => {
+          if (!event) throw new Error('Event not found offline');
+          return event;
+        })
+      );
+    }
+
+    return this.http.get<EventEntity>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`).pipe(
+      tap((event) => {
+        this.offlineStorage.save(this.offlineStorage.STORES.EVENTS, event);
+      }),
+      catchError(() => {
+        return from(this.offlineStorage.getById<EventEntity>(this.offlineStorage.STORES.EVENTS, eventId)).pipe(
+          map((event) => {
+            if (!event) throw new Error('Event not found offline');
+            return event;
+          })
+        );
+      })
+    );
   }
 
   updateEvent(teamId: string, eventId: string, data: UpdateEventDto): Observable<EventEntity> {
-    return this.http.patch<EventEntity>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`, data);
+    return this.http.patch<EventEntity>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`, data).pipe(
+      tap((updated) => {
+        this.offlineStorage.save(this.offlineStorage.STORES.EVENTS, updated);
+      })
+    );
   }
 
   deleteEvent(teamId: string, eventId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`);
+    return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`).pipe(
+      tap(() => {
+        this.offlineStorage.remove(this.offlineStorage.STORES.EVENTS, eventId);
+      })
+    );
   }
 
   getGameEvents(teamId: string, eventId: string): Observable<any[]> {

@@ -27,20 +27,40 @@
         "libs/client/data-access/drill/src/index.ts"
       ],
       "@apex-team/client/ui/drill": ["libs/client/ui/drill/src/index.ts"],
-      "@apex-team/client/ui/theme-toggle": ["libs/client/ui/theme-toggle/src/index.ts"],
-      "@apex-team/client/ui/empty-state": ["libs/client/ui/empty-state/src/index.ts"],
-      "@apex-team/client/ui/section-label": ["libs/client/ui/section-label/src/index.ts"],
+      "@apex-team/client/ui/theme-toggle": [
+        "libs/client/ui/theme-toggle/src/index.ts"
+      ],
+      "@apex-team/client/ui/empty-state": [
+        "libs/client/ui/empty-state/src/index.ts"
+      ],
+      "@apex-team/client/ui/section-label": [
+        "libs/client/ui/section-label/src/index.ts"
+      ],
       "@apex-team/client/ui/loading": ["libs/client/ui/loading/src/index.ts"],
-      "@apex-team/client/ui/location-modal": ["libs/client/ui/location-modal/src/index.ts"],
+      "@apex-team/client/ui/location-modal": [
+        "libs/client/ui/location-modal/src/index.ts"
+      ],
       "@apex-team/client/shared/services": [
-"apps/frontend/src/app/shared/services/index.ts"],
+        "apps/frontend/src/app/shared/services/index.ts"
+      ],
       "@apex-team/client/feature/drill-library": [
         "libs/client/feature/drill-library/src/index.ts"
       ],
       "@apex-team/client/feature/practice-console": [
         "libs/client/feature/practice-console/src/index.ts"
       ],
-      "@apex-team/client/ui/attendance": ["libs/client/ui/attendance/src/index.ts"]
+      "@apex-team/client/ui/attendance": [
+        "libs/client/ui/attendance/src/index.ts"
+      ],
+      "@apex-team/client/data-access/tactics": [
+        "libs/client/data-access/tactics/src/index.ts"
+      ],
+      "@apex-team/client/feature/tactic-board": [
+        "libs/client/feature/tactic-board/src/index.ts"
+      ],
+      "@apex-team/client/data-access/offline": [
+        "libs/client/data-access/offline/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]
