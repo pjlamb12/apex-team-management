@@ -22,7 +22,7 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
 
   get apiUrl(): string {
-    return this.config.getConfigObjectKey('apiBaseUrl');
+    return (this.config.getConfigObjectKey('apiBaseUrl') as string) || 'http://localhost:3000/api';
   }
 
   async login(email: string, password: string): Promise<void> {
