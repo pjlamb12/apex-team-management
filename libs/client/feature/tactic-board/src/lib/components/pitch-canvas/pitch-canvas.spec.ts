@@ -51,6 +51,12 @@ describe('PitchCanvas', () => {
       width: 2,
     };
     const path = component.getSvgPath(drawing);
-    expect(path).toContain('Q');
+    expect(path).toContain('C');
+  });
+
+  it('should return matching marker url for colors', () => {
+    expect(component.getMarkerUrl('#38bdf8')).toBe('url(#arrow-38bdf8)');
+    expect(component.getMarkerUrl('#f87171')).toBe('url(#arrow-f87171)');
+    expect(component.getMarkerUrl('')).toBe('url(#arrow-yellow)');
   });
 });

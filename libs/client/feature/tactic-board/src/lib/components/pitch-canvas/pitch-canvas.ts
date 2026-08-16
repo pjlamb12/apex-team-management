@@ -251,6 +251,21 @@ export class PitchCanvas {
   }
 
   // SVG Drawing path helpers
+  getMarkerUrl(color: string): string {
+    if (!color) return 'url(#arrow-yellow)';
+    const clean = color.toLowerCase().replace('#', '').trim();
+    if (['facc15', 'ffffff', '38bdf8', '4ade80', 'fb923c', 'f87171'].includes(clean)) {
+      return `url(#arrow-${clean})`;
+    }
+    if (clean.includes('yellow')) return 'url(#arrow-yellow)';
+    if (clean.includes('white')) return 'url(#arrow-white)';
+    if (clean.includes('cyan') || clean.includes('sky') || clean.includes('blue')) return 'url(#arrow-cyan)';
+    if (clean.includes('green')) return 'url(#arrow-green)';
+    if (clean.includes('orange')) return 'url(#arrow-orange)';
+    if (clean.includes('red')) return 'url(#arrow-red)';
+    return `url(#arrow-${clean})`;
+  }
+
   getSvgPath(drawing: TacticDrawing): string {
     const pts = drawing.points;
     if (!pts || pts.length === 0) return '';
@@ -280,25 +295,32 @@ export class PitchCanvas {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < 2) return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
+    if (dist < 1.5) return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
 
-    const numWaves = Math.max(2, Math.floor(dist / 6));
+    // Tight wavelength for prominent, unmistakable dribble squiggles
+    const wavelength = 3.0;
+    const numWaves = Math.max(3, Math.round(dist / wavelength));
     const normalX = -dy / dist;
     const normalY = dx / dist;
-    const amplitude = 1.8;
+    const amplitude = Math.min(3.2, Math.max(2.0, dist * 0.12));
 
-    let path = `M ${p1.x} ${p1.y}`;
-    for (let i = 1; i <= numWaves; i++) {
-      const tPrev = (i - 1) / numWaves;
-      const tCurr = i / numWaves;
-      const tMid = (tPrev + tCurr) / 2;
+    let path = `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`;
+    for (let i = 0; i < numWaves; i++) {
+      const t0 = i / numWaves;
+      const t1 = (i + 1) / numWaves;
+      const tMid1 = t0 + (t1 - t0) * 0.33;
+      const tMid2 = t0 + (t1 - t0) * 0.67;
 
-      const midX = p1.x + dx * tMid + normalX * (i % 2 === 1 ? amplitude : -amplitude);
-      const midY = p1.y + dy * tMid + normalY * (i % 2 === 1 ? amplitude : -amplitude);
-      const endX = p1.x + dx * tCurr;
-      const endY = p1.y + dy * tCurr;
+      const sign = i % 2 === 0 ? 1 : -1;
+      const cp1X = p1.x + dx * tMid1 + normalX * amplitude * sign;
+      const cp1Y = p1.y + dy * tMid1 + normalY * amplitude * sign;
+      const cp2X = p1.x + dx * tMid2 + normalX * amplitude * sign;
+      const cp2Y = p1.y + dy * tMid2 + normalY * amplitude * sign;
 
-      path += ` Q ${midX} ${midY}, ${endX} ${endY}`;
+      const endX = p1.x + dx * t1;
+      const endY = p1.y + dy * t1;
+
+      path += ` C ${cp1X.toFixed(2)} ${cp1Y.toFixed(2)}, ${cp2X.toFixed(2)} ${cp2Y.toFixed(2)}, ${endX.toFixed(2)} ${endY.toFixed(2)}`;
     }
 
     return path;
