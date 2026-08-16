@@ -59,4 +59,26 @@ describe('PitchCanvas', () => {
     expect(component.getMarkerUrl('#f87171')).toBe('url(#arrow-f87171)');
     expect(component.getMarkerUrl('')).toBe('url(#arrow-yellow)');
   });
+
+  it('should not open edit modal on single click', () => {
+    const token = component.tokens[0];
+    const event = new MouseEvent('click');
+    component.onTokenClick(event, token);
+    expect(component.editingToken()).toBeNull();
+    expect(component.selectedToken()?.id).toBe(token.id);
+  });
+
+  it('should open edit modal on double click', () => {
+    const token = component.tokens[0];
+    const event = new MouseEvent('dblclick');
+    component.onTokenDblClick(event, token);
+    expect(component.editingToken()?.id).toBe(token.id);
+  });
+
+  it('should open edit modal on right click (contextmenu)', () => {
+    const token = component.tokens[0];
+    const event = new MouseEvent('contextmenu');
+    component.onTokenContextMenu(event, token);
+    expect(component.editingToken()?.id).toBe(token.id);
+  });
 });

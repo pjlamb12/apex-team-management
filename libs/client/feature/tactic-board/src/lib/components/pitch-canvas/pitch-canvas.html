@@ -312,6 +312,8 @@
         (pointermove)="onTokenPointerMove($event, token)"
         (pointerup)="onTokenPointerUp($event, token)"
         (click)="onTokenClick($event, token)"
+        (dblclick)="onTokenDblClick($event, token)"
+        (contextmenu)="onTokenContextMenu($event, token)"
       >
         @if (token.team === 'ball') {
           <div class="ball-token">

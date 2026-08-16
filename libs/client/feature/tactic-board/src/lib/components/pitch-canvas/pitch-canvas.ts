@@ -70,6 +70,11 @@ export class PitchCanvas {
   editRole = '';
   editTeam: TokenType = 'home';
 
+  // Pointer & Long-press tracking
+  private longPressTimeout: ReturnType<typeof setTimeout> | null = null;
+  private pointerStartPos = { x: 0, y: 0 };
+  private hasMovedWhileDown = false;
+
   constructor() {
     addIcons({
       createOutline,
@@ -85,11 +90,22 @@ export class PitchCanvas {
   onTokenPointerDown(event: PointerEvent, token: TacticToken): void {
     if (!this.isInteractive || this.activeTool !== 'select') return;
     event.stopPropagation();
-    event.preventDefault();
 
+    this.pointerStartPos = { x: event.clientX, y: event.clientY };
+    this.hasMovedWhileDown = false;
     this.draggingTokenId.set(token.id);
     this.selectedToken.set(token);
     this.tokenSelect.emit(token);
+
+    // Click & Hold (Long-press ~450ms) to open edit modal
+    if (this.longPressTimeout) {
+      clearTimeout(this.longPressTimeout);
+    }
+    this.longPressTimeout = setTimeout(() => {
+      if (!this.hasMovedWhileDown) {
+        this.openEditToken(token);
+      }
+    }, 450);
 
     (event.target as HTMLElement).setPointerCapture(event.pointerId);
   }
@@ -97,7 +113,16 @@ export class PitchCanvas {
   onTokenPointerMove(event: PointerEvent, token: TacticToken): void {
     if (this.draggingTokenId() !== token.id) return;
     event.stopPropagation();
-    event.preventDefault();
+
+    // If movement exceeds threshold, cancel click-and-hold
+    const dist = Math.hypot(event.clientX - this.pointerStartPos.x, event.clientY - this.pointerStartPos.y);
+    if (dist > 4) {
+      this.hasMovedWhileDown = true;
+      if (this.longPressTimeout) {
+        clearTimeout(this.longPressTimeout);
+        this.longPressTimeout = null;
+      }
+    }
 
     const container = this.boardContainer()?.nativeElement;
     if (!container) return;
@@ -114,6 +139,11 @@ export class PitchCanvas {
   }
 
   onTokenPointerUp(event: PointerEvent, token: TacticToken): void {
+    if (this.longPressTimeout) {
+      clearTimeout(this.longPressTimeout);
+      this.longPressTimeout = null;
+    }
+
     if (this.draggingTokenId() === token.id) {
       this.draggingTokenId.set(null);
       try {
@@ -133,9 +163,25 @@ export class PitchCanvas {
       return;
     }
 
+    // Single click only selects the token, does NOT open modal
     if (this.activeTool === 'select') {
-      this.openEditToken(token);
+      this.selectedToken.set(token);
+      this.tokenSelect.emit(token);
     }
+  }
+
+  onTokenDblClick(event: MouseEvent, token: TacticToken): void {
+    if (!this.isInteractive || this.activeTool !== 'select') return;
+    event.stopPropagation();
+    event.preventDefault();
+    this.openEditToken(token);
+  }
+
+  onTokenContextMenu(event: MouseEvent, token: TacticToken): void {
+    if (!this.isInteractive || this.activeTool !== 'select') return;
+    event.stopPropagation();
+    event.preventDefault();
+    this.openEditToken(token);
   }
 
   openEditToken(token: TacticToken): void {
