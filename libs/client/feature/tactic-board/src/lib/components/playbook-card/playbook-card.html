@@ -1,50 +1,39 @@
 <div
-  class="group relative bg-ap-surface border border-ap-border hover:border-sky-500/50 rounded-2xl p-4 transition-all duration-200 shadow-sm hover:shadow-md flex flex-col justify-between select-none"
-  [class.ring-2]="isSelected"
-  [class.ring-sky-500]="isSelected"
+  class="playbook-card"
+  [class.selected-card]="isSelected"
 >
   <div>
     <!-- Top Meta Row -->
-    <div class="flex items-center justify-between gap-2 mb-2.5">
-      <div class="flex items-center gap-1.5 flex-wrap">
+    <div class="card-meta-row">
+      <div class="badge-group">
         <span
-          class="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md"
-          [class.bg-emerald-500_15]="play.category === 'formation'"
-          [class.text-emerald-600]="play.category === 'formation'"
-          [class.dark:text-emerald-400]="play.category === 'formation'"
-          [class.bg-amber-500_15]="play.category === 'set_piece'"
-          [class.text-amber-600]="play.category === 'set_piece'"
-          [class.dark:text-amber-400]="play.category === 'set_piece'"
-          [class.bg-sky-500_15]="play.category === 'offensive'"
-          [class.text-sky-600]="play.category === 'offensive'"
-          [class.dark:text-sky-400]="play.category === 'offensive'"
-          [class.bg-indigo-500_15]="play.category === 'defensive'"
-          [class.text-indigo-600]="play.category === 'defensive'"
-          [class.dark:text-indigo-400]="play.category === 'defensive'"
-          [class.bg-purple-500_15]="play.category === 'transition' || play.category === 'drill_setup'"
-          [class.text-purple-600]="play.category === 'transition' || play.category === 'drill_setup'"
-          [class.dark:text-purple-400]="play.category === 'transition' || play.category === 'drill_setup'"
+          class="cat-badge"
+          [class.badge-formation]="play.category === 'formation'"
+          [class.badge-set-piece]="play.category === 'set_piece'"
+          [class.badge-offensive]="play.category === 'offensive'"
+          [class.badge-defensive]="play.category === 'defensive'"
+          [class.badge-transition]="play.category === 'transition' || play.category === 'drill_setup'"
         >
           {{ play.category.replace('_', ' ') }}
         </span>
 
         @if (phaseCount > 1) {
-          <span class="px-2 py-0.5 text-[10px] font-bold bg-ap-surface-raised text-ap-muted rounded-md border border-ap-border flex items-center gap-1">
+          <span class="phases-badge">
             <ion-icon name="layers-outline"></ion-icon>
             {{ phaseCount }} Phases
           </span>
         }
       </div>
 
-      <span class="text-xs font-semibold text-ap-muted">
+      <span class="sport-icon">
         {{ play.sport === 'soccer' ? '⚽' : '🏐' }}
       </span>
     </div>
 
     <!-- Mini Pitch Preview Thumbnail -->
-    <div class="relative w-full aspect-video rounded-xl overflow-hidden mb-3 border border-ap-border bg-slate-950">
+    <div class="mini-pitch-box">
       @if (play.sport === 'soccer') {
-        <svg class="absolute inset-0 w-full h-full opacity-65" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <svg class="preview-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
           <rect width="100" height="100" fill="#15803d" />
           <rect x="5" y="5" width="90" height="90" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.6" />
           <line x1="50" y1="5" x2="50" y2="95" stroke="#ffffff" stroke-width="1" opacity="0.6" />
@@ -53,7 +42,7 @@
           <rect x="77" y="25" width="18" height="50" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.6" />
         </svg>
       } @else {
-        <svg class="absolute inset-0 w-full h-full opacity-65" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <svg class="preview-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
           <rect width="100" height="100" fill="#1e3a8a" />
           <rect x="10" y="10" width="80" height="80" fill="#c2410c" stroke="#ffffff" stroke-width="1" opacity="0.8" />
           <line x1="50" y1="10" x2="50" y2="90" stroke="#ffffff" stroke-width="1.2" opacity="0.9" />
@@ -65,11 +54,11 @@
       <!-- Mini Tokens -->
       @for (tok of play.canvasData.tokens; track tok.id) {
         <div
-          class="absolute w-2.5 h-2.5 rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-xs"
-          [class.bg-blue-400]="tok.team === 'home'"
-          [class.bg-rose-400]="tok.team === 'away'"
-          [class.bg-amber-300]="tok.team === 'ball'"
-          [class.bg-orange-500]="tok.team === 'cone'"
+          class="mini-token"
+          [class.token-home]="tok.team === 'home'"
+          [class.token-away]="tok.team === 'away'"
+          [class.token-ball]="tok.team === 'ball'"
+          [class.token-cone]="tok.team === 'cone'"
           [style.left.%]="tok.x"
           [style.top.%]="tok.y"
         ></div>
@@ -77,21 +66,21 @@
     </div>
 
     <!-- Title & Description -->
-    <h3 class="text-ap-text font-black text-sm leading-tight group-hover:text-sky-500 transition-colors">
+    <h3 class="card-title">
       {{ play.title }}
     </h3>
 
     @if (play.description) {
-      <p class="text-ap-muted text-xs mt-1 line-clamp-2 leading-normal">
+      <p class="card-description">
         {{ play.description }}
       </p>
     }
 
     <!-- Tags -->
     @if (play.tags && play.tags.length > 0) {
-      <div class="flex items-center gap-1.5 flex-wrap mt-2.5">
+      <div class="tags-row">
         @for (tag of play.tags; track tag) {
-          <span class="px-2 py-0.5 text-[10px] font-semibold bg-ap-surface-raised text-ap-muted rounded-md border border-ap-border">
+          <span class="tag-badge">
             #{{ tag }}
           </span>
         }
@@ -100,39 +89,39 @@
   </div>
 
   <!-- Bottom Actions -->
-  <div class="pt-3 mt-3 border-t border-ap-border flex items-center justify-between gap-2">
-    <div class="flex items-center gap-1">
+  <div class="card-footer">
+    <div class="icon-group">
       <button
         type="button"
-        class="w-7 h-7 rounded-lg text-ap-muted hover:text-sky-500 hover:bg-ap-surface-raised flex items-center justify-center transition-all cursor-pointer"
+        class="card-icon-btn"
         title="Edit metadata"
         (click)="editPlay.emit(play)"
       >
-        <ion-icon name="create-outline" class="text-sm"></ion-icon>
+        <ion-icon name="create-outline"></ion-icon>
       </button>
 
       <button
         type="button"
-        class="w-7 h-7 rounded-lg text-ap-muted hover:text-amber-500 hover:bg-ap-surface-raised flex items-center justify-center transition-all cursor-pointer"
+        class="card-icon-btn"
         title="Duplicate play"
         (click)="duplicatePlay.emit(play)"
       >
-        <ion-icon name="copy-outline" class="text-sm"></ion-icon>
+        <ion-icon name="copy-outline"></ion-icon>
       </button>
 
       <button
         type="button"
-        class="w-7 h-7 rounded-lg text-ap-muted hover:text-rose-500 hover:bg-ap-surface-raised flex items-center justify-center transition-all cursor-pointer"
+        class="card-icon-btn btn-danger-icon"
         title="Delete play"
         (click)="deletePlay.emit(play)"
       >
-        <ion-icon name="trash-outline" class="text-sm"></ion-icon>
+        <ion-icon name="trash-outline"></ion-icon>
       </button>
     </div>
 
     <button
       type="button"
-      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-black bg-sky-500/15 hover:bg-sky-500 text-sky-500 dark:text-sky-400 hover:text-white border border-sky-500/30 rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
+      class="load-btn"
       (click)="loadPlay.emit(play)"
     >
       <ion-icon name="easel-outline"></ion-icon>

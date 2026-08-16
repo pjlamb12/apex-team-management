@@ -1,52 +1,50 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-ap-surface text-ap-text border-b border-ap-border">
-    <div class="flex items-center gap-3 px-3 py-2">
-      <div class="w-9 h-9 rounded-xl bg-sky-500/15 text-sky-500 dark:text-sky-400 flex items-center justify-center text-lg">
-        <ion-icon name="save-outline"></ion-icon>
+  <ion-toolbar>
+    <div class="header-modal-row">
+      <div class="modal-title-group">
+        <div class="modal-badge-icon">
+          <ion-icon name="save-outline"></ion-icon>
+        </div>
+        <div>
+          <h2 class="modal-heading">
+            {{ existingPlay ? 'Update Play / Formation' : 'Save to Playbook' }}
+          </h2>
+          <p class="modal-subheading">Configure name, category, and tactical coaching keys</p>
+        </div>
       </div>
-      <div>
-        <ion-title class="p-0 text-base font-black text-ap-text">
-          {{ existingPlay ? 'Update Play / Formation' : 'Save to Playbook' }}
-        </ion-title>
-        <p class="text-xs text-ap-muted">Configure name, category, and tactical coaching keys</p>
-      </div>
+      <button
+        type="button"
+        class="modal-close-icon-btn"
+        (click)="cancel()"
+      >
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
     </div>
-    <ion-buttons slot="end">
-      <ion-button (click)="cancel()" color="medium">
-        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="bg-ap-bg ion-padding" style="--background: var(--ap-bg);">
-  <div class="space-y-4 max-w-lg mx-auto pb-10">
+<ion-content class="ion-padding">
+  <div class="modal-form-body">
     <!-- Sport Tag indicator -->
-    <div class="flex items-center justify-between p-3.5 rounded-xl bg-ap-surface border border-ap-border">
-      <span class="text-xs font-extrabold text-ap-text">Sport Tag:</span>
+    <div class="sport-tag-row">
+      <span class="sport-label">Sport Tag:</span>
       <span
-        class="px-3 py-1 text-xs font-black uppercase tracking-wider rounded-full border"
-        [class.bg-emerald-500_15]="sport === 'soccer'"
-        [class.text-emerald-600]="sport === 'soccer'"
-        [class.dark:text-emerald-400]="sport === 'soccer'"
-        [class.border-emerald-500_30]="sport === 'soccer'"
-        [class.bg-amber-500_15]="sport === 'volleyball'"
-        [class.text-amber-600]="sport === 'volleyball'"
-        [class.dark:text-amber-400]="sport === 'volleyball'"
-        [class.border-amber-500_30]="sport === 'volleyball'"
+        class="sport-pill"
+        [class.pill-soccer]="sport === 'soccer'"
+        [class.pill-volleyball]="sport === 'volleyball'"
       >
         {{ sport === 'soccer' ? '⚽ Soccer' : '🏐 Volleyball' }}
       </span>
     </div>
 
     <!-- Title -->
-    <div>
-      <label class="block text-[11px] font-extrabold text-ap-muted uppercase tracking-wider mb-1.5">
-        Play / Formation Name <span class="text-rose-500">*</span>
+    <div class="form-item">
+      <label class="item-label">
+        Play / Formation Name <span class="required">*</span>
       </label>
       <input
         type="text"
-        class="w-full bg-ap-surface border border-ap-border rounded-xl px-3.5 py-2.5 text-ap-text font-bold focus:outline-none focus:border-sky-400 text-sm"
+        class="item-input input-bold"
         [(ngModel)]="title"
         placeholder="e.g. 4-3-3 High Press, Short Corner Inswing, 5-1 Rot 1"
         required
@@ -54,12 +52,12 @@
     </div>
 
     <!-- Category -->
-    <div>
-      <label class="block text-[11px] font-extrabold text-ap-muted uppercase tracking-wider mb-1.5">
+    <div class="form-item">
+      <label class="item-label">
         Category
       </label>
       <select
-        class="w-full bg-ap-surface border border-ap-border rounded-xl px-3.5 py-2.5 text-ap-text font-bold focus:outline-none focus:border-sky-400 text-sm"
+        class="item-input"
         [(ngModel)]="category"
       >
         <option value="formation">Formation / System</option>
@@ -73,49 +71,49 @@
     </div>
 
     <!-- Description -->
-    <div>
-      <label class="block text-[11px] font-extrabold text-ap-muted uppercase tracking-wider mb-1.5">
+    <div class="form-item">
+      <label class="item-label">
         Brief Description / Objective
       </label>
       <textarea
         rows="2"
-        class="w-full bg-ap-surface border border-ap-border rounded-xl px-3.5 py-2 text-ap-text text-xs focus:outline-none focus:border-sky-400"
+        class="item-input textarea-input"
         [(ngModel)]="description"
         placeholder="Summarize the core movement or setup..."
       ></textarea>
     </div>
 
     <!-- Tags -->
-    <div>
-      <label class="block text-[11px] font-extrabold text-ap-muted uppercase tracking-wider mb-1.5">
+    <div class="form-item">
+      <label class="item-label">
         Tags (comma-separated)
       </label>
       <input
         type="text"
-        class="w-full bg-ap-surface border border-ap-border rounded-xl px-3.5 py-2.5 text-ap-text text-xs focus:outline-none focus:border-sky-400"
+        class="item-input"
         [(ngModel)]="tagsInput"
         placeholder="e.g. Corner, Near Post, Pressing, Rotation 1"
       />
     </div>
 
     <!-- Coaching Notes / Keys -->
-    <div>
-      <label class="block text-[11px] font-extrabold text-ap-muted uppercase tracking-wider mb-1.5">
+    <div class="form-item">
+      <label class="item-label">
         Tactical Coaching Keys & Notes
       </label>
       <textarea
         rows="3"
-        class="w-full bg-ap-surface border border-ap-border rounded-xl px-3.5 py-2 text-ap-text text-xs focus:outline-none focus:border-sky-400"
+        class="item-input textarea-input"
         [(ngModel)]="notes"
         placeholder="Key coaching cues for players (e.g. 'Striker makes decoy run towards near post', 'Setter penetrates immediately on contact')..."
       ></textarea>
     </div>
 
     <!-- Action Buttons -->
-    <div class="pt-4 flex items-center justify-end gap-3">
+    <div class="modal-footer-row">
       <button
         type="button"
-        class="px-5 py-2.5 text-xs font-bold text-ap-muted hover:text-ap-text hover:bg-ap-surface rounded-xl transition-colors cursor-pointer"
+        class="btn-modal btn-cancel"
         (click)="cancel()"
       >
         Cancel
@@ -123,7 +121,7 @@
 
       <button
         type="button"
-        class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-black bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-md shadow-sky-500/25 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+        class="btn-modal btn-save"
         [disabled]="!title.trim()"
         (click)="save()"
       >

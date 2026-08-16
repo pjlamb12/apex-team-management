@@ -1,28 +1,24 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-ap-surface text-ap-text border-b border-ap-border">
-    <div class="flex items-center justify-between px-3 py-2 flex-wrap gap-2">
+  <ion-toolbar>
+    <div class="header-bar">
       <!-- Title & Sport Selector -->
-      <div class="flex items-center gap-3 flex-wrap">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-400 flex items-center justify-center shadow-md shadow-sky-500/20 text-white text-lg">
+      <div class="header-left">
+        <div class="app-brand">
+          <div class="brand-icon">
             <ion-icon name="easel-outline"></ion-icon>
           </div>
-          <div class="hidden sm:block">
-            <h1 class="text-base font-extrabold text-ap-text tracking-tight leading-none">Playbook & Tactics</h1>
-            <span class="text-[11px] font-bold text-sky-400">Interactive Coaching Whiteboard</span>
+          <div class="brand-text">
+            <h1 class="brand-title">Playbook & Tactics</h1>
+            <span class="brand-subtitle">Interactive Coaching Whiteboard</span>
           </div>
         </div>
 
         <!-- Sport Toggle (Soccer vs Volleyball) -->
-        <div class="inline-flex items-center bg-ap-surface-raised p-1 rounded-xl border border-ap-border gap-1">
+        <div class="segment-pill-box">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer"
-            [class.bg-emerald-600]="currentSport() === 'soccer'"
-            [class.text-white]="currentSport() === 'soccer'"
-            [class.shadow-md]="currentSport() === 'soccer'"
-            [class.text-ap-muted]="currentSport() !== 'soccer'"
-            [class.hover:text-ap-text]="currentSport() !== 'soccer'"
+            class="sport-btn"
+            [class.active-soccer]="currentSport() === 'soccer'"
             (click)="onSportChange('soccer')"
           >
             <span>⚽</span>
@@ -31,12 +27,8 @@
 
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer"
-            [class.bg-amber-600]="currentSport() === 'volleyball'"
-            [class.text-white]="currentSport() === 'volleyball'"
-            [class.shadow-md]="currentSport() === 'volleyball'"
-            [class.text-ap-muted]="currentSport() !== 'volleyball'"
-            [class.hover:text-ap-text]="currentSport() !== 'volleyball'"
+            class="sport-btn"
+            [class.active-volleyball]="currentSport() === 'volleyball'"
             (click)="onSportChange('volleyball')"
           >
             <span>🏐</span>
@@ -46,16 +38,13 @@
       </div>
 
       <!-- Mode Switcher (Board vs Playbook) & Actions -->
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="header-right">
         <!-- View Segment -->
-        <div class="inline-flex items-center bg-ap-surface-raised p-1 rounded-xl border border-ap-border gap-1">
+        <div class="segment-pill-box">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer"
-            [class.bg-sky-500]="viewMode() === 'board'"
-            [class.text-white]="viewMode() === 'board'"
-            [class.shadow-md]="viewMode() === 'board'"
-            [class.text-ap-muted]="viewMode() !== 'board'"
+            class="view-btn"
+            [class.active-view]="viewMode() === 'board'"
             (click)="viewMode.set('board')"
           >
             <ion-icon name="easel-outline"></ion-icon>
@@ -64,17 +53,14 @@
 
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer"
-            [class.bg-sky-500]="viewMode() === 'playbook'"
-            [class.text-white]="viewMode() === 'playbook'"
-            [class.shadow-md]="viewMode() === 'playbook'"
-            [class.text-ap-muted]="viewMode() !== 'playbook'"
+            class="view-btn"
+            [class.active-view]="viewMode() === 'playbook'"
             (click)="viewMode.set('playbook')"
           >
             <ion-icon name="library-outline"></ion-icon>
             <span>Playbook</span>
             @if (tacticsService.filteredPlays().length > 0) {
-              <span class="ml-1 px-1.5 py-0.5 text-[10px] bg-black/40 text-white rounded-full font-black">
+              <span class="count-badge">
                 {{ tacticsService.filteredPlays().length }}
               </span>
             }
@@ -84,20 +70,20 @@
         <!-- Presets Button -->
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 dark:text-amber-400 border border-amber-500/30 text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
+          class="btn-action btn-warning"
           (click)="openPresetsModal()"
         >
-          <ion-icon name="flash-outline" class="text-sm"></ion-icon>
+          <ion-icon name="flash-outline"></ion-icon>
           <span>Presets</span>
         </button>
 
         <!-- Save Play Button -->
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-black transition-all cursor-pointer shadow-md shadow-sky-500/25 active:scale-95"
+          class="btn-action btn-primary"
           (click)="openSavePlayModal()"
         >
-          <ion-icon name="save-outline" class="text-sm"></ion-icon>
+          <ion-icon name="save-outline"></ion-icon>
           <span>Save</span>
         </button>
       </div>
@@ -105,32 +91,28 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="bg-ap-bg ion-padding" style="--background: var(--ap-bg);">
-  <div class="max-w-7xl mx-auto flex flex-col gap-4 pb-12">
+<ion-content class="ion-padding">
+  <div class="tactic-container">
     <!-- VIEW 1: TACTIC BOARD CANVAS VIEW -->
     @if (viewMode() === 'board') {
-      <div class="flex flex-col gap-3">
+      <div class="board-view">
         <!-- Secondary Pitch Bar (Pitch selector, tokens quick adder, undo/redo/reset) -->
-        <div class="flex items-center justify-between bg-ap-surface p-2.5 rounded-2xl border border-ap-border flex-wrap gap-2.5 shadow-sm">
+        <div class="action-bar">
           <!-- Pitch Type selector -->
-          <div class="inline-flex items-center gap-1 bg-ap-surface-raised p-1 rounded-xl border border-ap-border">
+          <div class="segment-pill-box">
             @if (currentSport() === 'soccer') {
               <button
                 type="button"
-                class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                [class.bg-sky-500]="pitchType() === 'full_pitch'"
-                [class.text-white]="pitchType() === 'full_pitch'"
-                [class.text-ap-muted]="pitchType() !== 'full_pitch'"
+                class="view-btn"
+                [class.active-view]="pitchType() === 'full_pitch'"
                 (click)="pitchType.set('full_pitch')"
               >
                 Full Pitch
               </button>
               <button
                 type="button"
-                class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                [class.bg-sky-500]="pitchType() === 'half_pitch'"
-                [class.text-white]="pitchType() === 'half_pitch'"
-                [class.text-ap-muted]="pitchType() !== 'half_pitch'"
+                class="view-btn"
+                [class.active-view]="pitchType() === 'half_pitch'"
                 (click)="pitchType.set('half_pitch')"
               >
                 Half Pitch / Box
@@ -138,10 +120,8 @@
             } @else {
               <button
                 type="button"
-                class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                [class.bg-sky-500]="pitchType() === 'full_court'"
-                [class.text-white]="pitchType() === 'full_court'"
-                [class.text-ap-muted]="pitchType() !== 'full_court'"
+                class="view-btn"
+                [class.active-view]="pitchType() === 'full_court'"
                 (click)="pitchType.set('full_court')"
               >
                 Full Court
@@ -149,30 +129,31 @@
             }
           </div>
 
-          <!-- Add Token Quick Tray -->
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-[11px] font-extrabold uppercase tracking-wider text-ap-muted">Add Token:</span>
+          <!-- Add Token Quick Tray (Pill chips with borders, rounded corners, padding) -->
+          <div class="token-tray">
+            <span class="tray-label">Add Token:</span>
+
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
+              class="token-chip token-home"
               (click)="addPlayerToken('home')"
             >
-              <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span class="chip-dot dot-blue"></span>
               <span>+ Home</span>
             </button>
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
+              class="token-chip token-away"
               (click)="addPlayerToken('away')"
             >
-              <div class="w-2 h-2 rounded-full bg-rose-500"></div>
+              <span class="chip-dot dot-rose"></span>
               <span>+ Away</span>
             </button>
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
+              class="token-chip token-ball"
               (click)="addBallToken()"
             >
               <span>{{ currentSport() === 'soccer' ? '⚽' : '🏐' }}</span>
@@ -181,19 +162,19 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 text-orange-600 dark:text-orange-400 border border-orange-500/30 text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
+              class="token-chip token-cone"
               (click)="addConeToken()"
             >
-              <span class="text-orange-500">▲</span>
+              <span class="cone-symbol">▲</span>
               <span>+ Cone</span>
             </button>
           </div>
 
           <!-- Board Actions (Undo, Redo, Reset) -->
-          <div class="flex items-center gap-1.5">
+          <div class="history-actions">
             <button
               type="button"
-              class="w-8 h-8 rounded-xl bg-ap-surface-raised hover:bg-ap-surface-raised/80 text-ap-text border border-ap-border flex items-center justify-center text-sm transition-all cursor-pointer active:scale-95"
+              class="icon-btn"
               title="Undo"
               (click)="undo()"
             >
@@ -202,7 +183,7 @@
 
             <button
               type="button"
-              class="w-8 h-8 rounded-xl bg-ap-surface-raised hover:bg-ap-surface-raised/80 text-ap-text border border-ap-border flex items-center justify-center text-sm transition-all cursor-pointer active:scale-95"
+              class="icon-btn"
               title="Redo"
               (click)="redo()"
             >
@@ -211,7 +192,7 @@
 
             <button
               type="button"
-              class="w-8 h-8 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-500 border border-rose-500/30 flex items-center justify-center text-sm transition-all cursor-pointer active:scale-95"
+              class="icon-btn btn-danger-icon"
               title="Reset Board"
               (click)="clearBoard()"
             >
@@ -235,18 +216,13 @@
         ></app-pitch-canvas>
 
         <!-- DRAWING TOOLS & PALETTE TOOLBAR -->
-        <div class="flex items-center justify-between bg-ap-surface p-3 rounded-2xl border border-ap-border flex-wrap gap-3 shadow-sm">
+        <div class="action-bar tools-bar">
           <!-- Tool buttons -->
-          <div class="flex items-center gap-2 flex-wrap">
+          <div class="tools-group">
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
-              [class.bg-sky-500]="activeTool() === 'select'"
-              [class.text-white]="activeTool() === 'select'"
-              [class.border-sky-400]="activeTool() === 'select'"
-              [class.bg-ap-surface-raised]="activeTool() !== 'select'"
-              [class.text-ap-text]="activeTool() !== 'select'"
-              [class.border-ap-border]="activeTool() !== 'select'"
+              class="tool-btn"
+              [class.active]="activeTool() === 'select'"
               (click)="activeTool.set('select')"
             >
               <span>👆</span>
@@ -255,13 +231,8 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
-              [class.bg-sky-500]="activeTool() === 'run'"
-              [class.text-white]="activeTool() === 'run'"
-              [class.border-sky-400]="activeTool() === 'run'"
-              [class.bg-ap-surface-raised]="activeTool() !== 'run'"
-              [class.text-ap-text]="activeTool() !== 'run'"
-              [class.border-ap-border]="activeTool() !== 'run'"
+              class="tool-btn"
+              [class.active]="activeTool() === 'run'"
               (click)="activeTool.set('run')"
             >
               <span>🏃</span>
@@ -270,13 +241,8 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
-              [class.bg-sky-500]="activeTool() === 'pass'"
-              [class.text-white]="activeTool() === 'pass'"
-              [class.border-sky-400]="activeTool() === 'pass'"
-              [class.bg-ap-surface-raised]="activeTool() !== 'pass'"
-              [class.text-ap-text]="activeTool() !== 'pass'"
-              [class.border-ap-border]="activeTool() !== 'pass'"
+              class="tool-btn"
+              [class.active]="activeTool() === 'pass'"
               (click)="activeTool.set('pass')"
             >
               <span>💨</span>
@@ -285,13 +251,8 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
-              [class.bg-sky-500]="activeTool() === 'dribble'"
-              [class.text-white]="activeTool() === 'dribble'"
-              [class.border-sky-400]="activeTool() === 'dribble'"
-              [class.bg-ap-surface-raised]="activeTool() !== 'dribble'"
-              [class.text-ap-text]="activeTool() !== 'dribble'"
-              [class.border-ap-border]="activeTool() !== 'dribble'"
+              class="tool-btn"
+              [class.active]="activeTool() === 'dribble'"
               (click)="activeTool.set('dribble')"
             >
               <span>〰️</span>
@@ -300,13 +261,8 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
-              [class.bg-sky-500]="activeTool() === 'freehand'"
-              [class.text-white]="activeTool() === 'freehand'"
-              [class.border-sky-400]="activeTool() === 'freehand'"
-              [class.bg-ap-surface-raised]="activeTool() !== 'freehand'"
-              [class.text-ap-text]="activeTool() !== 'freehand'"
-              [class.border-ap-border]="activeTool() !== 'freehand'"
+              class="tool-btn"
+              [class.active]="activeTool() === 'freehand'"
               (click)="activeTool.set('freehand')"
             >
               <span>✏️</span>
@@ -315,13 +271,8 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
-              [class.bg-sky-500]="activeTool() === 'zone_rect'"
-              [class.text-white]="activeTool() === 'zone_rect'"
-              [class.border-sky-400]="activeTool() === 'zone_rect'"
-              [class.bg-ap-surface-raised]="activeTool() !== 'zone_rect'"
-              [class.text-ap-text]="activeTool() !== 'zone_rect'"
-              [class.border-ap-border]="activeTool() !== 'zone_rect'"
+              class="tool-btn"
+              [class.active]="activeTool() === 'zone_rect'"
               (click)="activeTool.set('zone_rect')"
             >
               <span>▢</span>
@@ -330,13 +281,8 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer active:scale-95 shadow-xs"
-              [class.bg-rose-600]="activeTool() === 'eraser'"
-              [class.text-white]="activeTool() === 'eraser'"
-              [class.border-rose-400]="activeTool() === 'eraser'"
-              [class.bg-ap-surface-raised]="activeTool() !== 'eraser'"
-              [class.text-rose-500]="activeTool() !== 'eraser'"
-              [class.border-ap-border]="activeTool() !== 'eraser'"
+              class="tool-btn btn-eraser"
+              [class.active]="activeTool() === 'eraser'"
               (click)="activeTool.set('eraser')"
             >
               <span>🧹</span>
@@ -344,17 +290,15 @@
             </button>
           </div>
 
-          <!-- Color palette & line width -->
-          <div class="flex items-center gap-3">
-            <div class="inline-flex items-center gap-1.5 bg-ap-surface-raised p-1.5 rounded-xl border border-ap-border">
+          <!-- Color palette & clear lines -->
+          <div class="palette-actions">
+            <div class="palette-tray">
               @for (c of colorPalette; track c.value) {
                 <button
                   type="button"
-                  class="w-5 h-5 rounded-full border-2 transition-all cursor-pointer"
+                  class="color-dot"
                   [style.background-color]="c.value"
-                  [class.border-white]="activeColor() === c.value"
-                  [class.scale-125]="activeColor() === c.value"
-                  [class.border-transparent]="activeColor() !== c.value"
+                  [class.selected]="activeColor() === c.value"
                   [title]="c.label"
                   (click)="activeColor.set(c.value)"
                 ></button>
@@ -363,7 +307,7 @@
 
             <button
               type="button"
-              class="px-3 py-1.5 rounded-xl bg-ap-surface-raised hover:bg-ap-surface-raised/80 text-ap-muted hover:text-ap-text border border-ap-border text-xs font-bold transition-all cursor-pointer"
+              class="btn-action btn-outline"
               (click)="clearDrawings()"
             >
               Clear Lines
@@ -372,22 +316,17 @@
         </div>
 
         <!-- MULTI-PHASE TIMELINE & ANIMATION BAR -->
-        <div class="flex items-center justify-between bg-ap-surface p-3 rounded-2xl border border-ap-border flex-wrap gap-3 shadow-sm">
-          <div class="flex items-center gap-2 overflow-x-auto flex-1 py-0.5">
-            <span class="text-xs font-extrabold text-ap-muted inline-flex items-center gap-1 mr-1 whitespace-nowrap">
-              <ion-icon name="layers-outline" class="text-sky-400"></ion-icon>
+        <div class="action-bar timeline-bar">
+          <div class="phases-scroll">
+            <span class="phases-label">
+              <ion-icon name="layers-outline"></ion-icon>
               Phases:
             </span>
 
             @for (phase of phases(); track phase.id; let i = $index) {
               <div
-                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-extrabold cursor-pointer transition-all whitespace-nowrap"
-                [class.bg-sky-500_15]="currentPhaseIndex() === i"
-                [class.border-sky-500]="currentPhaseIndex() === i"
-                [class.text-sky-500]="currentPhaseIndex() === i"
-                [class.bg-ap-surface-raised]="currentPhaseIndex() !== i"
-                [class.border-ap-border]="currentPhaseIndex() !== i"
-                [class.text-ap-muted]="currentPhaseIndex() !== i"
+                class="phase-pill"
+                [class.active]="currentPhaseIndex() === i"
                 (click)="selectPhase(i)"
               >
                 <span>{{ phase.name }}</span>
@@ -395,7 +334,7 @@
                 @if (phases().length > 1) {
                   <button
                     type="button"
-                    class="text-ap-muted hover:text-rose-500 p-0.5"
+                    class="phase-close-btn"
                     title="Remove phase"
                     (click)="deletePhase(i, $event)"
                   >
@@ -407,7 +346,7 @@
 
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-dashed border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-xs font-extrabold cursor-pointer whitespace-nowrap transition-all"
+              class="btn-action btn-add-phase"
               (click)="addPhase()"
             >
               <ion-icon name="add-outline"></ion-icon>
@@ -418,14 +357,12 @@
           <!-- Play / Pause Animation -->
           <button
             type="button"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black text-white transition-all cursor-pointer shadow-md active:scale-95"
-            [class.bg-emerald-600]="!isPlayingAnimation()"
-            [class.hover:bg-emerald-500]="!isPlayingAnimation()"
-            [class.bg-amber-600]="isPlayingAnimation()"
-            [class.hover:bg-amber-500]="isPlayingAnimation()"
+            class="btn-action"
+            [class.btn-success]="!isPlayingAnimation()"
+            [class.btn-warning-solid]="isPlayingAnimation()"
             (click)="togglePlayAnimation()"
           >
-            <ion-icon [name]="isPlayingAnimation() ? 'pause-outline' : 'play-outline'" class="text-sm"></ion-icon>
+            <ion-icon [name]="isPlayingAnimation() ? 'pause-outline' : 'play-outline'"></ion-icon>
             <span>{{ isPlayingAnimation() ? 'Pause Movement' : 'Play Movement' }}</span>
           </button>
         </div>
@@ -434,27 +371,27 @@
 
     <!-- VIEW 2: PLAYBOOK LIBRARY VIEW -->
     @if (viewMode() === 'playbook') {
-      <div class="flex flex-col gap-4">
+      <div class="playbook-view">
         <!-- Header Filter Banner -->
-        <div class="flex items-center justify-between bg-ap-surface border border-ap-border rounded-2xl p-5 flex-wrap gap-4 shadow-sm">
+        <div class="playbook-banner">
           <div>
-            <div class="flex items-center gap-2">
-              <span class="text-2xl">{{ currentSport() === 'soccer' ? '⚽' : '🏐' }}</span>
-              <h2 class="text-lg font-black text-ap-text m-0">
+            <div class="banner-title-row">
+              <span class="banner-icon">{{ currentSport() === 'soccer' ? '⚽' : '🏐' }}</span>
+              <h2 class="banner-title">
                 {{ currentSport() === 'soccer' ? 'Soccer' : 'Volleyball' }} Playbook & Formations
               </h2>
             </div>
-            <p class="text-xs text-ap-muted mt-1">
+            <p class="banner-subtitle">
               Only showing tactical plays, set pieces, and formations saved with the
-              <span class="text-sky-400 font-extrabold">#{{ currentSport() }}</span> sport tag.
+              <span class="sport-tag-highlight">#{{ currentSport() }}</span> sport tag.
             </p>
           </div>
 
           <!-- Search input -->
-          <div class="w-full sm:w-72">
+          <div class="search-box">
             <input
               type="text"
-              class="w-full bg-ap-surface-raised border border-ap-border rounded-xl px-3.5 py-2 text-ap-text text-xs font-semibold focus:outline-none focus:border-sky-400"
+              class="search-input"
               placeholder="Search plays by name or tag..."
               [ngModel]="playbookSearch()"
               (ngModelChange)="playbookSearch.set($event); tacticsService.setSearchQuery($event)"
@@ -463,18 +400,12 @@
         </div>
 
         <!-- Category Filter Pills -->
-        <div class="flex items-center gap-2 overflow-x-auto py-1">
+        <div class="category-tray">
           @for (cat of ['all', 'formation', 'set_piece', 'offensive', 'defensive', 'transition', 'drill_setup']; track cat) {
             <button
               type="button"
-              class="inline-flex items-center px-3.5 py-2 rounded-full text-xs font-black capitalize whitespace-nowrap border transition-all cursor-pointer"
-              [class.bg-sky-500]="playbookCategory() === cat"
-              [class.text-white]="playbookCategory() === cat"
-              [class.border-sky-400]="playbookCategory() === cat"
-              [class.shadow-sm]="playbookCategory() === cat"
-              [class.bg-ap-surface-raised]="playbookCategory() !== cat"
-              [class.text-ap-muted]="playbookCategory() !== cat"
-              [class.border-ap-border]="playbookCategory() !== cat"
+              class="category-pill"
+              [class.active]="playbookCategory() === cat"
               (click)="playbookCategory.set(cat); tacticsService.setCategory(cat)"
             >
               {{ cat === 'all' ? 'All Categories' : cat.replace('_', ' ') }}
@@ -484,12 +415,12 @@
 
         <!-- Plays Grid -->
         @if (tacticsService.isLoading()) {
-          <div class="flex flex-col items-center justify-center py-20 gap-3">
+          <div class="loading-box">
             <ion-spinner name="crescent" color="primary"></ion-spinner>
-            <span class="text-xs text-ap-muted font-bold">Loading playbook...</span>
+            <span class="loading-label">Loading playbook...</span>
           </div>
         } @else if (tacticsService.filteredPlays().length > 0) {
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="playbook-grid">
             @for (play of tacticsService.filteredPlays(); track play.id) {
               <app-playbook-card
                 [play]="play"
@@ -502,19 +433,19 @@
           </div>
         } @else {
           <!-- Empty State -->
-          <div class="bg-ap-surface border border-ap-border rounded-2xl p-10 text-center max-w-md mx-auto my-8 shadow-sm">
-            <div class="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-3xl mx-auto mb-4">
+          <div class="empty-box">
+            <div class="empty-icon-circle">
               {{ currentSport() === 'soccer' ? '⚽' : '🏐' }}
             </div>
-            <h3 class="text-base font-black text-ap-text mb-1.5">No {{ currentSport() }} Plays Found</h3>
-            <p class="text-xs text-ap-muted leading-relaxed">
+            <h3 class="empty-title">No {{ currentSport() }} Plays Found</h3>
+            <p class="empty-desc">
               You haven't saved any formations or set pieces for {{ currentSport() }} yet, or no items match your search.
             </p>
 
-            <div class="flex items-center justify-center gap-3 mt-6 flex-wrap">
+            <div class="empty-buttons">
               <button
                 type="button"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-black cursor-pointer shadow-md shadow-sky-500/25 transition-all"
+                class="btn-action btn-primary"
                 (click)="viewMode.set('board')"
               >
                 <ion-icon name="easel-outline"></ion-icon>
@@ -523,7 +454,7 @@
 
               <button
                 type="button"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-black cursor-pointer transition-all"
+                class="btn-action btn-warning"
                 (click)="seedStandardPresets()"
               >
                 <ion-icon name="sparkles-outline"></ion-icon>
@@ -538,8 +469,8 @@
 
   <!-- Toast feedback -->
   @if (toastMessage(); as msg) {
-    <div class="fixed bottom-6 right-6 z-50 bg-slate-900 border border-slate-700 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold animate-fade-in">
-      <span class="text-emerald-400">✓</span>
+    <div class="toast-feedback">
+      <span class="toast-check">✓</span>
       <span>{{ msg }}</span>
     </div>
   }

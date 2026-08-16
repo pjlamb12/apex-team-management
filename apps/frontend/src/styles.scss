@@ -103,10 +103,7 @@ html {
   }
 }
 
-// Shell header offset — child route ion-content is outside the shell component's
-// encapsulation scope, so this must live in global styles to reach it.
-// The value matches Ionic's MD toolbar height (56px).
-// We also add padding-bottom to ensure no content is obscured by the bottom tab bar and safe area.
+// Shell header offset
 app-shell ion-content {
   --padding-top: 56px;
   --padding-bottom: calc(128px + var(--ion-safe-area-bottom, 0px));
@@ -116,14 +113,12 @@ app-shell ion-content::part(scroll) {
   padding-bottom: calc(128px + var(--ion-safe-area-bottom, 0px)) !important;
 }
 
-// Game, practice, and tryout consoles have their own local headers, so they cancel the shell-level top padding.
 app-console-wrapper ion-content,
 app-practice-console-wrapper ion-content,
 app-tryout-console ion-content {
   --padding-top: 0;
 }
 
-// Only the live game console uses a full screen absolute layout, so it cancels the bottom padding.
 app-console-wrapper ion-content {
   --padding-bottom: 0;
 }
@@ -132,21 +127,18 @@ app-console-wrapper ion-content::part(scroll) {
   padding-bottom: 0 !important;
 }
 
-// Dark mode card elevation — subtle accent-tinted shadow makes cards float above the deep base
+// Dark mode card elevation
 html.dark ion-card {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6),
               0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-// ion-card-title uses an internal --color var that doesn't always pick up
-// --ion-text-color changes, so force it globally via the exposed CSS part.
 ion-card-title {
   --color: var(--ion-text-color);
 }
 
 // === Ionic Component Overrides ===
 
-// Action sheet text — shadow DOM can't be pierced with CSS vars reliably
 ion-action-sheet.schedule-action-sheet::part(button) {
   color: var(--ap-text);
 }
@@ -155,7 +147,7 @@ ion-action-sheet.schedule-action-sheet::part(title) {
   color: var(--ap-muted);
 }
 
-// Datetime picker — shadow DOM requires !important overrides in some modal contexts
+// Datetime picker
 ion-datetime,
 .ion-palette-dark ion-datetime,
 html.ion-palette-dark ion-datetime {
@@ -205,7 +197,7 @@ html:not(.dark) ion-modal {
   color: var(--ap-text) !important;
 }
 
-// Join code input — apply mono/tracking only to the native input, not the floating label
+// Join code input
 ion-input.join-code-input::part(native) {
   font-family: 'Courier New', Courier, monospace;
   letter-spacing: 0.2em;
@@ -222,13 +214,13 @@ ion-datetime-button::part(native) {
   font-weight: 500;
 }
 
-// Ensure native date picker calendar icon is visible in dark mode
+// Date picker calendar icon
 html.dark ion-input[type="date"],
 html.dark ion-input[type="date"]::part(native) {
   color-scheme: dark !important;
 }
 
-// Clean scrollbar visibility for ion-segment
+// Scrollbars
 ion-segment {
   &::-webkit-scrollbar {
     display: none !important;
@@ -236,14 +228,13 @@ ion-segment {
   scrollbar-width: none !important;
 }
 
-// Let segment buttons have a reasonable padding
 ion-segment-button {
   --padding-start: 12px;
   --padding-end: 12px;
 }
 
 ion-segment-button ion-label {
-  white-space: nowrap !important; // Stop text wrapping in tab labels
+  white-space: nowrap !important;
   font-size: 11px !important;
   line-height: 1.2 !important;
   padding: 0 4px;
@@ -257,4 +248,150 @@ ion-segment-button ion-label {
   }
 }
 
+// ============================================================================
+// === Athletic Professional Button & Chip System (Tactic Board & Playbook) ===
+// ============================================================================
 
+.segment-pill-box {
+  display: inline-flex;
+  align-items: center;
+  background: var(--ap-surface-raised);
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--ap-border);
+  gap: 3px;
+}
+
+.sport-btn, .view-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 7px 14px !important;
+  border-radius: 9px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  border: 1px solid transparent !important;
+  color: var(--ap-muted) !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  &:hover { color: var(--ap-text) !important; }
+  &.active-soccer { background: #16a34a !important; color: #ffffff !important; }
+  &.active-volleyball { background: #ea580c !important; color: #ffffff !important; }
+  &.active-view { background: #0284c7 !important; color: #ffffff !important; }
+  .count-badge { padding: 1px 6px; font-size: 10px; border-radius: 9999px; background: rgba(0,0,0,0.4); color: #ffffff; }
+}
+
+.token-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 7px 14px !important;
+  border-radius: 9999px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+
+  &:hover { transform: translateY(-1px); filter: brightness(1.1); }
+  &:active { transform: scale(0.96); }
+
+  .chip-dot { width: 8px; height: 8px; border-radius: 9999px; }
+  .dot-blue { background: #3b82f6; }
+  .dot-rose { background: #f43f5e; }
+  .cone-symbol { color: #ea580c; }
+
+  &.token-home { background: rgba(59, 130, 246, 0.15) !important; border-color: rgba(59, 130, 246, 0.4) !important; color: #2563eb !important; }
+  &.token-away { background: rgba(244, 63, 94, 0.15) !important; border-color: rgba(244, 63, 94, 0.4) !important; color: #e11d48 !important; }
+  &.token-ball { background: rgba(245, 158, 11, 0.15) !important; border-color: rgba(245, 158, 11, 0.4) !important; color: #d97706 !important; }
+  &.token-cone { background: rgba(249, 115, 22, 0.15) !important; border-color: rgba(249, 115, 22, 0.4) !important; color: #ea580c !important; }
+}
+
+html.dark .token-chip {
+  &.token-home { color: #60a5fa !important; border-color: rgba(96, 165, 250, 0.35) !important; }
+  &.token-away { color: #fb7185 !important; border-color: rgba(251, 113, 133, 0.35) !important; }
+  &.token-ball { color: #fbbf24 !important; border-color: rgba(251, 191, 36, 0.35) !important; }
+  &.token-cone { color: #fb923c !important; border-color: rgba(251, 146, 60, 0.35) !important; }
+}
+
+.tool-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 13px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  border: 1.5px solid var(--ap-border) !important;
+  background: var(--ap-surface-raised) !important;
+  color: var(--ap-text) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  &:hover { border-color: rgba(56, 189, 248, 0.4) !important; transform: translateY(-1px); }
+  &.active { background: #0284c7 !important; border-color: #38bdf8 !important; color: #ffffff !important; }
+  &.btn-eraser.active { background: #dc2626 !important; border-color: #f87171 !important; color: #ffffff !important; }
+}
+
+.btn-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  border: 1.5px solid transparent !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  &:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  &:active { transform: scale(0.96); }
+  &.btn-primary { background: #0284c7 !important; color: #ffffff !important; }
+  &.btn-warning { background: rgba(245, 158, 11, 0.15) !important; border-color: rgba(245, 158, 11, 0.4) !important; color: #d97706 !important; }
+  &.btn-success { background: #16a34a !important; color: #ffffff !important; }
+  &.btn-warning-solid { background: #ea580c !important; color: #ffffff !important; }
+  &.btn-outline { background: var(--ap-surface-raised) !important; border-color: var(--ap-border) !important; color: var(--ap-muted) !important; }
+  &.btn-add-phase { background: rgba(14, 165, 233, 0.1) !important; border: 1.5px dashed rgba(56, 189, 248, 0.4) !important; color: #0284c7 !important; }
+}
+
+html.dark .btn-action {
+  &.btn-warning { color: #fbbf24 !important; }
+  &.btn-add-phase { color: #38bdf8 !important; }
+}
+
+.icon-btn {
+  width: 34px !important; height: 34px !important; border-radius: 10px !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  border: 1.5px solid var(--ap-border) !important; background: var(--ap-surface-raised) !important;
+  color: var(--ap-muted) !important; cursor: pointer !important; font-size: 16px !important;
+
+  &:hover { color: var(--ap-text) !important; }
+  &.btn-danger-icon { color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; border-color: rgba(239, 68, 68, 0.3) !important; }
+}
+
+.category-pill {
+  display: inline-flex !important; align-items: center !important; padding: 8px 18px !important;
+  border-radius: 9999px !important; font-size: 12px !important; font-weight: 800 !important; text-transform: capitalize !important;
+  white-space: nowrap !important; border: 1.5px solid var(--ap-border) !important; background: var(--ap-surface-raised) !important;
+  color: var(--ap-muted) !important; cursor: pointer !important;
+
+  &.active { background: #0284c7 !important; border-color: #38bdf8 !important; color: #ffffff !important; }
+}
+
+.phase-pill {
+  display: inline-flex !important; align-items: center !important; gap: 6px !important;
+  padding: 7px 14px !important; border-radius: 10px !important; border: 1.5px solid var(--ap-border) !important;
+  background: var(--ap-surface-raised) !important; color: var(--ap-muted) !important; font-size: 12px !important;
+  font-weight: 800 !important; cursor: pointer !important; white-space: nowrap !important;
+
+  &.active { background: rgba(2, 132, 199, 0.15) !important; border-color: #38bdf8 !important; color: #0284c7 !important; }
+  .phase-close-btn { background: transparent; border: none; color: inherit; cursor: pointer; padding: 0; }
+}
+
+html.dark .phase-pill.active { color: #38bdf8 !important; }

@@ -12,3 +12,115 @@ ion-content {
   --background: var(--ap-bg);
   --color: var(--ap-text);
 }
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.app-brand { display: flex; align-items: center; gap: 8px; }
+.brand-icon {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 18px;
+}
+.brand-title { font-size: 16px; font-weight: 800; color: var(--ap-text); margin: 0; }
+.brand-subtitle { font-size: 11px; font-weight: 700; color: #38bdf8; }
+
+.tactic-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 48px;
+}
+
+.board-view, .playbook-view { display: flex; flex-direction: column; gap: 12px; }
+
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ap-surface);
+  padding: 8px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--ap-border);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.token-tray { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tray-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--ap-muted); }
+
+.tools-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.palette-actions { display: flex; align-items: center; gap: 8px; }
+.palette-tray {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--ap-surface-raised); padding: 5px 8px; border-radius: 10px; border: 1px solid var(--ap-border);
+}
+.color-dot {
+  width: 20px !important; height: 20px !important; border-radius: 9999px !important; border: 2px solid transparent !important; cursor: pointer !important;
+  &.selected { transform: scale(1.2); border-color: #fff !important; }
+}
+
+.history-actions { display: flex; align-items: center; gap: 6px; }
+
+.phases-scroll {
+  display: flex; align-items: center; gap: 8px; overflow-x: auto; flex: 1;
+  .phases-label { font-size: 12px; font-weight: 800; color: var(--ap-muted); display: inline-flex; align-items: center; gap: 4px; ion-icon { color: #38bdf8; } }
+}
+
+.playbook-banner {
+  display: flex; align-items: center; justify-content: space-between; background: var(--ap-surface);
+  border: 1px solid var(--ap-border); border-radius: 20px; padding: 20px; flex-wrap: wrap; gap: 12px;
+}
+.banner-title-row { display: flex; align-items: center; gap: 8px; }
+.banner-icon { font-size: 24px; }
+.banner-title { font-size: 18px; font-weight: 800; color: var(--ap-text); margin: 0; }
+.banner-subtitle { font-size: 12px; color: var(--ap-muted); margin-top: 4px; }
+.sport-tag-highlight { color: #38bdf8; font-weight: 800; }
+.search-box { width: 100%; max-width: 280px; }
+.search-input {
+  width: 100%; background: var(--ap-surface-raised); border: 1.5px solid var(--ap-border);
+  border-radius: 12px; padding: 8px 14px; color: var(--ap-text); font-size: 12px; font-weight: 600;
+  &:focus { outline: none; border-color: #38bdf8; }
+}
+
+.category-tray { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+
+.playbook-grid {
+  display: grid; grid-template-columns: 1fr; gap: 16px;
+  @media (min-width: 640px) { grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 1024px) { grid-template-columns: repeat(3, 1fr); }
+}
+
+.empty-box {
+  background: var(--ap-surface); border: 1px solid var(--ap-border); border-radius: 20px;
+  padding: 40px 24px; text-align: center; max-width: 420px; margin: 24px auto;
+}
+.empty-icon-circle {
+  width: 56px; height: 56px; border-radius: 16px; background: rgba(56, 189, 248, 0.12);
+  display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px auto;
+}
+.empty-title { font-size: 16px; font-weight: 800; color: var(--ap-text); margin-bottom: 6px; }
+.empty-desc { font-size: 12px; color: var(--ap-muted); line-height: 1.4; }
+.empty-buttons { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; }
+
+.toast-feedback {
+  position: fixed; bottom: 24px; right: 24px; z-index: 99; background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 10px 16px;
+  border-radius: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700;
+}

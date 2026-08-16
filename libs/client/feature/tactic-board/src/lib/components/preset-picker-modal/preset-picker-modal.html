@@ -1,38 +1,36 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-ap-surface text-ap-text border-b border-ap-border">
-    <div class="flex items-center gap-3 px-3 py-2">
-      <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 dark:text-amber-400 flex items-center justify-center text-lg">
-        <ion-icon name="flash-outline"></ion-icon>
+  <ion-toolbar>
+    <div class="header-modal-row">
+      <div class="modal-title-group">
+        <div class="modal-badge-icon">
+          <ion-icon name="flash-outline"></ion-icon>
+        </div>
+        <div>
+          <h2 class="modal-heading">
+            Load {{ sport === 'soccer' ? 'Soccer' : 'Volleyball' }} Preset
+          </h2>
+          <p class="modal-subheading">Select standard formations, systems, and set pieces</p>
+        </div>
       </div>
-      <div>
-        <ion-title class="p-0 text-base font-black text-ap-text">
-          Load {{ sport === 'soccer' ? 'Soccer' : 'Volleyball' }} Preset
-        </ion-title>
-        <p class="text-xs text-ap-muted">Select standard formations, systems, and set pieces</p>
-      </div>
+      <button
+        type="button"
+        class="modal-close-icon-btn"
+        (click)="cancel()"
+      >
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
     </div>
-    <ion-buttons slot="end">
-      <ion-button (click)="cancel()" color="medium">
-        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="bg-ap-bg ion-padding" style="--background: var(--ap-bg);">
-  <div class="max-w-xl mx-auto flex flex-col gap-4 pb-8">
+<ion-content class="ion-padding">
+  <div class="preset-modal-content">
     <!-- Category filter pills -->
-    <div class="flex items-center gap-2 overflow-x-auto py-1">
+    <div class="preset-filter-row">
       <button
         type="button"
-        class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap border transition-all cursor-pointer"
-        [class.bg-sky-500]="activeCategory === 'all'"
-        [class.text-white]="activeCategory === 'all'"
-        [class.border-sky-400]="activeCategory === 'all'"
-        [class.shadow-sm]="activeCategory === 'all'"
-        [class.bg-ap-surface-raised]="activeCategory !== 'all'"
-        [class.text-ap-muted]="activeCategory !== 'all'"
-        [class.border-ap-border]="activeCategory !== 'all'"
+        class="preset-filter-pill"
+        [class.active]="activeCategory === 'all'"
         (click)="activeCategory = 'all'"
       >
         All Presets
@@ -40,14 +38,8 @@
 
       <button
         type="button"
-        class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap border transition-all cursor-pointer"
-        [class.bg-sky-500]="activeCategory === 'formation'"
-        [class.text-white]="activeCategory === 'formation'"
-        [class.border-sky-400]="activeCategory === 'formation'"
-        [class.shadow-sm]="activeCategory === 'formation'"
-        [class.bg-ap-surface-raised]="activeCategory !== 'formation'"
-        [class.text-ap-muted]="activeCategory !== 'formation'"
-        [class.border-ap-border]="activeCategory !== 'formation'"
+        class="preset-filter-pill"
+        [class.active]="activeCategory === 'formation'"
         (click)="activeCategory = 'formation'"
       >
         Formations / Systems
@@ -55,14 +47,8 @@
 
       <button
         type="button"
-        class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap border transition-all cursor-pointer"
-        [class.bg-sky-500]="activeCategory === 'set_piece'"
-        [class.text-white]="activeCategory === 'set_piece'"
-        [class.border-sky-400]="activeCategory === 'set_piece'"
-        [class.shadow-sm]="activeCategory === 'set_piece'"
-        [class.bg-ap-surface-raised]="activeCategory !== 'set_piece'"
-        [class.text-ap-muted]="activeCategory !== 'set_piece'"
-        [class.border-ap-border]="activeCategory !== 'set_piece'"
+        class="preset-filter-pill"
+        [class.active]="activeCategory === 'set_piece'"
         (click)="activeCategory = 'set_piece'"
       >
         Set Pieces & Routines
@@ -70,46 +56,40 @@
     </div>
 
     <!-- Presets Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+    <div class="preset-card-grid">
       @for (preset of presets; track preset.id) {
         <div
-          class="group p-4 rounded-2xl bg-ap-surface hover:bg-ap-surface-raised border border-ap-border hover:border-sky-500/50 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col justify-between"
+          class="preset-card-item"
           (click)="selectPreset(preset)"
         >
           <div>
-            <div class="flex items-center justify-between mb-2">
+            <div class="preset-item-meta">
               <span
-                class="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md"
-                [class.bg-emerald-500_15]="preset.category === 'formation'"
-                [class.text-emerald-600]="preset.category === 'formation'"
-                [class.dark:text-emerald-400]="preset.category === 'formation'"
-                [class.bg-amber-500_15]="preset.category === 'set_piece'"
-                [class.text-amber-600]="preset.category === 'set_piece'"
-                [class.dark:text-amber-400]="preset.category === 'set_piece'"
-                [class.bg-indigo-500_15]="preset.category === 'defensive'"
-                [class.text-indigo-600]="preset.category === 'defensive'"
-                [class.dark:text-indigo-400]="preset.category === 'defensive'"
+                class="preset-type-badge"
+                [class.badge-formation]="preset.category === 'formation'"
+                [class.badge-set-piece]="preset.category === 'set_piece'"
+                [class.badge-defensive]="preset.category === 'defensive'"
               >
                 {{ preset.category.replace('_', ' ') }}
               </span>
-              <span class="text-xs text-ap-muted font-bold">
+              <span class="tokens-badge">
                 {{ preset.tokens.length }} Tokens
               </span>
             </div>
 
-            <h4 class="text-ap-text font-black text-sm group-hover:text-sky-500 transition-colors">
+            <h4 class="preset-item-title">
               {{ preset.title }}
             </h4>
-            <p class="text-ap-muted text-xs mt-1 line-clamp-2 leading-relaxed">
+            <p class="preset-item-description">
               {{ preset.description }}
             </p>
           </div>
 
-          <div class="pt-3 mt-3 border-t border-ap-border flex items-center justify-between">
-            <span class="text-[11px] text-ap-muted font-medium">
+          <div class="preset-item-footer">
+            <span class="pitch-type-text">
               {{ preset.pitchType === 'half_pitch' ? 'Half Pitch' : 'Full Pitch / Court' }}
             </span>
-            <span class="text-xs font-black text-sky-500 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+            <span class="load-preset-text">
               Load Preset →
             </span>
           </div>
