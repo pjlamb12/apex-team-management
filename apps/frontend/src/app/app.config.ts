@@ -22,8 +22,8 @@ export const appConfig: ApplicationConfig = {
       configUrl: './assets/config/config.json',
     }),
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
+      enabled: !isDevMode() || (typeof window !== 'undefined' && 'serviceWorker' in navigator),
+      registrationStrategy: 'registerImmediately'
     }),
   ],
 };
