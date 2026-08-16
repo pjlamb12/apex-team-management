@@ -1,0 +1,126 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="modal-toolbar">
+    <ion-title class="font-bold text-white text-lg">
+      {{ existingPlay ? 'Update Play / Formation' : 'Save to Playbook' }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()" color="medium">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding modal-content">
+  <div class="space-y-4 max-w-lg mx-auto pb-10">
+    <!-- Sport Tag indicator -->
+    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-slate-700">
+      <span class="text-sm font-semibold text-slate-300">Sport Tag:</span>
+      <span class="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full"
+        [class.bg-emerald-500_20]="sport === 'soccer'"
+        [class.text-emerald-400]="sport === 'soccer'"
+        [class.border-emerald-500_30]="sport === 'soccer'"
+        [class.bg-amber-500_20]="sport === 'volleyball'"
+        [class.text-amber-400]="sport === 'volleyball'"
+        [class.border-amber-500_30]="sport === 'volleyball'"
+      >
+        {{ sport === 'soccer' ? '⚽ Soccer' : '🏐 Volleyball' }}
+      </span>
+    </div>
+
+    <!-- Title -->
+    <div>
+      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+        Play / Formation Name *
+      </label>
+      <input
+        type="text"
+        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-sky-500"
+        [(ngModel)]="title"
+        placeholder="e.g. 4-3-3 High Press, Short Corner Inswing, 5-1 Rot 1"
+        required
+      />
+    </div>
+
+    <!-- Category -->
+    <div>
+      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+        Category
+      </label>
+      <select
+        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-sky-500"
+        [(ngModel)]="category"
+      >
+        <option value="formation">Formation / System</option>
+        <option value="set_piece">Set Piece Routine</option>
+        <option value="offensive">Offensive Scheme</option>
+        <option value="defensive">Defensive Scheme</option>
+        <option value="transition">Transition / Counter</option>
+        <option value="drill_setup">Practice Drill Setup</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+        Brief Description / Objective
+      </label>
+      <textarea
+        rows="2"
+        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-sky-500"
+        [(ngModel)]="description"
+        placeholder="Summarize the core movement or setup..."
+      ></textarea>
+    </div>
+
+    <!-- Tags -->
+    <div>
+      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+        Tags (comma-separated)
+      </label>
+      <div class="relative">
+        <input
+          type="text"
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-sky-500"
+          [(ngModel)]="tagsInput"
+          placeholder="e.g. Corner, Near Post, Pressing, Rotation 1"
+        />
+      </div>
+    </div>
+
+    <!-- Coaching Notes / Keys -->
+    <div>
+      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+        Tactical Coaching Keys & Notes
+      </label>
+      <textarea
+        rows="3"
+        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-sky-500"
+        [(ngModel)]="notes"
+        placeholder="Key coaching cues for players (e.g. 'Striker makes decoy run towards near post', 'Setter penetrates immediately on contact')..."
+      ></textarea>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="pt-4 flex items-center justify-end gap-3">
+      <button
+        type="button"
+        class="px-5 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+        (click)="cancel()"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="px-6 py-2.5 text-sm font-bold bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-lg shadow-sky-500/25 flex items-center gap-2 transition-all disabled:opacity-50"
+        [disabled]="!title.trim()"
+        (click)="save()"
+      >
+        <ion-icon name="save-outline"></ion-icon>
+        {{ existingPlay ? 'Update Play' : 'Save Play' }}
+      </button>
+    </div>
+  </div>
+</ion-content>

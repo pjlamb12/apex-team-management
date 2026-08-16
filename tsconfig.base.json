@@ -40,7 +40,13 @@
       "@apex-team/client/feature/practice-console": [
         "libs/client/feature/practice-console/src/index.ts"
       ],
-      "@apex-team/client/ui/attendance": ["libs/client/ui/attendance/src/index.ts"]
+      "@apex-team/client/ui/attendance": ["libs/client/ui/attendance/src/index.ts"],
+      "@apex-team/client/data-access/tactics": [
+        "libs/client/data-access/tactics/src/index.ts"
+      ],
+      "@apex-team/client/feature/tactic-board": [
+        "libs/client/feature/tactic-board/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

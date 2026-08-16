@@ -53,6 +53,7 @@ import { UpdatePositionSwapPayloadSchema1784500000000 } from './1784500000000-Up
 import { CreateOpponents1784600000000 } from './1784600000000-CreateOpponents';
 import { CreatePlayerAwards1784700000000 } from './1784700000000-CreatePlayerAwards';
 import { CreatePlayerGoalsAndNotes1784800000000 } from './1784800000000-CreatePlayerGoalsAndNotes';
+import { CreateTacticPlays1784900000000 } from './1784900000000-CreateTacticPlays';
 
 export const ALL_MIGRATIONS = [
   InitialSchema1744934400000,
@@ -110,6 +111,7 @@ export const ALL_MIGRATIONS = [
   CreateOpponents1784600000000,
   CreatePlayerAwards1784700000000,
   CreatePlayerGoalsAndNotes1784800000000,
+  CreateTacticPlays1784900000000,
 ];
 
 

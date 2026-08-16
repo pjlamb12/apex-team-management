@@ -14,3 +14,4 @@ export * from './lib/opponent.model';
 export * from './lib/match-recap.model';
 export * from './lib/awards.model';
 export * from './lib/idp.model';
+export * from './lib/tactic-play.model';

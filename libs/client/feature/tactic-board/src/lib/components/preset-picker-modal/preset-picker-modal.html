@@ -1,0 +1,101 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="modal-toolbar">
+    <ion-title class="font-bold text-white text-lg flex items-center gap-2">
+      <ion-icon name="flash-outline" class="text-amber-400"></ion-icon>
+      Load {{ sport === 'soccer' ? 'Soccer' : 'Volleyball' }} Preset
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()" color="medium">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding modal-content">
+  <div class="space-y-4 max-w-xl mx-auto pb-8">
+    <!-- Category filter pills -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+      <button
+        type="button"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+        [class.bg-sky-500]="activeCategory === 'all'"
+        [class.text-white]="activeCategory === 'all'"
+        [class.bg-slate-800]="activeCategory !== 'all'"
+        [class.text-slate-400]="activeCategory !== 'all'"
+        (click)="activeCategory = 'all'"
+      >
+        All Presets
+      </button>
+
+      <button
+        type="button"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+        [class.bg-sky-500]="activeCategory === 'formation'"
+        [class.text-white]="activeCategory === 'formation'"
+        [class.bg-slate-800]="activeCategory !== 'formation'"
+        [class.text-slate-400]="activeCategory !== 'formation'"
+        (click)="activeCategory = 'formation'"
+      >
+        Formations / Systems
+      </button>
+
+      <button
+        type="button"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+        [class.bg-sky-500]="activeCategory === 'set_piece'"
+        [class.text-white]="activeCategory === 'set_piece'"
+        [class.bg-slate-800]="activeCategory !== 'set_piece'"
+        [class.text-slate-400]="activeCategory !== 'set_piece'"
+        (click)="activeCategory = 'set_piece'"
+      >
+        Set Pieces & Routines
+      </button>
+    </div>
+
+    <!-- Presets Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+      @for (preset of presets; track preset.id) {
+        <div
+          class="preset-card group p-4 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/50 transition-all cursor-pointer shadow-lg hover:shadow-sky-500/10 flex flex-col justify-between"
+          (click)="selectPreset(preset)"
+        >
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span
+                class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md"
+                [class.bg-emerald-500_20]="preset.category === 'formation'"
+                [class.text-emerald-400]="preset.category === 'formation'"
+                [class.bg-amber-500_20]="preset.category === 'set_piece'"
+                [class.text-amber-400]="preset.category === 'set_piece'"
+                [class.bg-indigo-500_20]="preset.category === 'defensive'"
+                [class.text-indigo-400]="preset.category === 'defensive'"
+              >
+                {{ preset.category }}
+              </span>
+              <span class="text-xs text-slate-400 font-medium">
+                {{ preset.tokens.length }} Tokens
+              </span>
+            </div>
+
+            <h4 class="text-white font-bold text-base group-hover:text-sky-400 transition-colors">
+              {{ preset.title }}
+            </h4>
+            <p class="text-slate-400 text-xs mt-1 line-clamp-2">
+              {{ preset.description }}
+            </p>
+          </div>
+
+          <div class="pt-3 mt-3 border-t border-slate-700/50 flex items-center justify-between">
+            <span class="text-[11px] text-slate-400 font-medium">
+              {{ preset.pitchType === 'half_pitch' ? 'Half Pitch' : 'Full Pitch / Court' }}
+            </span>
+            <span class="text-xs font-bold text-sky-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+              Load Preset →
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>

@@ -1,0 +1,448 @@
+<div
+  #boardContainer
+  class="pitch-container select-none relative overflow-hidden rounded-2xl shadow-2xl"
+  [class.cursor-crosshair]="activeTool !== 'select' && activeTool !== 'eraser'"
+  [class.cursor-pointer]="activeTool === 'eraser'"
+  (pointerdown)="onBoardPointerDown($event)"
+  (pointermove)="onBoardPointerMove($event)"
+  (pointerup)="onBoardPointerUp($event)"
+>
+  <!-- BACKGROUND PITCH SVG (SOCCER) -->
+  @if (sport === 'soccer') {
+    <svg
+      class="pitch-svg absolute inset-0 w-full h-full"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <!-- Grass stripes pattern -->
+        <pattern id="soccer-stripes" width="10" height="100" patternUnits="userSpaceOnUse">
+          <rect width="5" height="100" fill="#15803d" />
+          <rect x="5" width="5" height="100" fill="#166534" />
+        </pattern>
+        <!-- Pitch gradient for depth -->
+        <linearGradient id="soccer-vignette" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#052e16" stop-opacity="0.25" />
+          <stop offset="50%" stop-color="#000000" stop-opacity="0" />
+          <stop offset="100%" stop-color="#052e16" stop-opacity="0.25" />
+        </linearGradient>
+      </defs>
+
+      <!-- Turf background -->
+      <rect width="100" height="100" fill="url(#soccer-stripes)" />
+      <rect width="100" height="100" fill="url(#soccer-vignette)" />
+
+      <!-- Field Border -->
+      <rect x="4" y="4" width="92" height="92" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+
+      @if (pitchType === 'full_pitch') {
+        <!-- Halfway line -->
+        <line x1="50" y1="4" x2="50" y2="96" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Center circle -->
+        <circle cx="50" cy="50" r="11" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <circle cx="50" cy="50" r="0.8" fill="#ffffff" opacity="0.9" />
+
+        <!-- Left Penalty Area -->
+        <rect x="4" y="24" width="16" height="52" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Left Goal Area (6-yd box) -->
+        <rect x="4" y="37" width="6" height="26" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Left Penalty Spot -->
+        <circle cx="15" cy="50" r="0.7" fill="#ffffff" opacity="0.9" />
+        <!-- Left Penalty Arc -->
+        <path d="M 20 42 A 11 11 0 0 1 20 58" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Left Goal Mouth -->
+        <rect x="1.5" y="44" width="2.5" height="12" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.7" stroke-dasharray="0.6 0.6" />
+
+        <!-- Right Penalty Area -->
+        <rect x="80" y="24" width="16" height="52" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Right Goal Area -->
+        <rect x="90" y="37" width="6" height="26" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Right Penalty Spot -->
+        <circle cx="85" cy="50" r="0.7" fill="#ffffff" opacity="0.9" />
+        <!-- Right Penalty Arc -->
+        <path d="M 80 42 A 11 11 0 0 0 80 58" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Right Goal Mouth -->
+        <rect x="96" y="44" width="2.5" height="12" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.7" stroke-dasharray="0.6 0.6" />
+
+        <!-- Corner Arcs -->
+        <path d="M 4 7 A 3 3 0 0 0 7 4" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <path d="M 4 93 A 3 3 0 0 1 7 96" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <path d="M 96 7 A 3 3 0 0 1 93 4" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <path d="M 96 93 A 3 3 0 0 0 93 96" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+      } @else if (pitchType === 'half_pitch' || pitchType === 'attacking_third') {
+        <!-- Half Pitch view with high zoom on attacking box -->
+        <!-- Center line at bottom or left -->
+        <line x1="4" y1="96" x2="96" y2="96" stroke="#ffffff" stroke-width="1.2" opacity="0.9" />
+        <path d="M 39 96 A 11 11 0 0 1 61 96" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Penalty Area (Attacking Goal at Top) -->
+        <rect x="20" y="4" width="60" height="34" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Goal Area -->
+        <rect x="36" y="4" width="28" height="12" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Penalty Spot -->
+        <circle cx="50" cy="24" r="0.8" fill="#ffffff" opacity="0.9" />
+        <!-- Penalty Arc -->
+        <path d="M 41 38 A 11 11 0 0 0 59 38" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <!-- Goal Nets -->
+        <rect x="42" y="1" width="16" height="3" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-width="0.8" />
+        <!-- Corner Arcs -->
+        <path d="M 4 7 A 3 3 0 0 0 7 4" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+        <path d="M 96 7 A 3 3 0 0 1 93 4" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.85" />
+      }
+    </svg>
+  }
+
+  <!-- BACKGROUND PITCH SVG (VOLLEYBALL) -->
+  @if (sport === 'volleyball') {
+    <svg
+      class="pitch-svg absolute inset-0 w-full h-full"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <!-- Court Hardwood Gradient -->
+        <linearGradient id="vb-court-wood" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ea580c" />
+          <stop offset="100%" stop-color="#c2410c" />
+        </linearGradient>
+        <linearGradient id="vb-free-zone" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e3a8a" />
+          <stop offset="100%" stop-color="#172554" />
+        </linearGradient>
+        <!-- Net mesh pattern -->
+        <pattern id="vb-net-mesh" width="2" height="2" patternUnits="userSpaceOnUse">
+          <path d="M 0 1 L 2 1 M 1 0 L 1 2" stroke="#ffffff" stroke-width="0.3" opacity="0.5" />
+        </pattern>
+      </defs>
+
+      <!-- Free zone surround -->
+      <rect width="100" height="100" fill="url(#vb-free-zone)" />
+
+      <!-- Playing Court (18m x 9m ratio -> 80% width x 80% height centered) -->
+      <rect x="10" y="10" width="80" height="80" fill="url(#vb-court-wood)" stroke="#ffffff" stroke-width="1.2" opacity="0.95" />
+
+      <!-- Center Line (under net) -->
+      <line x1="50" y1="10" x2="50" y2="90" stroke="#ffffff" stroke-width="1.2" opacity="0.95" />
+
+      <!-- Attack Lines (3-meter lines, 30% from center line on both sides) -->
+      <!-- Left side attack line (Pos 4, 3, 2) -->
+      <line x1="36.7" y1="10" x2="36.7" y2="90" stroke="#ffffff" stroke-width="1.2" opacity="0.95" />
+      <line x1="36.7" y1="6" x2="36.7" y2="10" stroke="#ffffff" stroke-width="0.8" stroke-dasharray="0.8 0.8" opacity="0.8" />
+      <line x1="36.7" y1="90" x2="36.7" y2="94" stroke="#ffffff" stroke-width="0.8" stroke-dasharray="0.8 0.8" opacity="0.8" />
+
+      <!-- Right side attack line -->
+      <line x1="63.3" y1="10" x2="63.3" y2="90" stroke="#ffffff" stroke-width="1.2" opacity="0.95" />
+      <line x1="63.3" y1="6" x2="63.3" y2="10" stroke="#ffffff" stroke-width="0.8" stroke-dasharray="0.8 0.8" opacity="0.8" />
+      <line x1="63.3" y1="90" x2="63.3" y2="94" stroke="#ffffff" stroke-width="0.8" stroke-dasharray="0.8 0.8" opacity="0.8" />
+
+      <!-- Net Structure across middle -->
+      <rect x="49" y="8" width="2" height="84" fill="url(#vb-net-mesh)" stroke="#ffffff" stroke-width="0.6" opacity="0.9" />
+      <line x1="49" y1="8" x2="49" y2="92" stroke="#000000" stroke-width="0.6" opacity="0.4" />
+      <line x1="51" y1="8" x2="51" y2="92" stroke="#000000" stroke-width="0.6" opacity="0.4" />
+      <!-- Red/White Antenna Markers at sidelines -->
+      <rect x="49.5" y="7" width="1" height="6" fill="#ef4444" opacity="0.9" />
+      <rect x="49.5" y="87" width="1" height="6" fill="#ef4444" opacity="0.9" />
+
+      <!-- Court Zone Labels (Watermarked in subtle text for rotational guidance) -->
+      <!-- Left team (Home side) -->
+      <text x="43" y="22" font-size="3" fill="#ffffff" opacity="0.35" text-anchor="middle" font-weight="700">4</text>
+      <text x="43" y="52" font-size="3" fill="#ffffff" opacity="0.35" text-anchor="middle" font-weight="700">3</text>
+      <text x="43" y="82" font-size="3" fill="#ffffff" opacity="0.35" text-anchor="middle" font-weight="700">2</text>
+      <text x="23" y="22" font-size="3" fill="#ffffff" opacity="0.35" text-anchor="middle" font-weight="700">5</text>
+      <text x="23" y="52" font-size="3" fill="#ffffff" opacity="0.35" text-anchor="middle" font-weight="700">6</text>
+      <text x="23" y="82" font-size="3" fill="#ffffff" opacity="0.35" text-anchor="middle" font-weight="700">1</text>
+
+      <!-- Right team (Opponent side) -->
+      <text x="57" y="22" font-size="3" fill="#ffffff" opacity="0.25" text-anchor="middle" font-weight="700">2</text>
+      <text x="57" y="52" font-size="3" fill="#ffffff" opacity="0.25" text-anchor="middle" font-weight="700">3</text>
+      <text x="57" y="82" font-size="3" fill="#ffffff" opacity="0.25" text-anchor="middle" font-weight="700">4</text>
+      <text x="77" y="22" font-size="3" fill="#ffffff" opacity="0.25" text-anchor="middle" font-weight="700">1</text>
+      <text x="77" y="52" font-size="3" fill="#ffffff" opacity="0.25" text-anchor="middle" font-weight="700">6</text>
+      <text x="77" y="82" font-size="3" fill="#ffffff" opacity="0.25" text-anchor="middle" font-weight="700">5</text>
+    </svg>
+  }
+
+  <!-- SVG DRAWING & ANNOTATION LAYER -->
+  <svg
+    class="drawing-svg absolute inset-0 w-full h-full pointer-events-none"
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+  >
+    <defs>
+      <!-- Arrowheads for each drawing color -->
+      <marker id="arrow-yellow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L6,3 z" fill="#facc15" />
+      </marker>
+      <marker id="arrow-white" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L6,3 z" fill="#ffffff" />
+      </marker>
+      <marker id="arrow-cyan" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L6,3 z" fill="#38bdf8" />
+      </marker>
+      <marker id="arrow-green" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L6,3 z" fill="#4ade80" />
+      </marker>
+      <marker id="arrow-orange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L6,3 z" fill="#fb923c" />
+      </marker>
+      <marker id="arrow-red" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L6,3 z" fill="#f87171" />
+      </marker>
+    </defs>
+
+    <!-- Persisted Drawings -->
+    @for (draw of drawings; track draw.id) {
+      @if (draw.tool === 'zone_rect') {
+        @let r = getZoneRect(draw);
+        <rect
+          class="pointer-events-auto cursor-pointer transition-opacity hover:opacity-75"
+          [attr.x]="r.x"
+          [attr.y]="r.y"
+          [attr.width]="r.width"
+          [attr.height]="r.height"
+          [attr.fill]="draw.color"
+          fill-opacity="0.25"
+          [attr.stroke]="draw.color"
+          stroke-width="0.8"
+          stroke-dasharray="1.5 1.5"
+          (click)="onDrawingClick($event, draw.id)"
+        />
+      } @else if (draw.tool === 'zone_circle') {
+        @let c = getZoneCircle(draw);
+        <ellipse
+          class="pointer-events-auto cursor-pointer transition-opacity hover:opacity-75"
+          [attr.cx]="c.cx"
+          [attr.cy]="c.cy"
+          [attr.rx]="c.rx"
+          [attr.ry]="c.ry"
+          [attr.fill]="draw.color"
+          fill-opacity="0.25"
+          [attr.stroke]="draw.color"
+          stroke-width="0.8"
+          stroke-dasharray="1.5 1.5"
+          (click)="onDrawingClick($event, draw.id)"
+        />
+      } @else {
+        <path
+          class="pointer-events-auto cursor-pointer transition-opacity hover:opacity-75"
+          [attr.d]="getSvgPath(draw)"
+          fill="none"
+          [attr.stroke]="draw.color"
+          [attr.stroke-width]="draw.width * 0.4"
+          [attr.stroke-dasharray]="draw.tool === 'pass' ? '1.5 1' : 'none'"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          [attr.marker-end]="draw.tool === 'run' || draw.tool === 'pass' || draw.tool === 'dribble' ? 'url(#arrow-yellow)' : 'none'"
+          (click)="onDrawingClick($event, draw.id)"
+        />
+      }
+    }
+
+    <!-- In-progress Drawing Stroke -->
+    @if (isDrawing()) {
+      @if (activeZoneRect; as zr) {
+        <rect
+          [attr.x]="zr.x"
+          [attr.y]="zr.y"
+          [attr.width]="zr.width"
+          [attr.height]="zr.height"
+          [attr.fill]="activeColor"
+          fill-opacity="0.3"
+          [attr.stroke]="activeColor"
+          stroke-width="0.8"
+          stroke-dasharray="1.5 1.5"
+        />
+      } @else if (activeZoneCircle; as zc) {
+        <ellipse
+          [attr.cx]="zc.cx"
+          [attr.cy]="zc.cy"
+          [attr.rx]="zc.rx"
+          [attr.ry]="zc.ry"
+          [attr.fill]="activeColor"
+          fill-opacity="0.3"
+          [attr.stroke]="activeColor"
+          stroke-width="0.8"
+          stroke-dasharray="1.5 1.5"
+        />
+      } @else if (activeDrawingPath) {
+        <path
+          [attr.d]="activeDrawingPath"
+          fill="none"
+          [attr.stroke]="activeColor"
+          [attr.stroke-width]="strokeWidth * 0.4"
+          [attr.stroke-dasharray]="activeTool === 'pass' ? '1.5 1' : 'none'"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          [attr.marker-end]="activeTool === 'run' || activeTool === 'pass' || activeTool === 'dribble' ? 'url(#arrow-yellow)' : 'none'"
+        />
+      }
+    }
+  </svg>
+
+  <!-- INTERACTIVE TOKENS LAYER -->
+  <div class="tokens-layer absolute inset-0 w-full h-full pointer-events-none">
+    @for (token of tokens; track token.id) {
+      <div
+        class="tactic-token pointer-events-auto absolute flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing select-none"
+        [class.is-dragging]="draggingTokenId() === token.id"
+        [class.is-selected]="selectedToken()?.id === token.id"
+        [class.token-home]="token.team === 'home'"
+        [class.token-away]="token.team === 'away'"
+        [class.token-ball]="token.team === 'ball'"
+        [class.token-cone]="token.team === 'cone'"
+        [style.left.%]="token.x"
+        [style.top.%]="token.y"
+        [style.transition]="isPlaying ? 'left 0.8s cubic-bezier(0.4, 0, 0.2, 1), top 0.8s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'"
+        (pointerdown)="onTokenPointerDown($event, token)"
+        (pointermove)="onTokenPointerMove($event, token)"
+        (pointerup)="onTokenPointerUp($event, token)"
+        (click)="onTokenClick($event, token)"
+      >
+        @if (token.team === 'ball') {
+          <div class="ball-token">
+            @if (sport === 'soccer') {
+              <div class="soccer-ball-disc">⚽</div>
+            } @else {
+              <div class="volleyball-disc">🏐</div>
+            }
+          </div>
+        } @else if (token.team === 'cone') {
+          <div class="cone-token">
+            <div class="cone-shape">▲</div>
+          </div>
+        } @else {
+          <div class="player-token-body">
+            <span class="player-token-label">{{ token.label }}</span>
+            @if (token.role) {
+              <span class="player-token-role">{{ token.role }}</span>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- TOKEN EDIT MODAL / DRAWER -->
+  @if (editingToken(); as tok) {
+    <div
+      class="token-edit-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+      (click)="editingToken.set(null)"
+    >
+      <div
+        class="token-edit-card bg-slate-900 border border-slate-700 text-white rounded-2xl shadow-2xl p-6 w-full max-w-sm space-y-4"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <ion-icon name="create-outline" class="text-sky-400"></ion-icon>
+            Edit Player / Token
+          </h3>
+          <button
+            class="text-slate-400 hover:text-white p-1 rounded-lg"
+            (click)="editingToken.set(null)"
+          >
+            <ion-icon name="close-outline" class="text-2xl"></ion-icon>
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Jersey / Label</label>
+            <input
+              type="text"
+              class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-sky-500"
+              [(ngModel)]="editLabel"
+              placeholder="e.g. 9 or ST or S"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Role / Position Note</label>
+            <input
+              type="text"
+              class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-sky-500"
+              [(ngModel)]="editRole"
+              placeholder="e.g. Striker, Setter, Blocker"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Team / Token Type</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button
+                type="button"
+                class="py-2 px-1 text-xs font-bold rounded-xl border flex flex-col items-center gap-1 transition-all"
+                [class.bg-blue-600]="editTeam === 'home'"
+                [class.border-blue-400]="editTeam === 'home'"
+                [class.bg-slate-800]="editTeam !== 'home'"
+                [class.border-slate-700]="editTeam !== 'home'"
+                (click)="editTeam = 'home'"
+              >
+                <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+                <span>Home</span>
+              </button>
+
+              <button
+                type="button"
+                class="py-2 px-1 text-xs font-bold rounded-xl border flex flex-col items-center gap-1 transition-all"
+                [class.bg-rose-600]="editTeam === 'away'"
+                [class.border-rose-400]="editTeam === 'away'"
+                [class.bg-slate-800]="editTeam !== 'away'"
+                [class.border-slate-700]="editTeam !== 'away'"
+                (click)="editTeam = 'away'"
+              >
+                <div class="w-4 h-4 rounded-full bg-rose-500"></div>
+                <span>Away</span>
+              </button>
+
+              <button
+                type="button"
+                class="py-2 px-1 text-xs font-bold rounded-xl border flex flex-col items-center gap-1 transition-all"
+                [class.bg-amber-600]="editTeam === 'ball'"
+                [class.border-amber-400]="editTeam === 'ball'"
+                [class.bg-slate-800]="editTeam !== 'ball'"
+                [class.border-slate-700]="editTeam !== 'ball'"
+                (click)="editTeam = 'ball'"
+              >
+                <span>⚽</span>
+                <span>Ball</span>
+              </button>
+
+              <button
+                type="button"
+                class="py-2 px-1 text-xs font-bold rounded-xl border flex flex-col items-center gap-1 transition-all"
+                [class.bg-orange-600]="editTeam === 'cone'"
+                [class.border-orange-400]="editTeam === 'cone'"
+                [class.bg-slate-800]="editTeam !== 'cone'"
+                [class.border-slate-700]="editTeam !== 'cone'"
+                (click)="editTeam = 'cone'"
+              >
+                <span class="text-orange-400">▲</span>
+                <span>Cone</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            class="px-4 py-2 text-sm font-semibold text-rose-400 hover:bg-rose-950/50 rounded-xl flex items-center gap-1 transition-colors"
+            (click)="deleteToken(tok.id)"
+          >
+            <ion-icon name="trash-outline"></ion-icon>
+            Delete
+          </button>
+
+          <button
+            type="button"
+            class="px-5 py-2.5 text-sm font-bold bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-lg shadow-sky-500/25 flex items-center gap-1 transition-all"
+            (click)="saveTokenEdit()"
+          >
+            <ion-icon name="checkmark-outline"></ion-icon>
+            Save Token
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

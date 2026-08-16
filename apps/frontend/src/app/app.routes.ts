@@ -33,6 +33,11 @@ export const appRoutes: Route[] = [
           import('@apex-team/client/feature/drill-library').then((m) => m.DRILL_LIBRARY_ROUTES),
       },
       {
+        path: 'tactics',
+        loadChildren: () =>
+          import('@apex-team/client/feature/tactic-board').then((m) => m.TACTIC_BOARD_ROUTES),
+      },
+      {
         path: 'teams/new',
         loadComponent: () =>
           import('./teams/create-team/create-team').then((m) => m.CreateTeam),

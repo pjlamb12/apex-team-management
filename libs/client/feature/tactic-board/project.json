@@ -1,0 +1,20 @@
+{
+  "name": "client-feature-tactic-board",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/client/feature/tactic-board/src",
+  "prefix": "apex-team",
+  "projectType": "library",
+  "tags": ["scope:client", "type:feature"],
+  "targets": {
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/libs/client/feature/tactic-board"],
+      "options": {
+        "configFile": "libs/client/feature/tactic-board/vitest.config.mts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

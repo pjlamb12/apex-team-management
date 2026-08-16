@@ -1,0 +1,25 @@
+.tactic-toolbar {
+  --background: #090d16;
+  --color: #f8fafc;
+  --border-color: #1e293b;
+}
+
+.tactic-content {
+  --background: #090d16;
+  --color: #f8fafc;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
