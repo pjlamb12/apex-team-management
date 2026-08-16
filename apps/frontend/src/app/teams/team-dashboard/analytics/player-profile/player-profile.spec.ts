@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PlayerProfileAnalyticsComponent } from './player-profile';
@@ -105,6 +106,7 @@ describe('PlayerProfileAnalyticsComponent', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: AnalyticsService, useValue: mockAnalyticsService },
         { provide: AwardsService, useValue: mockAwardsService },
         { provide: GoalsService, useValue: mockGoalsService },

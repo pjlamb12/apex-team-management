@@ -1,5 +1,6 @@
 import { Component, inject, signal, effect, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   IonContent,
@@ -51,7 +52,6 @@ import {
   TeamService
 } from '@apex-team/client/data-access/team';
 import { PlayerModal } from '../../player-modal/player-modal';
-import { PlayerProfileAnalyticsComponent } from '../analytics/player-profile/player-profile';
 import { ManageSeasonRosterModal } from './manage-roster-modal/manage-roster-modal';
 
 @Component({
@@ -91,6 +91,7 @@ export class Roster {
     return this._teamId() ?? '';
   }
 
+  private readonly router = inject(Router);
   private readonly playersService = inject(PlayersService);
   private readonly analyticsService = inject(AnalyticsService);
   private readonly seasonsService = inject(SeasonsService);
@@ -415,20 +416,15 @@ export class Roster {
     }
   }
 
-  protected async openPlayerAnalytics(
+  protected openPlayerAnalytics(
     player: PlayerEntity,
     tab: 'overview' | 'idp' | 'history' = 'overview',
-  ): Promise<void> {
-    const modal = await this.modalCtrl.create({
-      component: PlayerProfileAnalyticsComponent,
-      componentProps: { 
-        teamId: this.teamId,
-        playerId: player.id,
-        initialTab: tab,
+  ): void {
+    void this.router.navigate(['/teams', this.teamId, 'players', player.id], {
+      queryParams: {
+        tab,
         seasonId: this.selectedSeasonId() ?? undefined,
       },
     });
-
-    await modal.present();
   }
 }

@@ -1,11 +1,13 @@
 import { Component, inject, signal, computed, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   IonHeader,
   IonToolbar,
   IonTitle,
   IonButtons,
+  IonBackButton,
   IonButton,
   IonContent,
   IonCard,
@@ -32,6 +34,7 @@ import {
   trendingUpOutline,
   alertCircleOutline,
   closeOutline,
+  arrowBackOutline,
   checkmarkCircleOutline,
   closeCircleOutline,
   bandageOutline,
@@ -83,6 +86,7 @@ import { IdpGrowthCardModalComponent } from './idp-growth-card-modal/idp-growth-
     IonToolbar,
     IonTitle,
     IonButtons,
+    IonBackButton,
     IonButton,
     IonContent,
     IonCard,
@@ -102,16 +106,48 @@ import { IdpGrowthCardModalComponent } from './idp-growth-card-modal/idp-growth-
   styleUrl: './player-profile.scss',
 })
 export class PlayerProfileAnalyticsComponent implements OnInit {
-  @Input({ required: true }) teamId!: string;
-  @Input({ required: true }) playerId!: string;
-  @Input() initialTab: 'overview' | 'idp' | 'history' = 'overview';
-  @Input() seasonId?: string;
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+  @Input() set teamId(val: string) {
+    this._teamId.set(val);
+  }
+  @Input() set playerId(val: string) {
+    this._playerId.set(val);
+  }
+  @Input() set tab(val: 'overview' | 'idp' | 'history') {
+    if (val) this.activeTab.set(val);
+  }
+  @Input() set initialTab(val: 'overview' | 'idp' | 'history') {
+    if (val) this.activeTab.set(val);
+  }
+  @Input() set seasonId(val: string | undefined) {
+    this._seasonId.set(val);
+  }
 
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly analyticsService = inject(AnalyticsService);
   private readonly awardsService = inject(AwardsService);
   private readonly goalsService = inject(GoalsService);
   private readonly teamService = inject(TeamService);
   private readonly modalCtrl = inject(ModalController);
+
+  private _teamId = signal<string | null>(null);
+  private _playerId = signal<string | null>(null);
+  private _seasonId = signal<string | undefined>(undefined);
+
+  public get teamId(): string {
+    return this._teamId() || this.route.snapshot.paramMap.get('id') || this.route.snapshot.paramMap.get('teamId') || '';
+  }
+
+  public get playerId(): string {
+    return this._playerId() || this.route.snapshot.paramMap.get('playerId') || '';
+  }
+
+  public get seasonId(): string | undefined {
+    return this._seasonId() ?? (this.route.snapshot.queryParamMap.get('seasonId') || undefined);
+  }
 
   protected profile = signal<PlayerProfileAnalytics | null>(null);
   protected playerAwards = signal<PlayerAward[]>([]);
@@ -135,6 +171,7 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
       trendingUpOutline,
       alertCircleOutline,
       closeOutline,
+      arrowBackOutline,
       checkmarkCircleOutline,
       closeCircleOutline,
       bandageOutline,
@@ -163,8 +200,9 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (this.initialTab) {
-      this.activeTab.set(this.initialTab);
+    const queryTab = this.route.snapshot.queryParamMap.get('tab') as 'overview' | 'idp' | 'history' | null;
+    if (queryTab && (queryTab === 'overview' || queryTab === 'idp' || queryTab === 'history')) {
+      this.activeTab.set(queryTab);
     }
     void this.loadData();
   }
@@ -195,6 +233,11 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
 
   protected setTab(tab: 'overview' | 'idp' | 'history'): void {
     this.activeTab.set(tab);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected async openAddGoalModal(goal?: PlayerGoal): Promise<void> {
@@ -307,7 +350,11 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
   }
 
   protected async dismiss() {
-    await this.modalCtrl.dismiss();
+    try {
+      await this.modalCtrl.dismiss();
+    } catch {
+      await this.router.navigate(['/teams', this.teamId, 'roster']);
+    }
   }
 
   protected formatMinutes(seconds: number): string {
