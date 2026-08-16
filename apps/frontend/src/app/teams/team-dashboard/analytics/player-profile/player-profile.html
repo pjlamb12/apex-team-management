@@ -226,8 +226,8 @@
       <!-- ================= TAB 2: IDP & DEVELOPMENT GOALS ================= -->
       @if (activeTab() === 'idp') {
         <!-- Action & Summary Bar -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-ap-surface border border-ap-border rounded-2xl p-4 shadow-sm">
-          <div class="flex flex-col">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-ap-surface border border-ap-border rounded-2xl p-4 shadow-sm">
+          <div class="flex flex-col min-w-0">
             <span class="text-[10px] font-black uppercase tracking-widest text-ap-accent">Development Roadmap</span>
             <h2 class="text-lg font-black text-ap-text uppercase tracking-tight">Individual Development Plan (IDP)</h2>
             <div class="flex items-center gap-3 text-xs font-bold text-ap-muted mt-1">
@@ -239,12 +239,12 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-2 w-full sm:w-auto">
+          <div class="flex flex-row sm:flex-col gap-2 w-full sm:w-36 shrink-0">
             <ion-button
               fill="outline"
               color="primary"
               size="small"
-              class="font-black uppercase tracking-wider flex-1 sm:flex-none"
+              class="font-black uppercase tracking-wider flex-1 sm:w-full ion-no-margin"
               (click)="openGrowthCardModal()"
             >
               <ion-icon name="document-text-outline" slot="start"></ion-icon>
@@ -254,7 +254,7 @@
             <ion-button
               color="primary"
               size="small"
-              class="font-black uppercase tracking-wider flex-1 sm:flex-none"
+              class="font-black uppercase tracking-wider flex-1 sm:w-full ion-no-margin"
               (click)="openAddGoalModal()"
             >
               <ion-icon name="add-outline" slot="start"></ion-icon>
