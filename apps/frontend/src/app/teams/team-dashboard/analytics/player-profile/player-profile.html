@@ -16,13 +16,13 @@
   </ion-toolbar>
 
   <!-- Segmented Navigation -->
-  <div class="px-4 py-2 bg-ap-surface border-b border-ap-border">
-    <div class="grid grid-cols-3 gap-1 p-1 bg-ap-bg rounded-xl border border-ap-border max-w-xl mx-auto">
+  <div class="px-4 py-2.5 bg-ap-surface border-b border-ap-border">
+    <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-ap-bg rounded-2xl border border-ap-border max-w-xl mx-auto">
       <button
         type="button"
         (click)="setTab('overview')"
-        class="py-2 px-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-        [ngClass]="activeTab() === 'overview' ? 'bg-ap-surface text-ap-text shadow-sm border border-ap-border' : 'text-ap-muted hover:text-ap-text'"
+        class="py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+        [ngClass]="activeTab() === 'overview' ? 'bg-blue-500/15 text-blue-500 border border-blue-500/30' : 'text-ap-muted hover:text-ap-text hover:bg-ap-surface/40 border border-transparent'"
       >
         <ion-icon name="stats-chart-outline" class="text-sm"></ion-icon>
         <span class="truncate">Overview</span>
@@ -31,13 +31,13 @@
       <button
         type="button"
         (click)="setTab('idp')"
-        class="py-2 px-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-        [ngClass]="activeTab() === 'idp' ? 'bg-ap-surface text-ap-accent shadow-sm border border-ap-border' : 'text-ap-muted hover:text-ap-text'"
+        class="py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+        [ngClass]="activeTab() === 'idp' ? 'bg-blue-500/15 text-blue-500 border border-blue-500/30' : 'text-ap-muted hover:text-ap-text hover:bg-ap-surface/40 border border-transparent'"
       >
         <ion-icon name="flag-outline" class="text-sm"></ion-icon>
         <span class="truncate">IDP & Goals</span>
         @if (playerGoals().length > 0) {
-          <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-ap-accent/15 text-ap-accent">
+          <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold" [ngClass]="activeTab() === 'idp' ? 'bg-blue-500/25 text-blue-600' : 'bg-ap-surface-raised text-ap-muted border border-ap-border'">
             {{ playerGoals().length }}
           </span>
         }
@@ -46,8 +46,8 @@
       <button
         type="button"
         (click)="setTab('history')"
-        class="py-2 px-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-        [ngClass]="activeTab() === 'history' ? 'bg-ap-surface text-ap-text shadow-sm border border-ap-border' : 'text-ap-muted hover:text-ap-text'"
+        class="py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+        [ngClass]="activeTab() === 'history' ? 'bg-blue-500/15 text-blue-500 border border-blue-500/30' : 'text-ap-muted hover:text-ap-text hover:bg-ap-surface/40 border border-transparent'"
       >
         <ion-icon name="time-outline" class="text-sm"></ion-icon>
         <span class="truncate">History</span>
