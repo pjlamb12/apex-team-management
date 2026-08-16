@@ -1,0 +1,190 @@
+<ion-header class="ion-no-border no-print">
+  <ion-toolbar class="bg-ap-surface border-b border-ap-border">
+    <ion-title class="text-base font-black uppercase tracking-wider text-ap-text">
+      Player Development Summary Card
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button color="primary" class="font-black uppercase tracking-wider mr-2" (click)="printCard()">
+        <ion-icon name="print-outline" slot="start"></ion-icon>
+        Print / PDF
+      </ion-button>
+      <ion-button (click)="dismiss()" class="text-ap-muted hover:text-ap-text">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg print-container">
+  <div class="p-4 sm:p-8 max-w-3xl mx-auto">
+
+    <!-- Printable Card Container -->
+    <div class="growth-card bg-white text-slate-900 border border-slate-300 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col gap-6">
+
+      <!-- Header: Athlete & Team Info -->
+      <div class="flex items-start justify-between border-b-2 border-slate-900 pb-5">
+        <div class="flex flex-col">
+          <span class="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-0.5">Individual Player Development Plan (IDP)</span>
+          <h1 class="text-3xl font-black tracking-tight text-slate-950 font-heading">
+            {{ profile.player.firstName }} {{ profile.player.lastName }}
+          </h1>
+          <div class="flex items-center gap-3 mt-1 text-xs font-bold text-slate-600 uppercase tracking-wide">
+            <span>{{ teamName }}</span>
+            @if (seasonName) {
+              <span>•</span>
+              <span>{{ seasonName }}</span>
+            }
+            @if (profile.player.preferredPosition) {
+              <span>•</span>
+              <span>Position: {{ profile.player.preferredPosition }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="text-right flex flex-col items-end">
+          @if (profile.player.jerseyNumber !== null && profile.player.jerseyNumber !== undefined) {
+            <div class="text-3xl font-black text-blue-600 italic">#{{ profile.player.jerseyNumber }}</div>
+          }
+          <span class="text-[10px] text-slate-500 font-bold uppercase mt-1">Generated {{ currentDate | date:'mediumDate' }}</span>
+        </div>
+      </div>
+
+      <!-- Quick Season Stats Bar -->
+      <div class="grid grid-cols-4 gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
+        <div>
+          <div class="text-[9px] font-black uppercase text-slate-500 tracking-wider">Matches</div>
+          <div class="text-lg font-black text-slate-900">{{ profile.totalGamesPlayed }}</div>
+        </div>
+        <div>
+          <div class="text-[9px] font-black uppercase text-slate-500 tracking-wider">Minutes</div>
+          <div class="text-lg font-black text-slate-900">{{ profile.totalMinutes }}m</div>
+        </div>
+        <div>
+          <div class="text-[9px] font-black uppercase text-slate-500 tracking-wider">Goals / Ast</div>
+          <div class="text-lg font-black text-blue-600">{{ profile.totalGoals }} / {{ profile.totalAssists }}</div>
+        </div>
+        <div>
+          <div class="text-[9px] font-black uppercase text-slate-500 tracking-wider">Skill Honors</div>
+          <div class="text-lg font-black text-amber-500">{{ awards.length }}</div>
+        </div>
+      </div>
+
+      <!-- Developmental Goals Section -->
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+          <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+            <span>🎯</span> Season Developmental Goals & Mastery Progression
+          </h2>
+          <span class="text-xs font-bold text-slate-500">{{ goals.length }} Target Goals</span>
+        </div>
+
+        @if (goals.length > 0) {
+          <div class="flex flex-col gap-4">
+            @for (goal of goals; track goal.id; let idx = $index) {
+              <div class="border border-slate-200 rounded-2xl p-4 bg-slate-50/70 flex flex-col gap-2.5">
+                
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-black text-blue-600">Goal #{{ idx + 1 }}</span>
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 uppercase">
+                        {{ goal.category }}
+                      </span>
+                    </div>
+                    <h3 class="text-base font-black text-slate-900 mt-0.5">{{ goal.title }}</h3>
+                  </div>
+
+                  <!-- Mastery Badge -->
+                  <div class="shrink-0 text-right">
+                    <span class="inline-flex items-center gap-1 text-[11px] font-black uppercase px-2.5 py-1 rounded-full"
+                      [ngClass]="{
+                        'bg-amber-100 text-amber-800 border border-amber-300': goal.masteryStage === 'emerging',
+                        'bg-blue-100 text-blue-800 border border-blue-300': goal.masteryStage === 'developing',
+                        'bg-emerald-100 text-emerald-800 border border-emerald-300': goal.masteryStage === 'mastered'
+                      }"
+                    >
+                      @if (goal.masteryStage === 'mastered') { 🌟 Mastered }
+                      @else if (goal.masteryStage === 'developing') { 🌿 Developing }
+                      @else { 🌱 Emerging }
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Baseline Assessment -->
+                @if (goal.baselineAssessment) {
+                  <div class="text-xs text-slate-700 bg-white border border-slate-200 rounded-xl p-2.5">
+                    <span class="font-bold text-slate-900">Starting Baseline:</span> {{ goal.baselineAssessment }}
+                  </div>
+                }
+
+                <!-- Latest Coaching Notes Timeline -->
+                @if (goal.notes && goal.notes.length > 0) {
+                  <div class="flex flex-col gap-1.5 mt-1">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Coach Progress Observations:</span>
+                    <div class="flex flex-col gap-1">
+                      @for (n of goal.notes; track n.id) {
+                        <div class="text-xs text-slate-700 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1.5 flex items-start justify-between gap-2">
+                          <div class="flex-1">
+                            <span class="font-semibold italic">"{{ n.note }}"</span>
+                            @if (n.event?.opponent) {
+                              <span class="text-[10px] text-slate-500 ml-1.5">(vs {{ n.event?.opponent }})</span>
+                            }
+                          </div>
+                          <span class="text-[10px] text-slate-500 shrink-0">{{ n.observedAt | date:'mediumDate' }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="py-6 text-center text-slate-500 italic text-xs">
+            No specific IDP goals recorded yet for this season.
+          </div>
+        }
+      </div>
+
+      <!-- Trophy Case & Honors Earned -->
+      @if (awards.length > 0) {
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <span class="text-amber-500">🏆</span> Honors & Skill Badges
+            </h2>
+            <span class="text-xs font-bold text-amber-600">{{ awards.length }} Badges Earned</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            @for (award of awards; track award.id) {
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center shrink-0">
+                  <ion-icon [name]="award.icon" class="text-base"></ion-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-bold text-slate-900 truncate">{{ award.title }}</div>
+                  <div class="text-[10px] text-slate-500">{{ award.awardedAt | date:'mediumDate' }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Coach Sign-off Block -->
+      <div class="mt-4 pt-4 border-t-2 border-slate-300 grid grid-cols-2 gap-8 text-xs">
+        <div>
+          <div class="h-8 border-b border-slate-400"></div>
+          <div class="text-[10px] font-black uppercase tracking-wider text-slate-600 mt-1">Head Coach Signature</div>
+        </div>
+        <div>
+          <div class="h-8 border-b border-slate-400"></div>
+          <div class="text-[10px] font-black uppercase tracking-wider text-slate-600 mt-1">Player / Parent Signature</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</ion-content>

@@ -18,14 +18,14 @@ The following five features are prioritized for immediate planning and implement
 │ #2 │ AI Post-Match Recap         │ ✅ COMPLETED: 1-click automated parent comms & recap│
 │    │ (Item 11)                   │ generator via Gemini 3.6 Flash & match stream.      │
 ├────┼─────────────────────────────┼─────────────────────────────────────────────────────┤
-│ #3 │ "Player of the Match" &     │ ⏳ NEXT: Positive reinforcement badge system        │
+│ #3 │ "Player of the Match" &     │ ✅ COMPLETED: Positive reinforcement badge system   │
 │    │ Skill Badges (Item 12)      │ celebrating effort, defense, and playmaking.        │
 ├────┼─────────────────────────────┼─────────────────────────────────────────────────────┤
 │ #4 │ Multi-Context Tactic Board  │ Digital interactive whiteboard & set piece library  │
 │    │ & Playbook (Item 1)         │ for games, practices, and team tactical sessions.   │
 ├────┼─────────────────────────────┼─────────────────────────────────────────────────────┤
-│ #5 │ Individual Player Goals &   │ 1-on-1 goal setting, qualitative observation notes, │
-│    │ IDP Tracking (Item 6)       │ milestone tracking, and seasonal player reviews.    │
+│ #5 │ Individual Player Goals &   │ ✅ COMPLETED: 1-on-1 goal setting, qualitative    │
+│    │ IDP Tracking (Item 6)       │ observations, mastery tracking, and growth cards.   │
 └────┴─────────────────────────────┴─────────────────────────────────────────────────────┘
 ```
 
@@ -194,11 +194,11 @@ gantt
     section High Priority
     Opponent Dossier & Match History (Item 2)        :done, p1, 2026-08-10, 3d
     1-Click AI Match Recap & Parent Comms (Item 11)   :done, p2, 2026-08-13, 2d
-    Player of the Match & Skill Badges (Item 12)     :active, p3, 2026-08-15, 10d
-    Multi-Context Digital Tactic Board (Item 1)      :p4, after p3, 18d
-    Player IDPs & Goal Tracking (Item 6)             :p5, after p4, 14d
+    Player of the Match & Skill Badges (Item 12)     :done, p3, 2026-08-15, 2d
+    Player IDPs & Goal Tracking (Item 6)             :done, p5, 2026-08-16, 2d
+    Multi-Context Digital Tactic Board (Item 1)      :p4, after p5, 18d
     section Medium Priority
-    Pre-Game RSVP & Lineup Generator (Item 4)        :p6, after p5, 12d
+    Pre-Game RSVP & Lineup Generator (Item 4)        :p6, after p4, 12d
     Halftime Assistant & Sub Balancer (Item 3)       :p7, after p6, 10d
     Skill Combine Benchmark Tracker (Item 7)         :p8, after p7, 12d
 ```

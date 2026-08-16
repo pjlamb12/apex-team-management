@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+ion-content {
+  --background: var(--ap-bg, #0f172a);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  ion-content {
+    --background: white !important;
+  }
+
+  .print-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  .growth-card {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    page-break-inside: avoid;
+  }
+}

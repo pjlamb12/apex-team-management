@@ -1,283 +1,549 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar>
-    <ion-title>{{ profile()?.player?.firstName }} {{ profile()?.player?.lastName }}</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="dismiss()">
-        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-      </ion-button>
+  <ion-toolbar class="bg-ap-surface border-b border-ap-border">
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/teams/' + teamId + '/roster'" class="text-ap-text"></ion-back-button>
     </ion-buttons>
+    <ion-title class="text-base sm:text-lg font-black uppercase tracking-tight text-ap-text">
+      @if (profile()?.player?.jerseyNumber !== null && profile()?.player?.jerseyNumber !== undefined) {
+        <span class="text-ap-accent italic mr-1">#{{ profile()?.player?.jerseyNumber }}</span>
+      }
+      {{ profile()?.player?.firstName }} {{ profile()?.player?.lastName }}
+    </ion-title>
   </ion-toolbar>
+
+  <!-- Segmented Navigation -->
+  <div class="px-4 py-2 bg-ap-surface border-b border-ap-border">
+    <div class="grid grid-cols-3 max-w-xl mx-auto">
+      <button
+        type="button"
+        (click)="setTab('overview')"
+        class="py-2.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+        [ngClass]="activeTab() === 'overview' ? 'text-blue-500' : 'text-ap-muted hover:text-ap-text'"
+      >
+        <ion-icon name="stats-chart-outline" class="text-sm"></ion-icon>
+        <span class="truncate">Overview</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="setTab('idp')"
+        class="py-2.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+        [ngClass]="activeTab() === 'idp' ? 'text-blue-500' : 'text-ap-muted hover:text-ap-text'"
+      >
+        <ion-icon name="flag-outline" class="text-sm"></ion-icon>
+        <span class="truncate">IDP & Goals</span>
+        @if (playerGoals().length > 0) {
+          <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold" [ngClass]="activeTab() === 'idp' ? 'bg-blue-500/15 text-blue-500' : 'bg-ap-surface-raised text-ap-muted border border-ap-border'">
+            {{ playerGoals().length }}
+          </span>
+        }
+      </button>
+
+      <button
+        type="button"
+        (click)="setTab('history')"
+        class="py-2.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+        [ngClass]="activeTab() === 'history' ? 'text-blue-500' : 'text-ap-muted hover:text-ap-text'"
+      >
+        <ion-icon name="time-outline" class="text-sm"></ion-icon>
+        <span class="truncate">History</span>
+      </button>
+    </div>
+  </div>
 </ion-header>
 
 <ion-content class="bg-ap-bg">
-  <div class="p-4 pb-16 flex flex-col gap-6">
+  <div class="p-4 pb-16 flex flex-col gap-6 max-w-4xl mx-auto">
     @if (isLoading()) {
       <div class="flex flex-col items-center justify-center py-20 gap-4">
         <ion-spinner name="crescent" color="primary"></ion-spinner>
       </div>
+    } @else if (errorMessage()) {
+      <div class="text-center py-20 text-ap-danger font-bold">
+        <ion-icon name="alert-circle-outline" class="text-4xl mb-2"></ion-icon>
+        <p>{{ errorMessage() }}</p>
+      </div>
     } @else if (profile(); as p) {
-      <!-- Summary Grid -->
-      <div class="grid grid-cols-2 gap-4">
-        @if (sportName() === 'Volleyball') {
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Kills</div>
-              <div class="text-3xl font-black text-red-500 summary-value">{{ p.totalKills || 0 }}</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Aces</div>
-              <div class="text-3xl font-black text-amber-500 summary-value">{{ p.totalAces || 0 }}</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocks</div>
-              <div class="text-3xl font-black text-blue-500 summary-value">{{ p.totalBlocks || 0 }}</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Digs</div>
-              <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalDigs || 0 }}</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Assists</div>
-              <div class="text-3xl font-black text-purple-500 summary-value">{{ p.totalAssists || 0 }}</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Points</div>
-              <div class="text-3xl font-black text-blue-500 summary-value">{{ p.totalMinutes }} pts</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Errors</div>
-              <div class="text-3xl font-black text-red-500 summary-value">{{ (p.totalServiceErrors || 0) + (p.totalHittingErrors || 0) }}</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Games</div>
-              <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalGamesPlayed }}</div>
-            </ion-card-content>
-          </ion-card>
-        } @else {
-          @if (p.player.preferredPosition === 'Goalkeeper') {
-            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-              <ion-card-content class="flex flex-col items-center py-6">
-                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocked Shots</div>
-                <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalBlockedShots || 0 }}</div>
+
+      <!-- ================= TAB 1: OVERVIEW & STATS ================= -->
+      @if (activeTab() === 'overview') {
+        <!-- Summary Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          @if (sportName() === 'Volleyball') {
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+              <ion-card-content class="flex flex-col items-center py-4">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Kills</div>
+                <div class="text-2xl font-black text-red-500 summary-value">{{ p.totalKills || 0 }}</div>
               </ion-card-content>
             </ion-card>
-            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-              <ion-card-content class="flex flex-col items-center py-6">
-                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocked PKs</div>
-                <div class="text-3xl font-black text-emerald-500 summary-value">{{ p.totalBlockedPenaltyKicks || 0 }}</div>
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+              <ion-card-content class="flex flex-col items-center py-4">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Aces</div>
+                <div class="text-2xl font-black text-amber-500 summary-value">{{ p.totalAces || 0 }}</div>
+              </ion-card-content>
+            </ion-card>
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+              <ion-card-content class="flex flex-col items-center py-4">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Blocks</div>
+                <div class="text-2xl font-black text-blue-500 summary-value">{{ p.totalBlocks || 0 }}</div>
+              </ion-card-content>
+            </ion-card>
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+              <ion-card-content class="flex flex-col items-center py-4">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Digs</div>
+                <div class="text-2xl font-black text-emerald-500 summary-value">{{ p.totalDigs || 0 }}</div>
+              </ion-card-content>
+            </ion-card>
+          } @else {
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+              <ion-card-content class="flex flex-col items-center py-4">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Goals</div>
+                <div class="text-2xl font-black text-blue-500 summary-value">{{ p.totalGoals }}</div>
+              </ion-card-content>
+            </ion-card>
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+              <ion-card-content class="flex flex-col items-center py-4">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Assists</div>
+                <div class="text-2xl font-black text-amber-500 summary-value">{{ p.totalAssists }}</div>
+              </ion-card-content>
+            </ion-card>
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+              <ion-card-content class="flex flex-col items-center py-4">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Minutes</div>
+                <div class="text-2xl font-black text-ap-text summary-value">{{ p.totalMinutes }}m</div>
+              </ion-card-content>
+            </ion-card>
+            <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+              <ion-card-content class="flex flex-col items-center py-4">
+                <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Games</div>
+                <div class="text-2xl font-black text-ap-text summary-value">{{ p.totalGamesPlayed }}</div>
               </ion-card-content>
             </ion-card>
           }
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Goals</div>
-              <div class="text-3xl font-black text-blue-500 summary-value">{{ p.totalGoals }}</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Assists</div>
-              <div class="text-3xl font-black text-amber-500 summary-value">{{ p.totalAssists }}</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Minutes</div>
-              <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalMinutes }}m</div>
-            </ion-card-content>
-          </ion-card>
-          <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-            <ion-card-content class="flex flex-col items-center py-6">
-              <div class="text-[10px] font-black uppercase tracking-widest text-ap-muted mb-1 summary-label">Games</div>
-              <div class="text-3xl font-black text-ap-text summary-value">{{ p.totalGamesPlayed }}</div>
-            </ion-card-content>
-          </ion-card>
-        }
-      </div>
-      @if (errorMessage()) {
-        <div class="text-center py-20 text-ap-danger font-bold">
-          <ion-icon name="alert-circle-outline" class="text-4xl mb-2"></ion-icon>
-          <p>{{ errorMessage() }}</p>
         </div>
+
+        <!-- Position Distribution -->
+        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+          <ion-card-header class="px-4 pt-4 pb-2">
+            <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+              <ion-icon name="shirt-outline"></ion-icon>
+              Position Distribution
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content class="p-0">
+            <ion-list lines="full" class="bg-transparent">
+              @for (pos of p.positionDistribution | keyvalue; track pos.key) {
+                <ion-item class="bg-transparent">
+                  <ion-label>
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="font-bold text-ap-text text-sm">{{ pos.key }}</span>
+                      @if (sportName() === 'Volleyball') {
+                        <span class="text-xs font-black text-ap-muted">{{ pos.value }} pts ({{ Math.round((pos.value / (p.totalMinutes || 1)) * 100) }}%)</span>
+                      } @else {
+                        <span class="text-xs font-black text-ap-muted">{{ formatMinutes(pos.value) }}</span>
+                      }
+                    </div>
+                    @if (sportName() === 'Volleyball') {
+                      <ion-progress-bar 
+                        [value]="pos.value / (p.totalMinutes || 1)" 
+                        [class]="getHeatmapClass(pos.value, p.totalMinutes)"
+                        class="h-1 rounded-full">
+                      </ion-progress-bar>
+                    } @else {
+                      <ion-progress-bar 
+                        [value]="pos.value / (p.totalMinutes * 60 || 1)" 
+                        [class]="getHeatmapClass(pos.value, p.totalMinutes * 60)"
+                        class="h-1 rounded-full">
+                      </ion-progress-bar>
+                    }
+                  </ion-label>
+                </ion-item>
+              } @empty {
+                <div class="py-8 text-center text-ap-muted italic text-xs">No position data available.</div>
+              }
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Trophy Case & Honors -->
+        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+          <ion-card-header class="px-4 pt-4 pb-2">
+            <div class="flex items-center justify-between">
+              <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                <ion-icon name="trophy-outline" class="text-amber-400"></ion-icon>
+                Trophy Case & Honors
+              </ion-card-title>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                {{ playerAwards().length }} {{ playerAwards().length === 1 ? 'Award' : 'Awards' }}
+              </span>
+            </div>
+          </ion-card-header>
+          <ion-card-content class="px-4 pb-4 pt-2">
+            @if (playerAwards().length > 0) {
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                @for (award of playerAwards(); track award.id) {
+                  <div class="p-3.5 rounded-xl bg-ap-bg border border-ap-border flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 mt-0.5" [ngClass]="{
+                      'bg-amber-500/15 text-amber-400 border border-amber-500/30': award.color === 'amber',
+                      'bg-blue-500/15 text-blue-400 border border-blue-500/30': award.color === 'blue',
+                      'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': award.color === 'emerald',
+                      'bg-rose-500/15 text-rose-400 border border-rose-500/30': award.color === 'rose',
+                      'bg-purple-500/15 text-purple-400 border border-purple-500/30': award.color === 'purple',
+                      'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30': award.color === 'indigo',
+                      'bg-red-500/15 text-red-400 border border-red-500/30': award.color === 'red'
+                    }">
+                      <ion-icon [name]="award.icon"></ion-icon>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between gap-1">
+                        <span class="text-xs font-bold text-ap-text uppercase tracking-wide">{{ award.title }}</span>
+                        <span class="text-[10px] text-ap-muted">{{ award.awardedAt | date:'mediumDate' }}</span>
+                      </div>
+                      @if (award.event?.opponent) {
+                        <div class="text-[11px] font-semibold text-ap-muted mt-0.5">vs {{ award.event?.opponent }}</div>
+                      }
+                      @if (award.notes) {
+                        <p class="text-[11px] text-ap-text/90 italic mt-1 leading-snug">"{{ award.notes }}"</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="py-8 text-center text-ap-muted italic text-xs flex flex-col items-center gap-2">
+                <ion-icon name="ribbon-outline" class="text-2xl opacity-40"></ion-icon>
+                <span>No honors or skill badges recorded yet this season.</span>
+              </div>
+            }
+          </ion-card-content>
+        </ion-card>
       }
 
-      <!-- Position Distribution -->
-      <ion-card class="m-0 border border-ap-border shadow-none">
-        <ion-card-header class="px-4 pt-4 pb-2">
-          <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
-            <ion-icon name="shirt-outline"></ion-icon>
-            Position Distribution
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content class="p-0">
-          <ion-list lines="full">
-            @for (pos of p.positionDistribution | keyvalue; track pos.key) {
-              <ion-item>
-                <ion-label>
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="font-bold text-ap-text">{{ pos.key }}</span>
-                    @if (sportName() === 'Volleyball') {
-                      <span class="text-xs font-black text-ap-muted">{{ pos.value }} pts ({{ Math.round((pos.value / (p.totalMinutes || 1)) * 100) }}%)</span>
-                    } @else {
-                      <span class="text-xs font-black text-ap-muted">{{ formatMinutes(pos.value) }}</span>
-                    }
-                  </div>
-                  @if (sportName() === 'Volleyball') {
-                    <ion-progress-bar 
-                      [value]="pos.value / (p.totalMinutes || 1)" 
-                      [class]="getHeatmapClass(pos.value, p.totalMinutes)"
-                      class="h-1 rounded-full">
-                    </ion-progress-bar>
-                  } @else {
-                    <ion-progress-bar 
-                      [value]="pos.value / (p.totalMinutes * 60 || 1)" 
-                      [class]="getHeatmapClass(pos.value, p.totalMinutes * 60)"
-                      class="h-1 rounded-full">
-                    </ion-progress-bar>
-                  }
-                </ion-label>
-              </ion-item>
-            } @empty {
-              <div class="py-12 text-center text-ap-muted italic text-sm">No position data available.</div>
-            }
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Trophy Case & Honors -->
-      <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface">
-        <ion-card-header class="px-4 pt-4 pb-2">
-          <div class="flex items-center justify-between">
-            <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
-              <ion-icon name="trophy-outline" class="text-amber-400"></ion-icon>
-              Trophy Case & Honors
-            </ion-card-title>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              {{ playerAwards().length }} {{ playerAwards().length === 1 ? 'Award' : 'Awards' }}
-            </span>
+      <!-- ================= TAB 2: IDP & DEVELOPMENT GOALS ================= -->
+      @if (activeTab() === 'idp') {
+        <!-- Action & Summary Bar -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-ap-surface border border-ap-border rounded-2xl p-4 shadow-sm">
+          <div class="flex flex-col min-w-0">
+            <span class="text-[10px] font-black uppercase tracking-widest text-ap-accent">Development Roadmap</span>
+            <h2 class="text-lg font-black text-ap-text uppercase tracking-tight">Individual Development Plan (IDP)</h2>
+            <div class="flex items-center gap-3 text-xs font-bold text-ap-muted mt-1">
+              <span>{{ playerGoals().length }} Goals Tracked</span>
+              <span>•</span>
+              <span class="text-emerald-400">
+                {{ masteredGoalsCount() }} Mastered
+              </span>
+            </div>
           </div>
-        </ion-card-header>
-        <ion-card-content class="px-4 pb-4 pt-2">
-          @if (playerAwards().length > 0) {
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              @for (award of playerAwards(); track award.id) {
-                <div class="p-3.5 rounded-xl bg-ap-bg border border-ap-border flex items-start gap-3 transition-all">
-                  <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 mt-0.5" [ngClass]="{
-                    'bg-amber-500/15 text-amber-400 border border-amber-500/30': award.color === 'amber',
-                    'bg-blue-500/15 text-blue-400 border border-blue-500/30': award.color === 'blue',
-                    'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': award.color === 'emerald',
-                    'bg-rose-500/15 text-rose-400 border border-rose-500/30': award.color === 'rose',
-                    'bg-purple-500/15 text-purple-400 border border-purple-500/30': award.color === 'purple',
-                    'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30': award.color === 'indigo',
-                    'bg-red-500/15 text-red-400 border border-red-500/30': award.color === 'red'
-                  }">
-                    <ion-icon [name]="award.icon"></ion-icon>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-1">
-                      <span class="text-xs font-bold text-ap-text uppercase tracking-wide">{{ award.title }}</span>
-                      <span class="text-[10px] text-ap-muted">{{ award.awardedAt | date:'mediumDate' }}</span>
+
+          <div class="flex flex-row sm:flex-col gap-2 w-full sm:w-36 shrink-0">
+            <ion-button
+              fill="outline"
+              color="primary"
+              size="small"
+              class="font-black uppercase tracking-wider flex-1 sm:w-full ion-no-margin"
+              (click)="openGrowthCardModal()"
+            >
+              <ion-icon name="document-text-outline" slot="start"></ion-icon>
+              Growth Card
+            </ion-button>
+
+            <ion-button
+              color="primary"
+              size="small"
+              class="font-black uppercase tracking-wider flex-1 sm:w-full ion-no-margin"
+              (click)="openAddGoalModal()"
+            >
+              <ion-icon name="add-outline" slot="start"></ion-icon>
+              Set Goal
+            </ion-button>
+          </div>
+        </div>
+
+        <!-- Goals List -->
+        @if (playerGoals().length > 0) {
+          <div class="flex flex-col gap-4">
+            @for (goal of playerGoals(); track goal.id; let idx = $index) {
+              <div class="p-4 sm:p-5 rounded-2xl bg-ap-surface border border-ap-border shadow-sm flex flex-col gap-4">
+                
+                <!-- Goal Top Bar -->
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-xs font-black uppercase tracking-wider text-ap-accent">Goal #{{ idx + 1 }}</span>
+                      <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border" [ngClass]="{
+                        'bg-blue-500/15 border-blue-500/30 text-blue-400': goal.category === 'technical',
+                        'bg-purple-500/15 border-purple-500/30 text-purple-400': goal.category === 'tactical',
+                        'bg-emerald-500/15 border-emerald-500/30 text-emerald-400': goal.category === 'physical',
+                        'bg-amber-500/15 border-amber-500/30 text-amber-400': goal.category === 'mental' || goal.category === 'positional',
+                        'bg-slate-500/15 border-slate-500/30 text-slate-400': goal.category === 'general'
+                      }">
+                        {{ goal.category }}
+                      </span>
+                      <span class="text-[10px] text-ap-muted uppercase font-bold">
+                        Target: {{ goal.timeframe | uppercase }}
+                      </span>
                     </div>
-                    @if (award.event?.opponent) {
-                      <div class="text-[11px] font-semibold text-ap-muted mt-0.5">vs {{ award.event?.opponent }}</div>
-                    }
-                    @if (award.notes) {
-                      <p class="text-[11px] text-ap-text/90 italic mt-1 leading-snug">"{{ award.notes }}"</p>
-                    }
+
+                    <h3 class="text-base sm:text-lg font-black text-ap-text mt-1">{{ goal.title }}</h3>
+                  </div>
+
+                  <!-- Goal Action Buttons -->
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      (click)="openAddGoalModal(goal)"
+                      class="p-2 rounded-lg text-ap-muted hover:text-ap-text hover:bg-ap-surface-raised cursor-pointer"
+                      title="Edit Goal"
+                    >
+                      <ion-icon name="create-outline" class="text-base"></ion-icon>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="deleteGoal(goal)"
+                      class="p-2 rounded-lg text-ap-muted hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
+                      title="Delete Goal"
+                    >
+                      <ion-icon name="trash-outline" class="text-base"></ion-icon>
+                    </button>
                   </div>
                 </div>
-              }
-            </div>
-          } @else {
-            <div class="py-8 text-center text-ap-muted italic text-xs flex flex-col items-center gap-2">
-              <ion-icon name="ribbon-outline" class="text-2xl opacity-40"></ion-icon>
-              <span>No honors or skill badges recorded yet this season.</span>
-            </div>
-          }
-        </ion-card-content>
-      </ion-card>
 
-      <!-- History Log -->
-      <ion-card class="m-0 border border-ap-border shadow-none">
-        <ion-card-header class="px-4 pt-4 pb-2">
-          <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
-            <ion-icon name="time-outline"></ion-icon>
-            Session History
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content class="p-0">
-          <ion-list lines="full">
-            @for (h of p.history; track h.eventId) {
-              <ion-item>
-                <ion-icon slot="start" [name]="getStatusIcon(h.status)" [color]="getStatusColor(h.status)" class="mr-3"></ion-icon>
-                <ion-label>
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <div class="font-bold text-ap-text">{{ h.eventName }}</div>
-                      <div class="text-[10px] text-ap-muted uppercase">{{ h.scheduledAt | date:'mediumDate' }}</div>
-                    </div>
-                    <div class="text-right">
-                       @if (h.eventType === 'game') {
-                          <div class="flex items-center justify-end gap-2 flex-wrap max-w-[200px]">
-                             @if (sportName() === 'Volleyball') {
-                               @if ((h.kills ?? 0) > 0) {
-                                 <ion-badge color="danger" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">K: {{ h.kills }}</ion-badge>
-                               }
-                               @if ((h.aces ?? 0) > 0) {
-                                 <ion-badge color="warning" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">A: {{ h.aces }}</ion-badge>
-                               }
-                               @if ((h.blocks ?? 0) > 0) {
-                                 <ion-badge color="primary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">B: {{ h.blocks }}</ion-badge>
-                               }
-                               @if ((h.digs ?? 0) > 0) {
-                                 <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">D: {{ h.digs }}</ion-badge>
-                               }
-                               @if (h.assists > 0) {
-                                 <ion-badge color="secondary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">AST: {{ h.assists }}</ion-badge>
-                               }
-                             } @else {
-                               @if (h.goals > 0) {
-                                 <ion-badge color="primary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">G: {{ h.goals }}</ion-badge>
-                               }
-                               @if (h.assists > 0) {
-                                 <ion-badge color="warning" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">A: {{ h.assists }}</ion-badge>
-                               }
-                               @if (h.blockedShots > 0) {
-                                 <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">BS: {{ h.blockedShots }}</ion-badge>
-                               }
-                               @if (h.blockedPenaltyKicks > 0) {
-                                 <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">BPK: {{ h.blockedPenaltyKicks }}</ion-badge>
-                               }
-                             }
-                             <span class="text-xs font-black text-ap-text">{{ formatMinutes(h.playingTimeSeconds) }}</span>
-                          </div>
-                       } @else {
-                         <div class="flex items-center justify-end gap-2">
-                           <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 uppercase tracking-tighter font-bold">Practice</ion-badge>
-                         </div>
-                       }
-                    </div>
+                <!-- Mastery Progression Bar & Quick Toggles -->
+                <div class="flex flex-col gap-2 p-3.5 rounded-2xl bg-ap-bg border border-ap-border">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted">Mastery Progression</span>
+                    <span class="text-xs font-black uppercase" [ngClass]="{
+                      'text-amber-700 dark:text-amber-300': goal.masteryStage === 'emerging',
+                      'text-blue-700 dark:text-blue-300': goal.masteryStage === 'developing',
+                      'text-emerald-700 dark:text-emerald-300': goal.masteryStage === 'mastered'
+                    }">
+                      @if (goal.masteryStage === 'mastered') { 🌟 Mastered }
+                      @else if (goal.masteryStage === 'developing') { 🌿 Developing }
+                      @else { 🌱 Emerging }
+                    </span>
                   </div>
-                </ion-label>
-              </ion-item>
+
+                  <div class="grid grid-cols-3 gap-2 mt-1">
+                    <button
+                      type="button"
+                      (click)="advanceStage(goal, 'emerging')"
+                      class="py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-2 flex items-center justify-center gap-1.5"
+                      [ngClass]="goal.masteryStage === 'emerging' 
+                        ? 'bg-amber-100 dark:bg-amber-500/20 border-amber-500 text-amber-900 dark:text-amber-200 shadow-xs' 
+                        : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
+                    >
+                      <span>🌱</span>
+                      <span class="truncate">Emerging</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="advanceStage(goal, 'developing')"
+                      class="py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-2 flex items-center justify-center gap-1.5"
+                      [ngClass]="goal.masteryStage === 'developing' 
+                        ? 'bg-blue-100 dark:bg-blue-500/20 border-blue-500 text-blue-900 dark:text-blue-200 shadow-xs' 
+                        : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
+                    >
+                      <span>🌿</span>
+                      <span class="truncate">Developing</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="advanceStage(goal, 'mastered')"
+                      class="py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-2 flex items-center justify-center gap-1.5"
+                      [ngClass]="goal.masteryStage === 'mastered' 
+                        ? 'bg-emerald-100 dark:bg-emerald-500/20 border-emerald-500 text-emerald-900 dark:text-emerald-200 shadow-xs' 
+                        : 'bg-ap-surface border-ap-border text-ap-muted hover:text-ap-text hover:border-ap-muted/60'"
+                    >
+                      <span>🌟</span>
+                      <span class="truncate">Mastered</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Baseline Assessment -->
+                @if (goal.baselineAssessment) {
+                  <div class="text-xs text-ap-muted bg-ap-bg border border-ap-border rounded-xl p-3">
+                    <span class="font-bold text-ap-text uppercase tracking-wider text-[10px]">Starting Baseline:</span>
+                    <p class="mt-0.5 text-ap-text/90 italic">"{{ goal.baselineAssessment }}"</p>
+                  </div>
+                }
+
+                <!-- Action Plan / Focus -->
+                @if (goal.description) {
+                  <div class="text-xs text-ap-muted">
+                    <span class="font-bold text-ap-text uppercase tracking-wider text-[10px]">Action Plan / Focus Drills:</span>
+                    <p class="mt-0.5 text-ap-text/90">{{ goal.description }}</p>
+                  </div>
+                }
+
+                <!-- Progress Observations Timeline -->
+                <div class="flex flex-col gap-2 border-t border-ap-border pt-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-1.5">
+                      <ion-icon name="chatbox-ellipses-outline"></ion-icon>
+                      Coaching Observations ({{ goal.notes?.length || 0 }})
+                    </span>
+
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      color="primary"
+                      class="font-black uppercase tracking-wider text-[11px] ion-no-margin"
+                      (click)="openLogNoteModal(goal)"
+                    >
+                      <ion-icon name="add-outline" slot="start"></ion-icon>
+                      Log Observation
+                    </ion-button>
+                  </div>
+
+                  @if (goal.notes && goal.notes.length > 0) {
+                    <div class="flex flex-col gap-2">
+                      @for (note of goal.notes; track note.id) {
+                        <div class="p-3 rounded-xl bg-ap-bg border border-ap-border flex items-start justify-between gap-3">
+                          <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                              @if (note.stage) {
+                                <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border" [ngClass]="{
+                                  'bg-amber-500/15 border-amber-500/30 text-amber-400': note.stage === 'emerging',
+                                  'bg-blue-500/15 border-blue-500/30 text-blue-400': note.stage === 'developing',
+                                  'bg-emerald-500/15 border-emerald-500/30 text-emerald-400': note.stage === 'mastered'
+                                }">
+                                  {{ note.stage }}
+                                </span>
+                              }
+                              @if (note.event) {
+                                <span class="text-[10px] font-semibold text-ap-muted">
+                                  {{ note.event.type === 'game' ? '⚽ vs ' + (note.event.opponent || 'Opponent') : '🏃 Practice' }}
+                                </span>
+                              }
+                              <span class="text-[10px] text-ap-muted">{{ note.observedAt | date:'mediumDate' }}</span>
+                            </div>
+                            <p class="text-xs text-ap-text/95 italic leading-relaxed">"{{ note.note }}"</p>
+                          </div>
+
+                          <button
+                            type="button"
+                            (click)="deleteGoalNote(goal, note)"
+                            class="text-ap-muted hover:text-red-400 p-1 cursor-pointer"
+                            title="Delete note"
+                          >
+                            <ion-icon name="trash-outline" class="text-sm"></ion-icon>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="py-4 text-center text-ap-muted italic text-xs bg-ap-bg rounded-xl border border-dashed border-ap-border">
+                      No progress observations logged yet. Tap "Log Observation" to track growth in practices and games!
+                    </div>
+                  }
+                </div>
+
+              </div>
             }
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
+          </div>
+        } @else {
+          <!-- Empty State: No Goals Yet -->
+          <div class="py-12 px-6 text-center flex flex-col items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-ap-accent/15 border border-ap-accent/30 text-ap-accent flex items-center justify-center text-3xl">
+              <ion-icon name="flag-outline"></ion-icon>
+            </div>
+            <div class="max-w-md">
+              <h3 class="text-lg font-black uppercase tracking-tight text-ap-text">No Development Goals Set</h3>
+              <p class="text-xs text-ap-muted mt-1 leading-relaxed">
+                Set 2–3 clear developmental focus areas with this athlete. Track qualitative coaching observations in practices and games to showcase tangible season growth!
+              </p>
+            </div>
+            <ion-button
+              (click)="openAddGoalModal()"
+              class="font-black uppercase tracking-wider mt-2"
+            >
+              <ion-icon name="add-outline" slot="start"></ion-icon>
+              Set First IDP Goal
+            </ion-button>
+          </div>
+        }
+      }
+
+      <!-- ================= TAB 3: SESSION HISTORY ================= -->
+      @if (activeTab() === 'history') {
+        <ion-card class="m-0 border border-ap-border shadow-none bg-ap-surface rounded-2xl">
+          <ion-card-header class="px-4 pt-4 pb-2">
+            <ion-card-title class="text-[10px] font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+              <ion-icon name="time-outline"></ion-icon>
+              Session & Attendance History
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content class="p-0">
+            <ion-list lines="full" class="bg-transparent">
+              @for (h of p.history; track h.eventId) {
+                <ion-item class="bg-transparent">
+                  <ion-icon slot="start" [name]="getStatusIcon(h.status)" [color]="getStatusColor(h.status)" class="mr-3"></ion-icon>
+                  <ion-label>
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div class="font-bold text-ap-text text-sm">{{ h.eventName }}</div>
+                        <div class="text-[10px] text-ap-muted uppercase">{{ h.scheduledAt | date:'mediumDate' }}</div>
+                      </div>
+                      <div class="text-right">
+                         @if (h.eventType === 'game') {
+                            <div class="flex items-center justify-end gap-2 flex-wrap max-w-[200px]">
+                               @if (sportName() === 'Volleyball') {
+                                 @if ((h.kills ?? 0) > 0) {
+                                   <ion-badge color="danger" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">K: {{ h.kills }}</ion-badge>
+                                 }
+                                 @if ((h.aces ?? 0) > 0) {
+                                   <ion-badge color="warning" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">A: {{ h.aces }}</ion-badge>
+                                 }
+                                 @if ((h.blocks ?? 0) > 0) {
+                                   <ion-badge color="primary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">B: {{ h.blocks }}</ion-badge>
+                                 }
+                                 @if ((h.digs ?? 0) > 0) {
+                                   <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">D: {{ h.digs }}</ion-badge>
+                                 }
+                                 @if (h.assists > 0) {
+                                   <ion-badge color="secondary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">AST: {{ h.assists }}</ion-badge>
+                                 }
+                               } @else {
+                                 @if (h.goals > 0) {
+                                   <ion-badge color="primary" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">G: {{ h.goals }}</ion-badge>
+                                 }
+                                 @if (h.assists > 0) {
+                                   <ion-badge color="warning" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">A: {{ h.assists }}</ion-badge>
+                                 }
+                                 @if (h.blockedShots > 0) {
+                                   <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">BS: {{ h.blockedShots }}</ion-badge>
+                                 }
+                                 @if (h.blockedPenaltyKicks > 0) {
+                                   <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 font-bold">BPK: {{ h.blockedPenaltyKicks }}</ion-badge>
+                                 }
+                               }
+                               <span class="text-xs font-black text-ap-text">{{ formatMinutes(h.playingTimeSeconds) }}</span>
+                            </div>
+                         } @else {
+                           <div class="flex items-center justify-end gap-2">
+                             <ion-badge color="success" mode="ios" class="text-[8px] px-2 py-0.5 uppercase tracking-tighter font-bold">Practice</ion-badge>
+                           </div>
+                         }
+                      </div>
+                    </div>
+                  </ion-label>
+                </ion-item>
+              }
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      }
+
     }
   </div>
+
+  <ion-toast
+    [isOpen]="isToastOpen()"
+    [message]="toastMessage()"
+    [duration]="2500"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
 </ion-content>

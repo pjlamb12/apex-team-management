@@ -1,11 +1,13 @@
-import { Component, inject, signal, Input, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   IonHeader,
   IonToolbar,
   IonTitle,
   IonButtons,
+  IonBackButton,
   IonButton,
   IonContent,
   IonCard,
@@ -18,10 +20,9 @@ import {
   IonBadge,
   IonIcon,
   IonSpinner,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonProgressBar,
+  IonToast,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -33,6 +34,7 @@ import {
   trendingUpOutline,
   alertCircleOutline,
   closeOutline,
+  arrowBackOutline,
   checkmarkCircleOutline,
   closeCircleOutline,
   bandageOutline,
@@ -47,10 +49,33 @@ import {
   flameOutline,
   handLeftOutline,
   sparklesOutline,
+  flagOutline,
+  addOutline,
+  printOutline,
+  trashOutline,
+  createOutline,
+  chatboxEllipsesOutline,
+  checkmarkDoneOutline,
+  arrowForwardOutline,
+  documentTextOutline,
+  bulbOutline,
 } from 'ionicons/icons';
-import { AnalyticsService, PlayerProfileAnalytics, TeamService, AwardsService } from '@apex-team/client/data-access/team';
-import { PlayerAward } from '@apex-team/shared/util/models';
-import { ModalController } from '@ionic/angular/standalone';
+import {
+  AnalyticsService,
+  PlayerProfileAnalytics,
+  TeamService,
+  AwardsService,
+  GoalsService,
+} from '@apex-team/client/data-access/team';
+import {
+  PlayerAward,
+  PlayerGoal,
+  PlayerGoalNote,
+  GoalMasteryStage,
+} from '@apex-team/shared/util/models';
+import { IdpGoalModalComponent } from './idp-goal-modal/idp-goal-modal';
+import { IdpNoteModalComponent } from './idp-note-modal/idp-note-modal';
+import { IdpGrowthCardModalComponent } from './idp-growth-card-modal/idp-growth-card-modal';
 
 @Component({
   selector: 'app-player-profile-analytics',
@@ -61,6 +86,7 @@ import { ModalController } from '@ionic/angular/standalone';
     IonToolbar,
     IonTitle,
     IonButtons,
+    IonBackButton,
     IonButton,
     IonContent,
     IonCard,
@@ -73,28 +99,67 @@ import { ModalController } from '@ionic/angular/standalone';
     IonBadge,
     IonIcon,
     IonSpinner,
-    IonGrid,
-    IonRow,
-    IonCol,
     IonProgressBar,
+    IonToast,
   ],
   templateUrl: './player-profile.html',
   styleUrl: './player-profile.scss',
 })
 export class PlayerProfileAnalyticsComponent implements OnInit {
-  @Input({ required: true }) teamId!: string;
-  @Input({ required: true }) playerId!: string;
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+  @Input() set teamId(val: string) {
+    this._teamId.set(val);
+  }
+  @Input() set playerId(val: string) {
+    this._playerId.set(val);
+  }
+  @Input() set tab(val: 'overview' | 'idp' | 'history') {
+    if (val) this.activeTab.set(val);
+  }
+  @Input() set initialTab(val: 'overview' | 'idp' | 'history') {
+    if (val) this.activeTab.set(val);
+  }
+  @Input() set seasonId(val: string | undefined) {
+    this._seasonId.set(val);
+  }
 
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly analyticsService = inject(AnalyticsService);
   private readonly awardsService = inject(AwardsService);
+  private readonly goalsService = inject(GoalsService);
   private readonly teamService = inject(TeamService);
   private readonly modalCtrl = inject(ModalController);
 
+  private _teamId = signal<string | null>(null);
+  private _playerId = signal<string | null>(null);
+  private _seasonId = signal<string | undefined>(undefined);
+
+  public get teamId(): string {
+    return this._teamId() || this.route.snapshot.paramMap.get('id') || this.route.snapshot.paramMap.get('teamId') || '';
+  }
+
+  public get playerId(): string {
+    return this._playerId() || this.route.snapshot.paramMap.get('playerId') || '';
+  }
+
+  public get seasonId(): string | undefined {
+    return this._seasonId() ?? (this.route.snapshot.queryParamMap.get('seasonId') || undefined);
+  }
+
   protected profile = signal<PlayerProfileAnalytics | null>(null);
   protected playerAwards = signal<PlayerAward[]>([]);
+  protected playerGoals = signal<PlayerGoal[]>([]);
+  protected masteredGoalsCount = computed(() => this.playerGoals().filter((g) => g.masteryStage === 'mastered').length);
+  protected activeTab = signal<'overview' | 'idp' | 'history'>('overview');
   protected sportName = signal<string>('Soccer');
+  protected teamName = signal<string>('Team');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
+  protected toastMessage = signal<string>('');
+  protected isToastOpen = signal(false);
 
   constructor() {
     addIcons({ 
@@ -106,6 +171,7 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
       trendingUpOutline,
       alertCircleOutline,
       closeOutline,
+      arrowBackOutline,
       checkmarkCircleOutline,
       closeCircleOutline,
       bandageOutline,
@@ -120,10 +186,24 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
       flameOutline,
       handLeftOutline,
       sparklesOutline,
+      flagOutline,
+      addOutline,
+      printOutline,
+      trashOutline,
+      createOutline,
+      chatboxEllipsesOutline,
+      checkmarkDoneOutline,
+      arrowForwardOutline,
+      documentTextOutline,
+      bulbOutline,
     });
   }
 
   ngOnInit() {
+    const queryTab = this.route.snapshot.queryParamMap.get('tab') as 'overview' | 'idp' | 'history' | null;
+    if (queryTab && (queryTab === 'overview' || queryTab === 'idp' || queryTab === 'history')) {
+      this.activeTab.set(queryTab);
+    }
     void this.loadData();
   }
 
@@ -131,13 +211,16 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const [profile, team, awards] = await Promise.all([
+      const [profile, team, awards, goals] = await Promise.all([
         firstValueFrom(this.analyticsService.getPlayerProfile(this.teamId, this.playerId)),
         this.teamService.getTeam(this.teamId),
         firstValueFrom(this.awardsService.getPlayerAwards(this.teamId, this.playerId)).catch(() => []),
+        firstValueFrom(this.goalsService.getPlayerGoals(this.teamId, this.playerId, this.seasonId)).catch(() => []),
       ]);
       this.profile.set(profile);
       this.playerAwards.set(awards || []);
+      this.playerGoals.set(goals || []);
+      this.teamName.set(team.name || 'Team');
       this.sportName.set(team.sport?.name || 'Soccer');
     } catch {
       this.errorMessage.set('Failed to load player analytics.');
@@ -148,8 +231,130 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
 
   protected Math = Math;
 
+  protected setTab(tab: 'overview' | 'idp' | 'history'): void {
+    this.activeTab.set(tab);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  protected async openAddGoalModal(goal?: PlayerGoal): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: IdpGoalModalComponent,
+      componentProps: {
+        teamId: this.teamId,
+        playerId: this.playerId,
+        seasonId: this.seasonId,
+        goal,
+      },
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss<PlayerGoal | undefined>();
+    if (data) {
+      await this.reloadGoals();
+      this.showToast(goal ? 'Goal updated successfully.' : 'New development goal created! 🎯');
+    }
+  }
+
+  protected async openLogNoteModal(goal: PlayerGoal): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: IdpNoteModalComponent,
+      componentProps: {
+        teamId: this.teamId,
+        goal,
+      },
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss<PlayerGoalNote | undefined>();
+    if (data) {
+      await this.reloadGoals();
+      this.showToast('Progress observation logged! 📝');
+    }
+  }
+
+  protected async openGrowthCardModal(): Promise<void> {
+    const p = this.profile();
+    if (!p) return;
+
+    const modal = await this.modalCtrl.create({
+      component: IdpGrowthCardModalComponent,
+      componentProps: {
+        teamName: this.teamName(),
+        profile: p,
+        goals: this.playerGoals(),
+        awards: this.playerAwards(),
+      },
+    });
+    await modal.present();
+  }
+
+  protected async advanceStage(goal: PlayerGoal, newStage: GoalMasteryStage): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.goalsService.updateGoal(this.teamId, goal.id, {
+          masteryStage: newStage,
+        }),
+      );
+      await this.reloadGoals();
+      this.showToast(`Updated mastery level to ${newStage.toUpperCase()}! 🌟`);
+    } catch (err) {
+      console.error('Failed to advance goal stage', err);
+      this.showToast('Could not update stage.');
+    }
+  }
+
+  protected async deleteGoal(goal: PlayerGoal): Promise<void> {
+    try {
+      await firstValueFrom(this.goalsService.deleteGoal(this.teamId, goal.id));
+      this.playerGoals.update((prev) => prev.filter((g) => g.id !== goal.id));
+      this.showToast('Goal removed.');
+    } catch (err) {
+      console.error('Failed to delete goal', err);
+      this.showToast('Could not remove goal.');
+    }
+  }
+
+  protected async deleteGoalNote(goal: PlayerGoal, note: PlayerGoalNote): Promise<void> {
+    try {
+      await firstValueFrom(this.goalsService.deleteGoalNote(this.teamId, goal.id, note.id));
+      await this.reloadGoals();
+      this.showToast('Observation note removed.');
+    } catch (err) {
+      console.error('Failed to delete note', err);
+      this.showToast('Could not remove note.');
+    }
+  }
+
+  private async reloadGoals(): Promise<void> {
+    try {
+      const goals = await firstValueFrom(
+        this.goalsService.getPlayerGoals(this.teamId, this.playerId, this.seasonId),
+      );
+      this.playerGoals.set(goals || []);
+    } catch (err) {
+      console.warn('Failed to reload goals', err);
+    }
+  }
+
+  protected showToast(msg: string): void {
+    this.toastMessage.set(msg);
+    this.isToastOpen.set(true);
+  }
+
+  protected closeToast(): void {
+    this.isToastOpen.set(false);
+  }
+
   protected async dismiss() {
-    await this.modalCtrl.dismiss();
+    try {
+      await this.modalCtrl.dismiss();
+    } catch {
+      await this.router.navigate(['/teams', this.teamId, 'roster']);
+    }
   }
 
   protected formatMinutes(seconds: number): string {

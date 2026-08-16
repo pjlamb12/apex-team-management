@@ -1,0 +1,144 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-ap-surface border-b border-ap-border">
+    <ion-title class="text-base font-black uppercase tracking-wider text-ap-text">
+      Log Progress Observation
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" class="text-ap-muted hover:text-ap-text">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg">
+  <div class="p-4 sm:p-6 pb-24 sm:pb-28 max-w-xl mx-auto flex flex-col gap-5">
+
+    <!-- Goal Header Card -->
+    <div class="p-4 rounded-2xl bg-ap-surface border border-ap-border shadow-sm flex flex-col gap-1.5">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-black uppercase tracking-widest text-ap-accent">Target Goal</span>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-ap-surface-raised border border-ap-border uppercase text-ap-muted">
+          {{ goal.category }}
+        </span>
+      </div>
+      <h3 class="text-base font-black text-ap-text leading-tight">{{ goal.title }}</h3>
+      @if (goal.baselineAssessment) {
+        <p class="text-xs text-ap-muted italic mt-0.5">Baseline: "{{ goal.baselineAssessment }}"</p>
+      }
+    </div>
+
+    <!-- Observation Form -->
+    <div class="bg-ap-surface border border-ap-border rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+      
+      <!-- Event / Session Context Selector -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-black uppercase tracking-wider text-ap-muted flex items-center gap-1.5">
+          <ion-icon name="calendar-outline" class="text-sm"></ion-icon>
+          Session Context
+        </label>
+        <ion-select
+          [value]="selectedEventId()"
+          (ionChange)="selectedEventId.set($event.detail.value)"
+          interface="popover"
+          placeholder="General 1-on-1 Review / No linked event"
+          class="border border-ap-border rounded-xl px-3 py-1 bg-ap-bg text-ap-text text-sm font-semibold"
+        >
+          <ion-select-option [value]="null">General Observation / 1-on-1 Session</ion-select-option>
+          @for (ev of recentEvents(); track ev.id) {
+            <ion-select-option [value]="ev.id">
+              {{ ev.type === 'game' ? '⚽ Match: vs ' + (ev.opponent || 'Opponent') : '🏃 Practice' }} ({{ ev.scheduledAt | date:'mediumDate' }})
+            </ion-select-option>
+          }
+        </ion-select>
+      </div>
+
+      <!-- Update Mastery Stage -->
+      <div class="flex flex-col gap-2">
+        <label class="text-xs font-black uppercase tracking-wider text-ap-muted">Observed Mastery Level</label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
+          <button
+            type="button"
+            (click)="selectedStage.set('emerging')"
+            class="mastery-stage-card"
+            [ngClass]="{ 'stage-emerging': selectedStage() === 'emerging' }"
+          >
+            <div class="flex items-center gap-1.5">
+              <span class="text-base">🌱</span>
+              <span class="text-xs font-black uppercase tracking-wider">Emerging</span>
+            </div>
+            <span class="text-[9px] font-medium opacity-80">Learning</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="selectedStage.set('developing')"
+            class="mastery-stage-card"
+            [ngClass]="{ 'stage-developing': selectedStage() === 'developing' }"
+          >
+            <div class="flex items-center gap-1.5">
+              <span class="text-base">🌿</span>
+              <span class="text-xs font-black uppercase tracking-wider">Developing</span>
+            </div>
+            <span class="text-[9px] font-medium opacity-80">Progressing</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="selectedStage.set('mastered')"
+            class="mastery-stage-card"
+            [ngClass]="{ 'stage-mastered': selectedStage() === 'mastered' }"
+          >
+            <div class="flex items-center gap-1.5">
+              <span class="text-base">🌟</span>
+              <span class="text-xs font-black uppercase tracking-wider">Mastered</span>
+            </div>
+            <span class="text-[9px] font-medium opacity-80">Game Ready</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Qualitative Note -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-black uppercase tracking-wider text-ap-muted flex items-center gap-1.5">
+          <ion-icon name="chatbox-ellipses-outline" class="text-sm"></ion-icon>
+          Coaching Observation Notes *
+        </label>
+        <ion-textarea
+          [value]="noteContent()"
+          (ionInput)="noteContent.set($any($event.detail.value))"
+          rows="4"
+          placeholder="What did you observe today? e.g. Successfully checked shoulder twice before receiving under heavy midfield press; connected 3 out of 4 weak-foot distribution passes."
+          class="border border-ap-border rounded-xl px-3 py-2 bg-ap-bg text-ap-text text-sm focus:border-ap-accent"
+        ></ion-textarea>
+      </div>
+
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <ion-button fill="clear" color="medium" (click)="dismiss()" [disabled]="isSubmitting()">
+        Cancel
+      </ion-button>
+      <ion-button
+        color="primary"
+        class="font-black uppercase tracking-wider h-11 px-6 shadow-sm"
+        (click)="submitNote()"
+        [disabled]="isSubmitting() || !noteContent().trim()"
+      >
+        @if (isSubmitting()) {
+          <ion-spinner name="crescent" class="mr-2"></ion-spinner>
+        }
+        Save Observation
+      </ion-button>
+    </div>
+
+  </div>
+
+  <ion-toast
+    [isOpen]="isToastOpen()"
+    [message]="toastMessage()"
+    [duration]="2500"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>
