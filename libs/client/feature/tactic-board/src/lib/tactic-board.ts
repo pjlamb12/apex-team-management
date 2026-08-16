@@ -43,6 +43,7 @@ import {
   closeOutline,
   layersOutline,
   sparklesOutline,
+  syncOutline,
 } from 'ionicons/icons';
 import {
   TacticSport,
@@ -148,6 +149,7 @@ export class TacticBoard implements OnInit {
       closeOutline,
       layersOutline,
       sparklesOutline,
+      syncOutline,
     });
   }
 

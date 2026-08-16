@@ -22,6 +22,11 @@ describe('TacticBoard', () => {
       isLoading: signal(false),
       plays: signal([]),
       filteredPlays: signal([]),
+      network: {
+        isOnline: signal(true),
+        isSyncing: signal(false),
+        pendingSyncCount: signal(0),
+      },
       setSport: vi.fn((s) => mockTacticsService.selectedSport.set(s)),
       setCategory: vi.fn(),
       setSearchQuery: vi.fn(),

@@ -67,6 +67,22 @@
           </button>
         </div>
 
+        <!-- Offline & Sync Status Indicator -->
+        @if (!tacticsService.network.isOnline()) {
+          <div class="offline-badge" title="Offline mode: Plays and whiteboard drawings are saved locally on this device.">
+            <span class="offline-dot"></span>
+            <span>Offline</span>
+            @if (tacticsService.network.pendingSyncCount() > 0) {
+              <span class="offline-pending-pill">{{ tacticsService.network.pendingSyncCount() }} pending</span>
+            }
+          </div>
+        } @else if (tacticsService.network.isSyncing()) {
+          <div class="syncing-badge" title="Syncing plays with the cloud...">
+            <ion-icon name="sync-outline" class="animate-spin"></ion-icon>
+            <span>Syncing...</span>
+          </div>
+        }
+
         <!-- Presets Button -->
         <button
           type="button"

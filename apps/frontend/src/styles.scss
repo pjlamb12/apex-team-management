@@ -530,3 +530,54 @@ html.dark .phase-pill.active { color: #38bdf8 !important; }
     background: var(--ap-surface-raised) !important;
   }
 }
+
+// === Offline & Sync Badges ===
+.offline-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.4) !important;
+  color: #d97706 !important;
+  white-space: nowrap !important;
+
+  .offline-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: #f59e0b;
+  }
+
+  .offline-pending-pill {
+    background: rgba(245, 158, 11, 0.3);
+    padding: 1px 6px;
+    border-radius: 9999px;
+    font-size: 10px;
+  }
+}
+
+html.dark .offline-badge {
+  color: #fbbf24 !important;
+}
+
+.syncing-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  background: rgba(56, 189, 248, 0.15) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.4) !important;
+  color: #0284c7 !important;
+  white-space: nowrap !important;
+}
+
+html.dark .syncing-badge {
+  color: #38bdf8 !important;
+}

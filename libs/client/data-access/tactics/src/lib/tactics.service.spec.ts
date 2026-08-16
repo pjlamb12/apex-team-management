@@ -129,10 +129,24 @@ describe('TacticsService', () => {
     expect(postReq.request.method).toBe('POST');
     postReq.flush(created);
 
-    const refreshReq = httpMock.expectOne((r) => r.url === 'http://api.test/tactics');
-    expect(refreshReq.request.method).toBe('GET');
-    refreshReq.flush([created]);
-
     expect(service.activePlay()).toEqual(created);
+    expect(service.plays()).toContainEqual(created);
+  });
+
+  it('should create play offline and queue synchronization', async () => {
+    service.network.setOnlineStatus(false);
+    const dto = {
+      title: 'Offline Field Play',
+      sport: 'soccer' as const,
+      category: 'formation' as const,
+      canvasData: { pitchType: 'full_pitch' as const, tokens: [], drawings: [] },
+    };
+
+    const createdOffline = await import('rxjs').then((m) => m.firstValueFrom(service.createPlay(dto)));
+
+    expect(createdOffline).toBeTruthy();
+    expect(createdOffline.id.startsWith('offline_')).toBe(true);
+    expect(createdOffline.title).toBe('Offline Field Play');
+    expect(service.network.pendingSyncCount()).toBeGreaterThanOrEqual(1);
   });
 });

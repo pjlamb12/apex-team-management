@@ -1,0 +1,20 @@
+{
+  "name": "client-data-access-offline",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/client/data-access/offline/src",
+  "prefix": "apex-team",
+  "projectType": "library",
+  "tags": ["scope:client", "type:data-access"],
+  "targets": {
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/libs/client/data-access/offline"],
+      "options": {
+        "configFile": "libs/client/data-access/offline/vitest.config.mts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
