@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, catchError } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 
 export interface PlayerPerformanceMetrics {
@@ -104,7 +104,7 @@ export class AnalyticsService {
   private readonly config = inject(RuntimeConfigLoaderService);
 
   private get apiUrl(): string {
-    return this.config.getConfigObjectKey('apiBaseUrl') as string;
+    return (this.config.getConfigObjectKey('apiBaseUrl') as string) || 'http://localhost:3000/api';
   }
 
   getPerformanceMetrics(teamId: string, seasonId?: string, leagueId?: string, eventType?: 'game' | 'practice' | 'all'): Observable<PlayerPerformanceMetrics[]> {
@@ -112,14 +112,18 @@ export class AnalyticsService {
     if (seasonId) params.seasonId = seasonId;
     if (leagueId) params.leagueId = leagueId;
     if (eventType) params.eventType = eventType;
-    return this.http.get<PlayerPerformanceMetrics[]>(`${this.apiUrl}/teams/${teamId}/analytics/performance`, { params });
+    return this.http.get<PlayerPerformanceMetrics[]>(`${this.apiUrl}/teams/${teamId}/analytics/performance`, { params }).pipe(
+      catchError(() => of([]))
+    );
   }
 
   getTeamPlayingTime(teamId: string, seasonId?: string, leagueId?: string): Observable<Record<string, PlayerPlaytime>> {
     const params: any = {};
     if (seasonId) params.seasonId = seasonId;
     if (leagueId) params.leagueId = leagueId;
-    return this.http.get<Record<string, PlayerPlaytime>>(`${this.apiUrl}/teams/${teamId}/analytics/playing-time`, { params });
+    return this.http.get<Record<string, PlayerPlaytime>>(`${this.apiUrl}/teams/${teamId}/analytics/playing-time`, { params }).pipe(
+      catchError(() => of({}))
+    );
   }
 
   getParticipationStats(teamId: string, seasonId?: string, leagueId?: string, eventType?: 'game' | 'practice' | 'all'): Observable<ParticipationStats[]> {
@@ -127,7 +131,9 @@ export class AnalyticsService {
     if (seasonId) params.seasonId = seasonId;
     if (leagueId) params.leagueId = leagueId;
     if (eventType) params.eventType = eventType;
-    return this.http.get<ParticipationStats[]>(`${this.apiUrl}/teams/${teamId}/participation`, { params });
+    return this.http.get<ParticipationStats[]>(`${this.apiUrl}/teams/${teamId}/participation`, { params }).pipe(
+      catchError(() => of([]))
+    );
   }
 
   getPlayerProfile(teamId: string, playerId: string, seasonId?: string): Observable<PlayerProfileAnalytics> {

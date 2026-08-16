@@ -187,8 +187,8 @@ export class Schedule implements OnDestroy {
       const s = this.scope();
       const seasonId = this.selectedSeasonId();
       const leagueId = this.selectedLeagueId();
-      if (id && seasonId) {
-        void this.loadEvents(id, s, seasonId, leagueId ?? undefined);
+      if (id) {
+        void this.loadEvents(id, s, seasonId ?? undefined, leagueId ?? undefined);
       }
     });
 
@@ -414,11 +414,10 @@ export class Schedule implements OnDestroy {
   protected async loadEvents(
     teamId: string,
     scope: 'upcoming' | 'past',
-    seasonId: string,
+    seasonId?: string,
     leagueId?: string
   ): Promise<void> {
     this.isLoading.set(true);
-    this.events.set([]);
     try {
       const data = await firstValueFrom(
         this.eventsService.getEvents(teamId, scope, seasonId)
@@ -428,7 +427,7 @@ export class Schedule implements OnDestroy {
       if (leagueId) {
         this.events.set(data.filter(e => e.leagueId === leagueId));
       } else {
-        this.events.set(data);
+        this.events.set(data || []);
       }
     } catch (err) {
       console.error('Failed to load events', err);
