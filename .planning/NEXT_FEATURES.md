@@ -24,7 +24,7 @@ The following five features are prioritized for immediate planning and implement
 │ #4 │ Multi-Context Tactic Board  │ Digital interactive whiteboard & set piece library  │
 │    │ & Playbook (Item 1)         │ for games, practices, and team tactical sessions.   │
 ├────┼─────────────────────────────┼─────────────────────────────────────────────────────┤
-│ #5 │ Individual Player Goals &   │ ⏳ IN PROGRESS: 1-on-1 goal setting, qualitative    │
+│ #5 │ Individual Player Goals &   │ ✅ COMPLETED: 1-on-1 goal setting, qualitative    │
 │    │ IDP Tracking (Item 6)       │ observations, mastery tracking, and growth cards.   │
 └────┴─────────────────────────────┴─────────────────────────────────────────────────────┘
 ```
@@ -195,7 +195,7 @@ gantt
     Opponent Dossier & Match History (Item 2)        :done, p1, 2026-08-10, 3d
     1-Click AI Match Recap & Parent Comms (Item 11)   :done, p2, 2026-08-13, 2d
     Player of the Match & Skill Badges (Item 12)     :done, p3, 2026-08-15, 2d
-    Player IDPs & Goal Tracking (Item 6)             :active, p5, 2026-08-16, 5d
+    Player IDPs & Goal Tracking (Item 6)             :done, p5, 2026-08-16, 2d
     Multi-Context Digital Tactic Board (Item 1)      :p4, after p5, 18d
     section Medium Priority
     Pre-Game RSVP & Lineup Generator (Item 4)        :p6, after p4, 12d
