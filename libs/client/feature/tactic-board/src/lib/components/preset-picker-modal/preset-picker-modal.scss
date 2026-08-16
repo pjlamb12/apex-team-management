@@ -1,10 +1,14 @@
-.modal-toolbar {
-  --background: #0f172a;
-  --color: #f8fafc;
-  --border-color: #334155;
+:host {
+  display: block;
 }
 
-.modal-content {
-  --background: #0f172a;
-  --color: #f8fafc;
+ion-toolbar {
+  --background: var(--ap-surface);
+  --color: var(--ap-text);
+  --border-color: var(--ap-border);
+}
+
+ion-content {
+  --background: var(--ap-bg);
+  --color: var(--ap-text);
 }
