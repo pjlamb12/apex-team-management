@@ -295,7 +295,7 @@ export class LiveGameStateService {
     const activeIds = new Set(active.map((p) => p.id));
 
     return lineup
-      .filter((e) => !activeIds.has(e.playerId))
+      .filter((e) => !activeIds.has(e.playerId) && (e.player as any)?.isActive !== false)
       .map((e) => e.player);
   });
 

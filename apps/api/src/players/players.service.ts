@@ -37,7 +37,7 @@ export class PlayersService {
     });
     return seasonPlayers
       .map(sp => sp.player)
-      .filter(Boolean)
+      .filter((p): p is PlayerEntity => !!p && (includeInactive || p.isActive !== false))
       .sort((a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity));
   }
 
