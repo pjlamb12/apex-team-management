@@ -223,6 +223,7 @@ export class GameSummary implements OnDestroy {
   // Edit event state signals
   protected isEditModalOpen = signal(false);
   protected editEvent = signal<any | null>(null);
+  protected editPeriod = signal<number>(1);
   protected editMinute = signal<number>(0);
   protected editPlayerIn = signal<string | null>(null);
   protected editPlayerOut = signal<string | null>(null);
@@ -238,6 +239,70 @@ export class GameSummary implements OnDestroy {
   // Create event state signals
   protected isCreateMode = signal(false);
   protected createEventType = signal<string>('SUB');
+
+  protected availablePeriods = computed(() => {
+    const isVb = this.sportName() === 'Volleyball';
+    const defaultCount = isVb ? 3 : (this.game()?.periodCount || 2);
+    const existingPeriods = this.gameEvents()
+      .map(e => e.period ?? e.payload?.period)
+      .filter((p): p is number => typeof p === 'number' && p > 0);
+    const currentEditP = this.editPeriod();
+    const maxP = Math.max(defaultCount, ...existingPeriods, currentEditP, isVb ? 3 : 2);
+
+    const totalPeriodsToShow = isVb
+      ? Math.max(maxP, 5)
+      : Math.max(maxP, defaultCount === 2 ? 4 : defaultCount);
+
+    const periods: number[] = [];
+    for (let i = 1; i <= totalPeriodsToShow; i++) {
+      periods.push(i);
+    }
+    return periods;
+  });
+
+  protected getPeriodLabel(periodNum: number): string {
+    if (this.sportName() === 'Volleyball') {
+      return `Set ${periodNum}`;
+    }
+    const count = this.game()?.periodCount || 2;
+    if (count === 2) {
+      if (periodNum === 1) return '1st Half';
+      if (periodNum === 2) return '2nd Half';
+      if (periodNum === 3) return 'Extra Time 1 (OT1)';
+      if (periodNum === 4) return 'Extra Time 2 (OT2)';
+      return `Period ${periodNum}`;
+    }
+    if (count === 4) {
+      if (periodNum === 1) return '1st Quarter';
+      if (periodNum === 2) return '2nd Quarter';
+      if (periodNum === 3) return '3rd Quarter';
+      if (periodNum === 4) return '4th Quarter';
+      return `Overtime ${periodNum - 4}`;
+    }
+    return `Period ${periodNum}`;
+  }
+
+  protected getPeriodShortLabel(periodNum: number): string {
+    if (this.sportName() === 'Volleyball') {
+      return `S${periodNum}`;
+    }
+    const count = this.game()?.periodCount || 2;
+    if (count === 2) {
+      if (periodNum === 1) return '1H';
+      if (periodNum === 2) return '2H';
+      if (periodNum === 3) return 'OT1';
+      if (periodNum === 4) return 'OT2';
+      return `P${periodNum}`;
+    }
+    if (count === 4) {
+      if (periodNum === 1) return '1Q';
+      if (periodNum === 2) return '2Q';
+      if (periodNum === 3) return '3Q';
+      if (periodNum === 4) return '4Q';
+      return `OT${periodNum - 4}`;
+    }
+    return `P${periodNum}`;
+  }
 
 
 
@@ -782,6 +847,7 @@ export class GameSummary implements OnDestroy {
     this.isCreateMode.set(true);
     this.createEventType.set('SUB');
     this.editEvent.set(null);
+    this.editPeriod.set(1);
     this.editMinute.set(0);
     this.editPlayerIn.set(null);
     this.editPlayerOut.set(null);
@@ -799,6 +865,7 @@ export class GameSummary implements OnDestroy {
   protected openEditModal(event: any): void {
     this.isCreateMode.set(false);
     this.editEvent.set(event);
+    this.editPeriod.set(event.period ?? event.payload?.period ?? 1);
     this.editMinute.set(event.minuteOccurred ?? 0);
     const payload = event.payload || {};
     this.editPlayerIn.set(payload.inPlayerId || null);
@@ -818,10 +885,18 @@ export class GameSummary implements OnDestroy {
     this.isEditModalOpen.set(false);
     this.editEvent.set(null);
     this.isCreateMode.set(false);
+    this.editPeriod.set(1);
     this.editPlayerA.set(null);
     this.editPlayerB.set(null);
     this.editPositionA.set(null);
     this.editPositionB.set(null);
+  }
+
+  protected onEditPeriodChange(event: any): void {
+    const val = parseInt(event.detail.value, 10);
+    if (!isNaN(val)) {
+      this.editPeriod.set(val);
+    }
   }
 
   protected onEditMinuteChange(event: any): void {
@@ -860,7 +935,7 @@ export class GameSummary implements OnDestroy {
   protected async saveCreate(): Promise<void> {
     const type = this.createEventType();
     const payload: Record<string, any> = {
-      period: 1 // default to period 1 for post-game logged events
+      period: this.editPeriod()
     };
 
     if (type === 'SUB') {
@@ -911,7 +986,7 @@ export class GameSummary implements OnDestroy {
           eventType: 'ASSIST',
           minuteOccurred: this.editMinute(),
           payload: {
-            period: 1,
+            period: this.editPeriod(),
             assistorId: this.editAssistorId()
           }
         }));
@@ -941,7 +1016,8 @@ export class GameSummary implements OnDestroy {
     if (!event) return;
 
     const payload: Record<string, any> = {
-      ...event.payload
+      ...event.payload,
+      period: this.editPeriod()
     };
 
     if (event.eventType === 'SUB') {
@@ -998,7 +1074,8 @@ export class GameSummary implements OnDestroy {
       if (event.eventType === 'GOAL') {
         const existingAssist = this.gameEvents().find(ge => 
           ge.eventType === 'ASSIST' && 
-          ge.minuteOccurred === event.minuteOccurred
+          ge.minuteOccurred === event.minuteOccurred &&
+          (ge.period ?? ge.payload?.period ?? 1) === (event.period ?? event.payload?.period ?? 1)
         );
 
         if (this.editAssistorId()) {
@@ -1007,6 +1084,7 @@ export class GameSummary implements OnDestroy {
               minuteOccurred: this.editMinute(),
               payload: {
                 ...existingAssist.payload,
+                period: this.editPeriod(),
                 assistorId: this.editAssistorId()
               }
             }));
@@ -1015,7 +1093,7 @@ export class GameSummary implements OnDestroy {
               eventType: 'ASSIST',
               minuteOccurred: this.editMinute(),
               payload: {
-                period: event.payload?.period || 1,
+                period: this.editPeriod(),
                 assistorId: this.editAssistorId()
               }
             }));

@@ -58,6 +58,21 @@ describe('LiveGameStateService', () => {
     expect(service.benchPlayers()[0].id).toBe('p2');
   });
 
+  it('should exclude stepped-away (isActive: false) players from benchPlayers', () => {
+    const lineupWithInactive = [
+      ...mockLineup,
+      {
+        playerId: 'p-inactive',
+        player: { id: 'p-inactive', firstName: 'Inactive', lastName: 'Player', isActive: false },
+        status: 'bench',
+      },
+    ];
+    service.initialize(eventId, lineupWithInactive as any, teamId);
+
+    expect(service.benchPlayers().find(p => p.id === 'p-inactive')).toBeUndefined();
+    expect(service.benchPlayers().map(p => p.id)).toEqual(['p2']);
+  });
+
   it('should update active/bench players when a SUB event is pushed, preserving slot', () => {
     service.initialize(eventId, mockLineup, teamId);
     

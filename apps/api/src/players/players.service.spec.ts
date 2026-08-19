@@ -96,6 +96,16 @@ describe('PlayersService', () => {
       });
       expect(result).toHaveLength(2);
     });
+
+    it('should filter out any inactive players if returned with isActive: false when includeInactive is false', async () => {
+      vi.spyOn(seasonPlayerRepo, 'find').mockResolvedValue([
+        { id: 'sp1', player: { id: 'p1', jerseyNumber: 10, isActive: true } },
+        { id: 'sp2', player: { id: 'p2', jerseyNumber: 12, isActive: false } },
+      ] as any);
+      const result = await service.findAllForSeason('s1');
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('p1');
+    });
   });
 
   describe('create and update with isActive', () => {

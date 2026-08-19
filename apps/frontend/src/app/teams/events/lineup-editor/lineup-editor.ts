@@ -232,7 +232,7 @@ export class LineupEditor implements OnInit {
   protected benchPlayers = computed(() => {
     const assigned = this.assignedPlayerIds();
     const absent = this.absentPlayerIds();
-    return this.players().filter((p) => !assigned.has(p.id) && !absent.has(p.id));
+    return this.players().filter((p) => !assigned.has(p.id) && !absent.has(p.id) && p.isActive !== false);
   });
 
   protected eligibleLiberos = computed(() => {
@@ -242,7 +242,7 @@ export class LineupEditor implements OnInit {
         .map((s) => s.playerId!)
     );
     const absent = this.absentPlayerIds();
-    return this.players().filter((p) => !startingIds.has(p.id) && !absent.has(p.id));
+    return this.players().filter((p) => !startingIds.has(p.id) && !absent.has(p.id) && p.isActive !== false);
   });
 
   protected pitchPlayers = computed(() => {
@@ -338,6 +338,9 @@ export class LineupEditor implements OnInit {
       leagueGuests.forEach((gp) => allPlayersMap.set(gp.id, gp));
       lineup.forEach((entry) => {
         if (entry.player && !allPlayersMap.has(entry.player.id)) {
+          if (entry.player.isActive === false && entry.status !== 'starting') {
+            return;
+          }
           allPlayersMap.set(entry.player.id, {
             ...entry.player,
             teamId,

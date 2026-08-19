@@ -116,7 +116,7 @@ export interface LineupEntry {
   id: string;
   eventId: string;
   playerId: string;
-  player: { id: string; firstName: string; lastName: string; jerseyNumber: number | null };
+  player: { id: string; firstName: string; lastName: string; jerseyNumber: number | null; isActive?: boolean };
   positionName: string | null;
   slotIndex: number | null;
   status: 'starting' | 'bench';
