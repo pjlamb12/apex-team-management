@@ -110,6 +110,7 @@ describe('GameSummary Event Sorting', () => {
     (component as any).openEditModal(swapEvent);
 
     expect((component as any).editEvent()).toBe(swapEvent);
+    expect((component as any).editPeriod()).toBe(1);
     expect((component as any).editMinute()).toBe(14);
     expect((component as any).editPlayerA()).toBe('p1');
     expect((component as any).editPlayerB()).toBe('p2');
@@ -134,13 +135,15 @@ describe('GameSummary Event Sorting', () => {
       eventType: 'POSITION_SWAP',
       minuteOccurred: 14,
       payload: {
+        period: 1,
         playerIdA: 'p1',
         playerIdB: 'p2',
       },
     };
 
     (component as any).openEditModal(swapEvent);
-    (component as any).editMinute.set(16);
+    (component as any).editPeriod.set(2);
+    (component as any).editMinute.set(29);
     (component as any).editPlayerA.set('p3');
     (component as any).editPlayerB.set('p4');
     (component as any).editPositionA.set('DEF');
@@ -149,8 +152,9 @@ describe('GameSummary Event Sorting', () => {
     await (component as any).saveEdit();
 
     expect(updateSpy).toHaveBeenCalledWith('team-1', 'event-1', 'swap-1', {
-      minuteOccurred: 16,
+      minuteOccurred: 29,
       payload: {
+        period: 2,
         playerIdA: 'p3',
         playerIdB: 'p4',
         positionNameA: 'DEF',
@@ -172,7 +176,8 @@ describe('GameSummary Event Sorting', () => {
 
     (component as any).openCreateModal();
     (component as any).createEventType.set('POSITION_SWAP');
-    (component as any).editMinute.set(22);
+    (component as any).editPeriod.set(2);
+    (component as any).editMinute.set(29);
     (component as any).editPlayerA.set('p1');
     (component as any).editPlayerB.set('p2');
     (component as any).editPositionA.set('MID');
@@ -182,15 +187,35 @@ describe('GameSummary Event Sorting', () => {
 
     expect(logSpy).toHaveBeenCalledWith('team-1', 'event-1', {
       eventType: 'POSITION_SWAP',
-      minuteOccurred: 22,
+      minuteOccurred: 29,
       payload: {
-        period: 1,
+        period: 2,
         playerIdA: 'p1',
         playerIdB: 'p2',
         positionNameA: 'MID',
         positionNameB: 'FWD',
       },
     });
+  });
+
+  it('should correctly format period labels and short labels for Soccer and Volleyball', () => {
+    (component as any).sportName.set('Soccer');
+    (component as any).game.set({ id: 'g1', periodCount: 2 } as any);
+
+    expect((component as any).getPeriodLabel(1)).toBe('1st Half');
+    expect((component as any).getPeriodLabel(2)).toBe('2nd Half');
+    expect((component as any).getPeriodLabel(3)).toBe('Extra Time 1 (OT1)');
+    expect((component as any).getPeriodLabel(4)).toBe('Extra Time 2 (OT2)');
+
+    expect((component as any).getPeriodShortLabel(1)).toBe('1H');
+    expect((component as any).getPeriodShortLabel(2)).toBe('2H');
+    expect((component as any).getPeriodShortLabel(3)).toBe('OT1');
+
+    (component as any).sportName.set('Volleyball');
+    expect((component as any).getPeriodLabel(1)).toBe('Set 1');
+    expect((component as any).getPeriodLabel(2)).toBe('Set 2');
+    expect((component as any).getPeriodShortLabel(1)).toBe('S1');
+    expect((component as any).getPeriodShortLabel(2)).toBe('S2');
   });
 
   it('should present MatchRecapModalComponent when openAiRecapModal is called', async () => {

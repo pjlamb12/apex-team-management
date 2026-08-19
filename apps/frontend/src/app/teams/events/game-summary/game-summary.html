@@ -784,8 +784,9 @@
                 <ion-list lines="full">
                   @for (event of sortedGameEvents(); track event.id) {
                     <ion-item class="event-log-item">
-                      <div slot="start" class="w-12 text-center font-mono font-bold text-blue-400 border-r border-ap-border/60 h-full flex items-center justify-center">
-                        {{ event.minuteOccurred }}'
+                      <div slot="start" class="w-14 text-center font-mono border-r border-ap-border/60 h-full flex flex-col items-center justify-center py-1">
+                        <span class="font-bold text-blue-400 text-sm leading-none">{{ event.minuteOccurred }}'</span>
+                        <span class="text-[9px] text-ap-muted font-bold tracking-tight mt-0.5 uppercase">{{ getPeriodShortLabel(event.period ?? event.payload?.period ?? 1) }}</span>
                       </div>
                       <ion-label class="pl-4">
                         <div class="flex items-center justify-between">
@@ -930,6 +931,18 @@
               </ion-select>
             </ion-item>
           }
+
+          <!-- Period Select -->
+          <ion-item class="bg-ap-surface rounded-lg">
+            <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">
+              {{ sportName() === 'Volleyball' ? 'Set' : 'Period' }}
+            </ion-label>
+            <ion-select [value]="editPeriod()" (ionChange)="onEditPeriodChange($event)" class="text-ap-text">
+              @for (p of availablePeriods(); track p) {
+                <ion-select-option [value]="p">{{ getPeriodLabel(p) }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
 
           <!-- Minute Occurred -->
           <ion-item class="bg-ap-surface rounded-lg">
