@@ -516,16 +516,53 @@ export class LineupEditor implements OnInit {
       if (isStarting) return;
     }
 
+    const sportName = this.team()?.sport?.name;
+    const positionTypes = this.team()?.sport?.positionTypes || [];
+    const newPositionName = getPositionFromSlot(targetSlotIndex, sportName, positionTypes);
+
     this.slots.update((prev) => {
-      return prev.map((s) => {
-        if (s.playerId === currentSelection) {
-          return { ...s, playerId: null };
+      const next = prev.map((s) => ({ ...s }));
+      const existingSlotIndex = next.findIndex((s) => s.playerId === currentSelection);
+
+      if (existingSlotIndex !== -1) {
+        // Selected player is ALREADY on the pitch: moving to targetSlotIndex
+        const targetSlot = next.find((s) => s.slotIndex === targetSlotIndex);
+        if (targetSlot) {
+          if (targetSlot.playerId === null) {
+            targetSlot.playerId = currentSelection;
+            targetSlot.positionName = newPositionName;
+            next[existingSlotIndex].playerId = null;
+          } else {
+            // Swap players between the two starting slots
+            const tempPlayerId = targetSlot.playerId;
+            targetSlot.playerId = currentSelection;
+            next[existingSlotIndex].playerId = tempPlayerId;
+          }
+        } else {
+          // No slot with targetSlotIndex exists yet. Reassign existing slot to targetSlotIndex and position.
+          next[existingSlotIndex].slotIndex = targetSlotIndex;
+          next[existingSlotIndex].positionName = newPositionName;
         }
-        if (s.slotIndex === targetSlotIndex) {
-          return { ...s, playerId: currentSelection };
+      } else {
+        // Selected player is ON THE BENCH: adding to targetSlotIndex
+        const targetSlot = next.find((s) => s.slotIndex === targetSlotIndex);
+        if (targetSlot) {
+          targetSlot.playerId = currentSelection;
+          targetSlot.positionName = newPositionName;
+        } else {
+          // Find an empty starting slot (playerId === null)
+          const emptySlot = next.find((s) => s.playerId === null);
+          if (emptySlot) {
+            emptySlot.slotIndex = targetSlotIndex;
+            emptySlot.positionName = newPositionName;
+            emptySlot.playerId = currentSelection;
+          } else {
+            this.toastMessage.set('All starting spots on the field are filled.');
+          }
         }
-        return s;
-      });
+      }
+
+      return next;
     });
 
     this.selectedPlayerId.set(null);
