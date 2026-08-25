@@ -55,8 +55,11 @@ export class AttendanceService {
 
     let playerIds = dto.playerIds;
     if (!playerIds) {
-      // If no playerIds provided, update all players for the team
-      const players = await this.playerRepo.find({ where: { teamId: event.season.teamId } });
+      // If no playerIds provided, update active players for the team
+      const teamId = event.season?.teamId;
+      const players = teamId
+        ? await this.playerRepo.find({ where: { teamId, isActive: true } })
+        : [];
       playerIds = players.map(p => p.id);
     }
 
