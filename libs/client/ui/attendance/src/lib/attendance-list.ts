@@ -173,7 +173,13 @@ export class AttendanceList {
   }
 
   protected async markAllPresent() {
-    await firstValueFrom(this.attendanceService.batchUpdateAttendance(this.teamId(), this.eventId(), { status: 'present' }));
+    const playerIds = this.combinedList().map((p) => p.id);
+    await firstValueFrom(
+      this.attendanceService.batchUpdateAttendance(this.teamId(), this.eventId(), {
+        playerIds,
+        status: 'present',
+      })
+    );
     this.refreshAttendance();
   }
 

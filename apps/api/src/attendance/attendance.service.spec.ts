@@ -84,6 +84,35 @@ describe('AttendanceService', () => {
     });
   });
 
+  describe('batchUpdate', () => {
+    it('should update specified playerIds when playerIds is provided', async () => {
+      const event = { id: 'e1', season: { teamId: 't1' } };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(event as any);
+      vi.spyOn(attendanceRepo, 'findOne').mockResolvedValue(null);
+      vi.spyOn(attendanceRepo, 'create').mockImplementation((data: any) => data);
+      vi.spyOn(attendanceRepo, 'save').mockImplementation(async (data: any) => data);
+
+      await service.batchUpdate('e1', { playerIds: ['p1', 'p2'], status: 'present' });
+
+      expect(attendanceRepo.save).toHaveBeenCalledTimes(2);
+      expect(playerRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('should default to active players only when playerIds is omitted', async () => {
+      const event = { id: 'e1', season: { teamId: 't1' } };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(event as any);
+      vi.spyOn(playerRepo, 'find').mockResolvedValue([{ id: 'p1', isActive: true }] as any);
+      vi.spyOn(attendanceRepo, 'findOne').mockResolvedValue(null);
+      vi.spyOn(attendanceRepo, 'create').mockImplementation((data: any) => data);
+      vi.spyOn(attendanceRepo, 'save').mockImplementation(async (data: any) => data);
+
+      await service.batchUpdate('e1', { status: 'present' });
+
+      expect(playerRepo.find).toHaveBeenCalledWith({ where: { teamId: 't1', isActive: true } });
+      expect(attendanceRepo.save).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('getParticipationStats', () => {
     it('should calculate percentages correctly', async () => {
       const players = [{ id: 'p1', firstName: 'John', lastName: 'Doe', jerseyNumber: 10, isGuest: true }];
