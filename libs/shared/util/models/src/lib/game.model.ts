@@ -11,7 +11,7 @@ export interface Game {
   periodLengthMinutes?: number;
   playersOnField?: number;
   currentPeriod?: number;
-  status?: 'scheduled' | 'in_progress' | 'completed';
+  status?: 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather';
   goalsFor?: number;
   goalsAgainst?: number;
 }

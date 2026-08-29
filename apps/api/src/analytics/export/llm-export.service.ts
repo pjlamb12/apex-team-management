@@ -120,7 +120,7 @@ export class LlmExportService {
       });
     }
 
-    let games = allEvents.filter((e) => e.type === 'game');
+    let games = allEvents.filter((e) => e.type === 'game' && e.status === 'completed');
     const practices = allEvents.filter((e) => e.type === 'practice');
 
     // Filter by opponent if requested

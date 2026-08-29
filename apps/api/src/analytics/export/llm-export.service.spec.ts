@@ -128,6 +128,7 @@ describe('LlmExportService', () => {
       {
         id: 'g1',
         type: 'game',
+        status: 'completed',
         opponent: 'Thunder FC',
         goalsFor: 2,
         goalsAgainst: 1,

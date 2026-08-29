@@ -117,7 +117,18 @@
             </ngx-control-errors-display>
 
             @if (event()?.type === 'game') {
-              @if (event()?.status !== 'scheduled') {
+              <ngx-control-errors-display class="block mt-3">
+                <ion-item>
+                  <ion-select label="Status" label-placement="floating" formControlName="status" interface="action-sheet">
+                    <ion-select-option value="scheduled">Scheduled</ion-select-option>
+                    <ion-select-option value="in_progress">In Progress</ion-select-option>
+                    <ion-select-option value="completed">Completed</ion-select-option>
+                    <ion-select-option value="abandoned_weather">Unfinished (Weather Stoppage)</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </ngx-control-errors-display>
+
+              @if (form.get('status')?.value !== 'scheduled') {
                 <div class="grid grid-cols-2 gap-3 mt-3">
                   <ngx-control-errors-display>
                     <ion-item>

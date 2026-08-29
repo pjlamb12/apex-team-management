@@ -531,7 +531,7 @@ export class Schedule implements OnDestroy {
       path.push('/teams', teamId, 'events', event.id, 'practice');
     } else if (event.type === 'tryout') {
       path.push('/teams', teamId, 'events', event.id, 'tryout');
-    } else if (event.status === 'completed' || event.status === 'in_progress') {
+    } else if (event.status === 'completed' || event.status === 'in_progress' || event.status === 'abandoned_weather') {
       path.push('/teams', teamId, 'events', event.id, 'summary');
     } else {
       path.push('/teams', teamId, 'events', event.id, 'lineup');

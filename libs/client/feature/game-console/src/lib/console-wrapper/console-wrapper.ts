@@ -148,8 +148,8 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         team: this.http.get<any>(`${url}/teams/${teamId}`)
       }).pipe(
         tap(async ({ event, lineup, team }) => {
-          // If the event is already completed, redirect and do not initialize the console
-          if (event?.status === 'completed') {
+          // If the event is already completed or abandoned due to weather, redirect and do not initialize the console
+          if (event?.status === 'completed' || event?.status === 'abandoned_weather') {
             void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
             return;
           }
@@ -284,7 +284,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
     effect(() => {
       const status = this.stateService.status();
-      if (status === 'completed') {
+      if (status === 'completed' || status === 'abandoned_weather') {
         const teamId = this.teamId();
         const eventId = this.eventId();
         if (teamId && eventId) {
@@ -297,7 +297,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     effect(() => {
       const matchRes = this.stateService.matchResult();
       const status = this.stateService.status();
-      if (matchRes && status !== 'completed') {
+      if (matchRes && status !== 'completed' && status !== 'abandoned_weather') {
         void this.autoEndGame();
       }
     });
@@ -333,7 +333,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         firstValueFrom(this.http.get<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`)),
       ]);
 
-      if (event?.status === 'completed') {
+      if (event?.status === 'completed' || event?.status === 'abandoned_weather') {
         void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
         return;
       }
@@ -662,18 +662,24 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
   protected async endGame(): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'End Game?',
-      message: 'Are you sure you want to end this game? Once ended, the game cannot be updated.',
+      header: 'End Game',
+      message: 'Choose how you would like to end this match:',
       buttons: [
         {
           text: 'Cancel',
           role: 'cancel'
         },
         {
-          text: 'End Game',
+          text: 'Call Game (Weather Stoppage)',
+          handler: () => {
+            void this.performEndGame('abandoned_weather');
+          }
+        },
+        {
+          text: 'Complete Game (Final)',
           role: 'confirm',
           handler: () => {
-            void this.performEndGame();
+            void this.performEndGame('completed');
           }
         }
       ]
@@ -681,7 +687,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  private async performEndGame(): Promise<void> {
+  private async performEndGame(finalStatus: 'completed' | 'abandoned_weather' = 'completed'): Promise<void> {
     const elapsedMs = this.clockService.elapsedMs();
     const currentMinute = this.clockService.currentMinute();
 
@@ -698,7 +704,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     }
 
     await this.clockService.stop();
-    this.stateService.endGame();
+    this.stateService.endGame(finalStatus);
 
     // 2. Sync final status, score, and actual elapsed duration to the database
     const teamId = this.teamId();
@@ -712,7 +718,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       const actualDuration = elapsedMs > 0 ? Math.ceil(elapsedMs / 60000) : undefined;
 
       await firstValueFrom(this.eventsService.updateEvent(teamId, eventId, {
-        status: 'completed',
+        status: finalStatus,
         goalsFor,
         goalsAgainst,
         ...(actualDuration ? { durationMinutes: actualDuration } : {})
@@ -1021,7 +1027,6 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     if (!tId || !eId) return;
 
     try {
-      const currentEv = this.event();
       // 1. Create the guest player
       const guest = await firstValueFrom(
         this.playersService.addPlayer(tId, {
@@ -1029,7 +1034,6 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
           lastName,
           jerseyNumber,
           isGuest: true,
-          leagueId: currentEv?.leagueId || undefined,
         } as any)
       );
 

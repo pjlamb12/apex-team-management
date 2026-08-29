@@ -146,7 +146,7 @@ describe('SeasonsService', () => {
         goalDifference: 0,
       });
       expect(mockEventRepo.find).toHaveBeenCalledWith({
-        where: { seasonId, type: 'game' },
+        where: { seasonId, type: 'game', status: 'completed' },
       });
     });
 
@@ -183,9 +183,20 @@ describe('SeasonsService', () => {
       const result = await service.getSeasonStats(teamId, seasonId, 'league-99');
 
       expect(mockEventRepo.find).toHaveBeenCalledWith({
-        where: { seasonId, type: 'game', leagueId: 'league-99' },
+        where: { seasonId, type: 'game', status: 'completed', leagueId: 'league-99' },
       });
       expect(result.wins).toBe(1);
+    });
+
+    it('excludes abandoned_weather games from season stats query', async () => {
+      mockSeasonRepo.findOne.mockResolvedValue({ id: seasonId, teamId });
+      mockEventRepo.find.mockResolvedValue([]);
+
+      await service.getSeasonStats(teamId, seasonId);
+
+      expect(mockEventRepo.find).toHaveBeenCalledWith({
+        where: { seasonId, type: 'game', status: 'completed' },
+      });
     });
   });
 });

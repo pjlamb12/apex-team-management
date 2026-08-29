@@ -248,4 +248,17 @@ describe('GameSummary Event Sorting', () => {
       },
     }));
   });
+
+  it('should return UNFINISHED (WEATHER) and warning color for abandoned_weather games', () => {
+    const weatherGame = {
+      id: 'g-weather',
+      type: 'game',
+      status: 'abandoned_weather',
+      goalsFor: 1,
+      goalsAgainst: 0,
+    } as any;
+
+    expect((component as any).getResult(weatherGame)).toBe('UNFINISHED (WEATHER)');
+    expect((component as any).getResultColor(weatherGame)).toBe('warning');
+  });
 });

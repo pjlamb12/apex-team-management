@@ -116,6 +116,7 @@ export class EditEvent {
     locationId: [''],
     locationName: [''],
     uniformColor: [''],
+    status: ['scheduled' as 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather'],
     isHomeGame: [true],
     durationMinutes: [null as number | null, [Validators.min(1)]],
     notes: [''],
@@ -222,6 +223,7 @@ export class EditEvent {
         locationId: data.locationId ?? '',
         locationName: data.location ?? '',
         uniformColor: data.uniformColor ?? '',
+        status: data.status || 'scheduled',
         isHomeGame: data.isHomeGame ?? true,
         durationMinutes: data.durationMinutes ?? null,
         notes: data.notes ?? '',
@@ -291,7 +293,7 @@ export class EditEvent {
     this.errorMessage.set(null);
     try {
       const { 
-        opponent, opponentId, leagueId, scheduledAt, locationId, locationName, uniformColor, 
+        opponent, opponentId, leagueId, scheduledAt, locationId, locationName, uniformColor, status,
         isHomeGame, durationMinutes, notes, goalsFor, goalsAgainst, 
         periodCount, periodLengthMinutes, playersOnField 
       } = this.form.getRawValue();
@@ -309,6 +311,7 @@ export class EditEvent {
           location: locationName || undefined,
           locationId: locationId || undefined,
           uniformColor: uniformColor || undefined,
+          status: status || undefined,
           isHomeGame: isHomeGame ?? true,
           durationMinutes: durationMinutes || undefined,
           notes: notes || undefined,

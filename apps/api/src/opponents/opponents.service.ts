@@ -28,7 +28,7 @@ export class OpponentsService {
   ) {}
 
   private calculateH2H(events: EventEntity[]): OpponentHeadToHeadStats {
-    const completedMatches = events.filter((e) => e.status === 'completed' || (e.goalsFor !== null && e.goalsFor !== undefined));
+    const completedMatches = events.filter((e) => e.status === 'completed');
 
     let wins = 0;
     let draws = 0;
@@ -192,7 +192,7 @@ export class OpponentsService {
 
     const recentMatches: OpponentMatchHistoryItem[] = events.map((event) => {
       let result: 'win' | 'draw' | 'loss' | 'upcoming' = 'upcoming';
-      if (event.status === 'completed' || (event.goalsFor !== null && event.goalsFor !== undefined)) {
+      if (event.status === 'completed') {
         const gf = event.goalsFor ?? 0;
         const ga = event.goalsAgainst ?? 0;
         if (gf > ga) result = 'win';

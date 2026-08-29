@@ -68,7 +68,7 @@ describe('PlayerAnalyticsService', () => {
 
     it('should aggregate player stats correctly', async () => {
       const player = { id: playerId, firstName: 'John', lastName: 'Doe', teamId };
-      const event = { id: 'event-1', type: 'game', opponent: 'Rivals', scheduledAt: new Date() };
+      const event = { id: 'event-1', type: 'game', status: 'completed', opponent: 'Rivals', scheduledAt: new Date() };
       
       vi.spyOn(playerRepo, 'findOne').mockResolvedValue(player as any);
       vi.spyOn(eventRepo, 'find').mockResolvedValue([event] as any);
@@ -89,6 +89,33 @@ describe('PlayerAnalyticsService', () => {
       expect(result.totalMinutes).toBe(50);
       expect(result.history).toHaveLength(1);
       expect(result.history[0].status).toBe('present');
+    });
+
+    it('should exclude abandoned_weather games from aggregate totals while preserving in match history', async () => {
+      const player = { id: playerId, firstName: 'John', lastName: 'Doe', teamId };
+      const event = { id: 'event-weather', type: 'game', status: 'abandoned_weather', opponent: 'Storm FC', scheduledAt: new Date() };
+      
+      vi.spyOn(playerRepo, 'findOne').mockResolvedValue(player as any);
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([event] as any);
+      vi.spyOn(attendanceRepo, 'find').mockResolvedValue([
+        { eventId: 'event-weather', status: 'present' }
+      ] as any);
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([
+        { eventId: 'event-weather', eventType: 'GOAL', payload: { scorerId: playerId } }
+      ] as any);
+      vi.spyOn(playingTimeService, 'calculateForEvent').mockResolvedValue({
+        [playerId]: { totalSeconds: 600, positionSeconds: { 'FWD': 600 } }
+      } as any);
+
+      const result = await service.getPlayerProfile(playerId, teamId);
+
+      expect(result.totalGamesPlayed).toBe(0);
+      expect(result.totalGoals).toBe(0);
+      expect(result.totalMinutes).toBe(0);
+      expect(result.history).toHaveLength(1);
+      expect(result.history[0].eventId).toBe('event-weather');
+      expect(result.history[0].goals).toBe(1);
+      expect(result.history[0].playingTimeSeconds).toBe(600);
     });
   });
 });

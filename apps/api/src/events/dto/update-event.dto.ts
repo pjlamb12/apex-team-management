@@ -82,7 +82,7 @@ export class UpdateEventDto {
 
   @IsString()
   @IsOptional()
-  status?: 'scheduled' | 'in_progress' | 'completed';
+  status?: 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather';
 
   @IsString()
   @IsOptional()

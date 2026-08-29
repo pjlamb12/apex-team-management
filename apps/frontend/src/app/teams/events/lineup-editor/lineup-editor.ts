@@ -361,14 +361,74 @@ export class LineupEditor implements OnInit {
       const fieldCount = event.playersOnField || (sportName === 'Volleyball' ? 6 : 11);
       const defaultSlots = getDefaultSlots(fieldCount, sportName);
 
-      // Map existing lineup to slots
-      const startingLineup = lineup.filter((e) => e.status === 'starting');
-      
-      const newSlots: LineupSlot[] = Array.from({ length: fieldCount }, (_, i) => ({
-        slotIndex: defaultSlots[i] ?? i,
-        positionName: getPositionFromSlot(defaultSlots[i] ?? i, sportName, positionTypes),
-        playerId: null,
-      }));
+      // Filter out absent player IDs
+      const absent = new Set(attendance.filter((a) => a.status === 'absent').map((a) => a.playerId));
+
+      // Separate starters from lineup (excluding volleyball libero slot 99)
+      const startingLineup = lineup.filter(
+        (e) => e.status === 'starting' && e.slotIndex !== 99
+      );
+
+      const newSlots: LineupSlot[] = [];
+      const usedSlotIndices = new Set<number>();
+      const unassignedEntries: typeof startingLineup = [];
+
+      // 1. First add slots for starting entries that already have a valid slotIndex (preserving custom formations)
+      for (const entry of startingLineup) {
+        if (entry.slotIndex !== null && entry.slotIndex !== undefined && !usedSlotIndices.has(entry.slotIndex)) {
+          usedSlotIndices.add(entry.slotIndex);
+          const isAbsent = absent.has(entry.playerId);
+          newSlots.push({
+            slotIndex: entry.slotIndex,
+            positionName: entry.positionName || getPositionFromSlot(entry.slotIndex, sportName, positionTypes),
+            playerId: isAbsent ? null : entry.playerId,
+          });
+        } else if (!absent.has(entry.playerId)) {
+          unassignedEntries.push(entry);
+        }
+      }
+
+      // 2. If total on-field slots < fieldCount, add empty slots from defaultSlots that haven't been used yet
+      for (const defSlot of defaultSlots) {
+        if (newSlots.length >= fieldCount) break;
+        if (!usedSlotIndices.has(defSlot)) {
+          usedSlotIndices.add(defSlot);
+          newSlots.push({
+            slotIndex: defSlot,
+            positionName: getPositionFromSlot(defSlot, sportName, positionTypes),
+            playerId: null,
+          });
+        }
+      }
+
+      // 3. If still below fieldCount, fill in any remaining valid slot indices
+      let candidateSlot = 0;
+      const maxCandidate = sportName === 'Volleyball' ? 5 : 15;
+      while (newSlots.length < fieldCount && candidateSlot <= maxCandidate) {
+        if (!usedSlotIndices.has(candidateSlot)) {
+          usedSlotIndices.add(candidateSlot);
+          newSlots.push({
+            slotIndex: candidateSlot,
+            positionName: getPositionFromSlot(candidateSlot, sportName, positionTypes),
+            playerId: null,
+          });
+        }
+        candidateSlot++;
+      }
+
+      // 4. Fill unassigned starting players into empty slots
+      for (const entry of unassignedEntries) {
+        const emptySlot = newSlots.find((s) => s.playerId === null);
+        if (emptySlot) {
+          emptySlot.playerId = entry.playerId;
+          if (entry.positionName) {
+            emptySlot.positionName = entry.positionName;
+          }
+        }
+      }
+
+      // Sort slots by slotIndex for consistent visual order in list view
+      newSlots.sort((a, b) => a.slotIndex - b.slotIndex);
 
       if (sportName === 'Volleyball') {
         newSlots.push({
@@ -378,36 +438,6 @@ export class LineupEditor implements OnInit {
         });
       }
 
-      // Filter out absent player IDs
-      const absent = new Set(attendance.filter((a) => a.status === 'absent').map((a) => a.playerId));
-
-      // Map the players that are already assigned
-      startingLineup.forEach((entry, idx) => {
-        // Skip if marked absent
-        if (absent.has(entry.playerId)) return;
-
-        // If they have a valid slotIndex, try to match it, else assign sequentially
-        if (entry.slotIndex !== null) {
-          const existingSlot = newSlots.find(s => s.slotIndex === entry.slotIndex);
-          if (existingSlot && existingSlot.playerId === null) {
-            existingSlot.playerId = entry.playerId;
-            existingSlot.positionName = entry.positionName || getPositionFromSlot(entry.slotIndex, sportName, positionTypes);
-          } else {
-             // Fallback
-             const emptySlot = newSlots.find(s => s.playerId === null);
-             if (emptySlot) {
-               emptySlot.playerId = entry.playerId;
-               emptySlot.positionName = entry.positionName || getPositionFromSlot(emptySlot.slotIndex, sportName, positionTypes);
-             }
-          }
-        } else {
-            const emptySlot = newSlots.find(s => s.playerId === null);
-            if (emptySlot) {
-              emptySlot.playerId = entry.playerId;
-              emptySlot.positionName = entry.positionName || getPositionFromSlot(emptySlot.slotIndex, sportName, positionTypes);
-            }
-        }
-      });
       this.slots.set(newSlots);
     } catch (err) {
       console.error('Failed to load lineup data', err);
@@ -674,14 +704,12 @@ export class LineupEditor implements OnInit {
 
   private async performAddGuestPlayer(firstName: string, lastName: string, jerseyNumber: number): Promise<void> {
     try {
-      const leagueId = this.event()?.leagueId || undefined;
       const guest = await firstValueFrom(
         this.playersService.addPlayer(this.teamId, {
           firstName,
           lastName,
           jerseyNumber,
           isGuest: true,
-          leagueId,
         })
       );
 

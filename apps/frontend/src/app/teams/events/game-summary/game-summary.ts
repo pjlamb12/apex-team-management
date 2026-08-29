@@ -609,7 +609,7 @@ export class GameSummary implements OnDestroy {
       return { team: teamSets, opponent: opponentSets };
     }
 
-    if (g && g.status === 'completed' && g.goalsFor !== null && g.goalsAgainst !== null) {
+    if (g && (g.status === 'completed' || g.status === 'abandoned_weather') && g.goalsFor !== null && g.goalsAgainst !== null) {
       return { team: g.goalsFor ?? 0, opponent: g.goalsAgainst ?? 0 };
     }
 
@@ -813,6 +813,7 @@ export class GameSummary implements OnDestroy {
   }
 
   protected getResult(game: EventEntity): string {
+    if (game.status === 'abandoned_weather') return 'UNFINISHED (WEATHER)';
     const s = this.score();
     if (s.team > s.opponent) return 'WIN';
     if (s.team < s.opponent) return 'LOSS';
@@ -820,6 +821,7 @@ export class GameSummary implements OnDestroy {
   }
 
   protected getResultColor(game: EventEntity): string {
+    if (game.status === 'abandoned_weather') return 'warning';
     const res = this.getResult(game);
     if (res === 'WIN') return 'success';
     if (res === 'LOSS') return 'danger';
