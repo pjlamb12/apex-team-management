@@ -61,7 +61,7 @@ export interface OpponentMatchHistoryItem {
   goalsFor?: number | null;
   goalsAgainst?: number | null;
   result: 'win' | 'draw' | 'loss' | 'upcoming';
-  status: 'scheduled' | 'in_progress' | 'completed';
+  status: 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather';
   seasonName?: string;
   leagueName?: string;
   notes?: string | null;

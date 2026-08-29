@@ -53,6 +53,7 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
       ])),
       getPlayers: vi.fn().mockReturnValue(of([])),
       getGuestPlayersForLeague: vi.fn().mockReturnValue(of([])),
+      addPlayer: vi.fn().mockReturnValue(of({})),
     };
 
     const mockAttendanceService = {
@@ -158,5 +159,26 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
     expect(fwdSlots.length).toBe(1);
     expect(fwdSlots[0].slotIndex).toBe(13);
     expect(fwdSlots[0].playerId).toBe('p9');
+  });
+
+  it('should create single-game guest player without leagueId', async () => {
+    const playersService = TestBed.inject(PlayersService);
+    const addPlayerSpy = vi.spyOn(playersService, 'addPlayer').mockReturnValue(of({
+      id: 'guest-1',
+      firstName: 'Guest',
+      lastName: 'Player',
+      jerseyNumber: 99,
+      isGuest: true,
+      teamId: 't1',
+    } as any));
+
+    await component['performAddGuestPlayer']('Guest', 'Player', 99);
+
+    expect(addPlayerSpy).toHaveBeenCalledWith('t1', {
+      firstName: 'Guest',
+      lastName: 'Player',
+      jerseyNumber: 99,
+      isGuest: true,
+    });
   });
 });

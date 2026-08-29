@@ -357,7 +357,7 @@ export class PlayingTimeService {
   }
 
   async calculateForTeam(teamId: string, seasonId?: string, leagueId?: string): Promise<Record<string, PlayerPlaytime>> {
-    const where: any = { type: 'game' };
+    const where: any = { type: 'game', status: 'completed' };
     if (leagueId) {
       where.leagueId = leagueId;
     } else if (seasonId) {

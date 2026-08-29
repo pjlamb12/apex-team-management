@@ -32,7 +32,7 @@ export interface EventEntity {
   locationRef?: LocationEntity | null;
   uniformColor: string | null;
   isHomeGame: boolean;
-  status: 'scheduled' | 'in_progress' | 'completed';
+  status: 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather';
   durationMinutes?: number;
   notes?: string;
   goalsFor?: number | null;
@@ -105,7 +105,7 @@ export interface UpdateEventDto {
   periodLengthMinutes?: number;
   playersOnField?: number;
   currentPeriod?: number;
-  status?: 'scheduled' | 'in_progress' | 'completed';
+  status?: 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather';
   clockStartTime?: string | null;
   clockAccumulatedMs?: number;
   recurrenceRule?: string;

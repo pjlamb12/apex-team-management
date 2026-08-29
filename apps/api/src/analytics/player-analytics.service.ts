@@ -213,17 +213,19 @@ export class PlayerAnalyticsService {
         if (isPresent && event.status === 'completed') gamesPlayed++;
       }
 
-      totalGoals += eventGoals;
-      totalAssists += eventAssists;
-      totalBlockedShots += eventBlockedShots;
-      totalBlockedPenaltyKicks += eventBlockedPenaltyKicks;
-      totalKills += eventKills;
-      totalAces += eventAces;
-      totalBlocks += eventBlocks;
-      totalDigs += eventDigs;
-      totalServiceErrors += eventServiceErrors;
-      totalHittingErrors += eventHittingErrors;
-      totalSeconds += playingTime;
+      if (event.type === 'game' && event.status === 'completed') {
+        totalGoals += eventGoals;
+        totalAssists += eventAssists;
+        totalBlockedShots += eventBlockedShots;
+        totalBlockedPenaltyKicks += eventBlockedPenaltyKicks;
+        totalKills += eventKills;
+        totalAces += eventAces;
+        totalBlocks += eventBlocks;
+        totalDigs += eventDigs;
+        totalServiceErrors += eventServiceErrors;
+        totalHittingErrors += eventHittingErrors;
+        totalSeconds += playingTime;
+      }
 
       history.push({
         eventId: event.id,

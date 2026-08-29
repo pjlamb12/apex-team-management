@@ -27,7 +27,7 @@ export class SeasonsService {
       );
     }
 
-    const whereClause: any = { seasonId: seasonId, type: 'game' };
+    const whereClause: any = { seasonId: seasonId, type: 'game', status: 'completed' };
     if (leagueId) {
       whereClause.leagueId = leagueId;
     }

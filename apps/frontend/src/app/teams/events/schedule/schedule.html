@@ -130,6 +130,11 @@
                       <ion-label>
                         <div class="flex items-center gap-2">
                           <h2 [class.opacity-70]="scope() === 'past'" class="font-bold">{{ getEventTitle(event) }}</h2>
+                          @if (event.status === 'abandoned_weather') {
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 whitespace-nowrap">
+                              Unfinished (Weather)
+                            </span>
+                          }
                           @if (event.recurrenceRule) {
                             <ion-icon name="refresh-outline" class="text-xs" color="medium"></ion-icon>
                           }

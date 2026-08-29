@@ -704,14 +704,12 @@ export class LineupEditor implements OnInit {
 
   private async performAddGuestPlayer(firstName: string, lastName: string, jerseyNumber: number): Promise<void> {
     try {
-      const leagueId = this.event()?.leagueId || undefined;
       const guest = await firstValueFrom(
         this.playersService.addPlayer(this.teamId, {
           firstName,
           lastName,
           jerseyNumber,
           isGuest: true,
-          leagueId,
         })
       );
 

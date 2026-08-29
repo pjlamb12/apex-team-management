@@ -65,7 +65,7 @@ export class EventEntity {
   isHomeGame: boolean;
 
   @Column({ default: 'scheduled' })
-  status: 'scheduled' | 'in_progress' | 'completed';
+  status: 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather';
 
   @Column({ name: 'ignore_playing_time', type: 'boolean', default: false })
   ignorePlayingTime: boolean;

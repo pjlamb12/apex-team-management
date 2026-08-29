@@ -42,7 +42,7 @@ export class LiveGameStateService {
   private _initialLineup = signal<LineupEntry[]>([]);
   private _playersOnField = signal<number>(11);
   private _currentPeriod = signal<number>(1);
-  private _status = signal<'scheduled' | 'in_progress' | 'completed'>('in_progress');
+  private _status = signal<'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather'>('in_progress');
   private _stagedSubs = signal<StagedSub[]>([]);
   private _lastIntervalTriggered = signal<number>(0);
   private _rotationConfig = signal<RotationConfig>({
@@ -916,8 +916,8 @@ export class LiveGameStateService {
     this.save();
   }
 
-  public endGame(): void {
-    this._status.set('completed');
+  public endGame(status: 'completed' | 'abandoned_weather' = 'completed'): void {
+    this._status.set(status);
     this.save();
   }
 
