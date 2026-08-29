@@ -124,4 +124,39 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
     expect(p10Slot?.positionName).toBe('MID');
     expect(p10Slot?.playerId).toBe('p10');
   });
+
+  it('should preserve 4 midfielders (slot 6, 7, 8, 9) and 1 striker (slot 13) when loading saved lineup', async () => {
+    // Re-trigger loadData with a custom 1-3-4-1 formation lineup
+    const customLineup = [
+      { id: 'l1', eventId: 'e1', playerId: 'p1', slotIndex: 0, status: 'starting', positionName: 'GK', player: { id: 'p1', firstName: 'Goal', lastName: 'Keeper', jerseyNumber: 1 } },
+      { id: 'l2', eventId: 'e1', playerId: 'p2', slotIndex: 2, status: 'starting', positionName: 'DEF', player: { id: 'p2', firstName: 'Def', lastName: 'One', jerseyNumber: 2 } },
+      { id: 'l3', eventId: 'e1', playerId: 'p3', slotIndex: 3, status: 'starting', positionName: 'DEF', player: { id: 'p3', firstName: 'Def', lastName: 'Two', jerseyNumber: 3 } },
+      { id: 'l4', eventId: 'e1', playerId: 'p4', slotIndex: 4, status: 'starting', positionName: 'DEF', player: { id: 'p4', firstName: 'Def', lastName: 'Three', jerseyNumber: 4 } },
+      { id: 'l5', eventId: 'e1', playerId: 'p5', slotIndex: 6, status: 'starting', positionName: 'MID', player: { id: 'p5', firstName: 'Mid', lastName: 'One', jerseyNumber: 5 } },
+      { id: 'l6', eventId: 'e1', playerId: 'p6', slotIndex: 7, status: 'starting', positionName: 'MID', player: { id: 'p6', firstName: 'Mid', lastName: 'Two', jerseyNumber: 6 } },
+      { id: 'l7', eventId: 'e1', playerId: 'p7', slotIndex: 8, status: 'starting', positionName: 'MID', player: { id: 'p7', firstName: 'Mid', lastName: 'Three', jerseyNumber: 7 } },
+      { id: 'l8', eventId: 'e1', playerId: 'p8', slotIndex: 9, status: 'starting', positionName: 'MID', player: { id: 'p8', firstName: 'Mid', lastName: 'Four', jerseyNumber: 8 } },
+      { id: 'l9', eventId: 'e1', playerId: 'p9', slotIndex: 13, status: 'starting', positionName: 'FWD', player: { id: 'p9', firstName: 'Fwd', lastName: 'Solo', jerseyNumber: 9 } },
+    ];
+
+    const eventsService = TestBed.inject(EventsService);
+    vi.spyOn(eventsService, 'getLineup').mockReturnValue(of(customLineup as any));
+
+    await component['loadData']('t1', 'e1');
+
+    const slots = component['slots']();
+    expect(slots.length).toBe(9);
+
+    const slotIndices = slots.map(s => s.slotIndex);
+    expect(slotIndices).toEqual([0, 2, 3, 4, 6, 7, 8, 9, 13]);
+
+    const midSlots = slots.filter(s => s.positionName === 'MID');
+    expect(midSlots.length).toBe(4);
+    expect(midSlots.map(s => s.slotIndex)).toEqual([6, 7, 8, 9]);
+
+    const fwdSlots = slots.filter(s => s.positionName === 'FWD');
+    expect(fwdSlots.length).toBe(1);
+    expect(fwdSlots[0].slotIndex).toBe(13);
+    expect(fwdSlots[0].playerId).toBe('p9');
+  });
 });
