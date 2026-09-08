@@ -9,6 +9,7 @@ import { TeamEntity } from '../entities/team.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
 import { EventNoteEntity } from '../entities/event-note.entity';
 import { LeagueEntity } from '../entities/league.entity';
+import { OpponentEntity } from '../entities/opponent.entity';
 
 import { CreateEventDto } from './dto/create-event.dto';
 import { SocketGateway } from '../socket/socket.gateway';
@@ -86,6 +87,19 @@ describe('EventsService', () => {
             save: vi.fn().mockImplementation((league) => Promise.resolve({ id: 'league-1', ...league })),
             find: vi.fn(),
             findOne: vi.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(OpponentEntity),
+          useValue: {
+            create: vi.fn().mockImplementation((dto) => ({ id: 'opp-1', ...dto })),
+            save: vi.fn().mockImplementation((opp) => Promise.resolve({ id: 'opp-1', ...opp })),
+            findOne: vi.fn(),
+            createQueryBuilder: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnThis(),
+              andWhere: vi.fn().mockReturnThis(),
+              getOne: vi.fn().mockResolvedValue(null),
+            }),
           },
         },
         {

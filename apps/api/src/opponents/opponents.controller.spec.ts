@@ -16,6 +16,7 @@ describe('OpponentsController', () => {
       findAllForTeam: vi.fn().mockResolvedValue([]),
       findOne: vi.fn().mockResolvedValue({ id: mockOpponentId, name: 'Thunder FC' }),
       create: vi.fn().mockResolvedValue({ id: mockOpponentId, name: 'Thunder FC' }),
+      findOrCreateByName: vi.fn().mockResolvedValue({ id: mockOpponentId, name: 'Thunder FC' }),
       update: vi.fn().mockResolvedValue({ id: mockOpponentId, name: 'Thunder FC Updated' }),
       remove: vi.fn().mockResolvedValue(undefined),
       addScoutingNote: vi.fn().mockResolvedValue({ id: 'note-1', content: 'Good speed' }),
@@ -53,6 +54,12 @@ describe('OpponentsController', () => {
     const dto = { name: 'Thunder FC' };
     await controller.create(mockTeamId, dto);
     expect(opponentsService.create).toHaveBeenCalledWith(mockTeamId, dto);
+  });
+
+  it('findOrCreate should call service.findOrCreateByName', async () => {
+    const dto = { name: 'Thunder FC', eventId: 'event-1' };
+    await controller.findOrCreate(mockTeamId, dto);
+    expect(opponentsService.findOrCreateByName).toHaveBeenCalledWith(mockTeamId, dto.name, dto.eventId);
   });
 
   it('findOne should call service.findOne', async () => {

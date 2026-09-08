@@ -10,6 +10,7 @@ import { TeamEntity } from '../entities/team.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
 import { EventNoteEntity } from '../entities/event-note.entity';
 import { LeagueEntity } from '../entities/league.entity';
+import { OpponentEntity } from '../entities/opponent.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { CreateBulkEventsDto } from './dto/create-bulk-events.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -38,6 +39,8 @@ export class EventsService {
     private readonly eventNoteRepo: Repository<EventNoteEntity>,
     @InjectRepository(LeagueEntity)
     private readonly leagueRepo: Repository<LeagueEntity>,
+    @InjectRepository(OpponentEntity)
+    private readonly opponentRepo: Repository<OpponentEntity>,
     private readonly socketGateway: SocketGateway,
     private readonly weatherService: WeatherService,
     private readonly attendanceService: AttendanceService,
@@ -102,6 +105,34 @@ export class EventsService {
     // Automatically calculate duration for games
     if (event.type === 'game' && event.periodCount && event.periodLengthMinutes) {
       event.durationMinutes = event.periodCount * event.periodLengthMinutes;
+    }
+
+    // Auto-create/link opponent dossier for games
+    if (event.type === 'game' && event.opponent) {
+      const trimmed = event.opponent.trim();
+      if (trimmed) {
+        if (dto.opponentId) {
+          event.opponentId = dto.opponentId;
+        } else {
+          let opp = await this.opponentRepo
+            .createQueryBuilder('opp')
+            .where('opp.team_id = :teamId', { teamId })
+            .andWhere('LOWER(TRIM(opp.name)) = LOWER(TRIM(:name))', { name: trimmed })
+            .getOne();
+
+          if (!opp) {
+            opp = this.opponentRepo.create({
+              teamId,
+              name: trimmed,
+              threatLevel: 'medium',
+              dangerPlayers: [],
+              scoutingNotes: [],
+            });
+            opp = await this.opponentRepo.save(opp);
+          }
+          event.opponentId = opp.id;
+        }
+      }
     }
 
     const savedEvent = await this.eventRepo.save(event);
@@ -171,6 +202,34 @@ export class EventsService {
 
       if (event.type === 'game' && event.periodCount && event.periodLengthMinutes) {
         event.durationMinutes = item.durationMinutes ?? (event.periodCount * event.periodLengthMinutes);
+      }
+
+      // Auto-create/link opponent dossier for games
+      if (event.type === 'game' && event.opponent) {
+        const trimmed = event.opponent.trim();
+        if (trimmed) {
+          if (item.opponentId) {
+            event.opponentId = item.opponentId;
+          } else {
+            let opp = await this.opponentRepo
+              .createQueryBuilder('opp')
+              .where('opp.team_id = :teamId', { teamId })
+              .andWhere('LOWER(TRIM(opp.name)) = LOWER(TRIM(:name))', { name: trimmed })
+              .getOne();
+
+            if (!opp) {
+              opp = this.opponentRepo.create({
+                teamId,
+                name: trimmed,
+                threatLevel: 'medium',
+                dangerPlayers: [],
+                scoutingNotes: [],
+              });
+              opp = await this.opponentRepo.save(opp);
+            }
+            event.opponentId = opp.id;
+          }
+        }
       }
 
       const saved = await this.eventRepo.save(event);
@@ -320,6 +379,30 @@ export class EventsService {
     // Automatically calculate duration for games if period info is provided and durationMinutes is not explicitly updated
     if (event.type === 'game' && event.periodCount && event.periodLengthMinutes && dto.durationMinutes === undefined) {
       event.durationMinutes = event.periodCount * event.periodLengthMinutes;
+    }
+
+    // Auto-create/link opponent dossier for games
+    if (event.type === 'game' && event.opponent && !event.opponentId) {
+      const trimmed = event.opponent.trim();
+      if (trimmed) {
+        let opp = await this.opponentRepo
+          .createQueryBuilder('opp')
+          .where('opp.team_id = :teamId', { teamId: event.season.teamId })
+          .andWhere('LOWER(TRIM(opp.name)) = LOWER(TRIM(:name))', { name: trimmed })
+          .getOne();
+
+        if (!opp) {
+          opp = this.opponentRepo.create({
+            teamId: event.season.teamId,
+            name: trimmed,
+            threatLevel: 'medium',
+            dangerPlayers: [],
+            scoutingNotes: [],
+          });
+          opp = await this.opponentRepo.save(opp);
+        }
+        event.opponentId = opp.id;
+      }
     }
 
     const updated = await this.eventRepo.save(event);

@@ -113,6 +113,7 @@ describe('OpponentsService', () => {
 
     eventRepo = {
       createQueryBuilder: vi.fn().mockReturnValue(mockEventQueryBuilder),
+      update: vi.fn().mockResolvedValue({ affected: 1 }),
     };
 
     teamRepo = {
@@ -233,6 +234,35 @@ describe('OpponentsService', () => {
 
       await service.deleteScoutingNote(mockTeamId, mockOpponentId, 'note-1');
       expect(opponentRepo.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('findOrCreateByName', () => {
+    it('should find existing opponent, link matching events, and return with stats', async () => {
+      const mockOpp = { id: mockOpponentId, name: 'Thunder FC', teamId: mockTeamId };
+      opponentRepo.createQueryBuilder().getOne.mockResolvedValueOnce(mockOpp);
+      const result = await service.findOrCreateByName(mockTeamId, 'Thunder FC', 'event-1');
+      expect(result).toBeDefined();
+      expect(result.id).toBe(mockOpponentId);
+      expect(eventRepo.createQueryBuilder().update).toHaveBeenCalled();
+    });
+
+    it('should create new opponent if not found', async () => {
+      opponentRepo.createQueryBuilder().getOne.mockResolvedValueOnce(null);
+      const result = await service.findOrCreateByName(mockTeamId, 'New Team FC');
+      expect(result).toBeDefined();
+      expect(opponentRepo.create).toHaveBeenCalledWith({
+        teamId: mockTeamId,
+        name: 'New Team FC',
+        threatLevel: 'medium',
+        dangerPlayers: [],
+        scoutingNotes: [],
+      });
+      expect(opponentRepo.save).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException if opponent name is empty', async () => {
+      await expect(service.findOrCreateByName(mockTeamId, '  ')).rejects.toThrow();
     });
   });
 });
