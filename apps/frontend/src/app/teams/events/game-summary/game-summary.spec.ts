@@ -4,7 +4,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { GameSummary } from './game-summary';
-import { EventsService, TeamService, AwardsService } from '@apex-team/client/data-access/team';
+import { EventsService, TeamService, AwardsService, OpponentsService } from '@apex-team/client/data-access/team';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { ModalController, ActionSheetController, AlertController, ToastController } from '@ionic/angular/standalone';
 import { LiveGameStateService, EventSyncService } from '@apex-team/client/feature/game-console';
@@ -35,6 +35,12 @@ describe('GameSummary Event Sorting', () => {
       getTeam: vi.fn().mockReturnValue(Promise.resolve({ id: 't1', sport: { name: 'Soccer' } })),
     };
 
+    const mockOpponentsService = {
+      getOpponent: vi.fn().mockReturnValue(of(null)),
+      getOpponents: vi.fn().mockReturnValue(of([])),
+      findOrCreateOpponent: vi.fn().mockReturnValue(of({ id: 'opp-created', name: 'Thunder FC', headToHead: { wins: 0, draws: 0, losses: 0, winPercentage: 0 } })),
+    };
+
     const mockLiveGameStateService = {
       setEvents: vi.fn(),
       events: vi.fn().mockReturnValue([]),
@@ -54,6 +60,7 @@ describe('GameSummary Event Sorting', () => {
         { provide: EventsService, useValue: mockEventsService },
         { provide: AwardsService, useValue: mockAwardsService },
         { provide: TeamService, useValue: mockTeamService },
+        { provide: OpponentsService, useValue: mockOpponentsService },
         { provide: LiveGameStateService, useValue: mockLiveGameStateService },
         { provide: EventSyncService, useValue: mockEventSyncService },
         { provide: ModalController, useValue: { create: vi.fn().mockResolvedValue({ present: vi.fn(), onDidDismiss: vi.fn().mockResolvedValue({ data: null }) }) } },
@@ -260,5 +267,22 @@ describe('GameSummary Event Sorting', () => {
 
     expect((component as any).getResult(weatherGame)).toBe('UNFINISHED (WEATHER)');
     expect((component as any).getResultColor(weatherGame)).toBe('warning');
+  });
+
+  it('should call findOrCreateOpponent and set opponentDossier when createOpponentDossier is invoked', async () => {
+    const oppService = TestBed.inject(OpponentsService);
+    (component as any)._teamId.set('team-1');
+    (component as any).game.set({ id: 'g1', type: 'game', opponent: 'Thunder FC' } as any);
+
+    await (component as any).createOpponentDossier();
+
+    expect(oppService.findOrCreateOpponent).toHaveBeenCalledWith('team-1', {
+      name: 'Thunder FC',
+      eventId: 'g1',
+    });
+    expect((component as any).opponentDossier()).toEqual(expect.objectContaining({
+      id: 'opp-created',
+      name: 'Thunder FC',
+    }));
   });
 });

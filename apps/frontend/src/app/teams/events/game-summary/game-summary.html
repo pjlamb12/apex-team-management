@@ -303,6 +303,45 @@
                 </div>
               </ion-card-content>
             </ion-card>
+          } @else if (g.type === 'game' && g.opponent) {
+            <ion-card class="m-0 bg-ap-surface border border-ap-border shadow-xs">
+              <ion-card-header class="px-6 pt-5 pb-2 flex flex-row items-center justify-between">
+                <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-1.5">
+                  <ion-icon name="shield-outline" class="text-ap-accent text-sm"></ion-icon>
+                  Opponent Dossier
+                </ion-card-title>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-500/20 text-ap-muted">
+                  No Dossier
+                </span>
+              </ion-card-header>
+              <ion-card-content class="px-6 pb-5 flex flex-col gap-3">
+                <div>
+                  <h3 class="font-bold text-ap-text text-base">{{ g.opponent }}</h3>
+                  <p class="text-xs text-ap-muted mt-1">
+                    No scouting dossier exists for this team yet. Create one to track head-to-head records, tendencies, danger players, and coaching notes.
+                  </p>
+                </div>
+
+                <div class="pt-2 border-t border-ap-border">
+                  <ion-button
+                    expand="block"
+                    size="small"
+                    color="primary"
+                    [disabled]="isCreatingDossier()"
+                    (click)="createOpponentDossier()"
+                    class="font-bold text-xs ion-no-margin"
+                  >
+                    @if (isCreatingDossier()) {
+                      <ion-spinner name="crescent" class="mr-2 h-4 w-4"></ion-spinner>
+                      Creating Dossier...
+                    } @else {
+                      <ion-icon name="shield-outline" slot="start"></ion-icon>
+                      Create Opponent Dossier
+                    }
+                  </ion-button>
+                </div>
+              </ion-card-content>
+            </ion-card>
           }
 
           <!-- Team Stats Card -->

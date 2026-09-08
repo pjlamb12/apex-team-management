@@ -27,7 +27,7 @@ import {
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { settingsOutline, refreshOutline } from 'ionicons/icons';
+import { settingsOutline, refreshOutline, shieldOutline, warningOutline } from 'ionicons/icons';
 import {
   EventsService,
   EventEntity,
@@ -261,8 +261,54 @@ export class LineupEditor implements OnInit {
       .filter((p): p is Player & { slotIndex: number } => p !== null);
   });
 
+  protected isCreatingDossier = signal(false);
+
+  protected async createOpponentDossier(): Promise<void> {
+    const ev = this.event();
+    const tId = this.teamId;
+    if (!ev || !ev.opponent || !tId) return;
+
+    this.isCreatingDossier.set(true);
+    try {
+      const opp = await firstValueFrom(
+        this.opponentsService.findOrCreateOpponent(tId, {
+          name: ev.opponent,
+          eventId: ev.id,
+        })
+      );
+      this.opponentDossier.set(opp);
+      this.showOpponentIntel.set(true);
+      if (ev) {
+        this.event.set({ ...ev, opponentId: opp.id });
+      }
+
+      const alert = await this.alertCtrl.create({
+        header: `Dossier Created: ${opp.name}`,
+        message: 'Opponent dossier created! Would you like to view/edit the full dossier now, or stay on the lineup editor?',
+        buttons: [
+          {
+            text: 'Stay on Lineup',
+            role: 'cancel',
+          },
+          {
+            text: 'Open Dossier',
+            handler: () => {
+              void this.router.navigate(['/teams', tId, 'opponents', opp.id]);
+            },
+          },
+        ],
+      });
+      await alert.present();
+    } catch (err) {
+      console.error('Failed to create opponent dossier', err);
+      this.toastMessage.set('Failed to create opponent dossier');
+    } finally {
+      this.isCreatingDossier.set(false);
+    }
+  }
+
   constructor() {
-    addIcons({ settingsOutline, refreshOutline });
+    addIcons({ settingsOutline, refreshOutline, shieldOutline, warningOutline });
     // Load data whenever teamId or eventId changes
     effect(() => {
       const tId = this._teamId();

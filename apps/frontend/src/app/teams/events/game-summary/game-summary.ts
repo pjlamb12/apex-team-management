@@ -60,6 +60,8 @@ import {
   chevronUpOutline,
   chevronDownOutline,
   sparklesOutline,
+  shieldOutline,
+  chatboxEllipsesOutline,
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport, OpponentsService, AwardsService } from '@apex-team/client/data-access/team';
@@ -658,6 +660,8 @@ export class GameSummary implements OnDestroy {
       chevronUpOutline,
       chevronDownOutline,
       sparklesOutline,
+      shieldOutline,
+      chatboxEllipsesOutline,
     });
 
     effect(() => {
@@ -750,6 +754,44 @@ export class GameSummary implements OnDestroy {
       if (!silent) {
         this.isLoading.set(false);
       }
+    }
+  }
+
+  protected isCreatingDossier = signal(false);
+
+  protected async createOpponentDossier(): Promise<void> {
+    const g = this.game();
+    const teamId = this.teamId;
+    if (!g || !g.opponent || !teamId) return;
+
+    this.isCreatingDossier.set(true);
+    try {
+      const opp = await firstValueFrom(
+        this.opponentsService.findOrCreateOpponent(teamId, {
+          name: g.opponent,
+          eventId: g.id,
+        })
+      );
+      this.opponentDossier.set(opp);
+      if (g) {
+        this.game.set({ ...g, opponentId: opp.id });
+      }
+      const toast = await this.toastController.create({
+        message: `Opponent dossier created for ${opp.name}!`,
+        duration: 2500,
+        color: 'success',
+      });
+      await toast.present();
+    } catch (err) {
+      console.error('Failed to create opponent dossier', err);
+      const toast = await this.toastController.create({
+        message: 'Failed to create opponent dossier. Please try again.',
+        duration: 3000,
+        color: 'danger',
+      });
+      await toast.present();
+    } finally {
+      this.isCreatingDossier.set(false);
     }
   }
 

@@ -62,6 +62,8 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
 
     const mockOpponentsService = {
       getOpponents: vi.fn().mockReturnValue(of([])),
+      getOpponent: vi.fn().mockReturnValue(of(null)),
+      findOrCreateOpponent: vi.fn().mockReturnValue(of({ id: 'opp-created', name: 'Thunder FC', headToHead: { wins: 0, draws: 0, losses: 0, winPercentage: 0 } })),
     };
 
     await TestBed.configureTestingModule({
@@ -180,5 +182,22 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
       jerseyNumber: 99,
       isGuest: true,
     });
+  });
+
+  it('should create opponent dossier and update state when createOpponentDossier is invoked', async () => {
+    const oppService = TestBed.inject(OpponentsService);
+    component['event'].set({ id: 'e1', type: 'game', opponent: 'Thunder FC' } as any);
+
+    await component['createOpponentDossier']();
+
+    expect(oppService.findOrCreateOpponent).toHaveBeenCalledWith('t1', {
+      name: 'Thunder FC',
+      eventId: 'e1',
+    });
+    expect(component['opponentDossier']()).toEqual(expect.objectContaining({
+      id: 'opp-created',
+      name: 'Thunder FC',
+    }));
+    expect(component['showOpponentIntel']()).toBe(true);
   });
 });
