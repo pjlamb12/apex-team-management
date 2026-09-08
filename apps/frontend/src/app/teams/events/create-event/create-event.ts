@@ -211,6 +211,41 @@ export class CreateEvent {
     }
   }
 
+  protected hasExactOpponentMatch(): boolean {
+    const typed = this.form.get('opponent')?.value?.trim().toLowerCase();
+    if (!typed) return true;
+    return this.opponents().some((o) => o.name.trim().toLowerCase() === typed);
+  }
+
+  protected isCreatingDossier = signal(false);
+
+  protected async createDossierForTypedOpponent(): Promise<void> {
+    const tId = this.teamId;
+    const typedName = this.form.get('opponent')?.value?.trim();
+    if (!tId || !typedName) return;
+
+    this.isCreatingDossier.set(true);
+    try {
+      const opp = await firstValueFrom(
+        this.opponentsService.findOrCreateOpponent(tId, {
+          name: typedName,
+        })
+      );
+      this.opponents.update((prev) => {
+        if (prev.some((o) => o.id === opp.id)) return prev;
+        return [...prev, opp];
+      });
+      this.form.patchValue({
+        opponent: opp.name,
+        opponentId: opp.id,
+      });
+    } catch (err) {
+      console.error('Failed to create opponent dossier', err);
+    } finally {
+      this.isCreatingDossier.set(false);
+    }
+  }
+
   protected selectOpponent(opp: OpponentWithStats): void {
     this.form.patchValue({
       opponent: opp.name,

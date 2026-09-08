@@ -44,6 +44,16 @@ export class OpponentsController {
     return this.opponentsService.create(teamId, dto);
   }
 
+  @Post('find-or-create')
+  @UseGuards(TeamRoleGuard)
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  findOrCreate(
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Body() dto: { name: string; eventId?: string },
+  ) {
+    return this.opponentsService.findOrCreateByName(teamId, dto.name, dto.eventId);
+  }
+
   @Get(':opponentId')
   findOne(
     @Param('teamId', ParseUUIDPipe) teamId: string,

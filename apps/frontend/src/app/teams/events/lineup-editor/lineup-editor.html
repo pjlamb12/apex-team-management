@@ -188,6 +188,38 @@
             </div>
           }
         </div>
+      } @else if (event()?.type === 'game' && event()?.opponent) {
+        <div class="mb-4 bg-ap-surface border border-ap-border rounded-xl p-3.5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-ap-surface-raised border border-ap-border flex items-center justify-center text-ap-accent shrink-0">
+              <ion-icon name="shield-outline" class="text-lg"></ion-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-ap-text uppercase tracking-wider">Opponent Dossier: {{ event()?.opponent }}</span>
+                <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-500/20 text-ap-muted">
+                  No Dossier
+                </span>
+              </div>
+              <p class="text-xs text-ap-muted mt-0.5">No scouting dossier exists yet. Create one to track danger players, scouting notes, tendencies, and head-to-head records.</p>
+            </div>
+          </div>
+          <ion-button
+            size="small"
+            color="primary"
+            class="font-bold text-xs ion-no-margin shrink-0 w-full sm:w-auto"
+            [disabled]="isCreatingDossier()"
+            (click)="createOpponentDossier()"
+          >
+            @if (isCreatingDossier()) {
+              <ion-spinner name="crescent" class="mr-2 h-4 w-4"></ion-spinner>
+              Creating...
+            } @else {
+              <ion-icon name="shield-outline" slot="start"></ion-icon>
+              Create Dossier
+            }
+          </ion-button>
+        </div>
       }
 
       <ion-segment [value]="viewMode()" (ionChange)="setViewMode($event.detail.value)" class="mb-4" scrollable="true">

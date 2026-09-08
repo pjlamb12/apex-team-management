@@ -371,10 +371,15 @@ export class OpponentsService {
     await this.opponentRepo.save(opponent);
   }
 
-  async findOrCreateByName(teamId: string, name: string): Promise<OpponentEntity> {
+  async findOrCreateByName(teamId: string, name: string, eventId?: string): Promise<OpponentWithStats> {
     const trimmed = name.trim();
     if (!trimmed) {
       throw new BadRequestException('Opponent name is required');
+    }
+
+    const team = await this.teamRepo.findOne({ where: { id: teamId } });
+    if (!team) {
+      throw new NotFoundException('Team not found');
     }
 
     let opponent = await this.opponentRepo
@@ -394,6 +399,20 @@ export class OpponentsService {
       opponent = await this.opponentRepo.save(opponent);
     }
 
-    return opponent;
+    // Auto-link any existing events for this team that have matching opponent name
+    await this.eventRepo
+      .createQueryBuilder()
+      .update(EventEntity)
+      .set({ opponentId: opponent.id })
+      .where('season_id IN (SELECT id FROM seasons WHERE team_id = :teamId)', { teamId })
+      .andWhere('LOWER(TRIM(opponent)) = LOWER(TRIM(:oppName))', { oppName: opponent.name })
+      .andWhere('opponent_id IS NULL')
+      .execute();
+
+    if (eventId) {
+      await this.eventRepo.update(eventId, { opponentId: opponent.id });
+    }
+
+    return this.findOne(teamId, opponent.id);
   }
 }

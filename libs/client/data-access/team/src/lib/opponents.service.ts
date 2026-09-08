@@ -47,6 +47,16 @@ export class OpponentsService {
     );
   }
 
+  findOrCreateOpponent(
+    teamId: string,
+    data: { name: string; eventId?: string },
+  ): Observable<OpponentWithStats> {
+    return this.http.post<OpponentWithStats>(
+      `${this.apiUrl}/teams/${teamId}/opponents/find-or-create`,
+      data,
+    );
+  }
+
   updateOpponent(
     teamId: string,
     opponentId: string,
