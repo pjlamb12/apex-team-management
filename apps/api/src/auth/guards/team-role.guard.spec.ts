@@ -118,14 +118,34 @@ describe('TeamRoleGuard', () => {
     expect(mockMembershipService.hasRole).toHaveBeenCalledWith('user1', 'team-from-league-id', [TeamRole.HEAD_COACH]);
   });
 
-  function createMockContext(user: any, params: any, path = ''): ExecutionContext {
+  it('should handle request with undefined body and resolve teamId from params.id (e.g. DELETE /teams/:id)', async () => {
+    mockReflector.getAllAndOverride.mockReturnValue([TeamRole.HEAD_COACH]);
+    mockMembershipService.hasRole.mockResolvedValue(true);
+    const context = createMockContext({ sub: 'user1' }, { id: 'team-delete-id' }, '/teams/:id', undefined);
+    const result = await guard.canActivate(context);
+    expect(result).toBe(true);
+    expect(mockMembershipService.hasRole).toHaveBeenCalledWith('user1', 'team-delete-id', [TeamRole.HEAD_COACH]);
+  });
+
+  it('should resolve teamId from eventId via MembershipService', async () => {
+    mockReflector.getAllAndOverride.mockReturnValue([TeamRole.HEAD_COACH]);
+    mockMembershipService.findTeamIdByEventId = vi.fn().mockResolvedValue('team-from-event');
+    mockMembershipService.hasRole.mockResolvedValue(true);
+    const context = createMockContext({ sub: 'user1' }, { eventId: 'event-1' });
+    const result = await guard.canActivate(context);
+    expect(result).toBe(true);
+    expect(mockMembershipService.findTeamIdByEventId).toHaveBeenCalledWith('event-1');
+    expect(mockMembershipService.hasRole).toHaveBeenCalledWith('user1', 'team-from-event', [TeamRole.HEAD_COACH]);
+  });
+
+  function createMockContext(user: any, params: any, path = '', body: any = {}): ExecutionContext {
     return {
       switchToHttp: () => ({
         getRequest: () => ({
           user,
           params,
           query: {},
-          body: {},
+          body,
           route: { path },
           url: path,
         }),

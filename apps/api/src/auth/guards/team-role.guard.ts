@@ -29,22 +29,28 @@ export class TeamRoleGuard implements CanActivate {
     }
 
     // Try to find teamId in params, then query, then body, then related entities
-    let teamId = request.params.teamId || request.query.teamId || request.body.teamId;
+    let teamId = request.params?.teamId || request.query?.teamId || request.body?.teamId;
 
-    if (!teamId && request.params.seasonId) {
+    if (!teamId && request.params?.seasonId) {
       teamId = await this.membershipService.findTeamIdBySeasonId(request.params.seasonId);
     }
 
-    if (!teamId && request.params.leagueId) {
+    if (!teamId && request.params?.leagueId) {
       teamId = await this.membershipService.findTeamIdByLeagueId(request.params.leagueId);
     }
 
-    if (!teamId && request.params.id) {
+    if (!teamId && request.params?.eventId) {
+      teamId = await this.membershipService.findTeamIdByEventId(request.params.eventId);
+    }
+
+    if (!teamId && request.params?.id) {
       const path = request.route?.path || request.raw?.url || request.url || '';
       if (path.includes('seasons') && !path.includes('teams')) {
         teamId = await this.membershipService.findTeamIdBySeasonId(request.params.id);
       } else if (path.includes('leagues') && !path.includes('teams')) {
         teamId = await this.membershipService.findTeamIdByLeagueId(request.params.id);
+      } else if (path.includes('events') && !path.includes('teams')) {
+        teamId = await this.membershipService.findTeamIdByEventId(request.params.id);
       } else {
         teamId = request.params.id;
       }
