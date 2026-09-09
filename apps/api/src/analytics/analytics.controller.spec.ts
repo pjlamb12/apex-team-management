@@ -10,6 +10,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ExportLayout, ExportFormat } from './dto/export-options.dto';
 import { LlmExportFormat, LlmPromptTemplate } from './dto/llm-export-options.dto';
 import { Response } from 'express';
+import { MembershipService } from '../memberships/membership.service';
 
 describe('AnalyticsController', () => {
   let controller: AnalyticsController;
@@ -24,6 +25,7 @@ describe('AnalyticsController', () => {
         { provide: PerformanceMetricsService, useValue: {} },
         { provide: PlayerAnalyticsService, useValue: {} },
         { provide: CsvExportService, useValue: {} },
+        { provide: MembershipService, useValue: { hasRole: vi.fn().mockResolvedValue(true) } },
         {
           provide: PdfExportService,
           useValue: {

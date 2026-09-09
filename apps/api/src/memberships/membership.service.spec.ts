@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { MembershipService } from './membership.service';
 import { TeamMemberEntity } from '../entities/team-member.entity';
 import { TeamRole } from '@apex-team/shared/util/models';
@@ -8,7 +7,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('MembershipService', () => {
   let service: MembershipService;
-  let repo: Repository<TeamMemberEntity>;
 
   const mockRepo = {
     findOne: vi.fn(),
@@ -26,7 +24,6 @@ describe('MembershipService', () => {
     }).compile();
 
     service = module.get<MembershipService>(MembershipService);
-    repo = module.get<Repository<TeamMemberEntity>>(getRepositoryToken(TeamMemberEntity));
   });
 
   it('should be defined', () => {
@@ -79,6 +76,77 @@ describe('MembershipService', () => {
       mockRepo.findOne.mockResolvedValueOnce(null);
       const result = await service.hasRole('user1', 'team1', [TeamRole.HEAD_COACH]);
       expect(result).toBe(false);
+    });
+  });
+
+  describe('entity resolution', () => {
+    it('findTeamIdBySeasonId should return null if dataSource is not provided', async () => {
+      const result = await service.findTeamIdBySeasonId('s1');
+      expect(result).toBeNull();
+    });
+
+    it('findTeamIdByLeagueId should return null if dataSource is not provided', async () => {
+      const result = await service.findTeamIdByLeagueId('l1');
+      expect(result).toBeNull();
+    });
+
+    it('findTeamIdBySeasonId should return teamId if season found', async () => {
+      const mockSeasonRepo = {
+        findOne: vi.fn().mockResolvedValue({ id: 's1', teamId: 'team-from-season' }),
+      };
+      const mockDataSource = {
+        getRepository: vi.fn().mockReturnValue(mockSeasonRepo),
+      };
+      const serviceWithDs = new MembershipService(mockRepo as any, mockDataSource as any);
+      const result = await serviceWithDs.findTeamIdBySeasonId('s1');
+      expect(result).toBe('team-from-season');
+      expect(mockSeasonRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 's1' },
+        select: ['id', 'teamId'],
+      });
+    });
+
+    it('findTeamIdByEventId should return null if dataSource is not provided', async () => {
+      const result = await service.findTeamIdByEventId('e1');
+      expect(result).toBeNull();
+    });
+
+    it('findTeamIdByLeagueId should return teamId if league with season found', async () => {
+      const mockLeagueRepo = {
+        findOne: vi.fn().mockResolvedValue({
+          id: 'l1',
+          season: { id: 's1', teamId: 'team-from-league' },
+        }),
+      };
+      const mockDataSource = {
+        getRepository: vi.fn().mockReturnValue(mockLeagueRepo),
+      };
+      const serviceWithDs = new MembershipService(mockRepo as any, mockDataSource as any);
+      const result = await serviceWithDs.findTeamIdByLeagueId('l1');
+      expect(result).toBe('team-from-league');
+      expect(mockLeagueRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'l1' },
+        relations: ['season'],
+      });
+    });
+
+    it('findTeamIdByEventId should return teamId if event with season found', async () => {
+      const mockEventRepo = {
+        findOne: vi.fn().mockResolvedValue({
+          id: 'e1',
+          season: { id: 's1', teamId: 'team-from-event' },
+        }),
+      };
+      const mockDataSource = {
+        getRepository: vi.fn().mockReturnValue(mockEventRepo),
+      };
+      const serviceWithDs = new MembershipService(mockRepo as any, mockDataSource as any);
+      const result = await serviceWithDs.findTeamIdByEventId('e1');
+      expect(result).toBe('team-from-event');
+      expect(mockEventRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'e1' },
+        relations: ['season'],
+      });
     });
   });
 });
