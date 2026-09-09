@@ -5,10 +5,12 @@ import { CandidateEvaluationEntity } from '../entities/candidate-evaluation.enti
 import { CandidateNoteEntity } from '../entities/candidate-note.entity';
 import { ScoutingService } from './scouting.service';
 import { ScoutingController } from './scouting.controller';
+import { MembershipsModule } from '../memberships/memberships.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ScoutingRubricEntity, CandidateEvaluationEntity, CandidateNoteEntity]),
+    MembershipsModule,
   ],
   providers: [ScoutingService],
   controllers: [ScoutingController],

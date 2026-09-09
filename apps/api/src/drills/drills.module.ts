@@ -8,6 +8,7 @@ import { DrillsService } from './drills.service';
 import { PracticeDrillsService } from './practice-drills.service';
 import { DrillsController } from './drills.controller';
 import { PracticeDrillsController } from './practice-drills.controller';
+import { MembershipsModule } from '../memberships/memberships.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PracticeDrillsController } from './practice-drills.controller';
       PracticeDrillEntity,
       EventEntity,
     ]),
+    MembershipsModule,
   ],
   providers: [DrillsService, PracticeDrillsService],
   controllers: [DrillsController, PracticeDrillsController],

@@ -1,14 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { TeamMemberEntity } from '../entities/team-member.entity';
+import { SeasonEntity } from '../entities/season.entity';
+import { LeagueEntity } from '../entities/league.entity';
 import { TeamRole } from '@apex-team/shared/util/models';
 
 @Injectable()
 export class MembershipService {
   constructor(
     @InjectRepository(TeamMemberEntity)
-    private readonly membershipRepo: Repository<TeamMemberEntity>
+    private readonly membershipRepo: Repository<TeamMemberEntity>,
+    @Optional()
+    private readonly dataSource?: DataSource,
   ) {}
 
   async isMember(userId: string, teamId: string): Promise<boolean> {
@@ -35,5 +39,31 @@ export class MembershipService {
     }
 
     return roles.includes(membership.role);
+  }
+
+  async findTeamIdBySeasonId(seasonId: string): Promise<string | null> {
+    if (!this.dataSource) return null;
+    try {
+      const season = await this.dataSource.getRepository(SeasonEntity).findOne({
+        where: { id: seasonId },
+        select: ['id', 'teamId'],
+      });
+      return season?.teamId ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  async findTeamIdByLeagueId(leagueId: string): Promise<string | null> {
+    if (!this.dataSource) return null;
+    try {
+      const league = await this.dataSource.getRepository(LeagueEntity).findOne({
+        where: { id: leagueId },
+        relations: ['season'],
+      });
+      return league?.season?.teamId ?? null;
+    } catch {
+      return null;
+    }
   }
 }
