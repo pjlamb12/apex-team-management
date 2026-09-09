@@ -28,6 +28,7 @@ import { TeamRoleGuard } from '../auth/guards/team-role.guard';
 import { TeamRoles } from '../auth/decorators/team-role.decorator';
 import { TeamRole } from '@apex-team/shared/util/models';
 import { PlayingTimeValidationService } from '../analytics/playing-time-validation.service';
+import { Throttle, seconds } from '@nestjs/throttler';
 
 @UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId/events')
@@ -228,6 +229,7 @@ export class EventsController {
 
   @Post(':eventId/recap/generate')
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  @Throttle({ default: { limit: 5, ttl: seconds(60) } })
   generateRecap(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
