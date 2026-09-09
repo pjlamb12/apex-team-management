@@ -4,6 +4,7 @@ import { Repository, DataSource } from 'typeorm';
 import { TeamMemberEntity } from '../entities/team-member.entity';
 import { SeasonEntity } from '../entities/season.entity';
 import { LeagueEntity } from '../entities/league.entity';
+import { EventEntity } from '../entities/event.entity';
 import { TeamRole } from '@apex-team/shared/util/models';
 
 @Injectable()
@@ -62,6 +63,19 @@ export class MembershipService {
         relations: ['season'],
       });
       return league?.season?.teamId ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  async findTeamIdByEventId(eventId: string): Promise<string | null> {
+    if (!this.dataSource) return null;
+    try {
+      const event = await this.dataSource.getRepository(EventEntity).findOne({
+        where: { id: eventId },
+        relations: ['season'],
+      });
+      return event?.season?.teamId ?? null;
     } catch {
       return null;
     }
