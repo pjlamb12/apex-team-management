@@ -52,6 +52,8 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
         { id: 'p10', firstName: 'Bench', lastName: 'Player', jerseyNumber: 10, isActive: true },
       ])),
       getPlayers: vi.fn().mockReturnValue(of([])),
+      getGuestPlayers: vi.fn().mockReturnValue(of([])),
+      getGuestPlayersForSeason: vi.fn().mockReturnValue(of([])),
       getGuestPlayersForLeague: vi.fn().mockReturnValue(of([])),
       addPlayer: vi.fn().mockReturnValue(of({})),
     };

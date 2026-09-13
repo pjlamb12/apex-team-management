@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { PlayersService } from './players.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
+import { MergePlayersDto } from './dto/merge-players.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('teams/:teamId/players')
@@ -14,9 +15,19 @@ export class PlayersController {
     return this.playersService.findAllForTeam(teamId, includeInactive === 'true');
   }
 
+  @Get('guests')
+  findAllGuests(@Param('teamId') teamId: string) {
+    return this.playersService.findAllGuestsForTeam(teamId);
+  }
+
   @Get('seasons/:seasonId')
   findAllForSeason(@Param('seasonId') seasonId: string, @Query('includeInactive') includeInactive?: string) {
     return this.playersService.findAllForSeason(seasonId, includeInactive === 'true');
+  }
+
+  @Get('seasons/:seasonId/guests')
+  findGuestsForSeason(@Param('seasonId') seasonId: string) {
+    return this.playersService.findGuestPlayersForSeason(seasonId);
   }
 
   @Get('leagues/:leagueId')
@@ -27,6 +38,14 @@ export class PlayersController {
   @Post()
   create(@Param('teamId') teamId: string, @Body() data: CreatePlayerDto & { seasonId?: string; leagueId?: string }) {
     return this.playersService.create(teamId, data);
+  }
+
+  @Post('merge')
+  merge(
+    @Param('teamId') teamId: string,
+    @Body() dto: MergePlayersDto,
+  ) {
+    return this.playersService.mergePlayers(teamId, dto.targetPlayerId, dto.sourcePlayerId);
   }
 
   @Post('leagues/:leagueId')
@@ -58,3 +77,4 @@ export class PlayersController {
     return this.playersService.remove(teamId, id);
   }
 }
+

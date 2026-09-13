@@ -6,6 +6,7 @@ import { PlayerEntity } from '../entities/player.entity';
 import { EventEntity } from '../entities/event.entity';
 import { AttendanceEntity } from '../entities/attendance.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
+import { LineupEntryEntity } from '../entities/lineup-entry.entity';
 import { PlayingTimeService } from './playing-time.service';
 import { NotFoundException } from '@nestjs/common';
 import { vi } from 'vitest';
@@ -16,6 +17,7 @@ describe('PlayerAnalyticsService', () => {
   let eventRepo: Repository<EventEntity>;
   let attendanceRepo: Repository<AttendanceEntity>;
   let gameEventRepo: Repository<GameEventEntity>;
+  let lineupRepo: Repository<LineupEntryEntity>;
   let playingTimeService: PlayingTimeService;
 
   beforeEach(async () => {
@@ -39,6 +41,10 @@ describe('PlayerAnalyticsService', () => {
           useValue: { find: vi.fn() },
         },
         {
+          provide: getRepositoryToken(LineupEntryEntity),
+          useValue: { find: vi.fn().mockResolvedValue([]) },
+        },
+        {
           provide: PlayingTimeService,
           useValue: { calculateForEvent: vi.fn() },
         },
@@ -50,6 +56,7 @@ describe('PlayerAnalyticsService', () => {
     eventRepo = module.get<Repository<EventEntity>>(getRepositoryToken(EventEntity));
     attendanceRepo = module.get<Repository<AttendanceEntity>>(getRepositoryToken(AttendanceEntity));
     gameEventRepo = module.get<Repository<GameEventEntity>>(getRepositoryToken(GameEventEntity));
+    lineupRepo = module.get<Repository<LineupEntryEntity>>(getRepositoryToken(LineupEntryEntity));
     playingTimeService = module.get<PlayingTimeService>(PlayingTimeService);
   });
 
@@ -117,5 +124,31 @@ describe('PlayerAnalyticsService', () => {
       expect(result.history[0].goals).toBe(1);
       expect(result.history[0].playingTimeSeconds).toBe(600);
     });
+
+    it('should not give gamesPlayed credit to guest player who was marked present but did not participate', async () => {
+      const guestPlayer = { id: playerId, firstName: 'Kobyn', lastName: 'Bryant', isGuest: true, teamId };
+      const event = { id: 'event-1', type: 'game', status: 'completed', opponent: 'Rivals', scheduledAt: new Date() };
+
+      vi.spyOn(playerRepo, 'findOne').mockResolvedValue(guestPlayer as any);
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([event] as any);
+      // Errant attendance record marked present
+      vi.spyOn(attendanceRepo, 'find').mockResolvedValue([
+        { eventId: 'event-1', status: 'present' }
+      ] as any);
+      // No game events
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([] as any);
+      // Not in lineup
+      vi.spyOn(lineupRepo, 'find').mockResolvedValue([] as any);
+      // 0 playtime
+      vi.spyOn(playingTimeService, 'calculateForEvent').mockResolvedValue({
+        [playerId]: { totalSeconds: 0, positionSeconds: {} }
+      } as any);
+
+      const result = await service.getPlayerProfile(playerId, teamId);
+
+      expect(result.player.isGuest).toBe(true);
+      expect(result.totalGamesPlayed).toBe(0);
+    });
   });
 });
+

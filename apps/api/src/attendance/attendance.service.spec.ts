@@ -108,7 +108,7 @@ describe('AttendanceService', () => {
 
       await service.batchUpdate('e1', { status: 'present' });
 
-      expect(playerRepo.find).toHaveBeenCalledWith({ where: { teamId: 't1', isActive: true } });
+      expect(playerRepo.find).toHaveBeenCalledWith({ where: { teamId: 't1', isActive: true, isGuest: false } });
       expect(attendanceRepo.save).toHaveBeenCalledTimes(1);
     });
   });

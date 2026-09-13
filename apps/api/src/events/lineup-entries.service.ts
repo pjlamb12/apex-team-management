@@ -57,7 +57,7 @@ export class LineupEntriesService {
     return this.lineupRepo.find({
       where: { eventId },
       relations: ['player'],
-      order: { slotIndex: 'ASC', createdAt: 'ASC' },
+      order: { slotIndex: 'ASC' },
     });
   }
 }

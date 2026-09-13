@@ -5,6 +5,7 @@ import { GameEventEntity } from '../entities/game-event.entity';
 import { PlayerEntity } from '../entities/player.entity';
 import { EventEntity } from '../entities/event.entity';
 import { AttendanceEntity } from '../entities/attendance.entity';
+import { LineupEntryEntity } from '../entities/lineup-entry.entity';
 
 export interface PlayerPerformanceMetrics {
   playerId: string;
@@ -48,6 +49,8 @@ export class PerformanceMetricsService {
     private readonly eventRepo: Repository<EventEntity>,
     @InjectRepository(AttendanceEntity)
     private readonly attendanceRepo: Repository<AttendanceEntity>,
+    @InjectRepository(LineupEntryEntity)
+    private readonly lineupRepo: Repository<LineupEntryEntity>,
   ) {}
 
   async getTeamMetrics(
@@ -98,10 +101,8 @@ export class PerformanceMetricsService {
       result = await this.getMetricsForEvents(teamId, events.map(e => e.id));
     }
 
-    if (isFiltered) {
-      return result.filter(m => !m.isGuest || m.gamesPlayed > 0);
-    }
-    return result;
+    // Only include guest players if they actually participated in at least one game in this scope
+    return result.filter(m => !m.isGuest || m.gamesPlayed > 0);
   }
 
   async getEventMetrics(teamId: string, eventId: string): Promise<PlayerPerformanceMetrics[]> {
@@ -121,15 +122,59 @@ export class PerformanceMetricsService {
       where: { eventId: In(eventIds) }
     });
 
+    // Get lineup entries to verify actual match participation
+    const lineupEntries = await this.lineupRepo.find({
+      where: { eventId: In(eventIds) }
+    });
+
     const metricsMap: Record<string, PlayerPerformanceMetrics> = {};
     players.forEach(p => {
       metricsMap[p.id] = this.initializeMetrics(p);
     });
 
+    // Build map of actual match participation for guest players
+    const guestParticipantEvents = new Set<string>(); // Set of `${playerId}_${eventId}`
+    lineupEntries.forEach(le => {
+      guestParticipantEvents.add(`${le.playerId}_${le.eventId}`);
+    });
+    gameEvents.forEach(ge => {
+      const payload = ge.payload as any;
+      if (!payload) return;
+      const candidates = [
+        payload.scorerId, payload.assistorId, payload.playerId,
+        payload.inPlayerId, payload.outPlayerId, payload.goalkeeperId,
+        payload.liberoId, payload.playerIdA, payload.playerIdB
+      ];
+      candidates.forEach(cId => {
+        if (cId && typeof cId === 'string') {
+          guestParticipantEvents.add(`${cId}_${ge.eventId}`);
+        }
+      });
+    });
+
     // Aggregate attendance (games played)
     attendance.forEach(a => {
       if (metricsMap[a.playerId] && (a.status === 'present' || a.status === 'tardy')) {
-        metricsMap[a.playerId].gamesPlayed++;
+        const player = players.find(p => p.id === a.playerId);
+        if (player?.isGuest) {
+          // Guest player: ONLY count as game appearance if they actually participated in this match
+          if (guestParticipantEvents.has(`${a.playerId}_${a.eventId}`)) {
+            metricsMap[a.playerId].gamesPlayed++;
+            guestParticipantEvents.delete(`${a.playerId}_${a.eventId}`);
+          }
+        } else {
+          // Regular roster players count attendance
+          metricsMap[a.playerId].gamesPlayed++;
+        }
+      }
+    });
+
+    // If a guest player participated in an event (in lineup or logged event) but attendance was not recorded, still count them
+    guestParticipantEvents.forEach(key => {
+      const [playerId] = key.split('_');
+      const player = players.find(p => p.id === playerId);
+      if (player?.isGuest && metricsMap[playerId]) {
+        metricsMap[playerId].gamesPlayed++;
       }
     });
 

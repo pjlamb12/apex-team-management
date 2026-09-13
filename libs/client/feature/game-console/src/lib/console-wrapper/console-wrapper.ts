@@ -997,8 +997,63 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected async handleAddGuestPlayer(): Promise<void> {
+    const tId = this.teamId();
+    const eId = this.eventId();
+    if (!tId || !eId) return;
+
+    try {
+      const currentLineup = await firstValueFrom(this.eventsService.getLineup(tId, eId));
+      const currentIds = new Set(currentLineup.map((l) => l.playerId));
+
+      const allGuests = await firstValueFrom(this.playersService.getGuestPlayers(tId)).catch(() => []);
+      const selectableGuests = allGuests.filter((g) => !currentIds.has(g.id) && g.isActive !== false);
+
+      if (selectableGuests.length > 0) {
+        const alert = await this.alertCtrl.create({
+          header: 'Add Guest Player',
+          message: 'Select an existing guest player or create a new one:',
+          inputs: [
+            ...selectableGuests.map((g, index) => ({
+              type: 'radio' as const,
+              label: `${g.firstName} ${g.lastName} (#${g.jerseyNumber ?? '?'})`,
+              value: g.id,
+              checked: index === 0,
+            })),
+          ],
+          buttons: [
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'New Guest Player',
+              handler: () => {
+                void this.promptCreateNewGuestPlayer(currentLineup);
+              },
+            },
+            {
+              text: 'Add Selected',
+              handler: (selectedId) => {
+                if (!selectedId) return false;
+                const chosen = selectableGuests.find((g) => g.id === selectedId);
+                if (chosen) {
+                  void this.addGuestToLineup(chosen.id, currentLineup);
+                }
+                return true;
+              },
+            },
+          ],
+        });
+        await alert.present();
+      } else {
+        await this.promptCreateNewGuestPlayer(currentLineup);
+      }
+    } catch (err) {
+      console.error('Failed to load guest options', err);
+      await this.promptCreateNewGuestPlayer([]);
+    }
+  }
+
+  private async promptCreateNewGuestPlayer(currentLineup: any[]): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Add Guest Player',
+      header: 'Create New Guest Player',
       inputs: [
         { name: 'firstName', type: 'text', placeholder: 'First Name' },
         { name: 'lastName', type: 'text', placeholder: 'Last Name' },
@@ -1012,7 +1067,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
             if (!data.firstName || !data.lastName || !data.jerseyNumber) {
               return false;
             }
-            void this.addGuestPlayer(data.firstName, data.lastName, +data.jerseyNumber);
+            void this.addGuestPlayer(data.firstName, data.lastName, +data.jerseyNumber, currentLineup);
             return true;
           }
         }
@@ -1021,13 +1076,42 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  private async addGuestPlayer(firstName: string, lastName: string, jerseyNumber: number): Promise<void> {
+  private async addGuestToLineup(guestId: string, currentLineup: any[]): Promise<void> {
     const tId = this.teamId();
     const eId = this.eventId();
     if (!tId || !eId) return;
 
     try {
-      // 1. Create the guest player
+      const newEntries = currentLineup.map((entry) => ({
+        playerId: entry.playerId,
+        positionName: entry.positionName || undefined,
+        slotIndex: entry.slotIndex !== null ? entry.slotIndex : undefined,
+        status: entry.status,
+      }));
+
+      newEntries.push({
+        playerId: guestId,
+        positionName: undefined,
+        slotIndex: undefined,
+        status: 'bench',
+      });
+
+      const updatedLineup = await firstValueFrom(
+        this.eventsService.saveLineup(tId, eId, { entries: newEntries })
+      );
+
+      this.stateService.updateInitialLineup(updatedLineup as any);
+    } catch (err) {
+      console.error('Failed to add guest to lineup:', err);
+    }
+  }
+
+  private async addGuestPlayer(firstName: string, lastName: string, jerseyNumber: number, currentLineup: any[]): Promise<void> {
+    const tId = this.teamId();
+    const eId = this.eventId();
+    if (!tId || !eId) return;
+
+    try {
       const guest = await firstValueFrom(
         this.playersService.addPlayer(tId, {
           firstName,
@@ -1037,32 +1121,10 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         } as any)
       );
 
-      // 2. Fetch the current lineup entries
-      const currentLineup = await firstValueFrom(this.eventsService.getLineup(tId, eId));
-      
-      const newEntries = currentLineup.map(entry => ({
-        playerId: entry.playerId,
-        positionName: entry.positionName || undefined,
-        slotIndex: entry.slotIndex !== null ? entry.slotIndex : undefined,
-        status: entry.status,
-      }));
-
-      newEntries.push({
-        playerId: guest.id,
-        positionName: undefined,
-        slotIndex: undefined,
-        status: 'bench',
-      });
-
-      // 3. Save the lineup to backend
-      const updatedLineup = await firstValueFrom(
-        this.eventsService.saveLineup(tId, eId, { entries: newEntries })
-      );
-
-      // 4. Update the local live state service lineup so the UI updates
-      this.stateService.updateInitialLineup(updatedLineup as any);
+      await this.addGuestToLineup(guest.id, currentLineup);
     } catch (err) {
       console.error('Failed to add guest player:', err);
     }
   }
 }
+

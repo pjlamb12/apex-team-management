@@ -36,6 +36,7 @@ import {
   shieldOutline,
   handRightOutline,
   sparklesOutline,
+  gitMergeOutline,
 } from 'ionicons/icons';
 import { 
   AnalyticsService, 
@@ -51,6 +52,7 @@ import {
 import { ModalController } from '@ionic/angular/standalone';
 import { ExportModalComponent, ExportOptions } from './export-modal/export-modal';
 import { AiPromptModalComponent } from './ai-prompt-modal/ai-prompt-modal';
+import { MergePlayerModal } from '../../merge-player-modal/merge-player-modal';
 import { League, SeasonStats, TeamAwardsSummary } from '@apex-team/shared/util/models';
 
 
@@ -345,6 +347,7 @@ export class TeamAnalytics {
       shieldOutline, 
       handRightOutline,
       sparklesOutline,
+      gitMergeOutline,
     });
 
     // Initialize seasons if not already done
@@ -446,6 +449,32 @@ export class TeamAnalytics {
         await this.openAiPromptModal();
       }
       console.log('Export data:', data);
+    }
+  }
+
+  protected async openMergeModal(preselectedTargetId?: string, guestOnly = false): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: MergePlayerModal,
+      componentProps: {
+        teamId: this.teamId,
+        preselectedTargetId,
+        guestOnly,
+      },
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data?.merged) {
+      const seasonId = this.selectedSeasonId();
+      if (seasonId) {
+        void this.loadData(
+          this.teamId,
+          seasonId,
+          this.selectedLeagueId() ?? undefined,
+          this.selectedEventType()
+        );
+      }
     }
   }
 

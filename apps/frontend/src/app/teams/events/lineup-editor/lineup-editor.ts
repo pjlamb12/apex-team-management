@@ -138,6 +138,7 @@ export class LineupEditor implements OnInit {
   protected event = signal<EventEntity | null>(null);
   protected team = signal<any | null>(null);
   protected players = signal<PlayerEntity[]>([]);
+  protected availableGuestPlayers = signal<PlayerEntity[]>([]);
   protected attendance = signal<AttendanceRecord[]>([]);
   protected slots = signal<LineupSlot[]>([]);
   protected opponentDossier = signal<OpponentWithStats | null>(null);
@@ -362,19 +363,30 @@ export class LineupEditor implements OnInit {
         }
       }
 
-      let leagueGuests: PlayerEntity[] = [];
+      // Load available guest players from team, league, and season without auto-populating them into bench
+      const guestPromises: Promise<PlayerEntity[]>[] = [
+        firstValueFrom(this.playersService.getGuestPlayers(teamId)).catch(() => []),
+      ];
       if (event.leagueId) {
-        try {
-          leagueGuests = await firstValueFrom(this.playersService.getGuestPlayersForLeague(teamId, event.leagueId));
-        } catch (e) {
-          console.error('Failed to load league guest players', e);
-        }
+        guestPromises.push(
+          firstValueFrom(this.playersService.getGuestPlayersForLeague(teamId, event.leagueId)).catch(() => [])
+        );
       }
+      if (event.seasonId) {
+        guestPromises.push(
+          firstValueFrom(this.playersService.getGuestPlayersForSeason(teamId, event.seasonId)).catch(() => [])
+        );
+      }
+      const guestResults = await Promise.all(guestPromises);
+      const guestMap = new Map<string, PlayerEntity>();
+      guestResults.flat().forEach((gp) => {
+        if (gp && gp.isActive !== false) guestMap.set(gp.id, gp);
+      });
+      this.availableGuestPlayers.set(Array.from(guestMap.values()));
 
-      // Merge players from the lineup and competition guest players into the players list
+      // Only populate regular roster players and players who were already saved in THIS event's lineup
       const allPlayersMap = new Map<string, PlayerEntity>();
       players.forEach((p) => allPlayersMap.set(p.id, p));
-      leagueGuests.forEach((gp) => allPlayersMap.set(gp.id, gp));
       lineup.forEach((entry) => {
         if (entry.player && !allPlayersMap.has(entry.player.id)) {
           if (entry.player.isActive === false && entry.status !== 'starting') {
@@ -728,8 +740,52 @@ export class LineupEditor implements OnInit {
   }
 
   protected async addGuestPlayer(): Promise<void> {
+    const currentIds = new Set(this.players().map((p) => p.id));
+    const selectableGuests = this.availableGuestPlayers().filter((g) => !currentIds.has(g.id));
+
+    if (selectableGuests.length > 0) {
+      const alert = await this.alertCtrl.create({
+        header: 'Add Guest Player',
+        message: 'Select an existing guest player or create a new one:',
+        inputs: [
+          ...selectableGuests.map((g, index) => ({
+            type: 'radio' as const,
+            label: `${g.firstName} ${g.lastName} (#${g.jerseyNumber ?? '?'})`,
+            value: g.id,
+            checked: index === 0,
+          })),
+        ],
+        buttons: [
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'New Guest Player',
+            handler: () => {
+              void this.promptCreateNewGuestPlayer();
+            },
+          },
+          {
+            text: 'Add Selected',
+            handler: (selectedId) => {
+              if (!selectedId) return false;
+              const chosen = selectableGuests.find((g) => g.id === selectedId);
+              if (chosen) {
+                this.players.update((prev) => [...prev, chosen]);
+                this.toastMessage.set(`Guest player ${chosen.firstName} #${chosen.jerseyNumber} added to bench.`);
+              }
+              return true;
+            },
+          },
+        ],
+      });
+      await alert.present();
+    } else {
+      await this.promptCreateNewGuestPlayer();
+    }
+  }
+
+  private async promptCreateNewGuestPlayer(): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Add Guest Player',
+      header: 'Create New Guest Player',
       inputs: [
         { name: 'firstName', type: 'text', placeholder: 'First Name' },
         { name: 'lastName', type: 'text', placeholder: 'Last Name' },
@@ -765,6 +821,7 @@ export class LineupEditor implements OnInit {
 
       // Add the new guest player to the local players list so they can be assigned
       this.players.update((prev) => [...prev, guest]);
+      this.availableGuestPlayers.update((prev) => [...prev, guest]);
 
       this.toastMessage.set(`Guest player #${jerseyNumber} added to bench.`);
     } catch (err) {
