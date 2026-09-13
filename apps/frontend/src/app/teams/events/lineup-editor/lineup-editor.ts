@@ -41,22 +41,19 @@ import {
   OpponentsService,
 } from '@apex-team/client/data-access/team';
 import { SoccerPitchViewComponent, VolleyballCourtViewComponent } from '@apex-team/client/feature/game-console';
-import { Player, OpponentWithStats, ThreatLevel } from '@apex-team/shared/util/models';
+import {
+  Player,
+  OpponentWithStats,
+  ThreatLevel,
+  getPositionFromSlot as sharedGetPositionFromSlot,
+  getDefaultSlots,
+} from '@apex-team/shared/util/models';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 
 interface LineupSlot {
   slotIndex: number;
   positionName: string | null;
   playerId: string | null;
-}
-
-function getDefaultSlots(count: number, sportName?: string): number[] {
-  if (sportName === 'Volleyball') return [0, 1, 2, 3, 4, 5];
-  if (count === 11) return [0, 1, 2, 4, 5, 6, 7, 9, 10, 12, 14]; // GK, 4 DEF, 4 MID, 2 FWD
-  if (count === 9) return [0, 2, 3, 4, 7, 8, 9, 12, 14]; // GK, 3 DEF, 3 MID, 2 FWD
-  if (count === 7) return [0, 2, 4, 7, 8, 9, 13]; // GK, 2 DEF, 3 MID, 1 FWD
-  if (count === 5) return [0, 2, 4, 8, 13]; // GK, 2 DEF, 1 MID, 1 FWD
-  return Array.from({length: count}, (_, i) => i);
 }
 
 function getPositionFromSlot(slot: number, sportName?: string, positionTypes?: string[]): string {
@@ -72,11 +69,7 @@ function getPositionFromSlot(slot: number, sportName?: string, positionTypes?: s
     ];
     return defaults[slot] || 'Outside Hitter';
   }
-  if (slot === 0) return 'GK';
-  if (slot >= 1 && slot <= 5) return 'DEF';
-  if (slot >= 6 && slot <= 10) return 'MID';
-  if (slot >= 11 && slot <= 15) return 'FWD';
-  return 'UNKNOWN';
+  return sharedGetPositionFromSlot(slot, sportName);
 }
 
 @Component({
@@ -421,6 +414,7 @@ export class LineupEditor implements OnInit {
 
       // 1. First add slots for starting entries that already have a valid slotIndex (preserving custom formations)
       for (const entry of startingLineup) {
+        if (newSlots.length >= fieldCount) break;
         if (entry.slotIndex !== null && entry.slotIndex !== undefined && !usedSlotIndices.has(entry.slotIndex)) {
           usedSlotIndices.add(entry.slotIndex);
           const isAbsent = absent.has(entry.playerId);
@@ -449,7 +443,7 @@ export class LineupEditor implements OnInit {
 
       // 3. If still below fieldCount, fill in any remaining valid slot indices
       let candidateSlot = 0;
-      const maxCandidate = sportName === 'Volleyball' ? 5 : 15;
+      const maxCandidate = sportName === 'Volleyball' ? 5 : 21;
       while (newSlots.length < fieldCount && candidateSlot <= maxCandidate) {
         if (!usedSlotIndices.has(candidateSlot)) {
           usedSlotIndices.add(candidateSlot);
@@ -524,20 +518,20 @@ export class LineupEditor implements OnInit {
       
       if (field === 'positionName' && this.team()?.sport?.name !== 'Volleyball') {
         const pos = value as string;
-        let minSlot = 0, maxSlot = 0;
-        if (pos === 'GK') { minSlot = 0; maxSlot = 0; }
-        else if (pos === 'DEF') { minSlot = 1; maxSlot = 5; }
-        else if (pos === 'MID') { minSlot = 6; maxSlot = 10; }
-        else if (pos === 'FWD') { minSlot = 11; maxSlot = 15; }
-        
         const currentSlotIndex = next[index].slotIndex;
-        if (currentSlotIndex < minSlot || currentSlotIndex > maxSlot) {
+        const sportName = this.team()?.sport?.name;
+        const currentPos = getPositionFromSlot(currentSlotIndex, sportName);
+
+        if (currentPos !== pos) {
+          let candidateSlots: number[] = [];
+          if (pos === 'GK') candidateSlots = [0];
+          else if (pos === 'DEF') candidateSlots = [1, 2, 3, 4, 5];
+          else if (pos === 'MID') candidateSlots = [6, 7, 8, 9, 10, 16, 17, 18, 19, 20, 21];
+          else if (pos === 'FWD') candidateSlots = [11, 12, 13, 14, 15];
+
           const occupied = new Set(next.map((s, i) => i !== index ? s.slotIndex : -1));
-          let newSlot = -1;
-          for (let i = minSlot; i <= maxSlot; i++) {
-            if (!occupied.has(i)) { newSlot = i; break; }
-          }
-          if (newSlot !== -1) {
+          const newSlot = candidateSlots.find((s) => !occupied.has(s));
+          if (newSlot !== undefined) {
             next[index].slotIndex = newSlot;
           }
         }
@@ -686,6 +680,16 @@ export class LineupEditor implements OnInit {
     const eventId = this.eventId;
     const teamId = this.teamId;
     if (!eventId || !teamId) return;
+
+    const ev = this.event();
+    const sportName = this.team()?.sport?.name;
+    const fieldCount = ev?.playersOnField || (sportName === 'Volleyball' ? 6 : 11);
+
+    const startingStarters = this.slots().filter((s) => s.slotIndex !== 99 && !!s.playerId);
+    if (startingStarters.length > fieldCount) {
+      this.errorMessage.set(`Cannot have more than ${fieldCount} starting players on the field.`);
+      return;
+    }
 
     this.isSaving.set(true);
     try {

@@ -407,5 +407,85 @@ describe('LiveGameStateService', () => {
       // Score should reflect the opponent goal
       expect(service.score().opponent).toBe(1);
     });
+
+    it('should accurately represent 1-3-4-1 and 1-2-5-1 formations in activePlayers', () => {
+      // 1-3-4-1 formation: 1 GK (0), 3 DEF (2, 3, 4), 4 MID (6, 7, 8, 9), 1 FWD (13)
+      const formation1341Lineup: LineupEntry[] = [
+        { playerId: 'gk', player: { id: 'gk', firstName: 'GK', lastName: 'Keeper' } as any, status: 'starting', slotIndex: 0, positionName: 'GK' },
+        { playerId: 'd1', player: { id: 'd1', firstName: 'D', lastName: '1' } as any, status: 'starting', slotIndex: 2, positionName: 'DEF' },
+        { playerId: 'd2', player: { id: 'd2', firstName: 'D', lastName: '2' } as any, status: 'starting', slotIndex: 3, positionName: 'DEF' },
+        { playerId: 'd3', player: { id: 'd3', firstName: 'D', lastName: '3' } as any, status: 'starting', slotIndex: 4, positionName: 'DEF' },
+        { playerId: 'm1', player: { id: 'm1', firstName: 'M', lastName: '1' } as any, status: 'starting', slotIndex: 6, positionName: 'MID' },
+        { playerId: 'm2', player: { id: 'm2', firstName: 'M', lastName: '2' } as any, status: 'starting', slotIndex: 7, positionName: 'MID' },
+        { playerId: 'm3', player: { id: 'm3', firstName: 'M', lastName: '3' } as any, status: 'starting', slotIndex: 8, positionName: 'MID' },
+        { playerId: 'm4', player: { id: 'm4', firstName: 'M', lastName: '4' } as any, status: 'starting', slotIndex: 9, positionName: 'MID' },
+        { playerId: 'f1', player: { id: 'f1', firstName: 'F', lastName: '1' } as any, status: 'starting', slotIndex: 13, positionName: 'FWD' },
+      ];
+
+      service.initialize(eventId, formation1341Lineup, teamId, 9);
+      const active = service.activePlayers();
+      expect(active.length).toBe(9);
+      const slots = active.map(p => (p as any).slotIndex).sort((a, b) => a - b);
+      expect(slots).toEqual([0, 2, 3, 4, 6, 7, 8, 9, 13]);
+
+      // 1-2-5-1 formation: 1 GK (0), 2 DEF (2, 4), 5 MID (6, 7, 8, 9, 10), 1 FWD (13)
+      const formation1251Lineup: LineupEntry[] = [
+        { playerId: 'gk', player: { id: 'gk', firstName: 'GK', lastName: 'Keeper' } as any, status: 'starting', slotIndex: 0, positionName: 'GK' },
+        { playerId: 'd1', player: { id: 'd1', firstName: 'D', lastName: '1' } as any, status: 'starting', slotIndex: 2, positionName: 'DEF' },
+        { playerId: 'd2', player: { id: 'd2', firstName: 'D', lastName: '4' } as any, status: 'starting', slotIndex: 4, positionName: 'DEF' },
+        { playerId: 'm1', player: { id: 'm1', firstName: 'M', lastName: '1' } as any, status: 'starting', slotIndex: 6, positionName: 'MID' },
+        { playerId: 'm2', player: { id: 'm2', firstName: 'M', lastName: '2' } as any, status: 'starting', slotIndex: 7, positionName: 'MID' },
+        { playerId: 'm3', player: { id: 'm3', firstName: 'M', lastName: '3' } as any, status: 'starting', slotIndex: 8, positionName: 'MID' },
+        { playerId: 'm4', player: { id: 'm4', firstName: 'M', lastName: '4' } as any, status: 'starting', slotIndex: 9, positionName: 'MID' },
+        { playerId: 'm5', player: { id: 'm5', firstName: 'M', lastName: '5' } as any, status: 'starting', slotIndex: 10, positionName: 'MID' },
+        { playerId: 'f1', player: { id: 'f1', firstName: 'F', lastName: '1' } as any, status: 'starting', slotIndex: 13, positionName: 'FWD' },
+      ];
+
+      service.initialize(eventId, formation1251Lineup, teamId, 9);
+      const active1251 = service.activePlayers();
+      expect(active1251.length).toBe(9);
+      const slots1251 = active1251.map(p => (p as any).slotIndex).sort((a, b) => a - b);
+      expect(slots1251).toEqual([0, 2, 4, 6, 7, 8, 9, 10, 13]);
+    });
+
+    it('should strictly enforce playersOnField limit to prevent phantom 10th player in 9v9', () => {
+      // Lineup with 10 starters for a 9-player event
+      const tenStarters: LineupEntry[] = Array.from({ length: 10 }, (_, i) => ({
+        playerId: `p${i + 1}`,
+        player: { id: `p${i + 1}`, firstName: `P`, lastName: `${i + 1}` } as any,
+        status: 'starting',
+        slotIndex: i,
+        positionName: 'MID',
+      }));
+
+      service.initialize(eventId, tenStarters, teamId, 9);
+      expect(service.activePlayers().length).toBe(9);
+    });
+
+    it('should not create duplicate phantom players during substitution when slotIndex differs from outPlayer position', () => {
+      const lineup: LineupEntry[] = [
+        { playerId: 'p1', player: { id: 'p1', firstName: 'P', lastName: '1' } as any, status: 'starting', slotIndex: 3, positionName: 'DEF' },
+        { playerId: 'p2', player: { id: 'p2', firstName: 'P', lastName: '2' } as any, status: 'starting', slotIndex: 4, positionName: 'DEF' },
+        { playerId: 'p-bench', player: { id: 'p-bench', firstName: 'Bench', lastName: 'Player' } as any, status: 'bench', slotIndex: null, positionName: null },
+      ];
+
+      service.initialize(eventId, lineup, teamId, 2);
+      expect(service.activePlayers().length).toBe(2);
+
+      // Substitute p-bench in for p1, but sub event records slotIndex 3
+      service.pushEvent({
+        type: 'SUB',
+        playerIdIn: 'p-bench',
+        playerIdOut: 'p1',
+        slotIndex: 3,
+        timestamp: Date.now(),
+        minuteOccurred: 10,
+      });
+
+      const active = service.activePlayers();
+      expect(active.length).toBe(2);
+      expect(active.find(p => p.id === 'p1')).toBeUndefined();
+      expect(active.find(p => p.id === 'p-bench')).toBeDefined();
+    });
   });
 });

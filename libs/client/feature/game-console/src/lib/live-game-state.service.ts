@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Player, LineupEntry, StagedSub, getPositionFromSlot } from '@apex-team/shared/util/models';
+import { Player, LineupEntry, StagedSub, getPositionFromSlot, getDefaultSlots } from '@apex-team/shared/util/models';
 
 export interface GameEvent {
   id?: string;
@@ -219,27 +219,62 @@ export class LiveGameStateService {
   public readonly activePlayers = computed(() => {
     const lineup = this._initialLineup();
     const events = this._events().filter((e) => e.status !== 'deleted');
+    const fieldCount = this._playersOnField();
+    const sport = this._sportName();
 
     const slotMap = new Map<number, { player: Player; position: string }>();
 
+    // 1. First add starters with explicit slotIndex
     lineup
-      .filter((e) => e.status === 'starting' && e.slotIndex !== null)
+      .filter((e) => e.status === 'starting' && e.slotIndex !== null && e.slotIndex !== undefined && e.slotIndex !== 99)
       .forEach((e) => {
-        slotMap.set(e.slotIndex as number, {
-          player: e.player,
-          position: e.positionName || 'Unknown',
-        });
+        if (slotMap.size < fieldCount) {
+          slotMap.set(e.slotIndex as number, {
+            player: e.player,
+            position: e.positionName || getPositionFromSlot(e.slotIndex as number, sport),
+          });
+        }
       });
+
+    // 2. If any starters have null/undefined slotIndex, assign available default slots up to fieldCount
+    const unassignedStarters = lineup.filter(
+      (e) => e.status === 'starting' && (e.slotIndex === null || e.slotIndex === undefined) && e.slotIndex !== 99
+    );
+    if (unassignedStarters.length > 0 && slotMap.size < fieldCount) {
+      const defaultSlots = getDefaultSlots(fieldCount, sport);
+      for (const starter of unassignedStarters) {
+        if (slotMap.size >= fieldCount) break;
+        const availableSlot = defaultSlots.find((s) => !slotMap.has(s)) ??
+          Array.from({ length: 22 }, (_, i) => i).find((s) => !slotMap.has(s));
+        if (availableSlot !== undefined) {
+          slotMap.set(availableSlot, {
+            player: starter.player,
+            position: starter.positionName || getPositionFromSlot(availableSlot, sport),
+          });
+        }
+      }
+    }
 
     events.forEach((event) => {
       const inId = event.playerIdIn || event['inPlayerId'];
+      const outId = event.playerIdOut || event['outPlayerId'];
+
       if (event.type === 'SUB' && inId && event.slotIndex !== undefined) {
         const inEntry = lineup.find((e) => e.playerId === inId);
         if (inEntry) {
           const currentInSlot = slotMap.get(event.slotIndex);
+          const preservedPosition = currentInSlot?.position || event['positionName'] || getPositionFromSlot(event.slotIndex, sport);
+          // Remove outgoing player from any slot they previously occupied to prevent phantom players
+          if (outId) {
+            for (const [sIndex, data] of slotMap.entries()) {
+              if (data.player.id === outId) {
+                slotMap.delete(sIndex);
+              }
+            }
+          }
           slotMap.set(event.slotIndex, {
             player: inEntry.player,
-            position: currentInSlot?.position || 'Unknown',
+            position: preservedPosition,
           });
         }
       } else if (
@@ -249,7 +284,6 @@ export class LiveGameStateService {
       ) {
         const playerA = slotMap.get(event.slotIndexA);
         const playerB = slotMap.get(event.slotIndexB);
-        const sport = this._sportName();
 
         if (playerA && playerB) {
           const temp = { ...playerA };

@@ -59,6 +59,16 @@ export class SoccerPitchViewComponent {
       13: { x: 50, y: 20 },
       14: { x: 67.5, y: 20 },
       15: { x: 85, y: 20 },
+
+      // Defensive Midfielders / CDMs (16-18)
+      16: { x: 35, y: 56 },
+      17: { x: 65, y: 56 },
+      18: { x: 50, y: 56 },
+
+      // Attacking Midfielders / CAMs (19-21)
+      19: { x: 35, y: 32 },
+      20: { x: 65, y: 32 },
+      21: { x: 50, y: 32 },
     } as Record<number, { x: number; y: number }>;
   });
 

@@ -273,7 +273,7 @@
             <ion-label>Starting {{ event()?.playersOnField || (team()?.sport?.name === 'Volleyball' ? 6 : 11) }}</ion-label>
           </ion-list-header>
 
-          @for (slot of slots(); track slot.slotIndex; let idx = $index) {
+          @for (slot of slots(); track idx; let idx = $index) {
             @if (slot.slotIndex !== 99) {
               <ion-item>
                 <div class="slot-row w-full flex gap-2 py-2">

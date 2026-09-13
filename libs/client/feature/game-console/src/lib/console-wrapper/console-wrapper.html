@@ -335,7 +335,7 @@
             </app-volleyball-court-view>
           } @else {
             <app-soccer-pitch-view
-              class="w-full"
+              class="w-full h-full min-h-[350px] block relative"
               [players]="stateService.activePlayers()"
               [initialLineup]="stateService.initialLineup()"
               [stagedSubs]="stateService.stagedSubs()"
