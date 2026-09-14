@@ -96,6 +96,108 @@ describe('LiveGameStateService', () => {
     expect(service.benchPlayers().find(p => p.id === 'p1')).toBeTruthy();
   });
 
+  it('should allow subbing off an active player to bench without replacement (injury / playing down)', () => {
+    service.initialize(eventId, mockLineup, teamId);
+
+    // Sub out p1 without bringing anyone in
+    const subOutEvent = {
+      type: 'SUB',
+      playerIdOut: 'p1',
+      slotIndex: 0,
+      timestamp: Date.now(),
+      minuteOccurred: 12,
+    };
+
+    service.pushEvent(subOutEvent);
+
+    expect(service.activePlayers().find(p => p.id === 'p1')).toBeUndefined();
+    expect(service.benchPlayers().find(p => p.id === 'p1')).toBeTruthy();
+    // Only p3 is active now
+    expect(service.activePlayers().length).toBe(1);
+    expect(service.activePlayers()[0].id).toBe('p3');
+  });
+
+  it('should allow subbing on a bench player into an empty slot without subbing someone off', () => {
+    service.initialize(eventId, mockLineup, teamId);
+
+    // First sub out p1 so slot 0 is empty
+    service.pushEvent({
+      type: 'SUB',
+      playerIdOut: 'p1',
+      slotIndex: 0,
+      timestamp: Date.now(),
+      minuteOccurred: 10,
+    });
+
+    // Now sub bench player p2 directly into empty slot 0
+    service.pushEvent({
+      type: 'SUB',
+      playerIdIn: 'p2',
+      slotIndex: 0,
+      positionName: 'Forward',
+      timestamp: Date.now() + 1000,
+      minuteOccurred: 15,
+    });
+
+    const p2Active = service.activePlayers().find(p => p.id === 'p2');
+    expect(p2Active).toBeTruthy();
+    expect((p2Active as any).slotIndex).toBe(0);
+    expect(service.benchPlayers().find(p => p.id === 'p2')).toBeUndefined();
+  });
+
+  it('should not allow subbing on an additional player if field is already at maximum capacity (playersOnField)', () => {
+    // 2 starters (p1, p3), playersOnField = 2
+    service.initialize(eventId, mockLineup, teamId, 2);
+    expect(service.activePlayers().length).toBe(2);
+
+    // Try to sub bench player p2 into slot 2 without subbing anyone out
+    service.pushEvent({
+      type: 'SUB',
+      playerIdIn: 'p2',
+      slotIndex: 2,
+      positionName: 'Defender',
+      timestamp: Date.now(),
+      minuteOccurred: 15,
+    });
+
+    // p2 should NOT have been added to active players
+    expect(service.activePlayers().length).toBe(2);
+    expect(service.activePlayers().find(p => p.id === 'p2')).toBeUndefined();
+    expect(service.benchPlayers().find(p => p.id === 'p2')).toBeTruthy();
+  });
+
+  it('should strictly deduplicate players so a player cannot appear on the field twice', () => {
+    // Lineup with duplicate starter entry
+    const duplicateLineup = [
+      ...mockLineup,
+      {
+        playerId: 'p1',
+        player: { id: 'p1', firstName: 'P1', lastName: 'Dup', jerseyNumber: 10 },
+        status: 'starting',
+        slotIndex: 5,
+        positionName: 'Defender',
+      },
+    ];
+
+    service.initialize(eventId, duplicateLineup as any, teamId);
+    const p1Count = service.activePlayers().filter(p => p.id === 'p1').length;
+    expect(p1Count).toBe(1);
+
+    // Also test: subbing an already-active player into another slot moves them, doesn't duplicate
+    service.pushEvent({
+      type: 'SUB',
+      playerIdIn: 'p1',
+      slotIndex: 8,
+      positionName: 'Midfielder',
+      timestamp: Date.now(),
+      minuteOccurred: 20,
+    });
+
+    const p1Occurrences = service.activePlayers().filter(p => p.id === 'p1');
+    expect(p1Occurrences.length).toBe(1);
+    expect((p1Occurrences[0] as any).slotIndex).toBe(8);
+  });
+
   it('should handle POSITION_SWAP events', () => {
     service.initialize(eventId, mockLineup, teamId);
     
@@ -229,6 +331,23 @@ describe('LiveGameStateService', () => {
       expect(summary.teamCorners).toBe(1);
       expect(summary.opponentCorners).toBe(1);
       expect(summary.teamSaves).toBe(2); // 1 BLOCKED_SHOT + 1 BLOCKED_PENALTY
+    });
+
+    it('should award a point to team on addOpponentOwnGoal without attaching to a player', () => {
+      expect(service.score()).toEqual({ team: 0, opponent: 0 });
+      service.addOpponentOwnGoal(14);
+      expect(service.score()).toEqual({ team: 1, opponent: 0 });
+      const lastEvent = service.events()[service.events().length - 1];
+      expect(lastEvent.type).toBe('OPPONENT_OWN_GOAL');
+      expect(lastEvent.playerId).toBeUndefined();
+      expect(lastEvent.minuteOccurred).toBe(14);
+    });
+
+    it('should undo OPPONENT_OWN_GOAL correctly', () => {
+      service.addOpponentOwnGoal(14);
+      expect(service.score().team).toBe(1);
+      service.undo();
+      expect(service.score().team).toBe(0);
     });
 
     it('should calculate playerCardCounts and ejectedPlayerIds correctly and remove them from activePlayers', () => {
@@ -406,6 +525,86 @@ describe('LiveGameStateService', () => {
 
       // Score should reflect the opponent goal
       expect(service.score().opponent).toBe(1);
+    });
+
+    it('should accurately represent 1-3-4-1 and 1-2-5-1 formations in activePlayers', () => {
+      // 1-3-4-1 formation: 1 GK (0), 3 DEF (2, 3, 4), 4 MID (6, 7, 8, 9), 1 FWD (13)
+      const formation1341Lineup: LineupEntry[] = [
+        { playerId: 'gk', player: { id: 'gk', firstName: 'GK', lastName: 'Keeper' } as any, status: 'starting', slotIndex: 0, positionName: 'GK' },
+        { playerId: 'd1', player: { id: 'd1', firstName: 'D', lastName: '1' } as any, status: 'starting', slotIndex: 2, positionName: 'DEF' },
+        { playerId: 'd2', player: { id: 'd2', firstName: 'D', lastName: '2' } as any, status: 'starting', slotIndex: 3, positionName: 'DEF' },
+        { playerId: 'd3', player: { id: 'd3', firstName: 'D', lastName: '3' } as any, status: 'starting', slotIndex: 4, positionName: 'DEF' },
+        { playerId: 'm1', player: { id: 'm1', firstName: 'M', lastName: '1' } as any, status: 'starting', slotIndex: 6, positionName: 'MID' },
+        { playerId: 'm2', player: { id: 'm2', firstName: 'M', lastName: '2' } as any, status: 'starting', slotIndex: 7, positionName: 'MID' },
+        { playerId: 'm3', player: { id: 'm3', firstName: 'M', lastName: '3' } as any, status: 'starting', slotIndex: 8, positionName: 'MID' },
+        { playerId: 'm4', player: { id: 'm4', firstName: 'M', lastName: '4' } as any, status: 'starting', slotIndex: 9, positionName: 'MID' },
+        { playerId: 'f1', player: { id: 'f1', firstName: 'F', lastName: '1' } as any, status: 'starting', slotIndex: 13, positionName: 'FWD' },
+      ];
+
+      service.initialize(eventId, formation1341Lineup, teamId, 9);
+      const active = service.activePlayers();
+      expect(active.length).toBe(9);
+      const slots = active.map(p => (p as any).slotIndex).sort((a, b) => a - b);
+      expect(slots).toEqual([0, 2, 3, 4, 6, 7, 8, 9, 13]);
+
+      // 1-2-5-1 formation: 1 GK (0), 2 DEF (2, 4), 5 MID (6, 7, 8, 9, 10), 1 FWD (13)
+      const formation1251Lineup: LineupEntry[] = [
+        { playerId: 'gk', player: { id: 'gk', firstName: 'GK', lastName: 'Keeper' } as any, status: 'starting', slotIndex: 0, positionName: 'GK' },
+        { playerId: 'd1', player: { id: 'd1', firstName: 'D', lastName: '1' } as any, status: 'starting', slotIndex: 2, positionName: 'DEF' },
+        { playerId: 'd2', player: { id: 'd2', firstName: 'D', lastName: '4' } as any, status: 'starting', slotIndex: 4, positionName: 'DEF' },
+        { playerId: 'm1', player: { id: 'm1', firstName: 'M', lastName: '1' } as any, status: 'starting', slotIndex: 6, positionName: 'MID' },
+        { playerId: 'm2', player: { id: 'm2', firstName: 'M', lastName: '2' } as any, status: 'starting', slotIndex: 7, positionName: 'MID' },
+        { playerId: 'm3', player: { id: 'm3', firstName: 'M', lastName: '3' } as any, status: 'starting', slotIndex: 8, positionName: 'MID' },
+        { playerId: 'm4', player: { id: 'm4', firstName: 'M', lastName: '4' } as any, status: 'starting', slotIndex: 9, positionName: 'MID' },
+        { playerId: 'm5', player: { id: 'm5', firstName: 'M', lastName: '5' } as any, status: 'starting', slotIndex: 10, positionName: 'MID' },
+        { playerId: 'f1', player: { id: 'f1', firstName: 'F', lastName: '1' } as any, status: 'starting', slotIndex: 13, positionName: 'FWD' },
+      ];
+
+      service.initialize(eventId, formation1251Lineup, teamId, 9);
+      const active1251 = service.activePlayers();
+      expect(active1251.length).toBe(9);
+      const slots1251 = active1251.map(p => (p as any).slotIndex).sort((a, b) => a - b);
+      expect(slots1251).toEqual([0, 2, 4, 6, 7, 8, 9, 10, 13]);
+    });
+
+    it('should strictly enforce playersOnField limit to prevent phantom 10th player in 9v9', () => {
+      // Lineup with 10 starters for a 9-player event
+      const tenStarters: LineupEntry[] = Array.from({ length: 10 }, (_, i) => ({
+        playerId: `p${i + 1}`,
+        player: { id: `p${i + 1}`, firstName: `P`, lastName: `${i + 1}` } as any,
+        status: 'starting',
+        slotIndex: i,
+        positionName: 'MID',
+      }));
+
+      service.initialize(eventId, tenStarters, teamId, 9);
+      expect(service.activePlayers().length).toBe(9);
+    });
+
+    it('should not create duplicate phantom players during substitution when slotIndex differs from outPlayer position', () => {
+      const lineup: LineupEntry[] = [
+        { playerId: 'p1', player: { id: 'p1', firstName: 'P', lastName: '1' } as any, status: 'starting', slotIndex: 3, positionName: 'DEF' },
+        { playerId: 'p2', player: { id: 'p2', firstName: 'P', lastName: '2' } as any, status: 'starting', slotIndex: 4, positionName: 'DEF' },
+        { playerId: 'p-bench', player: { id: 'p-bench', firstName: 'Bench', lastName: 'Player' } as any, status: 'bench', slotIndex: null, positionName: null },
+      ];
+
+      service.initialize(eventId, lineup, teamId, 2);
+      expect(service.activePlayers().length).toBe(2);
+
+      // Substitute p-bench in for p1, but sub event records slotIndex 3
+      service.pushEvent({
+        type: 'SUB',
+        playerIdIn: 'p-bench',
+        playerIdOut: 'p1',
+        slotIndex: 3,
+        timestamp: Date.now(),
+        minuteOccurred: 10,
+      });
+
+      const active = service.activePlayers();
+      expect(active.length).toBe(2);
+      expect(active.find(p => p.id === 'p1')).toBeUndefined();
+      expect(active.find(p => p.id === 'p-bench')).toBeDefined();
     });
   });
 });

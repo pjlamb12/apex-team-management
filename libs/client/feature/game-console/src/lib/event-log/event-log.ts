@@ -1,7 +1,7 @@
 import { Component, inject, computed, ViewChild, ElementRef, signal, effect } from '@angular/core';
 import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController, IonSpinner } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline, trashOutline } from 'ionicons/icons';
+import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline, trashOutline, arrowDownCircleOutline, arrowUpCircleOutline } from 'ionicons/icons';
 import { LiveGameStateService, GameEvent } from '../live-game-state.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { firstValueFrom } from 'rxjs';
@@ -83,6 +83,8 @@ export class EventLogViewComponent {
       flagOutline,
       timeOutline,
       flashOutline,
+      arrowDownCircleOutline,
+      arrowUpCircleOutline,
       ribbonOutline,
       handRightOutline,
       closeCircleOutline,
@@ -119,6 +121,7 @@ export class EventLogViewComponent {
     switch (type) {
       case 'GOAL':
       case 'OPPONENT_GOAL':
+      case 'OPPONENT_OWN_GOAL':
       case 'OWN_GOAL': return 'football-outline';
       case 'ASSIST': return 'star-outline';
       case 'YELLOW_CARD':
@@ -156,7 +159,8 @@ export class EventLogViewComponent {
 
   protected getEventColor(type: string): string {
     switch (type) {
-      case 'GOAL': return 'success';
+      case 'GOAL':
+      case 'OPPONENT_OWN_GOAL': return 'success';
       case 'OPPONENT_GOAL':
       case 'OWN_GOAL': return 'danger';
       case 'YELLOW_CARD': return 'warning';

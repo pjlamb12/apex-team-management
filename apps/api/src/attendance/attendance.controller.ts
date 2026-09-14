@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards, ParseUUIDPipe, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AttendanceService } from './attendance.service';
 import { UpdateAttendanceDto, BatchUpdateAttendanceDto } from './dto/update-attendance.dto';
@@ -32,6 +32,14 @@ export class AttendanceController {
   @Post('events/:eventId/attendance/sync')
   syncFromLineup(@Param('eventId', ParseUUIDPipe) eventId: string) {
     return this.attendanceService.syncFromLineup(eventId);
+  }
+
+  @Delete('events/:eventId/attendance/:playerId')
+  removePlayer(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Param('playerId', ParseUUIDPipe) playerId: string,
+  ) {
+    return this.attendanceService.removePlayerFromEvent(eventId, playerId);
   }
 
   @Get('participation')

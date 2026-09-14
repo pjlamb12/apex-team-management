@@ -600,6 +600,12 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
 
           if (ge.eventType === 'GOAL') {
             lines.push(`  - ⚽ **${min} GOAL**: Scored by ${playerName}${assistName}`);
+          } else if (ge.eventType === 'OPPONENT_OWN_GOAL') {
+            lines.push(`  - ⚽ **${min} GOAL**: Opponent Own Goal (awarded to Team)`);
+          } else if (ge.eventType === 'OPPONENT_GOAL') {
+            lines.push(`  - ⚽ **${min} Opponent Goal**`);
+          } else if (ge.eventType === 'OWN_GOAL') {
+            lines.push(`  - ⚽ **${min} Own Goal**: ${playerName}`);
           } else if (ge.eventType === 'YELLOW_CARD' || (ge.eventType === 'CARD' && payload.color === 'yellow')) {
             lines.push(`  - 🟨 **${min} Yellow Card**: ${playerName}`);
           } else if (ge.eventType === 'RED_CARD' || (ge.eventType === 'CARD' && payload.color === 'red')) {

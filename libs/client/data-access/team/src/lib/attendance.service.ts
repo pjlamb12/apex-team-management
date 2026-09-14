@@ -43,4 +43,8 @@ export class AttendanceService {
   syncFromLineup(teamId: string, eventId: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/attendance/sync`, {});
   }
+
+  removePlayerFromAttendance(teamId: string, eventId: string, playerId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/attendance/${playerId}`);
+  }
 }

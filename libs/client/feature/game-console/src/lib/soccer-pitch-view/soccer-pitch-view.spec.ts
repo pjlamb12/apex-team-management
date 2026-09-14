@@ -82,4 +82,59 @@ describe('SoccerPitchViewComponent', () => {
     expect(playerSlots[0].textContent).toContain('0');
     expect(playerSlots[0].textContent).not.toContain('?');
   });
+
+  it('should render empty formation slots even when no player is selected', () => {
+    fixture.componentRef.setInput('players', []);
+    fixture.componentRef.setInput('selectedPlayerId', null);
+    fixture.componentRef.setInput('formationSlots', [
+      { slotIndex: 0, positionName: 'GK', playerId: null },
+      { slotIndex: 2, positionName: 'DEF', playerId: null },
+      { slotIndex: 7, positionName: 'MID', playerId: null },
+    ]);
+    fixture.detectChanges();
+
+    const emptySlots = fixture.nativeElement.querySelectorAll('.empty-formation-slot');
+    expect(emptySlots.length).toBe(3);
+    expect(emptySlots[0].textContent).toContain('GK');
+    expect(emptySlots[1].textContent).toContain('DEF');
+    expect(emptySlots[2].textContent).toContain('MID');
+  });
+
+  it('should emit emptySlotSelected when empty formation slot is clicked', () => {
+    const spy = vi.spyOn(component.emptySlotSelected, 'emit');
+    fixture.componentRef.setInput('players', []);
+    fixture.componentRef.setInput('formationSlots', [
+      { slotIndex: 0, positionName: 'GK', playerId: null },
+    ]);
+    fixture.detectChanges();
+
+    const emptySlot = fixture.nativeElement.querySelector('.empty-formation-slot');
+    emptySlot.click();
+    expect(spy).toHaveBeenCalledWith(0);
+  });
+
+  it('should render candidate slots when a player is selected', () => {
+    fixture.componentRef.setInput('players', []);
+    fixture.componentRef.setInput('selectedPlayerId', 'p1');
+    fixture.componentRef.setInput('formationSlots', [
+      { slotIndex: 0, positionName: 'GK', playerId: null },
+    ]);
+    fixture.detectChanges();
+
+    const candidateSlots = fixture.nativeElement.querySelectorAll('.candidate-slot');
+    // Total coordinates is 22, minus 1 formation slot = 21 candidate slots
+    expect(candidateSlots.length).toBe(21);
+  });
+
+  it('should display preferredPosition when showPlaytime is false', () => {
+    const players = [
+      { id: '10', teamId: 't1', firstName: 'Paul', lastName: 'Pogba', jerseyNumber: 6, preferredPosition: 'MID', slotIndex: 7 },
+    ];
+    fixture.componentRef.setInput('players', players);
+    fixture.componentRef.setInput('showPlaytime', false);
+    fixture.detectChanges();
+
+    const playerSlot = fixture.nativeElement.querySelector('.player-slot');
+    expect(playerSlot.textContent).toContain('MID');
+  });
 });

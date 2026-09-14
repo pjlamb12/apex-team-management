@@ -262,6 +262,40 @@ export class MatchRecapService {
           }
           break;
         }
+        case 'opponent_goal':
+        case 'OPPONENT_GOAL': {
+          eventDerivedOppGoals++;
+          goals.push({
+            minute: ge.minuteOccurred,
+            scorerName: opponentName,
+            isOpponent: true,
+            period: p.period,
+          });
+          break;
+        }
+        case 'opponent_own_goal':
+        case 'OPPONENT_OWN_GOAL': {
+          eventDerivedTeamGoals++;
+          goals.push({
+            minute: ge.minuteOccurred,
+            scorerName: 'Opponent Own Goal',
+            isOpponent: false,
+            period: p.period,
+          });
+          break;
+        }
+        case 'own_goal':
+        case 'OWN_GOAL': {
+          eventDerivedOppGoals++;
+          const player = p.playerId ? playerMap.get(p.playerId) : undefined;
+          goals.push({
+            minute: ge.minuteOccurred,
+            scorerName: player ? `${player.firstName} ${player.lastName} (OG)` : 'Own Goal',
+            isOpponent: true,
+            period: p.period,
+          });
+          break;
+        }
         case 'shot':
         case 'SHOT': {
           if (isOpponent) opponentShots++;

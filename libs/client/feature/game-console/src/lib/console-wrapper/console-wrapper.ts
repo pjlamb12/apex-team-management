@@ -27,7 +27,7 @@ import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
-import { EventsService, EventEntity, PlayersService } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, PlayersService, AttendanceService } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
@@ -84,6 +84,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected eventsService = inject(EventsService);
   protected syncService = inject(EventSyncService);
   protected playersService = inject(PlayersService);
+  protected attendanceService = inject(AttendanceService);
   private socketService = inject(SocketService);
   private alertCtrl = inject(AlertController);
 
@@ -241,6 +242,12 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
   protected stagedInIds = computed(() => {
     return new Set(this.stateService.stagedSubs().map(s => s.inPlayerId));
+  });
+
+  protected selectedActivePlayer = computed(() => {
+    const selId = this.selectedPlayerId();
+    if (!selId) return null;
+    return this.stateService.activePlayers().find(p => p.id === selId) || null;
   });
 
   constructor() {
@@ -404,6 +411,10 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
   protected addOpponentGoal(): void {
     this.stateService.addOpponentGoal(this.clockService.currentMinute(), this.clockService.elapsedMs());
+  }
+
+  protected addOpponentOwnGoal(): void {
+    this.stateService.addOpponentOwnGoal(this.clockService.currentMinute(), this.clockService.elapsedMs());
   }
 
   protected addTeamShot(): void {
@@ -858,6 +869,24 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     }
   }
 
+  protected handleMoveActiveToBench(): void {
+    const selId = this.selectedPlayerId();
+    if (!selId) return;
+    const activePlayer = this.stateService.activePlayers().find(p => p.id === selId);
+    if (!activePlayer) return;
+
+    this.stateService.pushEvent({
+      type: 'SUB',
+      playerIdOut: selId,
+      slotIndex: (activePlayer as any).slotIndex,
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+    this.selectedPlayerId.set(null);
+    this.actionPlayer.set(null);
+  }
+
   protected handleEmptySlotSelection(slotIndex: number): void {
     const currentSelectionId = this.selectedPlayerId();
     if (!currentSelectionId) return;
@@ -880,6 +909,31 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         minuteOccurred: this.clockService.currentMinute(),
         gameTimeMs: this.clockService.elapsedMs(),
       });
+    } else {
+      const benchPlayers = this.stateService.benchPlayers();
+      const selectedBench = benchPlayers.find(p => p.id === currentSelectionId);
+
+      if (selectedBench) {
+        const maxOnField = this.stateService.playersOnField();
+        if (activePlayers.length >= maxOnField) {
+          this.selectedPlayerId.set(null);
+          return;
+        }
+
+        const sportName = this.team()?.sport?.name;
+        const pos = getPositionFromSlot(slotIndex, sportName);
+
+        // Sub bench player directly into this empty slot
+        this.stateService.pushEvent({
+          type: 'SUB',
+          playerIdIn: selectedBench.id,
+          slotIndex,
+          positionName: pos,
+          timestamp: Date.now(),
+          minuteOccurred: this.clockService.currentMinute(),
+          gameTimeMs: this.clockService.elapsedMs(),
+        });
+      }
     }
 
     this.selectedPlayerId.set(null);
@@ -947,6 +1001,21 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected handleAction(action: { type: string; playerId: string; payload?: any }): void {
+    if (action.type === 'MOVE_TO_BENCH') {
+      const activePlayer = this.stateService.activePlayers().find(p => p.id === action.playerId);
+      this.stateService.pushEvent({
+        type: 'SUB',
+        playerIdOut: action.playerId,
+        slotIndex: (activePlayer as any)?.slotIndex,
+        timestamp: Date.now(),
+        minuteOccurred: this.clockService.currentMinute(),
+        gameTimeMs: this.clockService.elapsedMs(),
+      });
+      this.selectedPlayerId.set(null);
+      this.actionPlayer.set(null);
+      return;
+    }
+
     const baseEvent = {
       type: action.type,
       timestamp: Date.now(),
@@ -997,8 +1066,63 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected async handleAddGuestPlayer(): Promise<void> {
+    const tId = this.teamId();
+    const eId = this.eventId();
+    if (!tId || !eId) return;
+
+    try {
+      const currentLineup = await firstValueFrom(this.eventsService.getLineup(tId, eId));
+      const currentIds = new Set(currentLineup.map((l) => l.playerId));
+
+      const allGuests = await firstValueFrom(this.playersService.getGuestPlayers(tId)).catch(() => []);
+      const selectableGuests = allGuests.filter((g) => !currentIds.has(g.id) && g.isActive !== false);
+
+      if (selectableGuests.length > 0) {
+        const alert = await this.alertCtrl.create({
+          header: 'Add Guest Player',
+          message: 'Select an existing guest player or create a new one:',
+          inputs: [
+            ...selectableGuests.map((g, index) => ({
+              type: 'radio' as const,
+              label: `${g.firstName} ${g.lastName} (#${g.jerseyNumber ?? '?'})`,
+              value: g.id,
+              checked: index === 0,
+            })),
+          ],
+          buttons: [
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'New Guest Player',
+              handler: () => {
+                void this.promptCreateNewGuestPlayer(currentLineup);
+              },
+            },
+            {
+              text: 'Add Selected',
+              handler: (selectedId) => {
+                if (!selectedId) return false;
+                const chosen = selectableGuests.find((g) => g.id === selectedId);
+                if (chosen) {
+                  void this.addGuestToLineup(chosen.id, currentLineup);
+                }
+                return true;
+              },
+            },
+          ],
+        });
+        await alert.present();
+      } else {
+        await this.promptCreateNewGuestPlayer(currentLineup);
+      }
+    } catch (err) {
+      console.error('Failed to load guest options', err);
+      await this.promptCreateNewGuestPlayer([]);
+    }
+  }
+
+  private async promptCreateNewGuestPlayer(currentLineup: any[]): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Add Guest Player',
+      header: 'Create New Guest Player',
       inputs: [
         { name: 'firstName', type: 'text', placeholder: 'First Name' },
         { name: 'lastName', type: 'text', placeholder: 'Last Name' },
@@ -1012,7 +1136,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
             if (!data.firstName || !data.lastName || !data.jerseyNumber) {
               return false;
             }
-            void this.addGuestPlayer(data.firstName, data.lastName, +data.jerseyNumber);
+            void this.addGuestPlayer(data.firstName, data.lastName, +data.jerseyNumber, currentLineup);
             return true;
           }
         }
@@ -1021,13 +1145,42 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  private async addGuestPlayer(firstName: string, lastName: string, jerseyNumber: number): Promise<void> {
+  private async addGuestToLineup(guestId: string, currentLineup: any[]): Promise<void> {
     const tId = this.teamId();
     const eId = this.eventId();
     if (!tId || !eId) return;
 
     try {
-      // 1. Create the guest player
+      const newEntries = currentLineup.map((entry) => ({
+        playerId: entry.playerId,
+        positionName: entry.positionName || undefined,
+        slotIndex: entry.slotIndex !== null ? entry.slotIndex : undefined,
+        status: entry.status,
+      }));
+
+      newEntries.push({
+        playerId: guestId,
+        positionName: undefined,
+        slotIndex: undefined,
+        status: 'bench',
+      });
+
+      const updatedLineup = await firstValueFrom(
+        this.eventsService.saveLineup(tId, eId, { entries: newEntries })
+      );
+
+      this.stateService.updateInitialLineup(updatedLineup as any);
+    } catch (err) {
+      console.error('Failed to add guest to lineup:', err);
+    }
+  }
+
+  private async addGuestPlayer(firstName: string, lastName: string, jerseyNumber: number, currentLineup: any[]): Promise<void> {
+    const tId = this.teamId();
+    const eId = this.eventId();
+    if (!tId || !eId) return;
+
+    try {
       const guest = await firstValueFrom(
         this.playersService.addPlayer(tId, {
           firstName,
@@ -1037,32 +1190,41 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         } as any)
       );
 
-      // 2. Fetch the current lineup entries
-      const currentLineup = await firstValueFrom(this.eventsService.getLineup(tId, eId));
-      
-      const newEntries = currentLineup.map(entry => ({
-        playerId: entry.playerId,
-        positionName: entry.positionName || undefined,
-        slotIndex: entry.slotIndex !== null ? entry.slotIndex : undefined,
-        status: entry.status,
-      }));
-
-      newEntries.push({
-        playerId: guest.id,
-        positionName: undefined,
-        slotIndex: undefined,
-        status: 'bench',
-      });
-
-      // 3. Save the lineup to backend
-      const updatedLineup = await firstValueFrom(
-        this.eventsService.saveLineup(tId, eId, { entries: newEntries })
-      );
-
-      // 4. Update the local live state service lineup so the UI updates
-      this.stateService.updateInitialLineup(updatedLineup as any);
+      await this.addGuestToLineup(guest.id, currentLineup);
     } catch (err) {
       console.error('Failed to add guest player:', err);
     }
   }
+
+  protected async handleRemoveGuestPlayer(player: Player): Promise<void> {
+    const tId = this.teamId();
+    const eId = this.eventId();
+    if (!tId || !eId) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Remove Guest Player',
+      message: `Remove guest player ${player.firstName} ${player.lastName} (#${player.jerseyNumber ?? '?'}) completely from this game?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Remove',
+          role: 'destructive',
+          handler: async () => {
+            if (this.selectedPlayerId() === player.id) {
+              this.selectedPlayerId.set(null);
+            }
+            await firstValueFrom(
+              this.attendanceService.removePlayerFromAttendance(tId, eId, player.id)
+            ).catch(() => {});
+            const updatedLineup = await firstValueFrom(
+              this.eventsService.getLineup(tId, eId)
+            ).catch(() => []);
+            this.stateService.updateInitialLineup(updatedLineup as any);
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
 }
+
