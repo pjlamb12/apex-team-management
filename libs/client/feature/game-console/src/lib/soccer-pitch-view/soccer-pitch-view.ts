@@ -1,5 +1,5 @@
 import { Component, input, output, computed, inject } from '@angular/core';
-import { Player, StagedSub, LineupEntry } from '@apex-team/shared/util/models';
+import { Player, StagedSub, LineupEntry, getPositionFromSlot } from '@apex-team/shared/util/models';
 import { IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline } from 'ionicons/icons';
@@ -10,6 +10,12 @@ export interface PositionedPlayer extends Player {
   y: number;
   slotIndex?: number;
   isStaged?: boolean;
+}
+
+export interface FormationSlot {
+  slotIndex: number;
+  positionName?: string | null;
+  playerId?: string | null;
 }
 
 @Component({
@@ -27,6 +33,9 @@ export class SoccerPitchViewComponent {
   playersOnField = input<number>(11);
   selectedPlayerId = input<string | null>(null);
   playerCardCounts = input<Record<string, { yellow: number; red: boolean }>>({});
+  formationSlots = input<FormationSlot[]>([]);
+  selectedSlotIndex = input<number | null>(null);
+  showPlaytime = input<boolean>(true);
   playerSelected = output<{ player: Player; event: Event }>();
   emptySlotSelected = output<number>();
   backgroundClicked = output<void>();
@@ -125,14 +134,40 @@ export class SoccerPitchViewComponent {
     }) as PositionedPlayer[];
   });
 
-  protected emptySlots = computed(() => {
-    const players = this.players() as (Player & { slotIndex?: number })[];
-    const occupiedSlots = new Set(players.map(p => p.slotIndex).filter((s): s is number => s !== undefined));
+  protected emptyFormationSlots = computed(() => {
+    const fSlots = this.formationSlots();
+    if (!fSlots || fSlots.length === 0) return [];
     const coordsMap = this.slotCoordinates();
-    
+    return fSlots
+      .filter((s) => !s.playerId)
+      .map((s) => ({
+        slotIndex: s.slotIndex,
+        positionName: s.positionName || getPositionFromSlot(s.slotIndex),
+        x: coordsMap[s.slotIndex]?.x ?? 50,
+        y: coordsMap[s.slotIndex]?.y ?? 50,
+      }));
+  });
+
+  protected candidateSlots = computed(() => {
+    if (!this.selectedPlayerId()) return [];
+    const players = this.players() as (Player & { slotIndex?: number })[];
+    const occupiedSlots = new Set(players.map((p) => p.slotIndex).filter((s): s is number => s !== undefined));
+    const formationSlotIndices = new Set(this.emptyFormationSlots().map((s) => s.slotIndex));
+    const coordsMap = this.slotCoordinates();
+
     return Object.entries(coordsMap)
       .map(([slot, coords]) => ({ slotIndex: Number(slot), ...coords }))
-      .filter(s => !occupiedSlots.has(s.slotIndex));
+      .filter((s) => !occupiedSlots.has(s.slotIndex) && !formationSlotIndices.has(s.slotIndex));
+  });
+
+  protected emptySlots = computed(() => {
+    const players = this.players() as (Player & { slotIndex?: number })[];
+    const occupiedSlots = new Set(players.map((p) => p.slotIndex).filter((s): s is number => s !== undefined));
+    const coordsMap = this.slotCoordinates();
+
+    return Object.entries(coordsMap)
+      .map(([slot, coords]) => ({ slotIndex: Number(slot), ...coords }))
+      .filter((s) => !occupiedSlots.has(s.slotIndex));
   });
 
   protected selectPlayer(player: Player, event: Event) {
@@ -152,6 +187,7 @@ export class SoccerPitchViewComponent {
   }
 
   protected formatPlaytime(playerId: string): string {
+    if (!this.showPlaytime()) return '';
     const seconds = this.playtimeService.playtimeMap()[playerId] || 0;
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;

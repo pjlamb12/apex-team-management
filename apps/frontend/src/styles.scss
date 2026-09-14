@@ -45,7 +45,8 @@ html.dark {
 // Tailwind v4: override dark variant to use .dark class on <html>
 @custom-variant dark (&:where(.dark, .dark *));
 
-// Tailwind v4: explicit source paths for Nx libs
+// Tailwind v4: explicit source paths for frontend app and Nx libs
+@source '.';
 @source '../../../libs/client/ui/theme/src';
 @source '../../../libs/client/feature/game-console/src';
 @source '../../../libs/client/feature/practice-console/src';

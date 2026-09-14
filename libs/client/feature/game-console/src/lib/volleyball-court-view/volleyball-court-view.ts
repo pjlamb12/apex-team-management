@@ -29,6 +29,8 @@ export class VolleyballCourtViewComponent {
   playerStats = input<Record<string, { kills: number; aces: number; blocks: number; digs: number; assists: number; serviceErrors: number; hittingErrors: number }>>({});
   liberoDesignation = input<{ liberoId: string; replacedId: string } | null>(null);
   showLiberoSlot = input<boolean>(false);
+  formationSlots = input<Array<{ slotIndex: number; positionName?: string | null; playerId?: string | null }>>([]);
+  selectedSlotIndex = input<number | null>(null);
   playerSelected = output<{ player: Player; event: Event }>();
   emptySlotSelected = output<number>();
   backgroundClicked = output<void>();
@@ -103,14 +105,40 @@ export class VolleyballCourtViewComponent {
     }) as VolleyballPositionedPlayer[];
   });
 
+  protected emptyFormationSlots = computed(() => {
+    const fSlots = this.formationSlots();
+    if (!fSlots || fSlots.length === 0) return [];
+    const coordsMap = this.slotCoordinates();
+    return fSlots
+      .filter((s) => !s.playerId)
+      .map((s) => ({
+        slotIndex: s.slotIndex,
+        positionName: s.positionName || coordsMap[s.slotIndex]?.name || (s.slotIndex === 99 ? 'Libero' : `Zone ${s.slotIndex + 1}`),
+        x: coordsMap[s.slotIndex]?.x ?? 50,
+        y: coordsMap[s.slotIndex]?.y ?? 50,
+      }));
+  });
+
+  protected candidateSlots = computed(() => {
+    if (!this.selectedPlayerId()) return [];
+    const players = this.players() as (Player & { slotIndex?: number })[];
+    const occupiedSlots = new Set(players.map((p) => p.slotIndex).filter((s): s is number => s !== undefined));
+    const formationSlotIndices = new Set(this.emptyFormationSlots().map((s) => s.slotIndex));
+    const coordsMap = this.slotCoordinates();
+
+    return Object.entries(coordsMap)
+      .map(([slot, coords]) => ({ slotIndex: Number(slot), ...coords }))
+      .filter((s) => !occupiedSlots.has(s.slotIndex) && !formationSlotIndices.has(s.slotIndex));
+  });
+
   protected emptySlots = computed(() => {
     const players = this.players() as (Player & { slotIndex?: number })[];
-    const occupiedSlots = new Set(players.map(p => p.slotIndex).filter((s): s is number => s !== undefined));
+    const occupiedSlots = new Set(players.map((p) => p.slotIndex).filter((s): s is number => s !== undefined));
     const coordsMap = this.slotCoordinates();
     
     return Object.entries(coordsMap)
       .map(([slot, coords]) => ({ slotIndex: Number(slot), ...coords }))
-      .filter(s => !occupiedSlots.has(s.slotIndex));
+      .filter((s) => !occupiedSlots.has(s.slotIndex));
   });
 
   protected selectPlayer(player: Player, event: Event) {

@@ -148,7 +148,24 @@ export class LineupEditor implements OnInit {
   protected errorMessage = signal<string | null>(null);
   protected viewMode = signal<'list' | 'pitch' | 'attendance' | 'notes'>('list');
   protected selectedPlayerId = signal<string | null>(null);
+  protected selectedSlotIndex = signal<number | null>(null);
   protected toastMessage = signal<string | null>(null);
+
+  protected isPitchPlayerSelected = computed(() => {
+    const sel = this.selectedPlayerId();
+    if (!sel) return false;
+    return this.slots().some((s) => s.playerId === sel);
+  });
+
+  protected moveSelectedPitchPlayerToBench(): void {
+    const sel = this.selectedPlayerId();
+    if (!sel) return;
+    this.slots.update((prev) =>
+      prev.map((s) => (s.playerId === sel ? { ...s, playerId: null } : s))
+    );
+    this.selectedPlayerId.set(null);
+    this.selectedSlotIndex.set(null);
+  }
 
   protected liberoId = computed(() => {
     const liberoSlot = this.slots().find((s) => s.slotIndex === 99);
@@ -555,6 +572,7 @@ export class LineupEditor implements OnInit {
 
   protected handlePitchPlayerSelected(data: { player: Player; event: Event }): void {
     const { player } = data;
+    this.selectedSlotIndex.set(null);
     const currentSelection = this.selectedPlayerId();
 
     if (!currentSelection) {
@@ -589,12 +607,9 @@ export class LineupEditor implements OnInit {
     this.selectedPlayerId.set(null);
   }
 
-  protected handlePitchEmptySlotSelected(targetSlotIndex: number): void {
-    const currentSelection = this.selectedPlayerId();
-    if (!currentSelection) return;
-
+  protected assignPlayerToSlot(playerId: string, targetSlotIndex: number): void {
     if (targetSlotIndex === 99) {
-      const isStarting = this.slots().some(s => s.slotIndex !== 99 && s.playerId === currentSelection);
+      const isStarting = this.slots().some(s => s.slotIndex !== 99 && s.playerId === playerId);
       if (isStarting) return;
     }
 
@@ -604,20 +619,20 @@ export class LineupEditor implements OnInit {
 
     this.slots.update((prev) => {
       const next = prev.map((s) => ({ ...s }));
-      const existingSlotIndex = next.findIndex((s) => s.playerId === currentSelection);
+      const existingSlotIndex = next.findIndex((s) => s.playerId === playerId);
 
       if (existingSlotIndex !== -1) {
         // Selected player is ALREADY on the pitch: moving to targetSlotIndex
         const targetSlot = next.find((s) => s.slotIndex === targetSlotIndex);
         if (targetSlot) {
           if (targetSlot.playerId === null) {
-            targetSlot.playerId = currentSelection;
+            targetSlot.playerId = playerId;
             targetSlot.positionName = newPositionName;
             next[existingSlotIndex].playerId = null;
           } else {
             // Swap players between the two starting slots
             const tempPlayerId = targetSlot.playerId;
-            targetSlot.playerId = currentSelection;
+            targetSlot.playerId = playerId;
             next[existingSlotIndex].playerId = tempPlayerId;
           }
         } else {
@@ -629,7 +644,7 @@ export class LineupEditor implements OnInit {
         // Selected player is ON THE BENCH: adding to targetSlotIndex
         const targetSlot = next.find((s) => s.slotIndex === targetSlotIndex);
         if (targetSlot) {
-          targetSlot.playerId = currentSelection;
+          targetSlot.playerId = playerId;
           targetSlot.positionName = newPositionName;
         } else {
           // Find an empty starting slot (playerId === null)
@@ -637,7 +652,7 @@ export class LineupEditor implements OnInit {
           if (emptySlot) {
             emptySlot.slotIndex = targetSlotIndex;
             emptySlot.positionName = newPositionName;
-            emptySlot.playerId = currentSelection;
+            emptySlot.playerId = playerId;
           } else {
             this.toastMessage.set('All starting spots on the field are filled.');
           }
@@ -646,8 +661,51 @@ export class LineupEditor implements OnInit {
 
       return next;
     });
+  }
 
-    this.selectedPlayerId.set(null);
+  protected async handlePitchEmptySlotSelected(targetSlotIndex: number): Promise<void> {
+    const currentSelection = this.selectedPlayerId();
+
+    if (currentSelection) {
+      this.assignPlayerToSlot(currentSelection, targetSlotIndex);
+      this.selectedPlayerId.set(null);
+      this.selectedSlotIndex.set(null);
+      return;
+    }
+
+    this.selectedSlotIndex.set(targetSlotIndex);
+
+    const sportName = this.team()?.sport?.name;
+    const positionTypes = this.team()?.sport?.positionTypes || [];
+    const posName = getPositionFromSlot(targetSlotIndex, sportName, positionTypes);
+    const bench = this.benchPlayers();
+
+    if (bench.length === 0) {
+      this.toastMessage.set(`No bench players available for ${posName}`);
+      return;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: `Assign ${posName}`,
+      message: 'Choose a player from the bench:',
+      buttons: [
+        ...bench.map((p) => ({
+          text: `#${p.jerseyNumber ?? '?'} ${p.firstName} ${p.lastName}`,
+          handler: () => {
+            this.assignPlayerToSlot(p.id, targetSlotIndex);
+            this.selectedSlotIndex.set(null);
+          },
+        })),
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          handler: () => {
+            // Leave selectedSlotIndex active in case coach taps a bench card below
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   protected rotateStartingLineup(): void {
@@ -670,6 +728,14 @@ export class LineupEditor implements OnInit {
   }
 
   protected handleBenchPlayerClick(player: PlayerEntity): void {
+    const activeSlot = this.selectedSlotIndex();
+    if (activeSlot !== null) {
+      this.assignPlayerToSlot(player.id, activeSlot);
+      this.selectedSlotIndex.set(null);
+      this.selectedPlayerId.set(null);
+      return;
+    }
+
     const currentSelection = this.selectedPlayerId();
     if (currentSelection === player.id) {
       this.selectedPlayerId.set(null);

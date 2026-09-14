@@ -20,8 +20,48 @@
     <div class="absolute bottom-0 left-[35%] right-[35%] h-[5%] border-x-4 border-t-4 border-white"></div>
   </div>
 
-  <!-- Empty Slots (Shown only when a player is selected) -->
-  @if (selectedPlayerId()) {
+  <!-- Empty Formation Slots (Always visible so coach can see formation positions) -->
+  @for (slot of emptyFormationSlots(); track slot.slotIndex) {
+    <div class="empty-slot empty-formation-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-15 transition-all duration-300"
+         [class.slot-active]="selectedSlotIndex() === slot.slotIndex || selectedPlayerId()"
+         [style.left.%]="slot.x"
+         [style.top.%]="slot.y"
+         (click)="$event.stopPropagation(); selectEmptySlot(slot.slotIndex)">
+      <div class="flex flex-col items-center">
+        <div class="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center transition-all duration-200 shadow-md"
+             [class.border-yellow-400]="selectedSlotIndex() === slot.slotIndex"
+             [class.bg-yellow-400\/30]="selectedSlotIndex() === slot.slotIndex"
+             [class.scale-110]="selectedSlotIndex() === slot.slotIndex"
+             [class.border-white\/70]="selectedSlotIndex() !== slot.slotIndex"
+             [class.bg-white\/10]="selectedSlotIndex() !== slot.slotIndex && !selectedPlayerId()"
+             [class.bg-white\/25]="selectedPlayerId() && selectedSlotIndex() !== slot.slotIndex"
+             [class.hover:bg-white\/30]="true">
+          <ion-icon name="add-outline" class="text-white text-xl" [class.text-yellow-300]="selectedSlotIndex() === slot.slotIndex"></ion-icon>
+        </div>
+        <span class="text-[9px] font-black text-white bg-black/70 px-1.5 py-0.5 rounded shadow mt-1 border border-white/20 whitespace-nowrap uppercase tracking-wider"
+              [class.bg-yellow-500]="selectedSlotIndex() === slot.slotIndex"
+              [class.text-black]="selectedSlotIndex() === slot.slotIndex"
+              [class.border-yellow-300]="selectedSlotIndex() === slot.slotIndex">
+          {{ slot.positionName }}
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- Candidate Empty Slots (Shown when a player is selected to allow custom formation adjustments) -->
+  @for (slot of candidateSlots(); track slot.slotIndex) {
+    <div class="empty-slot candidate-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 transition-all duration-300"
+         [style.left.%]="slot.x"
+         [style.top.%]="slot.y"
+         (click)="$event.stopPropagation(); selectEmptySlot(slot.slotIndex)">
+      <div class="w-9 h-9 rounded-full border border-dashed border-white/50 flex items-center justify-center bg-white/10 hover:bg-white/30 hover:scale-110 transition-all shadow">
+        <ion-icon name="add-outline" class="text-white/80 text-lg"></ion-icon>
+      </div>
+    </div>
+  }
+
+  <!-- Fallback Empty Slots when no formationSlots provided (e.g. Game Console) -->
+  @if (formationSlots().length === 0 && selectedPlayerId()) {
     @for (slot of emptySlots(); track slot.slotIndex) {
       <div class="empty-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 transition-all duration-300"
            [style.left.%]="slot.x"
@@ -60,9 +100,15 @@
         <span class="player-name text-[10px] font-bold text-ap-text bg-ap-bg/85 px-2 py-0.5 rounded shadow-md mt-1 whitespace-nowrap border border-white/10">
           {{ player.lastName }}
         </span>
-        <span class="text-[9px] font-mono text-white bg-black/50 px-1.5 rounded-sm mt-0.5 border border-white/5">
-          {{ formatPlaytime(player.id) }}
-        </span>
+        @if (showPlaytime()) {
+          <span class="text-[9px] font-mono text-white bg-black/50 px-1.5 rounded-sm mt-0.5 border border-white/5">
+            {{ formatPlaytime(player.id) }}
+          </span>
+        } @else if (player.preferredPosition) {
+          <span class="text-[9px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded-sm mt-0.5 border border-white/5 uppercase tracking-wider">
+            {{ player.preferredPosition }}
+          </span>
+        }
         
         <!-- OUT Badge -->
         @if (stagedOutIds().has(player.id)) {
@@ -103,9 +149,15 @@
         <span class="player-name text-[10px] font-bold text-white bg-green-700 px-2 py-0.5 rounded shadow-md mt-1 whitespace-nowrap border border-green-400">
           {{ player.lastName }}
         </span>
-        <span class="text-[9px] font-mono text-white bg-black/50 px-1.5 rounded-sm mt-0.5 border border-white/5">
-          {{ formatPlaytime(player.id) }}
-        </span>
+        @if (showPlaytime()) {
+          <span class="text-[9px] font-mono text-white bg-black/50 px-1.5 rounded-sm mt-0.5 border border-white/5">
+            {{ formatPlaytime(player.id) }}
+          </span>
+        } @else if (player.preferredPosition) {
+          <span class="text-[9px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded-sm mt-0.5 border border-white/5 uppercase tracking-wider">
+            {{ player.preferredPosition }}
+          </span>
+        }
         
         <!-- IN Badge -->
         <div class="absolute -top-1 -right-1 bg-green-500 text-white text-[8px] font-black rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-md z-30">
