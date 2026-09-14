@@ -72,11 +72,11 @@
            [style.left.%]="slot.x"
            [style.top.%]="slot.y"
            (click)="$event.stopPropagation(); selectEmptySlot(slot.slotIndex)">
-        <div class="w-10 h-10 rounded-full border-2 border-dashed border-white/50 flex items-center justify-center bg-white/10 hover:bg-white/30 transition-colors">
-          <ion-icon name="add-outline" class="text-white text-xl"></ion-icon>
+        <div class="w-10 h-10 rounded-full border-2 border-dashed border-white/50 flex items-center justify-center bg-white/10 hover:bg-white/30 transition-colors pointer-events-none">
+          <ion-icon name="add-outline" class="text-white text-xl pointer-events-none"></ion-icon>
         </div>
         @if (slot.slotIndex === 99) {
-          <span class="absolute top-11 left-1/2 -translate-x-1/2 text-[8px] font-black text-amber-300 bg-black/75 px-1.5 py-0.5 rounded border border-amber-300/20 whitespace-nowrap">LIBERO</span>
+          <span class="absolute top-11 left-1/2 -translate-x-1/2 text-[8px] font-black text-amber-300 bg-black/75 px-1.5 py-0.5 rounded border border-amber-300/20 whitespace-nowrap pointer-events-none">LIBERO</span>
         }
       </div>
     }

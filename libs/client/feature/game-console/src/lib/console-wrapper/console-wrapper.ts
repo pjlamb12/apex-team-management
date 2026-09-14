@@ -909,6 +909,12 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       const selectedBench = benchPlayers.find(p => p.id === currentSelectionId);
 
       if (selectedBench) {
+        const maxOnField = this.stateService.playersOnField();
+        if (activePlayers.length >= maxOnField) {
+          this.selectedPlayerId.set(null);
+          return;
+        }
+
         const sportName = this.team()?.sport?.name;
         const pos = getPositionFromSlot(slotIndex, sportName);
 

@@ -283,7 +283,7 @@ export class LiveGameStateService {
           }
           if (event.slotIndex !== undefined && event.slotIndex !== null) {
             const inEntry = lineup.find((e) => e.playerId === inId);
-            if (inEntry) {
+            if (inEntry && (outId || slotMap.size < fieldCount)) {
               slotMap.set(event.slotIndex, {
                 player: inEntry.player,
                 position: preservedPosition || getPositionFromSlot(event.slotIndex, sport),
@@ -337,6 +337,14 @@ export class LiveGameStateService {
         slotMap.delete(slotIndex);
       } else {
         uniquePlayers.add(data.player.id);
+      }
+    }
+
+    // Hard cap: activePlayers must never exceed fieldCount
+    if (slotMap.size > fieldCount) {
+      const entries = Array.from(slotMap.entries());
+      for (let i = fieldCount; i < entries.length; i++) {
+        slotMap.delete(entries[i][0]);
       }
     }
 

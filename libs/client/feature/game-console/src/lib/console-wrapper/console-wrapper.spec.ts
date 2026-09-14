@@ -281,4 +281,19 @@ describe('ConsoleWrapper', () => {
     expect(subInEvent?.slotIndex).toBe(5);
     expect(component['selectedPlayerId']()).toBeNull();
   });
+
+  it('should not sub bench player into empty slot if active players count is already at playersOnField', () => {
+    // Set playersOnField to 2 (equal to current active count)
+    (stateService as any)._playersOnField.set(2);
+    expect(stateService.activePlayers().length).toBe(2);
+
+    // Select bench player p2 and try to add to empty slot 5
+    component['selectedPlayerId'].set('p2');
+    component['handleEmptySlotSelection'](5);
+
+    const events = stateService.events();
+    const subInEvent = events.find(e => e.type === 'SUB' && e.playerIdIn === 'p2');
+    expect(subInEvent).toBeUndefined();
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
 });

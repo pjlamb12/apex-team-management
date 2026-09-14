@@ -67,8 +67,8 @@
            [style.left.%]="slot.x"
            [style.top.%]="slot.y"
            (click)="$event.stopPropagation(); selectEmptySlot(slot.slotIndex)">
-        <div class="w-10 h-10 rounded-full border-2 border-dashed border-white/50 flex items-center justify-center bg-white/10 hover:bg-white/30 transition-colors">
-          <ion-icon name="add-outline" class="text-white text-xl"></ion-icon>
+        <div class="w-10 h-10 rounded-full border-2 border-dashed border-white/50 flex items-center justify-center bg-white/10 hover:bg-white/30 transition-colors pointer-events-none">
+          <ion-icon name="add-outline" class="text-white text-xl pointer-events-none"></ion-icon>
         </div>
       </div>
     }

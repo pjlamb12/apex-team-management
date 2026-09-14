@@ -145,6 +145,27 @@ describe('LiveGameStateService', () => {
     expect(service.benchPlayers().find(p => p.id === 'p2')).toBeUndefined();
   });
 
+  it('should not allow subbing on an additional player if field is already at maximum capacity (playersOnField)', () => {
+    // 2 starters (p1, p3), playersOnField = 2
+    service.initialize(eventId, mockLineup, teamId, 2);
+    expect(service.activePlayers().length).toBe(2);
+
+    // Try to sub bench player p2 into slot 2 without subbing anyone out
+    service.pushEvent({
+      type: 'SUB',
+      playerIdIn: 'p2',
+      slotIndex: 2,
+      positionName: 'Defender',
+      timestamp: Date.now(),
+      minuteOccurred: 15,
+    });
+
+    // p2 should NOT have been added to active players
+    expect(service.activePlayers().length).toBe(2);
+    expect(service.activePlayers().find(p => p.id === 'p2')).toBeUndefined();
+    expect(service.benchPlayers().find(p => p.id === 'p2')).toBeTruthy();
+  });
+
   it('should strictly deduplicate players so a player cannot appear on the field twice', () => {
     // Lineup with duplicate starter entry
     const duplicateLineup = [

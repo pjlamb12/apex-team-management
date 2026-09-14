@@ -120,8 +120,20 @@ export class VolleyballCourtViewComponent {
   });
 
   protected candidateSlots = computed(() => {
-    if (!this.selectedPlayerId()) return [];
+    const selId = this.selectedPlayerId();
+    if (!selId) return [];
+
+    // If no formation slots are provided, fallback emptySlots is used instead
+    if (this.formationSlots().length === 0) return [];
+
     const players = this.players() as (Player & { slotIndex?: number })[];
+    const isSelActive = players.some((p) => p.id === selId);
+
+    // If a bench player is selected, never show candidate slots if the court is already at maximum capacity
+    if (!isSelActive && players.length >= this.playersOnField()) {
+      return [];
+    }
+
     const occupiedSlots = new Set(players.map((p) => p.slotIndex).filter((s): s is number => s !== undefined));
     const formationSlotIndices = new Set(this.emptyFormationSlots().map((s) => s.slotIndex));
     const coordsMap = this.slotCoordinates();
@@ -132,7 +144,15 @@ export class VolleyballCourtViewComponent {
   });
 
   protected emptySlots = computed(() => {
+    const selId = this.selectedPlayerId();
     const players = this.players() as (Player & { slotIndex?: number })[];
+    const isSelActive = players.some((p) => p.id === selId);
+
+    // If a bench player is selected, never show fallback empty slots if court is at maximum capacity
+    if (selId && !isSelActive && players.length >= this.playersOnField()) {
+      return [];
+    }
+
     const occupiedSlots = new Set(players.map((p) => p.slotIndex).filter((s): s is number => s !== undefined));
     const coordsMap = this.slotCoordinates();
     
@@ -146,6 +166,13 @@ export class VolleyballCourtViewComponent {
   }
 
   protected selectEmptySlot(slotIndex: number) {
+    const selId = this.selectedPlayerId();
+    const players = this.players() as (Player & { slotIndex?: number })[];
+    const isSelActive = players.some((p) => p.id === selId);
+
+    if (selId && !isSelActive && players.length >= this.playersOnField()) {
+      return; // Cannot add bench player to empty slot if court is at maximum capacity
+    }
     this.emptySlotSelected.emit(slotIndex);
   }
 

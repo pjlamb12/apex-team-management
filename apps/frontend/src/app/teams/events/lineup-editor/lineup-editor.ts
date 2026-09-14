@@ -617,6 +617,9 @@ export class LineupEditor implements OnInit {
     const positionTypes = this.team()?.sport?.positionTypes || [];
     const newPositionName = getPositionFromSlot(targetSlotIndex, sportName, positionTypes);
 
+    const ev = this.event();
+    const fieldCount = ev?.playersOnField || (sportName === 'Volleyball' ? 6 : 11);
+
     this.slots.update((prev) => {
       const next = prev.map((s) => ({ ...s }));
       const existingSlotIndex = next.findIndex((s) => s.playerId === playerId);
@@ -644,17 +647,31 @@ export class LineupEditor implements OnInit {
         // Selected player is ON THE BENCH: adding to targetSlotIndex
         const targetSlot = next.find((s) => s.slotIndex === targetSlotIndex);
         if (targetSlot) {
+          if (!targetSlot.playerId && targetSlotIndex !== 99) {
+            const currentStartersCount = next.filter((s) => s.slotIndex !== 99 && !!s.playerId).length;
+            if (currentStartersCount >= fieldCount) {
+              this.toastMessage.set(`All ${fieldCount} spots on the field are filled.`);
+              return prev;
+            }
+          }
           targetSlot.playerId = playerId;
           targetSlot.positionName = newPositionName;
         } else {
+          if (targetSlotIndex !== 99) {
+            const currentStartersCount = next.filter((s) => s.slotIndex !== 99 && !!s.playerId).length;
+            if (currentStartersCount >= fieldCount) {
+              this.toastMessage.set(`All ${fieldCount} spots on the field are filled.`);
+              return prev;
+            }
+          }
           // Find an empty starting slot (playerId === null)
-          const emptySlot = next.find((s) => s.playerId === null);
+          const emptySlot = next.find((s) => s.playerId === null && s.slotIndex !== 99);
           if (emptySlot) {
             emptySlot.slotIndex = targetSlotIndex;
             emptySlot.positionName = newPositionName;
             emptySlot.playerId = playerId;
           } else {
-            this.toastMessage.set('All starting spots on the field are filled.');
+            this.toastMessage.set(`All ${fieldCount} spots on the field are filled.`);
           }
         }
       }
