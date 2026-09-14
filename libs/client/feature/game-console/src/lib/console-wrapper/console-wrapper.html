@@ -355,9 +355,11 @@
             [players]="stateService.benchPlayers()"
             [stagedInIds]="stagedInIds()"
             [selectedPlayerId]="selectedPlayerId()"
+            [selectedActivePlayer]="selectedActivePlayer()"
             [ejectedPlayerIds]="stateService.ejectedPlayerIds()"
             [liberoDesignation]="stateService.liberoDesignation()"
             (playerSelected)="handlePlayerSelection($event)"
+            (moveSelectedToBench)="handleMoveActiveToBench()"
             (addGuestPlayer)="handleAddGuestPlayer()">
           </app-bench-view>
           <div class="border-t border-ap-border flex-1">

@@ -1,10 +1,29 @@
 <div class="bench-container p-4">
   <div class="flex items-center justify-between mb-4">
     <h2 class="text-xl font-bold">Bench</h2>
-    <ion-button size="small" fill="outline" color="primary" class="font-bold m-0" (click)="addGuestPlayer.emit()">
-      + Guest
-    </ion-button>
+    <div class="flex items-center gap-2">
+      @if (selectedActivePlayer()) {
+        <ion-button size="small" color="warning" fill="solid" class="font-bold m-0 text-xs" (click)="moveSelectedToBench.emit()">
+          <ion-icon slot="start" name="arrow-down-circle-outline"></ion-icon>
+          Sub Off to Bench
+        </ion-button>
+      }
+      <ion-button size="small" fill="outline" color="primary" class="font-bold m-0" (click)="addGuestPlayer.emit()">
+        + Guest
+      </ion-button>
+    </div>
   </div>
+
+  @if (selectedActivePlayer(); as p) {
+    <div class="mb-3 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center justify-between gap-2 text-xs animate-fadeIn">
+      <div class="text-ap-text">
+        <span class="font-bold text-amber-500">{{ p.firstName }} {{ p.lastName }}</span> selected on pitch
+      </div>
+      <ion-button size="small" color="warning" fill="outline" class="font-bold m-0 text-xs" (click)="moveSelectedToBench.emit()">
+        Move to Bench
+      </ion-button>
+    </div>
+  }
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4">
     @for (player of players(); track player.id) {
       <ion-card

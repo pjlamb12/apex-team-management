@@ -96,6 +96,87 @@ describe('LiveGameStateService', () => {
     expect(service.benchPlayers().find(p => p.id === 'p1')).toBeTruthy();
   });
 
+  it('should allow subbing off an active player to bench without replacement (injury / playing down)', () => {
+    service.initialize(eventId, mockLineup, teamId);
+
+    // Sub out p1 without bringing anyone in
+    const subOutEvent = {
+      type: 'SUB',
+      playerIdOut: 'p1',
+      slotIndex: 0,
+      timestamp: Date.now(),
+      minuteOccurred: 12,
+    };
+
+    service.pushEvent(subOutEvent);
+
+    expect(service.activePlayers().find(p => p.id === 'p1')).toBeUndefined();
+    expect(service.benchPlayers().find(p => p.id === 'p1')).toBeTruthy();
+    // Only p3 is active now
+    expect(service.activePlayers().length).toBe(1);
+    expect(service.activePlayers()[0].id).toBe('p3');
+  });
+
+  it('should allow subbing on a bench player into an empty slot without subbing someone off', () => {
+    service.initialize(eventId, mockLineup, teamId);
+
+    // First sub out p1 so slot 0 is empty
+    service.pushEvent({
+      type: 'SUB',
+      playerIdOut: 'p1',
+      slotIndex: 0,
+      timestamp: Date.now(),
+      minuteOccurred: 10,
+    });
+
+    // Now sub bench player p2 directly into empty slot 0
+    service.pushEvent({
+      type: 'SUB',
+      playerIdIn: 'p2',
+      slotIndex: 0,
+      positionName: 'Forward',
+      timestamp: Date.now() + 1000,
+      minuteOccurred: 15,
+    });
+
+    const p2Active = service.activePlayers().find(p => p.id === 'p2');
+    expect(p2Active).toBeTruthy();
+    expect((p2Active as any).slotIndex).toBe(0);
+    expect(service.benchPlayers().find(p => p.id === 'p2')).toBeUndefined();
+  });
+
+  it('should strictly deduplicate players so a player cannot appear on the field twice', () => {
+    // Lineup with duplicate starter entry
+    const duplicateLineup = [
+      ...mockLineup,
+      {
+        playerId: 'p1',
+        player: { id: 'p1', firstName: 'P1', lastName: 'Dup', jerseyNumber: 10 },
+        status: 'starting',
+        slotIndex: 5,
+        positionName: 'Defender',
+      },
+    ];
+
+    service.initialize(eventId, duplicateLineup as any, teamId);
+    const p1Count = service.activePlayers().filter(p => p.id === 'p1').length;
+    expect(p1Count).toBe(1);
+
+    // Also test: subbing an already-active player into another slot moves them, doesn't duplicate
+    service.pushEvent({
+      type: 'SUB',
+      playerIdIn: 'p1',
+      slotIndex: 8,
+      positionName: 'Midfielder',
+      timestamp: Date.now(),
+      minuteOccurred: 20,
+    });
+
+    const p1Occurrences = service.activePlayers().filter(p => p.id === 'p1');
+    expect(p1Occurrences.length).toBe(1);
+    expect((p1Occurrences[0] as any).slotIndex).toBe(8);
+  });
+
   it('should handle POSITION_SWAP events', () => {
     service.initialize(eventId, mockLineup, teamId);
     

@@ -250,4 +250,35 @@ describe('ConsoleWrapper', () => {
     const events = stateService.events();
     expect(events.find(e => e.type === 'OPPONENT_CORNER_KICK')).toBeDefined();
   });
+
+  it('should push SUB event with playerIdOut when handleMoveActiveToBench is called', () => {
+    component['selectedPlayerId'].set('p1');
+    component['handleMoveActiveToBench']();
+
+    const events = stateService.events();
+    const subEvent = events.find(e => e.type === 'SUB' && e.playerIdOut === 'p1');
+    expect(subEvent).toBeDefined();
+    expect(subEvent?.playerIdIn).toBeUndefined();
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
+
+  it('should push SUB event with playerIdOut when MOVE_TO_BENCH action is received', () => {
+    component['handleAction']({ type: 'MOVE_TO_BENCH', playerId: 'p1' });
+
+    const events = stateService.events();
+    const subEvent = events.find(e => e.type === 'SUB' && e.playerIdOut === 'p1');
+    expect(subEvent).toBeDefined();
+  });
+
+  it('should sub bench player directly into empty slot when emptySlotSelected is called', () => {
+    // Select bench player p2
+    component['selectedPlayerId'].set('p2');
+    component['handleEmptySlotSelection'](5);
+
+    const events = stateService.events();
+    const subInEvent = events.find(e => e.type === 'SUB' && e.playerIdIn === 'p2');
+    expect(subInEvent).toBeDefined();
+    expect(subInEvent?.slotIndex).toBe(5);
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
 });

@@ -1,7 +1,7 @@
 import { Component, inject, computed, ViewChild, ElementRef, signal, effect } from '@angular/core';
 import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController, IonSpinner } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline, trashOutline } from 'ionicons/icons';
+import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline, trashOutline, arrowDownCircleOutline, arrowUpCircleOutline } from 'ionicons/icons';
 import { LiveGameStateService, GameEvent } from '../live-game-state.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { firstValueFrom } from 'rxjs';
@@ -83,6 +83,8 @@ export class EventLogViewComponent {
       flagOutline,
       timeOutline,
       flashOutline,
+      arrowDownCircleOutline,
+      arrowUpCircleOutline,
       ribbonOutline,
       handRightOutline,
       closeCircleOutline,

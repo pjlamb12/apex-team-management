@@ -27,7 +27,7 @@
          [style.left.%]="slot.x"
          [style.top.%]="slot.y"
          (click)="$event.stopPropagation(); selectEmptySlot(slot.slotIndex)">
-      <div class="flex flex-col items-center">
+      <div class="flex flex-col items-center pointer-events-none">
         <div class="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center transition-all duration-200 shadow-md"
              [class.border-yellow-400]="selectedSlotIndex() === slot.slotIndex"
              [class.bg-yellow-400\/30]="selectedSlotIndex() === slot.slotIndex"
@@ -36,9 +36,9 @@
              [class.bg-white\/10]="selectedSlotIndex() !== slot.slotIndex && !selectedPlayerId()"
              [class.bg-white\/25]="selectedPlayerId() && selectedSlotIndex() !== slot.slotIndex"
              [class.hover:bg-white\/30]="true">
-          <ion-icon name="add-outline" class="text-white text-xl" [class.text-yellow-300]="selectedSlotIndex() === slot.slotIndex"></ion-icon>
+          <ion-icon name="add-outline" class="text-white text-xl pointer-events-none" [class.text-yellow-300]="selectedSlotIndex() === slot.slotIndex"></ion-icon>
         </div>
-        <span class="text-[9px] font-black text-white bg-black/70 px-1.5 py-0.5 rounded shadow mt-1 border border-white/20 whitespace-nowrap uppercase tracking-wider"
+        <span class="text-[9px] font-black text-white bg-black/70 px-1.5 py-0.5 rounded shadow mt-1 border border-white/20 whitespace-nowrap uppercase tracking-wider pointer-events-none"
               [class.bg-yellow-500]="selectedSlotIndex() === slot.slotIndex"
               [class.text-black]="selectedSlotIndex() === slot.slotIndex"
               [class.border-yellow-300]="selectedSlotIndex() === slot.slotIndex">
@@ -54,8 +54,8 @@
          [style.left.%]="slot.x"
          [style.top.%]="slot.y"
          (click)="$event.stopPropagation(); selectEmptySlot(slot.slotIndex)">
-      <div class="w-9 h-9 rounded-full border border-dashed border-white/50 flex items-center justify-center bg-white/10 hover:bg-white/30 hover:scale-110 transition-all shadow">
-        <ion-icon name="add-outline" class="text-white/80 text-lg"></ion-icon>
+      <div class="w-9 h-9 rounded-full border border-dashed border-white/50 flex items-center justify-center bg-white/10 hover:bg-white/30 hover:scale-110 transition-all shadow pointer-events-none">
+        <ion-icon name="add-outline" class="text-white/80 text-lg pointer-events-none"></ion-icon>
       </div>
     </div>
   }

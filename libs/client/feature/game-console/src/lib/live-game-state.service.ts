@@ -223,12 +223,14 @@ export class LiveGameStateService {
     const sport = this._sportName();
 
     const slotMap = new Map<number, { player: Player; position: string }>();
+    const seenStarters = new Set<string>();
 
     // 1. First add starters with explicit slotIndex
     lineup
       .filter((e) => e.status === 'starting' && e.slotIndex !== null && e.slotIndex !== undefined && e.slotIndex !== 99)
       .forEach((e) => {
-        if (slotMap.size < fieldCount) {
+        if (slotMap.size < fieldCount && !seenStarters.has(e.playerId)) {
+          seenStarters.add(e.playerId);
           slotMap.set(e.slotIndex as number, {
             player: e.player,
             position: e.positionName || getPositionFromSlot(e.slotIndex as number, sport),
@@ -238,7 +240,7 @@ export class LiveGameStateService {
 
     // 2. If any starters have null/undefined slotIndex, assign available default slots up to fieldCount
     const unassignedStarters = lineup.filter(
-      (e) => e.status === 'starting' && (e.slotIndex === null || e.slotIndex === undefined) && e.slotIndex !== 99
+      (e) => e.status === 'starting' && (e.slotIndex === null || e.slotIndex === undefined) && e.slotIndex !== 99 && !seenStarters.has(e.playerId)
     );
     if (unassignedStarters.length > 0 && slotMap.size < fieldCount) {
       const defaultSlots = getDefaultSlots(fieldCount, sport);
@@ -247,6 +249,7 @@ export class LiveGameStateService {
         const availableSlot = defaultSlots.find((s) => !slotMap.has(s)) ??
           Array.from({ length: 22 }, (_, i) => i).find((s) => !slotMap.has(s));
         if (availableSlot !== undefined) {
+          seenStarters.add(starter.playerId);
           slotMap.set(availableSlot, {
             player: starter.player,
             position: starter.positionName || getPositionFromSlot(availableSlot, sport),
@@ -259,23 +262,34 @@ export class LiveGameStateService {
       const inId = event.playerIdIn || event['inPlayerId'];
       const outId = event.playerIdOut || event['outPlayerId'];
 
-      if (event.type === 'SUB' && inId && event.slotIndex !== undefined) {
-        const inEntry = lineup.find((e) => e.playerId === inId);
-        if (inEntry) {
-          const currentInSlot = slotMap.get(event.slotIndex);
-          const preservedPosition = currentInSlot?.position || event['positionName'] || getPositionFromSlot(event.slotIndex, sport);
-          // Remove outgoing player from any slot they previously occupied to prevent phantom players
-          if (outId) {
-            for (const [sIndex, data] of slotMap.entries()) {
-              if (data.player.id === outId) {
-                slotMap.delete(sIndex);
-              }
+      if (event.type === 'SUB') {
+        const currentInSlot = (event.slotIndex !== undefined && event.slotIndex !== null) ? slotMap.get(event.slotIndex) : undefined;
+        const preservedPosition = currentInSlot?.position || event['positionName'] || (event.slotIndex !== undefined && event.slotIndex !== null ? getPositionFromSlot(event.slotIndex, sport) : undefined);
+
+        // Remove outgoing player from any slot they occupied
+        if (outId) {
+          for (const [sIndex, data] of slotMap.entries()) {
+            if (data.player.id === outId) {
+              slotMap.delete(sIndex);
             }
           }
-          slotMap.set(event.slotIndex, {
-            player: inEntry.player,
-            position: preservedPosition,
-          });
+        }
+        // Remove incoming player from any other slot they might already occupy (prevents duplicate players on pitch)
+        if (inId) {
+          for (const [sIndex, data] of slotMap.entries()) {
+            if (data.player.id === inId) {
+              slotMap.delete(sIndex);
+            }
+          }
+          if (event.slotIndex !== undefined && event.slotIndex !== null) {
+            const inEntry = lineup.find((e) => e.playerId === inId);
+            if (inEntry) {
+              slotMap.set(event.slotIndex, {
+                player: inEntry.player,
+                position: preservedPosition || getPositionFromSlot(event.slotIndex, sport),
+              });
+            }
+          }
         }
       } else if (
         event.type === 'POSITION_SWAP' &&
@@ -313,6 +327,16 @@ export class LiveGameStateService {
     for (const [slotIndex, data] of slotMap.entries()) {
       if (ejected.has(data.player.id)) {
         slotMap.delete(slotIndex);
+      }
+    }
+
+    // Safety deduplication: ensure each player only appears at most once on the field
+    const uniquePlayers = new Set<string>();
+    for (const [slotIndex, data] of slotMap.entries()) {
+      if (uniquePlayers.has(data.player.id)) {
+        slotMap.delete(slotIndex);
+      } else {
+        uniquePlayers.add(data.player.id);
       }
     }
 

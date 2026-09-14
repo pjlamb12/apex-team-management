@@ -35,7 +35,13 @@
             <h3 class="font-bold">{{ event.type.replace('_', ' ') }}</h3>
             @if (event.type === 'SUB') {
               <p>
-                {{ getPlayerName(event.playerIdIn) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut) }}
+                @if ((event.playerIdIn || event.payload?.inPlayerId) && (event.playerIdOut || event.payload?.outPlayerId)) {
+                  {{ getPlayerName(event.playerIdIn || event.payload?.inPlayerId) }} <ion-icon name="swap-horizontal-outline"></ion-icon> {{ getPlayerName(event.playerIdOut || event.payload?.outPlayerId) }}
+                } @else if (event.playerIdOut || event.payload?.outPlayerId) {
+                  {{ getPlayerName(event.playerIdOut || event.payload?.outPlayerId) }} <ion-icon name="arrow-down-circle-outline" color="warning"></ion-icon> Subbed off to bench
+                } @else if (event.playerIdIn || event.payload?.inPlayerId) {
+                  {{ getPlayerName(event.playerIdIn || event.payload?.inPlayerId) }} <ion-icon name="arrow-up-circle-outline" color="success"></ion-icon> Subbed on
+                }
               </p>
             } @else if (event.type === 'POSITION_SWAP') {
               <p>

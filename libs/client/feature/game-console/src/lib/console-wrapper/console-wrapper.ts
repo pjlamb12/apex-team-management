@@ -243,6 +243,12 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     return new Set(this.stateService.stagedSubs().map(s => s.inPlayerId));
   });
 
+  protected selectedActivePlayer = computed(() => {
+    const selId = this.selectedPlayerId();
+    if (!selId) return null;
+    return this.stateService.activePlayers().find(p => p.id === selId) || null;
+  });
+
   constructor() {
     addIcons({
       chevronBackOutline,
@@ -858,6 +864,24 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     }
   }
 
+  protected handleMoveActiveToBench(): void {
+    const selId = this.selectedPlayerId();
+    if (!selId) return;
+    const activePlayer = this.stateService.activePlayers().find(p => p.id === selId);
+    if (!activePlayer) return;
+
+    this.stateService.pushEvent({
+      type: 'SUB',
+      playerIdOut: selId,
+      slotIndex: (activePlayer as any).slotIndex,
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+    this.selectedPlayerId.set(null);
+    this.actionPlayer.set(null);
+  }
+
   protected handleEmptySlotSelection(slotIndex: number): void {
     const currentSelectionId = this.selectedPlayerId();
     if (!currentSelectionId) return;
@@ -880,6 +904,25 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         minuteOccurred: this.clockService.currentMinute(),
         gameTimeMs: this.clockService.elapsedMs(),
       });
+    } else {
+      const benchPlayers = this.stateService.benchPlayers();
+      const selectedBench = benchPlayers.find(p => p.id === currentSelectionId);
+
+      if (selectedBench) {
+        const sportName = this.team()?.sport?.name;
+        const pos = getPositionFromSlot(slotIndex, sportName);
+
+        // Sub bench player directly into this empty slot
+        this.stateService.pushEvent({
+          type: 'SUB',
+          playerIdIn: selectedBench.id,
+          slotIndex,
+          positionName: pos,
+          timestamp: Date.now(),
+          minuteOccurred: this.clockService.currentMinute(),
+          gameTimeMs: this.clockService.elapsedMs(),
+        });
+      }
     }
 
     this.selectedPlayerId.set(null);
@@ -947,6 +990,21 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected handleAction(action: { type: string; playerId: string; payload?: any }): void {
+    if (action.type === 'MOVE_TO_BENCH') {
+      const activePlayer = this.stateService.activePlayers().find(p => p.id === action.playerId);
+      this.stateService.pushEvent({
+        type: 'SUB',
+        playerIdOut: action.playerId,
+        slotIndex: (activePlayer as any)?.slotIndex,
+        timestamp: Date.now(),
+        minuteOccurred: this.clockService.currentMinute(),
+        gameTimeMs: this.clockService.elapsedMs(),
+      });
+      this.selectedPlayerId.set(null);
+      this.actionPlayer.set(null);
+      return;
+    }
+
     const baseEvent = {
       type: action.type,
       timestamp: Date.now(),
