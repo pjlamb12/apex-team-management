@@ -2,7 +2,7 @@ import { Component, input, output, inject } from '@angular/core';
 import { Player } from '@apex-team/shared/util/models';
 import { IonCard, IonCardHeader, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowDownCircleOutline } from 'ionicons/icons';
+import { arrowDownCircleOutline, trashOutline } from 'ionicons/icons';
 import { PlaytimeService } from '../rotation-engine/playtime.service';
 
 @Component({
@@ -15,7 +15,7 @@ export class BenchViewComponent {
   protected playtimeService = inject(PlaytimeService);
 
   constructor() {
-    addIcons({ arrowDownCircleOutline });
+    addIcons({ arrowDownCircleOutline, trashOutline });
   }
 
   players = input.required<Player[]>();
@@ -27,6 +27,7 @@ export class BenchViewComponent {
   playerSelected = output<{ player: Player; event: Event }>();
   moveSelectedToBench = output<void>();
   addGuestPlayer = output<void>();
+  removeGuestPlayer = output<Player>();
 
   protected selectPlayer(player: Player, event: Event) {
     this.playerSelected.emit({ player, event });

@@ -42,13 +42,23 @@
               <div class="jersey-number">#{{ player.jerseyNumber }}</div>
               <div class="player-name flex items-center gap-2">
                 {{ player.firstName }} {{ player.lastName }}
+                @if (player.isGuest) {
+                  <span class="text-[8px] font-black uppercase bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/30">Guest</span>
+                }
                 @if (ejectedPlayerIds().has(player.id)) {
                   <div class="w-3.5 h-4.5 bg-red-600 rounded-[2px] border border-white flex items-center justify-center text-[7px] text-white font-black shadow-sm" title="Ejected (Red Card)">R</div>
                 }
               </div>
             </div>
             <div class="flex flex-col items-end">
-              <div class="text-[10px] font-mono text-ap-muted font-bold">{{ formatPlaytime(player.id) }}</div>
+              <div class="flex items-center gap-1.5">
+                <div class="text-[10px] font-mono text-ap-muted font-bold">{{ formatPlaytime(player.id) }}</div>
+                @if (player.isGuest) {
+                  <ion-button fill="clear" color="danger" size="small" class="m-0 h-6" (click)="$event.stopPropagation(); removeGuestPlayer.emit(player)" title="Remove guest player from game">
+                    <ion-icon slot="icon-only" name="trash-outline" class="text-xs"></ion-icon>
+                  </ion-button>
+                }
+              </div>
               @if (stagedInIds().has(player.id)) {
                 <div class="staged-badge mt-1 bg-green-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full animate-pulse border border-white/20">
                   STAGED

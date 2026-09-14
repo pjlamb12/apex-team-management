@@ -26,6 +26,7 @@ describe('AttendanceService', () => {
             findOne: vi.fn(),
             create: vi.fn(),
             save: vi.fn(),
+            delete: vi.fn(),
           },
         },
         {
@@ -44,6 +45,7 @@ describe('AttendanceService', () => {
           provide: getRepositoryToken(LineupEntryEntity),
           useValue: {
             find: vi.fn(),
+            delete: vi.fn(),
           },
         },
       ],
@@ -144,6 +146,14 @@ describe('AttendanceService', () => {
       expect(stats[0].totalEvents).toBe(1);
       expect(stats[0].present).toBe(1);
       expect(stats[0].percentage).toBe(100);
+    });
+  });
+
+  describe('removePlayerFromEvent', () => {
+    it('should delete attendance and lineup entry for player and event', async () => {
+      await service.removePlayerFromEvent('e1', 'p1');
+      expect(attendanceRepo.delete).toHaveBeenCalledWith({ eventId: 'e1', playerId: 'p1' });
+      expect(lineupRepo.delete).toHaveBeenCalledWith({ eventId: 'e1', playerId: 'p1' });
     });
   });
 });

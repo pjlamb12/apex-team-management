@@ -360,7 +360,8 @@
             [liberoDesignation]="stateService.liberoDesignation()"
             (playerSelected)="handlePlayerSelection($event)"
             (moveSelectedToBench)="handleMoveActiveToBench()"
-            (addGuestPlayer)="handleAddGuestPlayer()">
+            (addGuestPlayer)="handleAddGuestPlayer()"
+            (removeGuestPlayer)="handleRemoveGuestPlayer($event)">
           </app-bench-view>
           <div class="border-t border-ap-border flex-1">
             <app-sub-queue

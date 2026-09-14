@@ -375,9 +375,19 @@
           @for (player of benchPlayers(); track player.id) {
             <ion-item button (click)="handleBenchPlayerClick(player)" [detail]="false" [class.selected-player]="selectedPlayerId() === player.id">
               <ion-label>
-                <h2>{{ player.firstName }} {{ player.lastName }}</h2>
+                <h2>
+                  {{ player.firstName }} {{ player.lastName }}
+                  @if (player.isGuest) {
+                    <span class="text-[9px] font-black uppercase bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/30 ml-1">Guest</span>
+                  }
+                </h2>
                 <p>#{{ player.jerseyNumber }}</p>
               </ion-label>
+              @if (player.isGuest) {
+                <ion-button slot="end" fill="clear" color="danger" size="small" class="m-0 h-8" (click)="$event.stopPropagation(); removeGuestPlayerFromLineup(player)" title="Remove guest from this game">
+                  <ion-icon slot="icon-only" name="trash-outline" class="text-base"></ion-icon>
+                </ion-button>
+              }
               <ion-badge slot="end" [color]="selectedPlayerId() === player.id ? 'primary' : 'medium'">
                 {{ selectedPlayerId() === player.id ? 'SELECTED' : 'Bench' }}
               </ion-badge>

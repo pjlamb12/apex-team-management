@@ -27,7 +27,7 @@ import {
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { settingsOutline, refreshOutline, shieldOutline, warningOutline } from 'ionicons/icons';
+import { settingsOutline, refreshOutline, shieldOutline, warningOutline, trashOutline } from 'ionicons/icons';
 import {
   EventsService,
   EventEntity,
@@ -319,7 +319,7 @@ export class LineupEditor implements OnInit {
   }
 
   constructor() {
-    addIcons({ settingsOutline, refreshOutline, shieldOutline, warningOutline });
+    addIcons({ settingsOutline, refreshOutline, shieldOutline, warningOutline, trashOutline });
     // Load data whenever teamId or eventId changes
     effect(() => {
       const tId = this._teamId();
@@ -864,6 +864,35 @@ export class LineupEditor implements OnInit {
     } else {
       await this.promptCreateNewGuestPlayer();
     }
+  }
+
+  protected async removeGuestPlayerFromLineup(player: PlayerEntity): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Remove Guest Player',
+      message: `Remove guest player ${player.firstName} ${player.lastName} (#${player.jerseyNumber ?? '?'}) completely from this game?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Remove',
+          role: 'destructive',
+          handler: async () => {
+            this.players.update((prev) => prev.filter((p) => p.id !== player.id));
+            this.slots.update((prev) => prev.map((s) => (s.playerId === player.id ? { ...s, playerId: null } : s)));
+            if (this.selectedPlayerId() === player.id) {
+              this.selectedPlayerId.set(null);
+            }
+            if (this.teamId && this.eventId) {
+              await firstValueFrom(
+                this.attendanceService.removePlayerFromAttendance(this.teamId, this.eventId, player.id)
+              ).catch(() => {});
+              await this.onSave(false);
+            }
+            this.toastMessage.set(`Guest player ${player.firstName} removed from game.`);
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   private async promptCreateNewGuestPlayer(): Promise<void> {

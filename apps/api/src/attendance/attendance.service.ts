@@ -78,6 +78,11 @@ export class AttendanceService {
     }
   }
 
+  async removePlayerFromEvent(eventId: string, playerId: string): Promise<void> {
+    await this.attendanceRepo.delete({ eventId, playerId });
+    await this.lineupRepo.delete({ eventId, playerId });
+  }
+
   async getParticipationStats(
     teamId: string, 
     seasonId?: string, 

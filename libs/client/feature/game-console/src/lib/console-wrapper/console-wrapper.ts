@@ -27,7 +27,7 @@ import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
-import { EventsService, EventEntity, PlayersService } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, PlayersService, AttendanceService } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
@@ -84,6 +84,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected eventsService = inject(EventsService);
   protected syncService = inject(EventSyncService);
   protected playersService = inject(PlayersService);
+  protected attendanceService = inject(AttendanceService);
   private socketService = inject(SocketService);
   private alertCtrl = inject(AlertController);
 
@@ -1189,6 +1190,37 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     } catch (err) {
       console.error('Failed to add guest player:', err);
     }
+  }
+
+  protected async handleRemoveGuestPlayer(player: Player): Promise<void> {
+    const tId = this.teamId();
+    const eId = this.eventId();
+    if (!tId || !eId) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Remove Guest Player',
+      message: `Remove guest player ${player.firstName} ${player.lastName} (#${player.jerseyNumber ?? '?'}) completely from this game?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Remove',
+          role: 'destructive',
+          handler: async () => {
+            if (this.selectedPlayerId() === player.id) {
+              this.selectedPlayerId.set(null);
+            }
+            await firstValueFrom(
+              this.attendanceService.removePlayerFromAttendance(tId, eId, player.id)
+            ).catch(() => {});
+            const updatedLineup = await firstValueFrom(
+              this.eventsService.getLineup(tId, eId)
+            ).catch(() => []);
+            this.stateService.updateInitialLineup(updatedLineup as any);
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 }
 
