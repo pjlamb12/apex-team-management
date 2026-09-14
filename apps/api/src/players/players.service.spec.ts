@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { PlayersService } from './players.service';
 import { PlayerEntity } from '../entities/player.entity';
 import { SeasonPlayerEntity } from '../entities/season-player.entity';
@@ -9,6 +9,7 @@ describe('PlayersService', () => {
   let service: PlayersService;
   let playerRepo: Repository<PlayerEntity>;
   let seasonPlayerRepo: Repository<SeasonPlayerEntity>;
+  let dataSource: any;
   let mockEntityManager: any;
 
   beforeEach(async () => {

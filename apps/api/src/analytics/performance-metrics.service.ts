@@ -154,18 +154,19 @@ export class PerformanceMetricsService {
 
     // Aggregate attendance (games played)
     attendance.forEach(a => {
-      if (metricsMap[a.playerId] && (a.status === 'present' || a.status === 'tardy')) {
-        const player = players.find(p => p.id === a.playerId);
-        if (player?.isGuest) {
-          // Guest player: ONLY count as game appearance if they actually participated in this match
+      const player = players.find(p => p.id === a.playerId);
+      if (player?.isGuest) {
+        // Guest player: ONLY count as game appearance if they were present and actually participated
+        if ((a.status === 'present' || a.status === 'tardy') && metricsMap[a.playerId]) {
           if (guestParticipantEvents.has(`${a.playerId}_${a.eventId}`)) {
             metricsMap[a.playerId].gamesPlayed++;
-            guestParticipantEvents.delete(`${a.playerId}_${a.eventId}`);
           }
-        } else {
-          // Regular roster players count attendance
-          metricsMap[a.playerId].gamesPlayed++;
         }
+        // Always delete from unhandled guest events so absent/injured guests are not credited by fallback
+        guestParticipantEvents.delete(`${a.playerId}_${a.eventId}`);
+      } else if (metricsMap[a.playerId] && (a.status === 'present' || a.status === 'tardy')) {
+        // Regular roster players count attendance
+        metricsMap[a.playerId].gamesPlayed++;
       }
     });
 
