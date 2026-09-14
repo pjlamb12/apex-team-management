@@ -251,6 +251,16 @@ describe('ConsoleWrapper', () => {
     expect(events.find(e => e.type === 'OPPONENT_CORNER_KICK')).toBeDefined();
   });
 
+  it('should push OPPONENT_OWN_GOAL event when addOpponentOwnGoal is called', () => {
+    component['addOpponentOwnGoal']();
+    const events = stateService.events();
+    const ownGoalEvent = events.find(e => e.type === 'OPPONENT_OWN_GOAL');
+    expect(ownGoalEvent).toBeDefined();
+    expect(ownGoalEvent?.playerId).toBeUndefined();
+    expect(stateService.score().team).toBe(1);
+    expect(stateService.score().opponent).toBe(0);
+  });
+
   it('should push SUB event with playerIdOut when handleMoveActiveToBench is called', () => {
     component['selectedPlayerId'].set('p1');
     component['handleMoveActiveToBench']();

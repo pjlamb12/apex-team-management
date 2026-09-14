@@ -292,9 +292,12 @@
             <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
               {{ event()?.opponent ?? 'Opponent' }}
             </div>
-            <div class="grid grid-cols-3 gap-2 w-full">
+            <div class="grid grid-cols-2 gap-2 w-full">
               <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
                 + Goal ({{ stateService.score().opponent }})
+              </ion-button>
+              <ion-button class="ion-no-margin w-full" size="small" color="success" fill="solid" (click)="addOpponentOwnGoal()">
+                + Own Goal (+1 Us)
               </ion-button>
               <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="solid" (click)="addOpponentShot()">
                 + Shot ({{ stateService.statsSummary().opponentShots }})

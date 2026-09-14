@@ -388,7 +388,7 @@ export class LiveGameStateService {
 
       return { team, opponent };
     } else {
-      const team = events.filter((e) => e.type === 'GOAL').length;
+      const team = events.filter((e) => e.type === 'GOAL' || e.type === 'OPPONENT_OWN_GOAL').length;
       const opponent = events.filter((e) => e.type === 'OPPONENT_GOAL' || e.type === 'OWN_GOAL').length;
       return { team, opponent };
     }
@@ -990,6 +990,15 @@ export class LiveGameStateService {
   public addOpponentGoal(minuteOccurred: number, gameTimeMs?: number): void {
     this.pushEvent({
       type: 'OPPONENT_GOAL',
+      timestamp: Date.now(),
+      minuteOccurred,
+      gameTimeMs,
+    });
+  }
+
+  public addOpponentOwnGoal(minuteOccurred: number, gameTimeMs?: number): void {
+    this.pushEvent({
+      type: 'OPPONENT_OWN_GOAL',
       timestamp: Date.now(),
       minuteOccurred,
       gameTimeMs,

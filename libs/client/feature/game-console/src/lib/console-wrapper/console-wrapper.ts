@@ -413,6 +413,10 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     this.stateService.addOpponentGoal(this.clockService.currentMinute(), this.clockService.elapsedMs());
   }
 
+  protected addOpponentOwnGoal(): void {
+    this.stateService.addOpponentOwnGoal(this.clockService.currentMinute(), this.clockService.elapsedMs());
+  }
+
   protected addTeamShot(): void {
     this.stateService.pushEvent({
       type: 'SHOT',

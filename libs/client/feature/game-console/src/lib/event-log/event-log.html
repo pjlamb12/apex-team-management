@@ -32,7 +32,7 @@
           ></ion-icon>
  
           <ion-label>
-            <h3 class="font-bold">{{ event.type.replace('_', ' ') }}</h3>
+            <h3 class="font-bold">{{ event.type.split('_').join(' ') }}</h3>
             @if (event.type === 'SUB') {
               <p>
                 @if ((event.playerIdIn || event.payload?.inPlayerId) && (event.playerIdOut || event.payload?.outPlayerId)) {
@@ -70,6 +70,10 @@
             @if (event.type === 'GOAL') {
               <p>
                 {{ getPlayerName(event['scorerId'] || event.playerId) }}
+              </p>
+            } @else if (event.type === 'OPPONENT_OWN_GOAL') {
+              <p>
+                Awarded to {{ stateService.teamName() }}
               </p>
             } @else if (event.type === 'OWN_GOAL') {
               <p>

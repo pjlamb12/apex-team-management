@@ -121,6 +121,7 @@ export class EventLogViewComponent {
     switch (type) {
       case 'GOAL':
       case 'OPPONENT_GOAL':
+      case 'OPPONENT_OWN_GOAL':
       case 'OWN_GOAL': return 'football-outline';
       case 'ASSIST': return 'star-outline';
       case 'YELLOW_CARD':
@@ -158,7 +159,8 @@ export class EventLogViewComponent {
 
   protected getEventColor(type: string): string {
     switch (type) {
-      case 'GOAL': return 'success';
+      case 'GOAL':
+      case 'OPPONENT_OWN_GOAL': return 'success';
       case 'OPPONENT_GOAL':
       case 'OWN_GOAL': return 'danger';
       case 'YELLOW_CARD': return 'warning';

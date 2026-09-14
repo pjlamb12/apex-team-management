@@ -333,6 +333,23 @@ describe('LiveGameStateService', () => {
       expect(summary.teamSaves).toBe(2); // 1 BLOCKED_SHOT + 1 BLOCKED_PENALTY
     });
 
+    it('should award a point to team on addOpponentOwnGoal without attaching to a player', () => {
+      expect(service.score()).toEqual({ team: 0, opponent: 0 });
+      service.addOpponentOwnGoal(14);
+      expect(service.score()).toEqual({ team: 1, opponent: 0 });
+      const lastEvent = service.events()[service.events().length - 1];
+      expect(lastEvent.type).toBe('OPPONENT_OWN_GOAL');
+      expect(lastEvent.playerId).toBeUndefined();
+      expect(lastEvent.minuteOccurred).toBe(14);
+    });
+
+    it('should undo OPPONENT_OWN_GOAL correctly', () => {
+      service.addOpponentOwnGoal(14);
+      expect(service.score().team).toBe(1);
+      service.undo();
+      expect(service.score().team).toBe(0);
+    });
+
     it('should calculate playerCardCounts and ejectedPlayerIds correctly and remove them from activePlayers', () => {
       // Setup lineup: player 1 and player 2 are starting
       const lineup: any[] = [

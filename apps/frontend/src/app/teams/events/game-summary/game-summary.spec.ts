@@ -101,6 +101,19 @@ describe('GameSummary Event Sorting', () => {
     expect(sortedGoals.map((g: any) => g.id)).toEqual(['g3', 'g2', 'g1']);
   });
 
+  it('should include OPPONENT_OWN_GOAL in team score and OWN_GOAL in opponent score', () => {
+    (component as any).game.set({ status: 'in_progress', goalsFor: null, goalsAgainst: null });
+    (component as any).gameEvents.set([
+      { id: 'g1', eventType: 'GOAL', minuteOccurred: 5, payload: { period: 1, scorerId: 'p1' } },
+      { id: 'g2', eventType: 'OPPONENT_OWN_GOAL', minuteOccurred: 10, payload: { period: 1 } },
+      { id: 'g3', eventType: 'OPPONENT_GOAL', minuteOccurred: 20, payload: { period: 1 } },
+      { id: 'g4', eventType: 'OWN_GOAL', minuteOccurred: 30, payload: { period: 1, playerId: 'p1' } },
+    ]);
+
+    const score = (component as any).score();
+    expect(score).toEqual({ team: 2, opponent: 2 });
+  });
+
   it('should correctly populate edit fields when opening edit modal for POSITION_SWAP event', () => {
     const swapEvent = {
       id: 'swap-1',
