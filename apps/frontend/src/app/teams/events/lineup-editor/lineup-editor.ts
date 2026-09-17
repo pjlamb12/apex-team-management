@@ -381,25 +381,7 @@ export class LineupEditor implements OnInit {
       }
 
       // Load available guest players from team, league, and season without auto-populating them into bench
-      const guestPromises: Promise<PlayerEntity[]>[] = [
-        firstValueFrom(this.playersService.getGuestPlayers(teamId)).catch(() => []),
-      ];
-      if (event.leagueId) {
-        guestPromises.push(
-          firstValueFrom(this.playersService.getGuestPlayersForLeague(teamId, event.leagueId)).catch(() => [])
-        );
-      }
-      if (event.seasonId) {
-        guestPromises.push(
-          firstValueFrom(this.playersService.getGuestPlayersForSeason(teamId, event.seasonId)).catch(() => [])
-        );
-      }
-      const guestResults = await Promise.all(guestPromises);
-      const guestMap = new Map<string, PlayerEntity>();
-      guestResults.flat().forEach((gp) => {
-        if (gp && gp.isActive !== false) guestMap.set(gp.id, gp);
-      });
-      this.availableGuestPlayers.set(Array.from(guestMap.values()));
+      await this.loadAvailableGuests(teamId, event);
 
       // Only populate regular roster players and players who were already saved in THIS event's lineup
       const allPlayersMap = new Map<string, PlayerEntity>();
@@ -822,7 +804,33 @@ export class LineupEditor implements OnInit {
     }
   }
 
+  private async loadAvailableGuests(teamId: string, event: EventEntity | null): Promise<void> {
+    if (!teamId) return;
+    const guestPromises: Promise<PlayerEntity[]>[] = [
+      firstValueFrom(this.playersService.getGuestPlayers(teamId)).catch(() => []),
+    ];
+    if (event?.leagueId) {
+      guestPromises.push(
+        firstValueFrom(this.playersService.getGuestPlayersForLeague(teamId, event.leagueId)).catch(() => [])
+      );
+    }
+    if (event?.seasonId) {
+      guestPromises.push(
+        firstValueFrom(this.playersService.getGuestPlayersForSeason(teamId, event.seasonId)).catch(() => [])
+      );
+    }
+    const guestResults = await Promise.all(guestPromises);
+    const guestMap = new Map<string, PlayerEntity>();
+    guestResults.flat().forEach((gp) => {
+      if (gp && gp.isActive !== false) guestMap.set(gp.id, gp);
+    });
+    this.availableGuestPlayers.set(Array.from(guestMap.values()));
+  }
+
   protected async addGuestPlayer(): Promise<void> {
+    // Dynamically refresh available guests from team, league, and season to guarantee fresh options
+    await this.loadAvailableGuests(this.teamId, this.event());
+
     const currentIds = new Set(this.players().map((p) => p.id));
     const selectableGuests = this.availableGuestPlayers().filter((g) => !currentIds.has(g.id));
 
@@ -856,6 +864,21 @@ export class LineupEditor implements OnInit {
                 this.toastMessage.set(`Guest player ${chosen.firstName} #${chosen.jerseyNumber} added to bench.`);
               }
               return true;
+            },
+          },
+        ],
+      });
+      await alert.present();
+    } else if (this.availableGuestPlayers().length > 0) {
+      const alert = await this.alertCtrl.create({
+        header: 'Add Guest Player',
+        message: 'All existing guest players are already in this game. Would you like to create a new guest player?',
+        buttons: [
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'New Guest Player',
+            handler: () => {
+              void this.promptCreateNewGuestPlayer();
             },
           },
         ],

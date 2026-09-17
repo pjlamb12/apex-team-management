@@ -27,7 +27,7 @@ import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
-import { EventsService, EventEntity, PlayersService, AttendanceService } from '@apex-team/client/data-access/team';
+import { EventsService, EventEntity, PlayersService, AttendanceService, PlayerEntity } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
@@ -1074,8 +1074,27 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       const currentLineup = await firstValueFrom(this.eventsService.getLineup(tId, eId));
       const currentIds = new Set(currentLineup.map((l) => l.playerId));
 
-      const allGuests = await firstValueFrom(this.playersService.getGuestPlayers(tId)).catch(() => []);
-      const selectableGuests = allGuests.filter((g) => !currentIds.has(g.id) && g.isActive !== false);
+      const ev = this.event();
+      const guestPromises: Promise<PlayerEntity[]>[] = [
+        firstValueFrom(this.playersService.getGuestPlayers(tId)).catch(() => []),
+      ];
+      if (ev?.leagueId) {
+        guestPromises.push(
+          firstValueFrom(this.playersService.getGuestPlayersForLeague(tId, ev.leagueId)).catch(() => [])
+        );
+      }
+      if (ev?.seasonId) {
+        guestPromises.push(
+          firstValueFrom(this.playersService.getGuestPlayersForSeason(tId, ev.seasonId)).catch(() => [])
+        );
+      }
+      const guestResults = await Promise.all(guestPromises);
+      const guestMap = new Map<string, PlayerEntity>();
+      guestResults.flat().forEach((gp) => {
+        if (gp && gp.isActive !== false) guestMap.set(gp.id, gp);
+      });
+      const allGuests = Array.from(guestMap.values());
+      const selectableGuests = allGuests.filter((g) => !currentIds.has(g.id));
 
       if (selectableGuests.length > 0) {
         const alert = await this.alertCtrl.create({
@@ -1106,6 +1125,21 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
                   void this.addGuestToLineup(chosen.id, currentLineup);
                 }
                 return true;
+              },
+            },
+          ],
+        });
+        await alert.present();
+      } else if (allGuests.length > 0) {
+        const alert = await this.alertCtrl.create({
+          header: 'Add Guest Player',
+          message: 'All existing guest players are already in this game. Would you like to create a new guest player?',
+          buttons: [
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'New Guest Player',
+              handler: () => {
+                void this.promptCreateNewGuestPlayer(currentLineup);
               },
             },
           ],
