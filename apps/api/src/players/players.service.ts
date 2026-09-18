@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { PlayerEntity } from '../entities/player.entity';
 import { SeasonPlayerEntity } from '../entities/season-player.entity';
 import { AttendanceEntity } from '../entities/attendance.entity';
@@ -10,6 +10,8 @@ import { PlayerAwardEntity } from '../entities/player-award.entity';
 import { PlayerGoalEntity } from '../entities/player-goal.entity';
 import { PlayerGoalNoteEntity } from '../entities/player-goal-note.entity';
 import { SeasonChecklistValueEntity } from '../entities/season-checklist-value.entity';
+import { EventEntity } from '../entities/event.entity';
+import { SeasonEntity } from '../entities/season.entity';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 
@@ -105,21 +107,126 @@ export class PlayersService {
   }
 
   async findAllGuestsForTeam(teamId: string): Promise<PlayerEntity[]> {
-    return this.playerRepo.find({
+    const guestMap = new Map<string, PlayerEntity>();
+
+    // 1. Direct guest players on this team
+    const teamGuests = await this.playerRepo.find({
       where: { teamId, isGuest: true },
       order: { jerseyNumber: 'ASC', lastName: 'ASC' },
     });
+    for (const g of teamGuests) {
+      if (g.isActive !== false) guestMap.set(g.id, g);
+    }
+
+    // 2. Guest players who participated in any event across this team's seasons
+    try {
+      const seasonRepo = this.dataSource.getRepository(SeasonEntity);
+      const eventRepo = this.dataSource.getRepository(EventEntity);
+      const seasons = await seasonRepo.find({
+        where: { teamId },
+        select: ['id'],
+      });
+      const seasonIds = seasons.map((s) => s.id);
+
+      if (seasonIds.length > 0) {
+        const events = await eventRepo.find({
+          where: { seasonId: In(seasonIds) },
+          select: ['id'],
+        });
+        const eventIds = events.map((e) => e.id);
+
+        if (eventIds.length > 0) {
+          const lineupRepo = this.dataSource.getRepository(LineupEntryEntity);
+          const attendanceRepo = this.dataSource.getRepository(AttendanceEntity);
+
+          const [lineupEntries, attendanceEntries] = await Promise.all([
+            lineupRepo.find({
+              where: { eventId: In(eventIds) },
+              relations: ['player'],
+            }),
+            attendanceRepo.find({
+              where: { eventId: In(eventIds) },
+              relations: ['player'],
+            }),
+          ]);
+
+          for (const entry of lineupEntries) {
+            if (entry.player && entry.player.isGuest && entry.player.isActive !== false) {
+              guestMap.set(entry.player.id, entry.player);
+            }
+          }
+
+          for (const att of attendanceEntries) {
+            if (att.player && att.player.isGuest && att.player.isActive !== false) {
+              guestMap.set(att.player.id, att.player);
+            }
+          }
+        }
+      }
+    } catch {
+      // In case dataSource is unavailable or during partial transactions
+    }
+
+    return Array.from(guestMap.values()).sort(
+      (a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity) || a.lastName.localeCompare(b.lastName)
+    );
   }
 
   async findGuestPlayersForSeason(seasonId: string): Promise<PlayerEntity[]> {
+    const guestMap = new Map<string, PlayerEntity>();
+
+    // 1. Registered season players with isGuest: true
     const seasonPlayers = await this.seasonPlayerRepo.find({
       where: { seasonId, player: { isGuest: true, isActive: true } },
       relations: ['player'],
     });
-    return seasonPlayers
-      .map(sp => sp.player)
-      .filter((p): p is PlayerEntity => !!p)
-      .sort((a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity));
+    for (const sp of seasonPlayers) {
+      if (sp.player) guestMap.set(sp.player.id, sp.player);
+    }
+
+    // 2. Guest players who have lineup entries or attendance in events of this season
+    try {
+      const eventRepo = this.dataSource.getRepository(EventEntity);
+      const events = await eventRepo.find({
+        where: { seasonId },
+        select: ['id'],
+      });
+      const eventIds = events.map((e) => e.id);
+
+      if (eventIds.length > 0) {
+        const lineupRepo = this.dataSource.getRepository(LineupEntryEntity);
+        const attendanceRepo = this.dataSource.getRepository(AttendanceEntity);
+
+        const [lineupEntries, attendanceEntries] = await Promise.all([
+          lineupRepo.find({
+            where: { eventId: In(eventIds) },
+            relations: ['player'],
+          }),
+          attendanceRepo.find({
+            where: { eventId: In(eventIds) },
+            relations: ['player'],
+          }),
+        ]);
+
+        for (const entry of lineupEntries) {
+          if (entry.player && entry.player.isGuest && entry.player.isActive !== false) {
+            guestMap.set(entry.player.id, entry.player);
+          }
+        }
+
+        for (const att of attendanceEntries) {
+          if (att.player && att.player.isGuest && att.player.isActive !== false) {
+            guestMap.set(att.player.id, att.player);
+          }
+        }
+      }
+    } catch {
+      // In case dataSource is unavailable or during partial transactions
+    }
+
+    return Array.from(guestMap.values()).sort(
+      (a, b) => (a.jerseyNumber ?? Infinity) - (b.jerseyNumber ?? Infinity) || a.lastName.localeCompare(b.lastName)
+    );
   }
 
   async mergePlayers(teamId: string, targetPlayerId: string, sourcePlayerId: string): Promise<PlayerEntity> {

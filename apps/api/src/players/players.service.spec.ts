@@ -48,6 +48,9 @@ describe('PlayersService', () => {
           provide: DataSource,
           useValue: {
             transaction: vi.fn(async (cb) => cb(mockEntityManager)),
+            getRepository: vi.fn().mockReturnValue({
+              find: vi.fn().mockResolvedValue([]),
+            }),
           },
         },
       ],
@@ -155,7 +158,7 @@ describe('PlayersService', () => {
   describe('findAllGuestsForTeam', () => {
     it('should query for guest players only', async () => {
       vi.spyOn(playerRepo, 'find').mockResolvedValue([
-        { id: 'g1', firstName: 'Gwen', lastName: 'Stacy', isGuest: true },
+        { id: 'g1', firstName: 'Gwen', lastName: 'Stacy', isGuest: true, isActive: true },
       ] as any);
       const result = await service.findAllGuestsForTeam('t1');
       expect(playerRepo.find).toHaveBeenCalledWith({
@@ -163,6 +166,30 @@ describe('PlayersService', () => {
         order: { jerseyNumber: 'ASC', lastName: 'ASC' },
       });
       expect(result).toHaveLength(1);
+    });
+
+    it('should include guest players who played in event lineups for this team', async () => {
+      vi.spyOn(playerRepo, 'find').mockResolvedValue([]);
+      const mockSeasonRepo = { find: vi.fn().mockResolvedValue([{ id: 's1' }]) };
+      const mockEventRepo = { find: vi.fn().mockResolvedValue([{ id: 'e1' }]) };
+      const mockLineupRepo = {
+        find: vi.fn().mockResolvedValue([
+          { player: { id: 'g2', firstName: 'Guest', lastName: 'Two', jerseyNumber: 99, isGuest: true, isActive: true } },
+        ]),
+      };
+      const mockAttendanceRepo = { find: vi.fn().mockResolvedValue([]) };
+
+      vi.spyOn(dataSource, 'getRepository').mockImplementation((entity: any) => {
+        if (entity.name === 'SeasonEntity') return mockSeasonRepo;
+        if (entity.name === 'EventEntity') return mockEventRepo;
+        if (entity.name === 'LineupEntryEntity') return mockLineupRepo;
+        if (entity.name === 'AttendanceEntity') return mockAttendanceRepo;
+        return { find: vi.fn().mockResolvedValue([]) };
+      });
+
+      const result = await service.findAllGuestsForTeam('t1');
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('g2');
     });
   });
 
@@ -178,6 +205,32 @@ describe('PlayersService', () => {
       });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('g1');
+    });
+
+    it('should include guest players who played in event lineups or attendance for the season', async () => {
+      vi.spyOn(seasonPlayerRepo, 'find').mockResolvedValue([]);
+      const mockEventRepo = { find: vi.fn().mockResolvedValue([{ id: 'e1' }]) };
+      const mockLineupRepo = {
+        find: vi.fn().mockResolvedValue([
+          { player: { id: 'g1', firstName: 'Gwen', lastName: 'Stacy', jerseyNumber: 12, isGuest: true, isActive: true } },
+        ]),
+      };
+      const mockAttendanceRepo = {
+        find: vi.fn().mockResolvedValue([
+          { player: { id: 'g2', firstName: 'Miles', lastName: 'Morales', jerseyNumber: 7, isGuest: true, isActive: true } },
+        ]),
+      };
+
+      vi.spyOn(dataSource, 'getRepository').mockImplementation((entity: any) => {
+        if (entity.name === 'EventEntity') return mockEventRepo;
+        if (entity.name === 'LineupEntryEntity') return mockLineupRepo;
+        if (entity.name === 'AttendanceEntity') return mockAttendanceRepo;
+        return { find: vi.fn().mockResolvedValue([]) };
+      });
+
+      const result = await service.findGuestPlayersForSeason('s1');
+      expect(result).toHaveLength(2);
+      expect(result.map(r => r.id)).toEqual(['g2', 'g1']); // sorted by jerseyNumber: 7 then 12
     });
   });
 

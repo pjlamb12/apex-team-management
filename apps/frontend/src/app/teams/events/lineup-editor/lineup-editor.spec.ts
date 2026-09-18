@@ -6,7 +6,7 @@ import { of } from 'rxjs';
 import { LineupEditor } from './lineup-editor';
 import { EventsService, TeamService, PlayersService, AttendanceService, OpponentsService } from '@apex-team/client/data-access/team';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { ToastController } from '@ionic/angular/standalone';
+import { ToastController, AlertController } from '@ionic/angular/standalone';
 
 describe('LineupEditor Pitch Layout Slot Assignment', () => {
   let component: LineupEditor;
@@ -75,6 +75,7 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         ToastController,
+        { provide: AlertController, useValue: { create: vi.fn() } },
         { provide: RuntimeConfigLoaderService, useValue: mockRuntimeConfig },
         { provide: EventsService, useValue: mockEventsService },
         { provide: TeamService, useValue: mockTeamService },
@@ -272,5 +273,52 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
     const slots = component['slots']();
     // Must be capped at fieldCount (9)
     expect(slots.length).toBe(9);
+  });
+
+  it('should dynamically refresh available guests and present radio selection alert when unassigned guest exists', async () => {
+    const playersService = TestBed.inject(PlayersService);
+    const alertCtrl = TestBed.inject(AlertController);
+    const createAlertSpy = vi.spyOn(alertCtrl, 'create').mockResolvedValue({
+      present: vi.fn().mockResolvedValue(undefined),
+    } as any);
+
+    vi.spyOn(playersService, 'getGuestPlayers').mockReturnValue(of([
+      { id: 'gwen-1', firstName: 'Gwen', lastName: 'Stacy', jerseyNumber: 15, isGuest: true, isActive: true },
+    ] as any));
+
+    await component['addGuestPlayer']();
+
+    expect(playersService.getGuestPlayers).toHaveBeenCalledWith('t1');
+    expect(createAlertSpy).toHaveBeenCalledWith(expect.objectContaining({
+      header: 'Add Guest Player',
+      message: 'Select an existing guest player or create a new one:',
+      inputs: expect.arrayContaining([
+        expect.objectContaining({ value: 'gwen-1', label: 'Gwen Stacy (#15)' }),
+      ]),
+    }));
+  });
+
+  it('should present informative alert when all existing guests are already in lineup', async () => {
+    const playersService = TestBed.inject(PlayersService);
+    const alertCtrl = TestBed.inject(AlertController);
+    const createAlertSpy = vi.spyOn(alertCtrl, 'create').mockResolvedValue({
+      present: vi.fn().mockResolvedValue(undefined),
+    } as any);
+
+    // Gwen is already in component players
+    component['players'].set([
+      { id: 'gwen-1', firstName: 'Gwen', lastName: 'Stacy', jerseyNumber: 15, isGuest: true, isActive: true } as any,
+    ]);
+
+    vi.spyOn(playersService, 'getGuestPlayers').mockReturnValue(of([
+      { id: 'gwen-1', firstName: 'Gwen', lastName: 'Stacy', jerseyNumber: 15, isGuest: true, isActive: true },
+    ] as any));
+
+    await component['addGuestPlayer']();
+
+    expect(createAlertSpy).toHaveBeenCalledWith(expect.objectContaining({
+      header: 'Add Guest Player',
+      message: 'All existing guest players are already in this game. Would you like to create a new guest player?',
+    }));
   });
 });
