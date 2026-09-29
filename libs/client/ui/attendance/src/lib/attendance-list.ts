@@ -11,6 +11,7 @@ import {
   IonSelectOption,
   IonButton,
   IonSpinner,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -19,7 +20,8 @@ import {
   alertCircleOutline,
   bandageOutline,
   swapHorizontalOutline,
-  peopleOutline
+  peopleOutline,
+  trashOutline,
 } from 'ionicons/icons';
 import { AttendanceService, AttendanceRecord, PlayersService, EventsService } from '@apex-team/client/data-access/team';
 
@@ -66,9 +68,12 @@ import { AttendanceService, AttendanceRecord, PlayersService, EventsService } fr
         @for (player of combinedList(); track player.id) {
           <ion-item>
             <ion-label>
-              <div class="font-bold text-ap-text">
+              <div class="font-bold text-ap-text flex items-center gap-1.5">
                 {{ player.firstName }} {{ player.lastName }}
-                <span class="text-ap-muted font-normal ml-1">#{{ player.jerseyNumber }}</span>
+                <span class="text-ap-muted font-normal">#{{ player.jerseyNumber }}</span>
+                @if (player.isGuest) {
+                  <span class="text-[9px] font-black uppercase bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/30">Guest</span>
+                }
               </div>
             </ion-label>
             <ion-select [value]="player.status" aria-label="Status" (ionChange)="updateStatus(player.id, $event.detail.value)" interface="popover" placeholder="Select Status">
@@ -77,12 +82,17 @@ import { AttendanceService, AttendanceRecord, PlayersService, EventsService } fr
               <ion-select-option value="tardy">Tardy</ion-select-option>
               <ion-select-option value="injured">Injured</ion-select-option>
             </ion-select>
-            <div slot="end" class="ml-4">
+            <div slot="end" class="flex items-center gap-2 ml-4">
               @switch (player.status) {
                 @case ('present') { <ion-icon name="checkmark-circle-outline" color="success"></ion-icon> }
                 @case ('absent') { <ion-icon name="close-circle-outline" color="danger"></ion-icon> }
                 @case ('tardy') { <ion-icon name="alert-circle-outline" color="warning"></ion-icon> }
                 @case ('injured') { <ion-icon name="bandage-outline" color="medium"></ion-icon> }
+              }
+              @if (player.isGuest) {
+                <ion-button fill="clear" color="danger" size="small" class="m-0 h-8" (click)="removePlayerFromGame(player)" title="Remove guest player from this game">
+                  <ion-icon slot="icon-only" name="trash-outline" class="text-base"></ion-icon>
+                </ion-button>
               }
             </div>
           </ion-item>
@@ -105,6 +115,7 @@ export class AttendanceList {
   private readonly attendanceService = inject(AttendanceService);
   private readonly playersService = inject(PlayersService);
   private readonly eventsService = inject(EventsService);
+  private readonly alertCtrl = inject(AlertController);
 
   protected players = signal<any[]>([]);
   protected attendance = signal<AttendanceRecord[]>([]);
@@ -113,11 +124,19 @@ export class AttendanceList {
   protected combinedList = computed(() => {
     const players = this.players();
     const attendance = this.attendance();
-    
-    return players
-      .filter(p => p.isActive !== false || attendance.some(a => a.playerId === p.id))
-      .map(p => {
-        const record = attendance.find(a => a.playerId === p.id);
+    const playerMap = new Map<string, any>(players.map((p) => [p.id, { ...p }]));
+
+    // Include any players recorded in attendance (e.g. guest players)
+    attendance.forEach((a) => {
+      if (a.player && !playerMap.has(a.playerId)) {
+        playerMap.set(a.playerId, { ...a.player, isGuest: (a.player as any).isGuest ?? true });
+      }
+    });
+
+    return Array.from(playerMap.values())
+      .filter((p) => p.isActive !== false || attendance.some((a) => a.playerId === p.id))
+      .map((p) => {
+        const record = attendance.find((a) => a.playerId === p.id);
         return {
           ...p,
           status: record?.status || null,
@@ -132,7 +151,8 @@ export class AttendanceList {
       alertCircleOutline,
       bandageOutline,
       swapHorizontalOutline,
-      peopleOutline
+      peopleOutline,
+      trashOutline,
     });
 
     effect(() => {
@@ -181,6 +201,27 @@ export class AttendanceList {
       })
     );
     this.refreshAttendance();
+  }
+
+  protected async removePlayerFromGame(player: any) {
+    const alert = await this.alertCtrl.create({
+      header: 'Remove Guest Player',
+      message: `Remove guest player ${player.firstName} ${player.lastName} (#${player.jerseyNumber ?? '?'}) completely from this game?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Remove',
+          role: 'destructive',
+          handler: async () => {
+            await firstValueFrom(
+              this.attendanceService.removePlayerFromAttendance(this.teamId(), this.eventId(), player.id)
+            ).catch(() => {});
+            this.refreshAttendance();
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   private async refreshAttendance() {

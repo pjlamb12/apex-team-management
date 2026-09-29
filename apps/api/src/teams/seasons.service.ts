@@ -56,8 +56,8 @@ export class SeasonsService {
           where: { eventId: game.id },
         });
 
-        const logFor = counts.filter(e => e.eventType === 'GOAL').length;
-        const logAgainst = counts.filter(e => e.eventType === 'OPPONENT_GOAL').length;
+        const logFor = counts.filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_OWN_GOAL').length;
+        const logAgainst = counts.filter(e => e.eventType === 'OPPONENT_GOAL' || e.eventType === 'OWN_GOAL').length;
 
         // Only use logs if there is actually data there, otherwise skip "empty" scheduled games
         if (gFor === null && (logFor > 0 || logAgainst > 0 || game.status === 'completed')) {

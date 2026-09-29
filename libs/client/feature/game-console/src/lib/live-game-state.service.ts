@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Player, LineupEntry, StagedSub, getPositionFromSlot } from '@apex-team/shared/util/models';
+import { Player, LineupEntry, StagedSub, getPositionFromSlot, getDefaultSlots } from '@apex-team/shared/util/models';
 
 export interface GameEvent {
   id?: string;
@@ -219,28 +219,77 @@ export class LiveGameStateService {
   public readonly activePlayers = computed(() => {
     const lineup = this._initialLineup();
     const events = this._events().filter((e) => e.status !== 'deleted');
+    const fieldCount = this._playersOnField();
+    const sport = this._sportName();
 
     const slotMap = new Map<number, { player: Player; position: string }>();
+    const seenStarters = new Set<string>();
 
+    // 1. First add starters with explicit slotIndex
     lineup
-      .filter((e) => e.status === 'starting' && e.slotIndex !== null)
+      .filter((e) => e.status === 'starting' && e.slotIndex !== null && e.slotIndex !== undefined && e.slotIndex !== 99)
       .forEach((e) => {
-        slotMap.set(e.slotIndex as number, {
-          player: e.player,
-          position: e.positionName || 'Unknown',
-        });
+        if (slotMap.size < fieldCount && !seenStarters.has(e.playerId)) {
+          seenStarters.add(e.playerId);
+          slotMap.set(e.slotIndex as number, {
+            player: e.player,
+            position: e.positionName || getPositionFromSlot(e.slotIndex as number, sport),
+          });
+        }
       });
+
+    // 2. If any starters have null/undefined slotIndex, assign available default slots up to fieldCount
+    const unassignedStarters = lineup.filter(
+      (e) => e.status === 'starting' && (e.slotIndex === null || e.slotIndex === undefined) && e.slotIndex !== 99 && !seenStarters.has(e.playerId)
+    );
+    if (unassignedStarters.length > 0 && slotMap.size < fieldCount) {
+      const defaultSlots = getDefaultSlots(fieldCount, sport);
+      for (const starter of unassignedStarters) {
+        if (slotMap.size >= fieldCount) break;
+        const availableSlot = defaultSlots.find((s) => !slotMap.has(s)) ??
+          Array.from({ length: 22 }, (_, i) => i).find((s) => !slotMap.has(s));
+        if (availableSlot !== undefined) {
+          seenStarters.add(starter.playerId);
+          slotMap.set(availableSlot, {
+            player: starter.player,
+            position: starter.positionName || getPositionFromSlot(availableSlot, sport),
+          });
+        }
+      }
+    }
 
     events.forEach((event) => {
       const inId = event.playerIdIn || event['inPlayerId'];
-      if (event.type === 'SUB' && inId && event.slotIndex !== undefined) {
-        const inEntry = lineup.find((e) => e.playerId === inId);
-        if (inEntry) {
-          const currentInSlot = slotMap.get(event.slotIndex);
-          slotMap.set(event.slotIndex, {
-            player: inEntry.player,
-            position: currentInSlot?.position || 'Unknown',
-          });
+      const outId = event.playerIdOut || event['outPlayerId'];
+
+      if (event.type === 'SUB') {
+        const currentInSlot = (event.slotIndex !== undefined && event.slotIndex !== null) ? slotMap.get(event.slotIndex) : undefined;
+        const preservedPosition = currentInSlot?.position || event['positionName'] || (event.slotIndex !== undefined && event.slotIndex !== null ? getPositionFromSlot(event.slotIndex, sport) : undefined);
+
+        // Remove outgoing player from any slot they occupied
+        if (outId) {
+          for (const [sIndex, data] of slotMap.entries()) {
+            if (data.player.id === outId) {
+              slotMap.delete(sIndex);
+            }
+          }
+        }
+        // Remove incoming player from any other slot they might already occupy (prevents duplicate players on pitch)
+        if (inId) {
+          for (const [sIndex, data] of slotMap.entries()) {
+            if (data.player.id === inId) {
+              slotMap.delete(sIndex);
+            }
+          }
+          if (event.slotIndex !== undefined && event.slotIndex !== null) {
+            const inEntry = lineup.find((e) => e.playerId === inId);
+            if (inEntry && (outId || slotMap.size < fieldCount)) {
+              slotMap.set(event.slotIndex, {
+                player: inEntry.player,
+                position: preservedPosition || getPositionFromSlot(event.slotIndex, sport),
+              });
+            }
+          }
         }
       } else if (
         event.type === 'POSITION_SWAP' &&
@@ -249,7 +298,6 @@ export class LiveGameStateService {
       ) {
         const playerA = slotMap.get(event.slotIndexA);
         const playerB = slotMap.get(event.slotIndexB);
-        const sport = this._sportName();
 
         if (playerA && playerB) {
           const temp = { ...playerA };
@@ -279,6 +327,24 @@ export class LiveGameStateService {
     for (const [slotIndex, data] of slotMap.entries()) {
       if (ejected.has(data.player.id)) {
         slotMap.delete(slotIndex);
+      }
+    }
+
+    // Safety deduplication: ensure each player only appears at most once on the field
+    const uniquePlayers = new Set<string>();
+    for (const [slotIndex, data] of slotMap.entries()) {
+      if (uniquePlayers.has(data.player.id)) {
+        slotMap.delete(slotIndex);
+      } else {
+        uniquePlayers.add(data.player.id);
+      }
+    }
+
+    // Hard cap: activePlayers must never exceed fieldCount
+    if (slotMap.size > fieldCount) {
+      const entries = Array.from(slotMap.entries());
+      for (let i = fieldCount; i < entries.length; i++) {
+        slotMap.delete(entries[i][0]);
       }
     }
 
@@ -322,7 +388,7 @@ export class LiveGameStateService {
 
       return { team, opponent };
     } else {
-      const team = events.filter((e) => e.type === 'GOAL').length;
+      const team = events.filter((e) => e.type === 'GOAL' || e.type === 'OPPONENT_OWN_GOAL').length;
       const opponent = events.filter((e) => e.type === 'OPPONENT_GOAL' || e.type === 'OWN_GOAL').length;
       return { team, opponent };
     }
@@ -924,6 +990,15 @@ export class LiveGameStateService {
   public addOpponentGoal(minuteOccurred: number, gameTimeMs?: number): void {
     this.pushEvent({
       type: 'OPPONENT_GOAL',
+      timestamp: Date.now(),
+      minuteOccurred,
+      gameTimeMs,
+    });
+  }
+
+  public addOpponentOwnGoal(minuteOccurred: number, gameTimeMs?: number): void {
+    this.pushEvent({
+      type: 'OPPONENT_OWN_GOAL',
       timestamp: Date.now(),
       minuteOccurred,
       gameTimeMs,

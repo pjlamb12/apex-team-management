@@ -6,7 +6,7 @@ import { of } from 'rxjs';
 import { LineupEditor } from './lineup-editor';
 import { EventsService, TeamService, PlayersService, AttendanceService, OpponentsService } from '@apex-team/client/data-access/team';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { ToastController } from '@ionic/angular/standalone';
+import { ToastController, AlertController } from '@ionic/angular/standalone';
 
 describe('LineupEditor Pitch Layout Slot Assignment', () => {
   let component: LineupEditor;
@@ -52,6 +52,8 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
         { id: 'p10', firstName: 'Bench', lastName: 'Player', jerseyNumber: 10, isActive: true },
       ])),
       getPlayers: vi.fn().mockReturnValue(of([])),
+      getGuestPlayers: vi.fn().mockReturnValue(of([])),
+      getGuestPlayersForSeason: vi.fn().mockReturnValue(of([])),
       getGuestPlayersForLeague: vi.fn().mockReturnValue(of([])),
       addPlayer: vi.fn().mockReturnValue(of({})),
     };
@@ -73,6 +75,7 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         ToastController,
+        { provide: AlertController, useValue: { create: vi.fn() } },
         { provide: RuntimeConfigLoaderService, useValue: mockRuntimeConfig },
         { provide: EventsService, useValue: mockEventsService },
         { provide: TeamService, useValue: mockTeamService },
@@ -199,5 +202,123 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
       name: 'Thunder FC',
     }));
     expect(component['showOpponentIntel']()).toBe(true);
+  });
+
+  it('should support 1-2-5-1 formation (2 DEF, 5 MID, 1 FWD)', async () => {
+    const customLineup = [
+      { id: 'l1', eventId: 'e1', playerId: 'p1', slotIndex: 0, status: 'starting', positionName: 'GK', player: { id: 'p1', firstName: 'Goal', lastName: 'Keeper', jerseyNumber: 1 } },
+      { id: 'l2', eventId: 'e1', playerId: 'p2', slotIndex: 2, status: 'starting', positionName: 'DEF', player: { id: 'p2', firstName: 'Def', lastName: 'One', jerseyNumber: 2 } },
+      { id: 'l3', eventId: 'e1', playerId: 'p3', slotIndex: 4, status: 'starting', positionName: 'DEF', player: { id: 'p3', firstName: 'Def', lastName: 'Two', jerseyNumber: 4 } },
+      { id: 'l4', eventId: 'e1', playerId: 'p4', slotIndex: 6, status: 'starting', positionName: 'MID', player: { id: 'p4', firstName: 'Mid', lastName: 'One', jerseyNumber: 5 } },
+      { id: 'l5', eventId: 'e1', playerId: 'p5', slotIndex: 7, status: 'starting', positionName: 'MID', player: { id: 'p5', firstName: 'Mid', lastName: 'Two', jerseyNumber: 6 } },
+      { id: 'l6', eventId: 'e1', playerId: 'p6', slotIndex: 8, status: 'starting', positionName: 'MID', player: { id: 'p6', firstName: 'Mid', lastName: 'Three', jerseyNumber: 7 } },
+      { id: 'l7', eventId: 'e1', playerId: 'p7', slotIndex: 9, status: 'starting', positionName: 'MID', player: { id: 'p7', firstName: 'Mid', lastName: 'Four', jerseyNumber: 8 } },
+      { id: 'l8', eventId: 'e1', playerId: 'p8', slotIndex: 10, status: 'starting', positionName: 'MID', player: { id: 'p8', firstName: 'Mid', lastName: 'Five', jerseyNumber: 9 } },
+      { id: 'l9', eventId: 'e1', playerId: 'p9', slotIndex: 13, status: 'starting', positionName: 'FWD', player: { id: 'p9', firstName: 'Fwd', lastName: 'Solo', jerseyNumber: 10 } },
+    ];
+
+    const eventsService = TestBed.inject(EventsService);
+    vi.spyOn(eventsService, 'getLineup').mockReturnValue(of(customLineup as any));
+
+    await component['loadData']('t1', 'e1');
+
+    const slots = component['slots']();
+    expect(slots.length).toBe(9);
+    expect(slots.map(s => s.slotIndex)).toEqual([0, 2, 4, 6, 7, 8, 9, 10, 13]);
+    expect(slots.filter(s => s.positionName === 'DEF').length).toBe(2);
+    expect(slots.filter(s => s.positionName === 'MID').length).toBe(5);
+    expect(slots.filter(s => s.positionName === 'FWD').length).toBe(1);
+  });
+
+  it('should support 3-2-2-1 formation with CDM and CAM slot indices', async () => {
+    const customLineup = [
+      { id: 'l1', eventId: 'e1', playerId: 'p1', slotIndex: 0, status: 'starting', positionName: 'GK', player: { id: 'p1', firstName: 'GK', lastName: 'Keeper', jerseyNumber: 1 } },
+      { id: 'l2', eventId: 'e1', playerId: 'p2', slotIndex: 2, status: 'starting', positionName: 'DEF', player: { id: 'p2', firstName: 'D', lastName: '1', jerseyNumber: 2 } },
+      { id: 'l3', eventId: 'e1', playerId: 'p3', slotIndex: 3, status: 'starting', positionName: 'DEF', player: { id: 'p3', firstName: 'D', lastName: '2', jerseyNumber: 3 } },
+      { id: 'l4', eventId: 'e1', playerId: 'p4', slotIndex: 4, status: 'starting', positionName: 'DEF', player: { id: 'p4', firstName: 'D', lastName: '3', jerseyNumber: 4 } },
+      { id: 'l5', eventId: 'e1', playerId: 'p5', slotIndex: 16, status: 'starting', positionName: 'MID', player: { id: 'p5', firstName: 'CDM', lastName: '1', jerseyNumber: 5 } },
+      { id: 'l6', eventId: 'e1', playerId: 'p6', slotIndex: 17, status: 'starting', positionName: 'MID', player: { id: 'p6', firstName: 'CDM', lastName: '2', jerseyNumber: 6 } },
+      { id: 'l7', eventId: 'e1', playerId: 'p7', slotIndex: 19, status: 'starting', positionName: 'MID', player: { id: 'p7', firstName: 'CAM', lastName: '1', jerseyNumber: 7 } },
+      { id: 'l8', eventId: 'e1', playerId: 'p8', slotIndex: 20, status: 'starting', positionName: 'MID', player: { id: 'p8', firstName: 'CAM', lastName: '2', jerseyNumber: 8 } },
+      { id: 'l9', eventId: 'e1', playerId: 'p9', slotIndex: 13, status: 'starting', positionName: 'FWD', player: { id: 'p9', firstName: 'Fwd', lastName: 'Solo', jerseyNumber: 9 } },
+    ];
+
+    const eventsService = TestBed.inject(EventsService);
+    vi.spyOn(eventsService, 'getLineup').mockReturnValue(of(customLineup as any));
+
+    await component['loadData']('t1', 'e1');
+
+    const slots = component['slots']();
+    expect(slots.length).toBe(9);
+    expect(slots.map(s => s.slotIndex)).toEqual([0, 2, 3, 4, 13, 16, 17, 19, 20]);
+    expect(slots.filter(s => s.positionName === 'MID').length).toBe(4);
+  });
+
+  it('should not load a phantom 10th player into slots when database has 10 starters for a 9v9 event', async () => {
+    const tenStarters = Array.from({ length: 10 }, (_, i) => ({
+      id: `l${i + 1}`,
+      eventId: 'e1',
+      playerId: `p${i + 1}`,
+      slotIndex: i,
+      status: 'starting' as const,
+      positionName: 'MID',
+      player: { id: `p${i + 1}`, firstName: `P`, lastName: `${i + 1}`, jerseyNumber: i + 1 },
+    }));
+
+    const eventsService = TestBed.inject(EventsService);
+    vi.spyOn(eventsService, 'getLineup').mockReturnValue(of(tenStarters as any));
+
+    await component['loadData']('t1', 'e1');
+
+    const slots = component['slots']();
+    // Must be capped at fieldCount (9)
+    expect(slots.length).toBe(9);
+  });
+
+  it('should dynamically refresh available guests and present radio selection alert when unassigned guest exists', async () => {
+    const playersService = TestBed.inject(PlayersService);
+    const alertCtrl = TestBed.inject(AlertController);
+    const createAlertSpy = vi.spyOn(alertCtrl, 'create').mockResolvedValue({
+      present: vi.fn().mockResolvedValue(undefined),
+    } as any);
+
+    vi.spyOn(playersService, 'getGuestPlayers').mockReturnValue(of([
+      { id: 'gwen-1', firstName: 'Gwen', lastName: 'Stacy', jerseyNumber: 15, isGuest: true, isActive: true },
+    ] as any));
+
+    await component['addGuestPlayer']();
+
+    expect(playersService.getGuestPlayers).toHaveBeenCalledWith('t1');
+    expect(createAlertSpy).toHaveBeenCalledWith(expect.objectContaining({
+      header: 'Add Guest Player',
+      message: 'Select an existing guest player or create a new one:',
+      inputs: expect.arrayContaining([
+        expect.objectContaining({ value: 'gwen-1', label: 'Gwen Stacy (#15)' }),
+      ]),
+    }));
+  });
+
+  it('should present informative alert when all existing guests are already in lineup', async () => {
+    const playersService = TestBed.inject(PlayersService);
+    const alertCtrl = TestBed.inject(AlertController);
+    const createAlertSpy = vi.spyOn(alertCtrl, 'create').mockResolvedValue({
+      present: vi.fn().mockResolvedValue(undefined),
+    } as any);
+
+    // Gwen is already in component players
+    component['players'].set([
+      { id: 'gwen-1', firstName: 'Gwen', lastName: 'Stacy', jerseyNumber: 15, isGuest: true, isActive: true } as any,
+    ]);
+
+    vi.spyOn(playersService, 'getGuestPlayers').mockReturnValue(of([
+      { id: 'gwen-1', firstName: 'Gwen', lastName: 'Stacy', jerseyNumber: 15, isGuest: true, isActive: true },
+    ] as any));
+
+    await component['addGuestPlayer']();
+
+    expect(createAlertSpy).toHaveBeenCalledWith(expect.objectContaining({
+      header: 'Add Guest Player',
+      message: 'All existing guest players are already in this game. Would you like to create a new guest player?',
+    }));
   });
 });

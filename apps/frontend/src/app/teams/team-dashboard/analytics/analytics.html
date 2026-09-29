@@ -13,6 +13,9 @@
             <ion-icon slot="start" name="sparkles-outline"></ion-icon>
             <span class="hidden sm:inline">AI Prompts</span>
           </ion-button>
+          <ion-button (click)="openMergeModal()" fill="clear" color="medium" title="Merge Duplicate Players">
+            <ion-icon slot="icon-only" name="git-merge-outline"></ion-icon>
+          </ion-button>
           <ion-button (click)="openExportModal()" fill="clear" color="medium">
             <ion-icon slot="icon-only" name="download-outline"></ion-icon>
           </ion-button>
@@ -360,18 +363,31 @@
                             <span>Guest Players</span>
                             <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
                           </div>
-                          <span class="text-[10px] font-bold text-ap-muted">{{ guestPerformanceMetrics().length }} player{{ guestPerformanceMetrics().length > 1 ? 's' : '' }}</span>
+                          <div class="flex items-center gap-3">
+                            <ion-button fill="clear" size="small" color="secondary" class="h-6 text-[10px] font-bold" (click)="openMergeModal(undefined, true)">
+                              <ion-icon name="git-merge-outline" slot="start"></ion-icon>
+                              Merge Guests
+                            </ion-button>
+                            <span class="text-[10px] font-bold text-ap-muted">{{ guestPerformanceMetrics().length }} player{{ guestPerformanceMetrics().length > 1 ? 's' : '' }}</span>
+                          </div>
                         </div>
                       </td>
                     </tr>
                     @for (m of guestPerformanceMetrics(); track m.playerId) {
                       <tr class="hover:bg-ap-surface-raised transition-colors">
                         <td class="px-4 py-3 font-bold text-ap-text player-cell">
-                          {{ m.firstName }} {{ m.lastName }}
-                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
-                          @if (m.preferredPosition) {
-                            <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
-                          }
+                          <div class="flex items-center justify-between">
+                            <div>
+                              {{ m.firstName }} {{ m.lastName }}
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                              @if (m.preferredPosition) {
+                                <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
+                              }
+                            </div>
+                            <ion-button fill="clear" size="small" color="medium" class="h-6 w-6 ion-no-padding" (click)="openMergeModal(m.playerId, true)" title="Merge duplicate guest">
+                              <ion-icon name="git-merge-outline" slot="icon-only" class="text-xs"></ion-icon>
+                            </ion-button>
+                          </div>
                         </td>
                         <td class="px-2 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
                         <td class="px-2 py-3 text-center font-bold text-ap-text tabular-nums">{{ m.kills || 0 }}</td>
@@ -524,18 +540,31 @@
                             <span>Guest Players</span>
                             <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
                           </div>
-                          <span class="text-[10px] font-bold text-ap-muted">{{ guestPerformanceMetrics().length }} player{{ guestPerformanceMetrics().length > 1 ? 's' : '' }}</span>
+                          <div class="flex items-center gap-3">
+                            <ion-button fill="clear" size="small" color="secondary" class="h-6 text-[10px] font-bold" (click)="openMergeModal(undefined, true)">
+                              <ion-icon name="git-merge-outline" slot="start"></ion-icon>
+                              Merge Guests
+                            </ion-button>
+                            <span class="text-[10px] font-bold text-ap-muted">{{ guestPerformanceMetrics().length }} player{{ guestPerformanceMetrics().length > 1 ? 's' : '' }}</span>
+                          </div>
                         </div>
                       </td>
                     </tr>
                     @for (m of guestPerformanceMetrics(); track m.playerId) {
                       <tr class="hover:bg-ap-surface-raised transition-colors">
                         <td class="px-4 py-3 font-bold text-ap-text player-cell">
-                          {{ m.firstName }} {{ m.lastName }}
-                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
-                          @if (m.preferredPosition) {
-                            <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
-                          }
+                          <div class="flex items-center justify-between">
+                            <div>
+                              {{ m.firstName }} {{ m.lastName }}
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                              @if (m.preferredPosition) {
+                                <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
+                              }
+                            </div>
+                            <ion-button fill="clear" size="small" color="medium" class="h-6 w-6 ion-no-padding" (click)="openMergeModal(m.playerId, true)" title="Merge duplicate guest">
+                              <ion-icon name="git-merge-outline" slot="icon-only" class="text-xs"></ion-icon>
+                            </ion-button>
+                          </div>
                         </td>
                         <td class="px-4 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
                         <td class="px-4 py-3 text-center font-bold text-emerald-500 tabular-nums">{{ getPlayerMinutes(m.playerId) }}m</td>
@@ -671,16 +700,25 @@
                         <span class="text-[10px] font-black uppercase tracking-widest text-purple-400">Guest Players</span>
                         <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
                       </div>
-                      <span class="text-[10px] font-bold text-ap-muted">{{ guestParticipationStats().length }} player{{ guestParticipationStats().length > 1 ? 's' : '' }}</span>
+                      <div class="flex items-center gap-3">
+                        <ion-button fill="clear" size="small" color="secondary" class="h-6 text-[10px] font-bold" (click)="openMergeModal(undefined, true)">
+                          <ion-icon name="git-merge-outline" slot="start"></ion-icon>
+                          Merge Guests
+                        </ion-button>
+                        <span class="text-[10px] font-bold text-ap-muted">{{ guestParticipationStats().length }} player{{ guestParticipationStats().length > 1 ? 's' : '' }}</span>
+                      </div>
                     </div>
 
                     @for (p of guestParticipationStats(); track p.playerId) {
                       <ion-item>
                         <ion-label>
                           <div class="flex items-center justify-between mb-2">
-                            <span class="font-bold text-ap-text text-sm">
+                            <span class="font-bold text-ap-text text-sm flex items-center gap-2">
                               {{ p.firstName }} {{ p.lastName }}
-                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
+                              <ion-button fill="clear" size="small" color="medium" class="h-6 w-6 ion-no-padding" (click)="openMergeModal(p.playerId, true)" title="Merge duplicate guest">
+                                <ion-icon name="git-merge-outline" slot="icon-only" class="text-xs"></ion-icon>
+                              </ion-button>
                             </span>
                             <div class="text-right">
                               <span class="text-xs font-black text-ap-text">{{ p.present }} / {{ p.totalEvents }}</span>
@@ -790,16 +828,25 @@
                     <span class="text-[10px] font-black uppercase tracking-widest text-purple-400">Guest Players</span>
                     <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
                   </div>
-                  <span class="text-[10px] font-bold text-ap-muted">{{ guestPlaytime().length }} player{{ guestPlaytime().length > 1 ? 's' : '' }}</span>
+                  <div class="flex items-center gap-3">
+                    <ion-button fill="clear" size="small" color="secondary" class="h-6 text-[10px] font-bold" (click)="openMergeModal(undefined, true)">
+                      <ion-icon name="git-merge-outline" slot="start"></ion-icon>
+                      Merge Guests
+                    </ion-button>
+                    <span class="text-[10px] font-bold text-ap-muted">{{ guestPlaytime().length }} player{{ guestPlaytime().length > 1 ? 's' : '' }}</span>
+                  </div>
                 </div>
 
                 @for (pt of guestPlaytime(); track pt.playerId) {
                   <ion-item>
                     <ion-label>
                       <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-ap-text text-sm">
+                        <span class="font-bold text-ap-text text-sm flex items-center gap-2">
                           {{ getPlayerName(pt.playerId) }}
-                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                          <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
+                          <ion-button fill="clear" size="small" color="medium" class="h-6 w-6 ion-no-padding" (click)="openMergeModal(pt.playerId, true)" title="Merge duplicate guest">
+                            <ion-icon name="git-merge-outline" slot="icon-only" class="text-xs"></ion-icon>
+                          </ion-button>
                         </span>
                         <div class="text-right">
                           @if (sportName() === 'Volleyball') {

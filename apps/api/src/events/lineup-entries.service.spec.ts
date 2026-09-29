@@ -3,11 +3,13 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LineupEntriesService } from './lineup-entries.service';
 import { LineupEntryEntity } from '../entities/lineup-entry.entity';
+import { EventEntity } from '../entities/event.entity';
 import { SaveLineupDto } from './dto/save-lineup.dto';
 
 describe('LineupEntriesService', () => {
   let service: LineupEntriesService;
   let repo: Repository<LineupEntryEntity>;
+  let eventRepo: Repository<EventEntity>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,11 +27,18 @@ describe('LineupEntriesService', () => {
             delete: vi.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(EventEntity),
+          useValue: {
+            findOne: vi.fn().mockResolvedValue({ id: 'event-1', playersOnField: 9 }),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<LineupEntriesService>(LineupEntriesService);
     repo = module.get<Repository<LineupEntryEntity>>(getRepositoryToken(LineupEntryEntity));
+    eventRepo = module.get<Repository<EventEntity>>(getRepositoryToken(EventEntity));
   });
 
   describe('saveLineup', () => {
@@ -65,6 +74,30 @@ describe('LineupEntriesService', () => {
     it('should correctly record bench entries', async () => {
       const result = await service.saveLineup(eventId, dto);
       expect(result[1].status).toBe('bench');
+    });
+
+    it('should demote excess starters to bench when exceeding event.playersOnField', async () => {
+      // Event has playersOnField: 9, send 10 starters
+      const tenStartersDto: SaveLineupDto = {
+        entries: Array.from({ length: 10 }, (_, i) => ({
+          playerId: `p${i + 1}`,
+          status: 'starting' as const,
+          positionName: 'MID',
+          slotIndex: i,
+        })),
+      };
+
+      await service.saveLineup(eventId, tenStartersDto);
+
+      expect(repo.create).toHaveBeenCalledTimes(10);
+      const calls = (repo.create as any).mock.calls;
+      // First 9 should be starting
+      for (let i = 0; i < 9; i++) {
+        expect(calls[i][0].status).toBe('starting');
+      }
+      // 10th should be demoted to bench with slotIndex null
+      expect(calls[9][0].status).toBe('bench');
+      expect(calls[9][0].slotIndex).toBeNull();
     });
   });
 

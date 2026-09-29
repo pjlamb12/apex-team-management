@@ -292,9 +292,12 @@
             <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
               {{ event()?.opponent ?? 'Opponent' }}
             </div>
-            <div class="grid grid-cols-3 gap-2 w-full">
+            <div class="grid grid-cols-2 gap-2 w-full">
               <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
                 + Goal ({{ stateService.score().opponent }})
+              </ion-button>
+              <ion-button class="ion-no-margin w-full" size="small" color="success" fill="solid" (click)="addOpponentOwnGoal()">
+                + Own Goal (+1 Us)
               </ion-button>
               <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="solid" (click)="addOpponentShot()">
                 + Shot ({{ stateService.statsSummary().opponentShots }})
@@ -335,7 +338,7 @@
             </app-volleyball-court-view>
           } @else {
             <app-soccer-pitch-view
-              class="w-full"
+              class="w-full h-full min-h-[350px] block relative"
               [players]="stateService.activePlayers()"
               [initialLineup]="stateService.initialLineup()"
               [stagedSubs]="stateService.stagedSubs()"
@@ -355,10 +358,13 @@
             [players]="stateService.benchPlayers()"
             [stagedInIds]="stagedInIds()"
             [selectedPlayerId]="selectedPlayerId()"
+            [selectedActivePlayer]="selectedActivePlayer()"
             [ejectedPlayerIds]="stateService.ejectedPlayerIds()"
             [liberoDesignation]="stateService.liberoDesignation()"
             (playerSelected)="handlePlayerSelection($event)"
-            (addGuestPlayer)="handleAddGuestPlayer()">
+            (moveSelectedToBench)="handleMoveActiveToBench()"
+            (addGuestPlayer)="handleAddGuestPlayer()"
+            (removeGuestPlayer)="handleRemoveGuestPlayer($event)">
           </app-bench-view>
           <div class="border-t border-ap-border flex-1">
             <app-sub-queue

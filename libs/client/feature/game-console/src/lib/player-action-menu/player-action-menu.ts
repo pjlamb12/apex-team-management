@@ -2,7 +2,7 @@ import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonList, IonItem, IonLabel, IonIcon, IonListHeader, IonButton } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { footballOutline, starOutline, cardOutline, shieldOutline, shieldHalfOutline, flashOutline } from 'ionicons/icons';
+import { footballOutline, starOutline, cardOutline, shieldOutline, shieldHalfOutline, flashOutline, arrowDownCircleOutline } from 'ionicons/icons';
 import { Player } from '@apex-team/shared/util/models';
 
 @Component({
@@ -35,7 +35,7 @@ export class PlayerActionMenuComponent {
   });
 
   constructor() {
-    addIcons({ footballOutline, starOutline, cardOutline, shieldOutline, shieldHalfOutline, flashOutline });
+    addIcons({ footballOutline, starOutline, cardOutline, shieldOutline, shieldHalfOutline, flashOutline, arrowDownCircleOutline });
   }
 
   protected selectAction(type: string) {

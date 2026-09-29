@@ -128,4 +128,21 @@ describe('TeamAnalytics', () => {
     metrics = (component as any).filteredPerformanceMetrics();
     expect(metrics.map((m: any) => m.playerId)).toEqual(['p1', 'p2', 'p3']);
   });
+
+  it('should open merge modal and reload data when merge is confirmed', async () => {
+    (component as any).id = 't1';
+    mockSeasonsService.selectedSeasonId.set('s1');
+    const modalCtrl = TestBed.inject(ModalController);
+    const mockModal = {
+      present: vi.fn().mockResolvedValue(undefined),
+      onWillDismiss: vi.fn().mockResolvedValue({ data: { merged: true } }),
+    };
+    (modalCtrl.create as any).mockResolvedValue(mockModal);
+
+    await (component as any).openMergeModal('p2', true);
+
+    expect(modalCtrl.create).toHaveBeenCalled();
+    expect(mockModal.present).toHaveBeenCalled();
+    expect(mockAnalyticsService.getPerformanceMetrics).toHaveBeenCalled();
+  });
 });

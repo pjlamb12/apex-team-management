@@ -38,6 +38,7 @@ import {
   refreshOutline,
   removeCircleOutline,
   flagOutline,
+  gitMergeOutline,
 } from 'ionicons/icons';
 import { 
   AnalyticsService, 
@@ -53,6 +54,7 @@ import {
 } from '@apex-team/client/data-access/team';
 import { PlayerModal } from '../../player-modal/player-modal';
 import { ManageSeasonRosterModal } from './manage-roster-modal/manage-roster-modal';
+import { MergePlayerModal } from '../../merge-player-modal/merge-player-modal';
 
 @Component({
   selector: 'app-roster',
@@ -142,6 +144,7 @@ export class Roster {
       refreshOutline,
       removeCircleOutline,
       flagOutline,
+      gitMergeOutline,
     });
 
     // Load players whenever teamId or selectedSeasonId changes
@@ -433,5 +436,21 @@ export class Roster {
         seasonId: this.selectedSeasonId() ?? undefined,
       },
     });
+  }
+
+  protected async openMergeModal(preselectedTargetId?: string): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: MergePlayerModal,
+      componentProps: {
+        teamId: this.teamId,
+        preselectedTargetId,
+      },
+    });
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data?.merged) {
+      void this.loadPlayers(this.teamId, this.selectedSeasonId());
+    }
   }
 }

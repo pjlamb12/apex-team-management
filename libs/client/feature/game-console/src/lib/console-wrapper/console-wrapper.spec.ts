@@ -250,4 +250,60 @@ describe('ConsoleWrapper', () => {
     const events = stateService.events();
     expect(events.find(e => e.type === 'OPPONENT_CORNER_KICK')).toBeDefined();
   });
+
+  it('should push OPPONENT_OWN_GOAL event when addOpponentOwnGoal is called', () => {
+    component['addOpponentOwnGoal']();
+    const events = stateService.events();
+    const ownGoalEvent = events.find(e => e.type === 'OPPONENT_OWN_GOAL');
+    expect(ownGoalEvent).toBeDefined();
+    expect(ownGoalEvent?.playerId).toBeUndefined();
+    expect(stateService.score().team).toBe(1);
+    expect(stateService.score().opponent).toBe(0);
+  });
+
+  it('should push SUB event with playerIdOut when handleMoveActiveToBench is called', () => {
+    component['selectedPlayerId'].set('p1');
+    component['handleMoveActiveToBench']();
+
+    const events = stateService.events();
+    const subEvent = events.find(e => e.type === 'SUB' && e.playerIdOut === 'p1');
+    expect(subEvent).toBeDefined();
+    expect(subEvent?.playerIdIn).toBeUndefined();
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
+
+  it('should push SUB event with playerIdOut when MOVE_TO_BENCH action is received', () => {
+    component['handleAction']({ type: 'MOVE_TO_BENCH', playerId: 'p1' });
+
+    const events = stateService.events();
+    const subEvent = events.find(e => e.type === 'SUB' && e.playerIdOut === 'p1');
+    expect(subEvent).toBeDefined();
+  });
+
+  it('should sub bench player directly into empty slot when emptySlotSelected is called', () => {
+    // Select bench player p2
+    component['selectedPlayerId'].set('p2');
+    component['handleEmptySlotSelection'](5);
+
+    const events = stateService.events();
+    const subInEvent = events.find(e => e.type === 'SUB' && e.playerIdIn === 'p2');
+    expect(subInEvent).toBeDefined();
+    expect(subInEvent?.slotIndex).toBe(5);
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
+
+  it('should not sub bench player into empty slot if active players count is already at playersOnField', () => {
+    // Set playersOnField to 2 (equal to current active count)
+    (stateService as any)._playersOnField.set(2);
+    expect(stateService.activePlayers().length).toBe(2);
+
+    // Select bench player p2 and try to add to empty slot 5
+    component['selectedPlayerId'].set('p2');
+    component['handleEmptySlotSelection'](5);
+
+    const events = stateService.events();
+    const subInEvent = events.find(e => e.type === 'SUB' && e.playerIdIn === 'p2');
+    expect(subInEvent).toBeUndefined();
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
 });

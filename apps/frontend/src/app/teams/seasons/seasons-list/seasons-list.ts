@@ -30,6 +30,7 @@ import {
 import { SeasonsService, LeaguesService, PlayersService, SeasonChecklistService } from '@apex-team/client/data-access/team';
 import { Season, League, SeasonChecklistItem, SeasonChecklistValue } from '@apex-team/shared/util/models';
 import { LeagueModal } from '../../events/schedule/league-modal/league-modal';
+import { MergePlayerModal } from '../../merge-player-modal/merge-player-modal';
 
 interface SeasonWithLeagues extends Season {
   leagues: League[];
@@ -346,10 +347,38 @@ export class SeasonsList {
     if (!tId || !league.id) return;
 
     try {
-      const guests = await firstValueFrom(this.playersService.getGuestPlayersForLeague(tId, league.id));
-      const guestListMsg = guests.length > 0
-        ? 'Current guest players:\n' + guests.map(g => `#${g.jerseyNumber ?? '?'} ${g.firstName} ${g.lastName}`).join('\n')
+      const [leagueGuests, allTeamGuests] = await Promise.all([
+        firstValueFrom(this.playersService.getGuestPlayersForLeague(tId, league.id)).catch(() => []),
+        firstValueFrom(this.playersService.getGuestPlayers(tId)).catch(() => []),
+      ]);
+
+      const guestListMsg = leagueGuests.length > 0
+        ? 'Current guest players in this competition:\n' + leagueGuests.map(g => `#${g.jerseyNumber ?? '?'} ${g.firstName} ${g.lastName}`).join('\n')
         : 'No guest players assigned to this competition yet.';
+
+      const buttons: any[] = [
+        { text: 'Close', role: 'cancel' },
+      ];
+
+      if (allTeamGuests.length > 1) {
+        buttons.push({
+          text: 'Merge Guests',
+          handler: () => {
+            void this.openMergeModal();
+          },
+        });
+      }
+
+      buttons.push({
+        text: 'Add Guest',
+        handler: (data: any) => {
+          if (!data?.firstName || !data?.lastName || !data?.jerseyNumber) {
+            return false;
+          }
+          void this.addGuestPlayerToLeague(tId, league.id, data.firstName, data.lastName, +data.jerseyNumber);
+          return true;
+        },
+      });
 
       const alert = await this.alertCtrl.create({
         header: `Guest Players: ${league.name}`,
@@ -359,23 +388,26 @@ export class SeasonsList {
           { name: 'lastName', type: 'text', placeholder: 'Last Name' },
           { name: 'jerseyNumber', type: 'number', placeholder: 'Jersey #' },
         ],
-        buttons: [
-          { text: 'Close', role: 'cancel' },
-          {
-            text: 'Add Guest',
-            handler: (data) => {
-              if (!data.firstName || !data.lastName || !data.jerseyNumber) {
-                return false;
-              }
-              void this.addGuestPlayerToLeague(tId, league.id, data.firstName, data.lastName, +data.jerseyNumber);
-              return true;
-            }
-          }
-        ]
+        buttons,
       });
       await alert.present();
     } catch (err) {
       console.error('Failed to load guest players for competition', err);
+    }
+  }
+
+  protected async openMergeModal(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: MergePlayerModal,
+      componentProps: {
+        teamId: this.teamId,
+        guestOnly: true,
+      },
+    });
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+    if (data?.merged) {
+      void this.loadSeasons(this.teamId);
     }
   }
 

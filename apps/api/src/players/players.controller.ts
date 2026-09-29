@@ -6,6 +6,7 @@ import { UpdatePlayerDto } from './dto/update-player.dto';
 import { TeamRoleGuard } from '../auth/guards/team-role.guard';
 import { TeamRoles } from '../auth/decorators/team-role.decorator';
 import { TeamRole } from '@apex-team/shared/util/models';
+import { MergePlayersDto } from './dto/merge-players.dto';
 
 @UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId/players')
@@ -18,10 +19,22 @@ export class PlayersController {
     return this.playersService.findAllForTeam(teamId, includeInactive === 'true');
   }
 
+  @Get('guests')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  findAllGuests(@Param('teamId') teamId: string) {
+    return this.playersService.findAllGuestsForTeam(teamId);
+  }
+
   @Get('seasons/:seasonId')
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findAllForSeason(@Param('seasonId') seasonId: string, @Query('includeInactive') includeInactive?: string) {
     return this.playersService.findAllForSeason(seasonId, includeInactive === 'true');
+  }
+
+  @Get('seasons/:seasonId/guests')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
+  findGuestsForSeason(@Param('seasonId') seasonId: string) {
+    return this.playersService.findGuestPlayersForSeason(seasonId);
   }
 
   @Get('leagues/:leagueId')
@@ -34,6 +47,15 @@ export class PlayersController {
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   create(@Param('teamId') teamId: string, @Body() data: CreatePlayerDto & { seasonId?: string; leagueId?: string }) {
     return this.playersService.create(teamId, data);
+  }
+
+  @Post('merge')
+  @TeamRoles(TeamRole.HEAD_COACH)
+  merge(
+    @Param('teamId') teamId: string,
+    @Body() dto: MergePlayersDto,
+  ) {
+    return this.playersService.mergePlayers(teamId, dto.targetPlayerId, dto.sourcePlayerId);
   }
 
   @Post('leagues/:leagueId')
@@ -70,3 +92,4 @@ export class PlayersController {
     return this.playersService.remove(teamId, id);
   }
 }
+

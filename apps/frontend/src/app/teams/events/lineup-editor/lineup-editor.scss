@@ -6,6 +6,14 @@ ion-content {
   --padding-bottom: 72px;
 }
 
+.pitch-wrapper {
+  height: 520px;
+  min-height: 440px;
+  width: 100%;
+  position: relative;
+  display: block;
+}
+
 .slot-row {
   align-items: center;
 

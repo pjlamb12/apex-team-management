@@ -541,7 +541,7 @@ export class GameSummary implements OnDestroy {
   protected goals = computed(() => {
     const lineup = this.lineup();
     return this.gameEvents()
-      .filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_GOAL' || e.eventType === 'OWN_GOAL' || e.eventType === 'ASSIST')
+      .filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_GOAL' || e.eventType === 'OPPONENT_OWN_GOAL' || e.eventType === 'OWN_GOAL' || e.eventType === 'ASSIST')
       .map(e => {
         if (e.eventType === 'GOAL' || e.eventType === 'OWN_GOAL') {
           const scorerId = e.payload?.scorerId || e.payload?.playerId || e.playerId;
@@ -616,8 +616,8 @@ export class GameSummary implements OnDestroy {
     }
 
     const events = this.goals();
-    const team = events.filter(e => e.eventType === 'GOAL').length;
-    const opponent = events.filter(e => e.eventType === 'OPPONENT_GOAL').length;
+    const team = events.filter(e => e.eventType === 'GOAL' || e.eventType === 'OPPONENT_OWN_GOAL').length;
+    const opponent = events.filter(e => e.eventType === 'OPPONENT_GOAL' || e.eventType === 'OWN_GOAL').length;
     return { team, opponent };
   });
 
@@ -1010,6 +1010,8 @@ export class GameSummary implements OnDestroy {
       payload['assistorId'] = this.editAssistorId() || undefined;
     } else if (type === 'OWN_GOAL') {
       payload['playerId'] = this.editPlayerId();
+    } else if (type === 'OPPONENT_OWN_GOAL' || type === 'OPPONENT_GOAL' || type === 'OPPONENT_SHOT' || type === 'OPPONENT_CORNER_KICK') {
+      // No player associated
     } else if (type === 'ASSIST') {
       payload['assistorId'] = this.editPlayerId() || undefined;
     } else {
@@ -1099,6 +1101,8 @@ export class GameSummary implements OnDestroy {
       payload['assistorId'] = this.editAssistorId() || undefined;
     } else if (event.eventType === 'OWN_GOAL') {
       payload['playerId'] = this.editPlayerId();
+    } else if (event.eventType === 'OPPONENT_OWN_GOAL' || event.eventType === 'OPPONENT_GOAL' || event.eventType === 'OPPONENT_SHOT' || event.eventType === 'OPPONENT_CORNER_KICK') {
+      // No player associated
     } else if (event.eventType === 'ASSIST') {
       payload['assistorId'] = this.editPlayerId();
     } else {

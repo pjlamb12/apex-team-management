@@ -49,4 +49,17 @@ describe('BenchViewComponent', () => {
     expect(selectedAttribute.textContent).toContain('22');
     expect(selectedAttribute.textContent).toContain('Smith');
   });
+
+  it('should show Sub Off to Bench button and emit moveSelectedToBench when clicked', () => {
+    const spy = vi.spyOn(component.moveSelectedToBench, 'emit');
+    fixture.componentRef.setInput('selectedActivePlayer', mockPlayers[0]);
+    fixture.detectChanges();
+
+    const subOffBtn = fixture.nativeElement.querySelector('ion-button[color="warning"]');
+    expect(subOffBtn).toBeTruthy();
+    expect(subOffBtn.textContent).toContain('Sub Off to Bench');
+
+    subOffBtn.click();
+    expect(spy).toHaveBeenCalled();
+  });
 });

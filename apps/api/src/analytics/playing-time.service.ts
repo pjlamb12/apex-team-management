@@ -26,7 +26,7 @@ function getPositionFromSlot(slot: number, isVolleyball?: boolean): string {
   }
   if (slot === 0) return 'GK';
   if (slot >= 1 && slot <= 5) return 'DEF';
-  if (slot >= 6 && slot <= 10) return 'MID';
+  if ((slot >= 6 && slot <= 10) || (slot >= 16 && slot <= 21)) return 'MID';
   if (slot >= 11 && slot <= 15) return 'FWD';
   return 'UNKNOWN';
 }

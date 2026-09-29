@@ -54,6 +54,7 @@ import { CreateOpponents1784600000000 } from './1784600000000-CreateOpponents';
 import { CreatePlayerAwards1784700000000 } from './1784700000000-CreatePlayerAwards';
 import { CreatePlayerGoalsAndNotes1784800000000 } from './1784800000000-CreatePlayerGoalsAndNotes';
 import { CreateTacticPlays1784900000000 } from './1784900000000-CreateTacticPlays';
+import { AddOpponentOwnGoalEventDefinition1785000000000 } from './1785000000000-AddOpponentOwnGoalEventDefinition';
 
 export const ALL_MIGRATIONS = [
   InitialSchema1744934400000,
@@ -112,6 +113,7 @@ export const ALL_MIGRATIONS = [
   CreatePlayerAwards1784700000000,
   CreatePlayerGoalsAndNotes1784800000000,
   CreateTacticPlays1784900000000,
+  AddOpponentOwnGoalEventDefinition1785000000000,
 ];
 
 

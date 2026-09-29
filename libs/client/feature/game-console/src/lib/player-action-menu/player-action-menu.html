@@ -103,4 +103,11 @@
       <ion-label>Red Card</ion-label>
     </ion-item>
   }
+
+  <div class="h-px bg-ap-border/60 my-1"></div>
+
+  <ion-item button (click)="selectAction('MOVE_TO_BENCH')">
+    <ion-icon slot="start" name="arrow-down-circle-outline" color="warning"></ion-icon>
+    <ion-label color="warning">Sub Off to Bench (No Sub)</ion-label>
+  </ion-item>
 </ion-list>

@@ -57,4 +57,10 @@ describe('PlayerActionMenuComponent', () => {
     component['selectAction']('RED_CARD');
     expect(spy).toHaveBeenCalledWith({ type: 'RED_CARD', playerId: 'p1' });
   });
+
+  it('should emit MOVE_TO_BENCH action when Move to Bench item is clicked', () => {
+    const spy = vi.spyOn(component.actionSelected, 'emit');
+    component['selectAction']('MOVE_TO_BENCH');
+    expect(spy).toHaveBeenCalledWith({ type: 'MOVE_TO_BENCH', playerId: 'p1' });
+  });
 });

@@ -175,4 +175,20 @@ describe('Roster', () => {
       expect(component['players']().find(p => p.id === 'p1')).toBeUndefined();
     }
   });
+
+  it('should open merge modal and reload players when merge completes', async () => {
+    component.id = 't1';
+    const modalCtrl = TestBed.inject(ModalController);
+    const mockModal = {
+      present: vi.fn().mockResolvedValue(undefined),
+      onWillDismiss: vi.fn().mockResolvedValue({ data: { merged: true } }),
+    };
+    (modalCtrl.create as any).mockResolvedValue(mockModal);
+
+    await component['openMergeModal']('p1');
+
+    expect(modalCtrl.create).toHaveBeenCalled();
+    expect(mockModal.present).toHaveBeenCalled();
+    expect(mockPlayersService.getPlayers).toHaveBeenCalledWith('t1', true);
+  });
 });

@@ -39,6 +39,11 @@ export interface UpdatePlayerDto {
   leagueId?: string;
 }
 
+export interface MergePlayersDto {
+  targetPlayerId: string;
+  sourcePlayerId: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -56,7 +61,7 @@ export class PlayersService {
     if (!this.network.isOnline()) {
       return from(this.offlineStorage.getAll<PlayerEntity>(this.offlineStorage.STORES.PLAYERS)).pipe(
         map((players) =>
-          players.filter((p) => p.teamId === teamId && (includeInactive || p.isActive !== false))
+          players.filter((p) => p.teamId === teamId && !p.isGuest && (includeInactive || p.isActive !== false))
         )
       );
     }
@@ -72,7 +77,7 @@ export class PlayersService {
       catchError(() => {
         return from(this.offlineStorage.getAll<PlayerEntity>(this.offlineStorage.STORES.PLAYERS)).pipe(
           map((players) =>
-            players.filter((p) => p.teamId === teamId && (includeInactive || p.isActive !== false))
+            players.filter((p) => p.teamId === teamId && !p.isGuest && (includeInactive || p.isActive !== false))
           )
         );
       })
@@ -83,7 +88,7 @@ export class PlayersService {
     if (!this.network.isOnline()) {
       return from(this.offlineStorage.getAll<PlayerEntity>(this.offlineStorage.STORES.PLAYERS)).pipe(
         map((players) =>
-          players.filter((p) => p.teamId === teamId && (includeInactive || p.isActive !== false))
+          players.filter((p) => p.teamId === teamId && !p.isGuest && (includeInactive || p.isActive !== false))
         )
       );
     }
@@ -99,7 +104,7 @@ export class PlayersService {
       catchError(() => {
         return from(this.offlineStorage.getAll<PlayerEntity>(this.offlineStorage.STORES.PLAYERS)).pipe(
           map((players) =>
-            players.filter((p) => p.teamId === teamId && (includeInactive || p.isActive !== false))
+            players.filter((p) => p.teamId === teamId && !p.isGuest && (includeInactive || p.isActive !== false))
           )
         );
       })
@@ -108,6 +113,26 @@ export class PlayersService {
 
   getGuestPlayersForLeague(teamId: string, leagueId: string): Observable<PlayerEntity[]> {
     return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/leagues/${leagueId}`);
+  }
+
+  getGuestPlayersForSeason(teamId: string, seasonId: string): Observable<PlayerEntity[]> {
+    return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/seasons/${seasonId}/guests`);
+  }
+
+  getGuestPlayers(teamId: string): Observable<PlayerEntity[]> {
+    return this.http.get<PlayerEntity[]>(`${this.apiUrl}/teams/${teamId}/players/guests`);
+  }
+
+  mergePlayers(teamId: string, targetPlayerId: string, sourcePlayerId: string): Observable<PlayerEntity> {
+    return this.http.post<PlayerEntity>(`${this.apiUrl}/teams/${teamId}/players/merge`, {
+      targetPlayerId,
+      sourcePlayerId,
+    }).pipe(
+      tap((updated) => {
+        this.offlineStorage.save(this.offlineStorage.STORES.PLAYERS, updated);
+        this.offlineStorage.remove(this.offlineStorage.STORES.PLAYERS, sourcePlayerId);
+      })
+    );
   }
 
   addPlayer(teamId: string, data: CreatePlayerDto): Observable<PlayerEntity> {

@@ -198,5 +198,25 @@ describe('SeasonsService', () => {
         where: { seasonId, type: 'game', status: 'completed' },
       });
     });
+
+    it('derives scores from event logs including OPPONENT_OWN_GOAL and OWN_GOAL', async () => {
+      mockSeasonRepo.findOne.mockResolvedValue({ id: seasonId, teamId });
+      const games = [
+        { id: 'game-1', status: 'completed', goalsFor: null, goalsAgainst: null },
+      ];
+      mockEventRepo.find.mockResolvedValue(games);
+      mockGameEventRepo.find.mockResolvedValue([
+        { eventType: 'GOAL' },
+        { eventType: 'OPPONENT_OWN_GOAL' },
+        { eventType: 'OPPONENT_GOAL' },
+        { eventType: 'OWN_GOAL' },
+      ]);
+
+      const result = await service.getSeasonStats(teamId, seasonId);
+
+      expect(result.goalsFor).toBe(2);
+      expect(result.goalsAgainst).toBe(2);
+      expect(result.draws).toBe(1);
+    });
   });
 });

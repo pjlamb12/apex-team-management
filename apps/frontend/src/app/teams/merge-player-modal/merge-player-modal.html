@@ -1,0 +1,196 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-ap-surface border-b border-ap-border px-2">
+    <div class="flex items-center gap-2 pl-2">
+      <ion-icon name="git-merge-outline" class="text-ap-accent text-xl"></ion-icon>
+      <ion-title class="text-base font-black text-ap-text p-0">Merge Player Profiles</ion-title>
+    </div>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" [disabled]="isMerging()">
+        <ion-icon name="close-outline" slot="icon-only" class="text-ap-muted"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-ap-bg" style="--padding-top: 1rem; --padding-bottom: 2rem; --padding-start: 1rem; --padding-end: 1rem;">
+  <div class="max-w-xl mx-auto flex flex-col gap-4">
+    <!-- Instruction Banner -->
+    <div class="bg-ap-surface border border-ap-border rounded-xl p-4 text-xs text-ap-muted leading-relaxed">
+      <p class="m-0">
+        Combine a duplicate player or guest profile into their primary profile. All matches, lineups, playing time, goals, assists, awards, and notes will be transferred to the target player, and the duplicate will be safely removed.
+      </p>
+    </div>
+
+    <!-- Filter Toggle -->
+    <ion-segment [value]="filterMode()" (ionChange)="filterMode.set($any($event).detail.value)" class="bg-ap-surface-raised rounded-lg p-1">
+      <ion-segment-button value="all">
+        <ion-label class="text-xs font-bold uppercase tracking-wider">All Players</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="guests">
+        <ion-label class="text-xs font-bold uppercase tracking-wider">Guest Players Only</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-16 gap-3">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <span class="text-xs font-bold text-ap-muted uppercase tracking-widest">Loading Roster...</span>
+      </div>
+    } @else {
+      <!-- Target Player (Keep) -->
+      <ion-card class="m-0 border-2 border-emerald-500/40 bg-ap-surface shadow-none rounded-xl">
+        <ion-card-header class="p-4 pb-2">
+          <div class="flex items-center justify-between">
+            <ion-card-title class="text-xs font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+              <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
+              Target Profile (Keep & Update)
+            </ion-card-title>
+            <ion-badge color="success" class="text-[10px] font-black uppercase px-2 py-0.5">Retained</ion-badge>
+          </div>
+        </ion-card-header>
+        <ion-card-content class="p-4 pt-1 flex flex-col gap-2">
+          <ion-item lines="none" class="bg-ap-surface-raised rounded-lg border border-ap-border">
+            <ion-select
+              label="Select primary player"
+              labelPlacement="floating"
+              [value]="targetPlayerId()"
+              (ionChange)="onTargetChange($event)"
+              placeholder="Choose player to keep"
+              class="w-full text-sm font-bold"
+              interface="action-sheet"
+            >
+              @for (p of filteredPlayers(); track p.id) {
+                <ion-select-option [value]="p.id" [disabled]="p.id === sourcePlayerId()">
+                  #{{ p.jerseyNumber ?? '?' }} {{ p.firstName }} {{ p.lastName }} {{ p.isGuest ? '(Guest)' : '' }}
+                </ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+
+          @if (targetPlayer(); as tp) {
+            <div class="flex items-center justify-between bg-ap-surface-raised/60 rounded-lg p-2.5 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-ap-text">#{{ tp.jerseyNumber ?? '?' }} {{ tp.firstName }} {{ tp.lastName }}</span>
+                @if (tp.preferredPosition) {
+                  <span class="text-ap-muted">({{ tp.preferredPosition }})</span>
+                }
+              </div>
+              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
+                [class.bg-purple-500/20]="tp.isGuest"
+                [class.text-purple-400]="tp.isGuest"
+                [class.bg-emerald-500/20]="!tp.isGuest"
+                [class.text-emerald-400]="!tp.isGuest">
+                {{ tp.isGuest ? 'Guest Player' : 'Roster Player' }}
+              </span>
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Swap Button -->
+      <div class="flex justify-center -my-2 z-10">
+        <ion-button
+          fill="clear"
+          size="small"
+          class="bg-ap-surface border border-ap-border rounded-full shadow-sm"
+          (click)="swapSelection()"
+          [disabled]="!targetPlayerId() && !sourcePlayerId()"
+          title="Swap Target & Source"
+        >
+          <ion-icon name="swap-horizontal-outline" class="text-ap-accent text-lg rotate-90 sm:rotate-0"></ion-icon>
+        </ion-button>
+      </div>
+
+      <!-- Source Player (Merge & Delete) -->
+      <ion-card class="m-0 border-2 border-rose-500/40 bg-ap-surface shadow-none rounded-xl">
+        <ion-card-header class="p-4 pb-2">
+          <div class="flex items-center justify-between">
+            <ion-card-title class="text-xs font-black uppercase tracking-widest text-rose-400 flex items-center gap-1.5">
+              <ion-icon name="alert-circle-outline" class="text-base"></ion-icon>
+              Source Profile (Merge & Delete)
+            </ion-card-title>
+            <ion-badge color="danger" class="text-[10px] font-black uppercase px-2 py-0.5">Removed</ion-badge>
+          </div>
+        </ion-card-header>
+        <ion-card-content class="p-4 pt-1 flex flex-col gap-2">
+          <ion-item lines="none" class="bg-ap-surface-raised rounded-lg border border-ap-border">
+            <ion-select
+              label="Select duplicate player"
+              labelPlacement="floating"
+              [value]="sourcePlayerId()"
+              (ionChange)="onSourceChange($event)"
+              placeholder="Choose duplicate to remove"
+              class="w-full text-sm font-bold"
+              interface="action-sheet"
+            >
+              @for (p of filteredPlayers(); track p.id) {
+                <ion-select-option [value]="p.id" [disabled]="p.id === targetPlayerId()">
+                  #{{ p.jerseyNumber ?? '?' }} {{ p.firstName }} {{ p.lastName }} {{ p.isGuest ? '(Guest)' : '' }}
+                </ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+
+          @if (sourcePlayer(); as sp) {
+            <div class="flex items-center justify-between bg-ap-surface-raised/60 rounded-lg p-2.5 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-ap-text">#{{ sp.jerseyNumber ?? '?' }} {{ sp.firstName }} {{ sp.lastName }}</span>
+                @if (sp.preferredPosition) {
+                  <span class="text-ap-muted">({{ sp.preferredPosition }})</span>
+                }
+              </div>
+              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
+                [class.bg-purple-500/20]="sp.isGuest"
+                [class.text-purple-400]="sp.isGuest"
+                [class.bg-emerald-500/20]="!sp.isGuest"
+                [class.text-emerald-400]="!sp.isGuest">
+                {{ sp.isGuest ? 'Guest Player' : 'Roster Player' }}
+              </span>
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Merge Preview / Warning -->
+      @if (targetPlayer() && sourcePlayer()) {
+        <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-300 flex items-start gap-2.5">
+          <ion-icon name="alert-circle-outline" class="text-lg shrink-0 mt-0.5 text-amber-400"></ion-icon>
+          <div class="flex flex-col gap-1">
+            <span class="font-bold">Confirmation:</span>
+            <span>
+              All stats, game events, awards, and lineups for <strong>#{{ sourcePlayer()?.jerseyNumber ?? '?' }} {{ sourcePlayer()?.firstName }} {{ sourcePlayer()?.lastName }}</strong> will be merged into <strong>#{{ targetPlayer()?.jerseyNumber ?? '?' }} {{ targetPlayer()?.firstName }} {{ targetPlayer()?.lastName }}</strong>. The duplicate record will be deleted permanently.
+            </span>
+          </div>
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-xs text-red-400 flex items-center gap-2">
+          <ion-icon name="alert-circle-outline" class="text-lg shrink-0"></ion-icon>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Bottom Action Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <ion-button fill="clear" color="medium" (click)="dismiss()" [disabled]="isMerging()" class="text-xs font-bold">
+          Cancel
+        </ion-button>
+        <ion-button
+          color="primary"
+          [disabled]="!canMerge()"
+          (click)="executeMerge()"
+          class="font-black text-xs uppercase tracking-wider"
+        >
+          @if (isMerging()) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            <span>Merging...</span>
+          } @else {
+            <ion-icon name="git-merge-outline" slot="start"></ion-icon>
+            <span>Merge Profiles</span>
+          }
+        </ion-button>
+      </div>
+    }
+  </div>
+</ion-content>

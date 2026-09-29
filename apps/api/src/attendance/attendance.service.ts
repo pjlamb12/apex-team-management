@@ -55,10 +55,10 @@ export class AttendanceService {
 
     let playerIds = dto.playerIds;
     if (!playerIds) {
-      // If no playerIds provided, update active players for the team
+      // If no playerIds provided, update active regular players for the team
       const teamId = event.season?.teamId;
       const players = teamId
-        ? await this.playerRepo.find({ where: { teamId, isActive: true } })
+        ? await this.playerRepo.find({ where: { teamId, isActive: true, isGuest: false } })
         : [];
       playerIds = players.map(p => p.id);
     }
@@ -76,6 +76,11 @@ export class AttendanceService {
     for (const pid of presentIds) {
       await this.update(eventId, { playerId: pid, status: 'present' });
     }
+  }
+
+  async removePlayerFromEvent(eventId: string, playerId: string): Promise<void> {
+    await this.attendanceRepo.delete({ eventId, playerId });
+    await this.lineupRepo.delete({ eventId, playerId });
   }
 
   async getParticipationStats(
@@ -127,22 +132,33 @@ export class AttendanceService {
       let totalEvents = 0;
       let present = 0;
 
-      for (const eventId of trackedEventIds) {
-        const record = playerAttendance.find(a => a.eventId === eventId);
-        if (record) {
-          const status = record.status;
-          if (status !== 'injured') {
+      if (player.isGuest) {
+        for (const record of playerAttendance) {
+          if (trackedEventIds.has(record.eventId) && record.status !== 'injured') {
             totalEvents++;
-            if (status === 'present' || status === 'tardy') {
+            if (record.status === 'present' || record.status === 'tardy') {
               present++;
+            }
+          }
+        }
+      } else {
+        for (const eventId of trackedEventIds) {
+          const record = playerAttendance.find(a => a.eventId === eventId);
+          if (record) {
+            const status = record.status;
+            if (status !== 'injured') {
+              totalEvents++;
+              if (status === 'present' || status === 'tardy') {
+                present++;
+              }
             }
           }
         }
       }
 
       // Guest player filter rule:
-      // If a competition/season filter is set, guest players only show if they participated in the filtered competition
-      if (isFiltered && player.isGuest && present === 0) {
+      // Guest players only show if they actually participated in at least one event
+      if (player.isGuest && present === 0) {
         continue;
       }
 

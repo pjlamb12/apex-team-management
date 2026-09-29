@@ -6,6 +6,7 @@ import { TeamEntity } from '../entities/team.entity';
 import { EventEntity } from '../entities/event.entity';
 import { AttendanceEntity } from '../entities/attendance.entity';
 import { GameEventEntity } from '../entities/game-event.entity';
+import { LineupEntryEntity } from '../entities/lineup-entry.entity';
 import { PlayingTimeService } from './playing-time.service';
 
 export interface PlayerHistoryEntry {
@@ -35,6 +36,7 @@ export interface PlayerProfileAnalytics {
     jerseyNumber: number | null;
     preferredPosition: string | null;
     isActive?: boolean;
+    isGuest?: boolean;
   };
   totalGamesPlayed: number;
   totalGoals: number;
@@ -63,6 +65,8 @@ export class PlayerAnalyticsService {
     private readonly attendanceRepo: Repository<AttendanceEntity>,
     @InjectRepository(GameEventEntity)
     private readonly gameEventRepo: Repository<GameEventEntity>,
+    @InjectRepository(LineupEntryEntity)
+    private readonly lineupRepo: Repository<LineupEntryEntity>,
     private readonly playingTimeService: PlayingTimeService,
   ) {}
 
@@ -128,6 +132,10 @@ export class PlayerAnalyticsService {
 
     const gameEvents = await this.gameEventRepo.find({
       where: { eventId: In(eventIds) }
+    });
+
+    const lineupEntries = await this.lineupRepo.find({
+      where: { playerId, eventId: In(eventIds) }
     });
 
     const history: PlayerHistoryEntry[] = [];
@@ -210,7 +218,13 @@ export class PlayerAnalyticsService {
           // Playtime engine might fail if game is misconfigured, skip silently
         }
 
-        if (isPresent && event.status === 'completed') gamesPlayed++;
+        const inLineup = lineupEntries.some(le => le.eventId === event.id);
+        const participated = inLineup || playingTime > 0 || matchEvents.length > 0;
+        if (isPresent && event.status === 'completed') {
+          if (!player.isGuest || participated) {
+            gamesPlayed++;
+          }
+        }
       }
 
       if (event.type === 'game' && event.status === 'completed') {
@@ -255,6 +269,7 @@ export class PlayerAnalyticsService {
         jerseyNumber: player.jerseyNumber,
         preferredPosition: player.preferredPosition,
         isActive: player.isActive,
+        isGuest: player.isGuest,
       },
       totalGamesPlayed: gamesPlayed,
       totalGoals,

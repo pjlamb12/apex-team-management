@@ -1,24 +1,33 @@
 import { Component, input, output, inject } from '@angular/core';
 import { Player } from '@apex-team/shared/util/models';
-import { IonCard, IonCardHeader, IonButton } from '@ionic/angular/standalone';
+import { IonCard, IonCardHeader, IonButton, IonIcon } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { arrowDownCircleOutline, trashOutline } from 'ionicons/icons';
 import { PlaytimeService } from '../rotation-engine/playtime.service';
 
 @Component({
   selector: 'app-bench-view',
-  imports: [IonCard, IonCardHeader, IonButton],
+  imports: [IonCard, IonCardHeader, IonButton, IonIcon],
   templateUrl: './bench-view.html',
   styleUrls: ['./bench-view.scss'],
 })
 export class BenchViewComponent {
   protected playtimeService = inject(PlaytimeService);
 
+  constructor() {
+    addIcons({ arrowDownCircleOutline, trashOutline });
+  }
+
   players = input.required<Player[]>();
   stagedInIds = input<Set<string>>(new Set());
   selectedPlayerId = input<string | null>(null);
+  selectedActivePlayer = input<Player | null>(null);
   ejectedPlayerIds = input<Set<string>>(new Set());
   liberoDesignation = input<{ liberoId: string; replacedId: string } | null>(null);
   playerSelected = output<{ player: Player; event: Event }>();
+  moveSelectedToBench = output<void>();
   addGuestPlayer = output<void>();
+  removeGuestPlayer = output<Player>();
 
   protected selectPlayer(player: Player, event: Event) {
     this.playerSelected.emit({ player, event });
