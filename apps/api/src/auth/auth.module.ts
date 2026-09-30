@@ -16,6 +16,7 @@ import { TeamsModule } from '../teams/teams.module';
     TypeOrmModule.forFeature([UserEntity]),
     TeamsModule,
     JwtModule.registerAsync({
+      global: true,
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
