@@ -10,12 +10,44 @@ export interface LineupEntry {
   status: 'starting' | 'bench';
 }
 
+export interface FormationPreset {
+  name: string;
+  slots: number[];
+  fieldCount: number;
+}
+
+export const SOCCER_FORMATIONS: Record<number, FormationPreset[]> = {
+  9: [
+    { name: '3-4-1', slots: [0, 2, 3, 4, 7, 9, 13, 18, 21], fieldCount: 9 },
+    { name: '3-3-2', slots: [0, 2, 3, 4, 7, 8, 9, 12, 14], fieldCount: 9 },
+    { name: '3-2-2-1', slots: [0, 2, 3, 4, 16, 17, 19, 20, 13], fieldCount: 9 },
+    { name: '2-4-2', slots: [0, 2, 4, 7, 9, 12, 14, 18, 21], fieldCount: 9 },
+    { name: '3-2-3', slots: [0, 2, 3, 4, 7, 9, 11, 13, 15], fieldCount: 9 },
+  ],
+  11: [
+    { name: '4-4-2', slots: [0, 1, 2, 4, 5, 6, 7, 9, 10, 12, 14], fieldCount: 11 },
+    { name: '4-3-3', slots: [0, 1, 2, 4, 5, 7, 8, 9, 11, 13, 15], fieldCount: 11 },
+    { name: '4-2-3-1', slots: [0, 1, 2, 4, 5, 16, 17, 19, 20, 21, 13], fieldCount: 11 },
+    { name: '3-5-2', slots: [0, 2, 3, 4, 6, 7, 8, 9, 10, 12, 14], fieldCount: 11 },
+    { name: '3-4-3', slots: [0, 2, 3, 4, 7, 9, 18, 21, 11, 13, 15], fieldCount: 11 },
+  ],
+  7: [
+    { name: '2-3-1', slots: [0, 2, 4, 7, 8, 9, 13], fieldCount: 7 },
+    { name: '3-2-1', slots: [0, 2, 3, 4, 7, 9, 13], fieldCount: 7 },
+    { name: '2-2-2', slots: [0, 2, 4, 7, 9, 12, 14], fieldCount: 7 },
+  ],
+  5: [
+    { name: '2-1-1', slots: [0, 2, 4, 8, 13], fieldCount: 5 },
+    { name: '1-2-1', slots: [0, 3, 7, 9, 13], fieldCount: 5 },
+  ],
+};
+
 export function getDefaultSlots(count: number, sportName?: string): number[] {
   if (sportName === 'Volleyball') return [0, 1, 2, 3, 4, 5];
-  if (count === 11) return [0, 1, 2, 4, 5, 6, 7, 9, 10, 12, 14]; // GK, 4 DEF, 4 MID, 2 FWD
-  if (count === 9) return [0, 2, 3, 4, 7, 8, 9, 12, 14]; // GK, 3 DEF, 3 MID, 2 FWD
-  if (count === 7) return [0, 2, 4, 7, 8, 9, 13]; // GK, 2 DEF, 3 MID, 1 FWD
-  if (count === 5) return [0, 2, 4, 8, 13]; // GK, 2 DEF, 1 MID, 1 FWD
+  const presets = SOCCER_FORMATIONS[count];
+  if (presets && presets.length > 0) {
+    return [...presets[0].slots];
+  }
   return Array.from({ length: count }, (_, i) => i);
 }
 

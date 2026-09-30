@@ -321,4 +321,58 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
       message: 'All existing guest players are already in this game. Would you like to create a new guest player?',
     }));
   });
+
+  it('should default to 3-4-1 formation (slots 0, 2, 3, 4, 7, 9, 13, 18, 21) when no custom lineup exists', async () => {
+    const eventsService = TestBed.inject(EventsService);
+    // Return empty lineup so defaultSlots are applied
+    vi.spyOn(eventsService, 'getLineup').mockReturnValue(of([]));
+
+    await component.loadData('t1', 'e1', true);
+
+    const slots = component['slots']();
+    expect(slots.length).toBe(9);
+    expect(slots.map(s => s.slotIndex)).toEqual([0, 2, 3, 4, 7, 9, 13, 18, 21]);
+    expect(component['currentFormation']()).toBe('3-4-1');
+
+    const defs = slots.filter(s => s.positionName === 'DEF');
+    const mids = slots.filter(s => s.positionName === 'MID');
+    const fwds = slots.filter(s => s.positionName === 'FWD');
+    expect(defs.length).toBe(3);
+    expect(mids.length).toBe(4);
+    expect(fwds.length).toBe(1);
+  });
+
+  it('should switch formations between 3-4-1 and 3-3-2 using applyFormationPreset', async () => {
+    const eventsService = TestBed.inject(EventsService);
+    vi.spyOn(eventsService, 'getLineup').mockReturnValue(of([]));
+    await component.loadData('t1', 'e1', true);
+
+    expect(component['currentFormation']()).toBe('3-4-1');
+
+    // Switch to 3-3-2
+    component['applyFormationPreset']('3-3-2');
+    expect(component['slots']().map(s => s.slotIndex)).toEqual([0, 2, 3, 4, 7, 8, 9, 12, 14]);
+    expect(component['currentFormation']()).toBe('3-3-2');
+
+    // Switch back to 3-4-1
+    component['applyFormationPreset']('3-4-1');
+    expect(component['slots']().map(s => s.slotIndex)).toEqual([0, 2, 3, 4, 7, 9, 13, 18, 21]);
+    expect(component['currentFormation']()).toBe('3-4-1');
+  });
+
+  it('should assign on-field player to empty slot when clicking empty slot first then clicking on-field player', async () => {
+    await fixture.whenStable();
+
+    // Select empty slot index 18 (e.g. CDM)
+    component['selectedSlotIndex'].set(18);
+
+    // Now tap an on-field player (e.g. p8 who is at slot 12)
+    const p8 = component['players']().find(p => p.id === 'p8')!;
+    component['handlePitchPlayerSelected']({ player: p8 as any, event: new MouseEvent('click') });
+
+    const p8Slot = component['slots']().find(s => s.playerId === 'p8');
+    expect(p8Slot).toBeDefined();
+    expect(p8Slot?.slotIndex).toBe(18);
+    expect(component['selectedSlotIndex']()).toBeNull();
+  });
 });

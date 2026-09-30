@@ -47,6 +47,8 @@ import {
   ThreatLevel,
   getPositionFromSlot as sharedGetPositionFromSlot,
   getDefaultSlots,
+  SOCCER_FORMATIONS,
+  FormationPreset,
 } from '@apex-team/shared/util/models';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 
@@ -224,6 +226,128 @@ export class LineupEditor implements OnInit {
     return ['GK', 'DEF', 'MID', 'FWD'];
   });
 
+  protected availableFormations = computed<FormationPreset[]>(() => {
+    const sportName = this.team()?.sport?.name;
+    if (sportName === 'Volleyball') return [];
+    const ev = this.event();
+    const fieldCount = ev?.playersOnField || 11;
+    return SOCCER_FORMATIONS[fieldCount] || [];
+  });
+
+  protected currentFormation = computed<string | null>(() => {
+    const sportName = this.team()?.sport?.name;
+    if (sportName === 'Volleyball') return null;
+    const forms = this.availableFormations();
+    if (forms.length === 0) return null;
+
+    const currentSlots = this.slots()
+      .filter((s) => s.slotIndex !== 99)
+      .map((s) => s.slotIndex)
+      .sort((a, b) => a - b);
+
+    const match = forms.find((f) => {
+      const sortedPreset = [...f.slots].sort((a, b) => a - b);
+      return (
+        sortedPreset.length === currentSlots.length &&
+        sortedPreset.every((slot, i) => slot === currentSlots[i])
+      );
+    });
+
+    return match ? match.name : 'Custom';
+  });
+
+  protected applyFormationPreset(presetName: string): void {
+    const forms = this.availableFormations();
+    const preset = forms.find((f) => f.name === presetName);
+    if (!preset) return;
+
+    const sportName = this.team()?.sport?.name;
+    const positionTypes = this.team()?.sport?.positionTypes || [];
+
+    this.slots.update((prev) => {
+      const currentStarters = prev.filter((s) => s.slotIndex !== 99);
+      const liberoSlot = prev.find((s) => s.slotIndex === 99);
+
+      // Collect existing players currently assigned to starting slots
+      const assignedPlayers = currentStarters
+        .filter((s) => s.playerId !== null)
+        .map((s) => ({
+          playerId: s.playerId!,
+          currentSlot: s.slotIndex,
+          pos: s.positionName || getPositionFromSlot(s.slotIndex, sportName, positionTypes),
+        }));
+
+      const newSlots: LineupSlot[] = [];
+      const remainingTargetSlots = [...preset.slots];
+      const usedPlayerIds = new Set<string>();
+
+      // 1. Keep players whose current slot already matches one of the target preset slots
+      for (const p of assignedPlayers) {
+        const targetIdx = remainingTargetSlots.indexOf(p.currentSlot);
+        if (targetIdx !== -1) {
+          const slot = remainingTargetSlots.splice(targetIdx, 1)[0];
+          usedPlayerIds.add(p.playerId);
+          newSlots.push({
+            slotIndex: slot,
+            positionName: getPositionFromSlot(slot, sportName, positionTypes),
+            playerId: p.playerId,
+          });
+        }
+      }
+
+      // 2. Map remaining assigned players to compatible slots by role (GK, DEF, MID, FWD)
+      const remainingPlayers = assignedPlayers.filter((p) => !usedPlayerIds.has(p.playerId));
+      for (const p of remainingPlayers) {
+        const role = p.pos;
+        const matchingSlotIdx = remainingTargetSlots.findIndex((s) => {
+          const sPos = getPositionFromSlot(s, sportName, positionTypes);
+          return sPos === role;
+        });
+
+        if (matchingSlotIdx !== -1) {
+          const slot = remainingTargetSlots.splice(matchingSlotIdx, 1)[0];
+          usedPlayerIds.add(p.playerId);
+          newSlots.push({
+            slotIndex: slot,
+            positionName: getPositionFromSlot(slot, sportName, positionTypes),
+            playerId: p.playerId,
+          });
+        }
+      }
+
+      // 3. For any remaining players that couldn't match their exact role, place in any leftover slot
+      for (const p of assignedPlayers.filter((p) => !usedPlayerIds.has(p.playerId))) {
+        if (remainingTargetSlots.length > 0) {
+          const slot = remainingTargetSlots.shift()!;
+          usedPlayerIds.add(p.playerId);
+          newSlots.push({
+            slotIndex: slot,
+            positionName: getPositionFromSlot(slot, sportName, positionTypes),
+            playerId: p.playerId,
+          });
+        }
+      }
+
+      // 4. Fill remaining empty slots in preset
+      for (const slot of remainingTargetSlots) {
+        newSlots.push({
+          slotIndex: slot,
+          positionName: getPositionFromSlot(slot, sportName, positionTypes),
+          playerId: null,
+        });
+      }
+
+      // Sort slots by slotIndex
+      newSlots.sort((a, b) => a.slotIndex - b.slotIndex);
+
+      if (liberoSlot) {
+        newSlots.push(liberoSlot);
+      }
+
+      return newSlots;
+    });
+  }
+
   protected assignedPlayerIds = computed(() => {
     return new Set(
       this.slots()
@@ -330,6 +454,8 @@ export class LineupEditor implements OnInit {
     });
   }
 
+  private lastLoadedKey: string | null = null;
+
   ngOnInit(): void {
     const tId = this.teamId;
     const eId = this.eventId;
@@ -338,7 +464,12 @@ export class LineupEditor implements OnInit {
     }
   }
 
-  private async loadData(teamId: string, eventId: string): Promise<void> {
+  public async loadData(teamId: string, eventId: string, force = false): Promise<void> {
+    const key = `${teamId}_${eventId}`;
+    if (!force && this.lastLoadedKey === key && this.isLoading()) {
+      return;
+    }
+    this.lastLoadedKey = key;
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
@@ -502,7 +633,7 @@ export class LineupEditor implements OnInit {
     const tId = this.teamId;
     const eId = this.eventId;
     if (tId && eId) {
-      void this.loadData(tId, eId);
+      void this.loadData(tId, eId, true);
     }
   }
 
@@ -536,9 +667,15 @@ export class LineupEditor implements OnInit {
         if (currentPos !== pos) {
           let candidateSlots: number[] = [];
           if (pos === 'GK') candidateSlots = [0];
-          else if (pos === 'DEF') candidateSlots = [1, 2, 3, 4, 5];
-          else if (pos === 'MID') candidateSlots = [6, 7, 8, 9, 10, 16, 17, 18, 19, 20, 21];
-          else if (pos === 'FWD') candidateSlots = [11, 12, 13, 14, 15];
+          else if (pos === 'DEF') candidateSlots = [2, 3, 4, 1, 5];
+          else if (pos === 'MID') {
+            const ev = this.event();
+            const fieldCount = ev?.playersOnField || 11;
+            candidateSlots = fieldCount === 9
+              ? [18, 21, 7, 9, 8, 16, 17, 19, 20, 6, 10]
+              : [7, 8, 9, 6, 10, 18, 21, 16, 17, 19, 20];
+          }
+          else if (pos === 'FWD') candidateSlots = [13, 12, 14, 11, 15];
 
           const occupied = new Set(next.map((s, i) => i !== index ? s.slotIndex : -1));
           const newSlot = candidateSlots.find((s) => !occupied.has(s));
@@ -554,6 +691,14 @@ export class LineupEditor implements OnInit {
 
   protected handlePitchPlayerSelected(data: { player: Player; event: Event }): void {
     const { player } = data;
+    const activeSlot = this.selectedSlotIndex();
+    if (activeSlot !== null) {
+      this.assignPlayerToSlot(player.id, activeSlot);
+      this.selectedSlotIndex.set(null);
+      this.selectedPlayerId.set(null);
+      return;
+    }
+
     this.selectedSlotIndex.set(null);
     const currentSelection = this.selectedPlayerId();
 

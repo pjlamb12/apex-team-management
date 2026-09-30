@@ -271,6 +271,24 @@
         <ion-list>
           <ion-list-header>
             <ion-label>Starting {{ event()?.playersOnField || (team()?.sport?.name === 'Volleyball' ? 6 : 11) }}</ion-label>
+            @if (team()?.sport?.name !== 'Volleyball' && availableFormations().length > 0) {
+              <div slot="end" class="flex items-center gap-1.5 pr-2">
+                <span class="text-xs font-bold text-ap-muted uppercase tracking-wider">Formation:</span>
+                <ion-select
+                  interface="popover"
+                  [value]="currentFormation()"
+                  (ionChange)="applyFormationPreset($event.detail.value)"
+                  class="formation-select text-xs font-bold bg-ap-surface border border-ap-border rounded px-2 py-0.5"
+                >
+                  @for (form of availableFormations(); track form.name) {
+                    <ion-select-option [value]="form.name">{{ form.name }}</ion-select-option>
+                  }
+                  @if (currentFormation() === 'Custom') {
+                    <ion-select-option value="Custom" [disabled]="true">Custom</ion-select-option>
+                  }
+                </ion-select>
+              </div>
+            }
           </ion-list-header>
 
           @for (slot of slots(); track idx; let idx = $index) {
@@ -337,6 +355,25 @@
             >
             </app-volleyball-court-view>
           } @else {
+            @if (availableFormations().length > 0) {
+              <div class="flex justify-between items-center mb-2 bg-ap-bg/40 p-2 rounded-lg border border-ap-border/30">
+                <span class="text-xs font-black text-ap-primary uppercase tracking-wider pl-1">Formation</span>
+                <ion-select
+                  interface="popover"
+                  [value]="currentFormation()"
+                  (ionChange)="applyFormationPreset($event.detail.value)"
+                  class="formation-select text-xs font-bold bg-ap-surface border border-ap-border rounded px-2.5 py-1"
+                >
+                  @for (form of availableFormations(); track form.name) {
+                    <ion-select-option [value]="form.name">{{ form.name }}</ion-select-option>
+                  }
+                  @if (currentFormation() === 'Custom') {
+                    <ion-select-option value="Custom" [disabled]="true">Custom</ion-select-option>
+                  }
+                </ion-select>
+              </div>
+            }
+
             <app-soccer-pitch-view
               class="w-full h-full block relative"
               style="height: 520px; min-height: 440px;"

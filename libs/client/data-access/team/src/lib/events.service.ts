@@ -294,11 +294,46 @@ export class EventsService {
   }
 
   getLineup(teamId: string, eventId: string): Observable<LineupEntry[]> {
-    return this.http.get<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`);
+    if (!this.network.isOnline()) {
+      return from(
+        this.offlineStorage.getById<{ id: string; lineup: LineupEntry[] }>(
+          this.offlineStorage.STORES.KEY_VALUE,
+          `lineup_${eventId}`
+        )
+      ).pipe(map((item) => item?.lineup || []));
+    }
+
+    return this.http.get<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`).pipe(
+      tap((lineup) => {
+        if (lineup) {
+          void this.offlineStorage.save(this.offlineStorage.STORES.KEY_VALUE, {
+            id: `lineup_${eventId}`,
+            lineup,
+          });
+        }
+      }),
+      catchError(() =>
+        from(
+          this.offlineStorage.getById<{ id: string; lineup: LineupEntry[] }>(
+            this.offlineStorage.STORES.KEY_VALUE,
+            `lineup_${eventId}`
+          )
+        ).pipe(map((item) => item?.lineup || []))
+      )
+    );
   }
 
   saveLineup(teamId: string, eventId: string, data: SaveLineupDto): Observable<LineupEntry[]> {
-    return this.http.post<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`, data);
+    return this.http.post<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`, data).pipe(
+      tap((savedLineup) => {
+        if (savedLineup) {
+          void this.offlineStorage.save(this.offlineStorage.STORES.KEY_VALUE, {
+            id: `lineup_${eventId}`,
+            lineup: savedLineup,
+          });
+        }
+      })
+    );
   }
 
   getPlayingTime(teamId: string, eventId: string): Observable<Record<string, any>> {
