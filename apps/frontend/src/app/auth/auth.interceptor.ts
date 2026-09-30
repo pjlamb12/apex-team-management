@@ -1,5 +1,7 @@
 import { inject } from '@angular/core';
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 // Module-level flag: prevents multiple concurrent refresh calls (RESEARCH.md deduplication)
@@ -7,6 +9,7 @@ let isRefreshing = false;
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const router = inject(Router);
   const token = authService.getToken();
 
   if (!token) return next(req);
@@ -36,5 +39,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     setHeaders: { Authorization: `Bearer ${token}` },
   });
 
-  return next(authReq);
+  return next(authReq).pipe(
+    catchError((err: unknown) => {
+      if (err instanceof HttpErrorResponse && err.status === 403) {
+        void router.navigate(['/access-denied'], { replaceUrl: true });
+      }
+      return throwError(() => err);
+    })
+  );
 };

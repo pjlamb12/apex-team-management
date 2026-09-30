@@ -161,13 +161,11 @@ export class EditTeam {
         name: team.name,
       });
     } catch (err: any) {
-      if (err?.status === 403) {
-        this.errorMessage.set('You do not have permission to edit this team.');
-      } else if (err?.status === 404) {
-        this.errorMessage.set('This team could not be found.');
-      } else {
-        this.errorMessage.set('Failed to load team. Please try again.');
+      if (err?.status === 403 || err?.status === 404) {
+        void this.router.navigate(['/access-denied'], { replaceUrl: true });
+        return;
       }
+      this.errorMessage.set('Failed to load team. Please try again.');
     } finally {
       this.isLoading.set(false);
     }
