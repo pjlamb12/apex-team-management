@@ -37,19 +37,5 @@
         ]
       }
     }
-  ],
-  "dataGroups": [
-    {
-      "name": "api-freshness",
-      "urls": [
-        "/api/**"
-      ],
-      "cacheConfig": {
-        "maxSize": 200,
-        "maxAge": "30d",
-        "timeout": "2s",
-        "strategy": "freshness"
-      }
-    }
   ]
 }
