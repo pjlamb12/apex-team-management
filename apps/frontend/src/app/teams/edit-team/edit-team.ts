@@ -38,7 +38,8 @@ import {
   copyOutline, 
   shareOutline, 
   addOutline,
-  starOutline
+  starOutline,
+  lockClosedOutline
 } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
@@ -138,6 +139,7 @@ export class EditTeam {
       shareOutline,
       addOutline,
       starOutline,
+      lockClosedOutline,
     });
 
     // Load team whenever id changes
@@ -158,8 +160,14 @@ export class EditTeam {
       this.form.patchValue({
         name: team.name,
       });
-    } catch {
-      this.errorMessage.set('Failed to load team. Please try again.');
+    } catch (err: any) {
+      if (err?.status === 403) {
+        this.errorMessage.set('You do not have permission to edit this team.');
+      } else if (err?.status === 404) {
+        this.errorMessage.set('This team could not be found.');
+      } else {
+        this.errorMessage.set('Failed to load team. Please try again.');
+      }
     } finally {
       this.isLoading.set(false);
     }

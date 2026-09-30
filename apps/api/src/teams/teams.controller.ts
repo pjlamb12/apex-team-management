@@ -53,7 +53,8 @@ export class TeamsController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TeamRoleGuard)
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findOne(@Param('id') id: string, @Request() req: { user: { sub: string } }) {
     return this.teamsService.findOne(id, req.user.sub);
   }

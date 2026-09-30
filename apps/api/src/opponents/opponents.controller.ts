@@ -20,12 +20,13 @@ import { TeamRoleGuard } from '../auth/guards/team-role.guard';
 import { TeamRoles } from '../auth/decorators/team-role.decorator';
 import { TeamRole } from '@apex-team/shared/util/models';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId/opponents')
 export class OpponentsController {
   constructor(private readonly opponentsService: OpponentsService) {}
 
   @Get()
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findAll(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('search') search?: string,
@@ -35,7 +36,6 @@ export class OpponentsController {
   }
 
   @Post()
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   create(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -45,7 +45,6 @@ export class OpponentsController {
   }
 
   @Post('find-or-create')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findOrCreate(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -55,6 +54,7 @@ export class OpponentsController {
   }
 
   @Get(':opponentId')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findOne(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('opponentId', ParseUUIDPipe) opponentId: string,
@@ -63,7 +63,6 @@ export class OpponentsController {
   }
 
   @Patch(':opponentId')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   update(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -74,7 +73,6 @@ export class OpponentsController {
   }
 
   @Delete(':opponentId')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH)
   remove(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -84,7 +82,6 @@ export class OpponentsController {
   }
 
   @Post(':opponentId/scouting-notes')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   addScoutingNote(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -97,7 +94,6 @@ export class OpponentsController {
   }
 
   @Delete(':opponentId/scouting-notes/:noteId')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   deleteScoutingNote(
     @Param('teamId', ParseUUIDPipe) teamId: string,

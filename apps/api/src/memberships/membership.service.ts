@@ -2,6 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { TeamMemberEntity } from '../entities/team-member.entity';
+import { TeamEntity } from '../entities/team.entity';
 import { SeasonEntity } from '../entities/season.entity';
 import { LeagueEntity } from '../entities/league.entity';
 import { EventEntity } from '../entities/event.entity';
@@ -36,6 +37,19 @@ export class MembershipService {
     });
     
     if (!membership) {
+      if (this.dataSource) {
+        try {
+          const team = await this.dataSource.getRepository(TeamEntity).findOne({
+            where: { id: teamId },
+            select: ['id', 'coachId'],
+          });
+          if (team && team.coachId === userId && roles.includes(TeamRole.HEAD_COACH)) {
+            return true;
+          }
+        } catch {
+          // ignore lookup error
+        }
+      }
       return false;
     }
 

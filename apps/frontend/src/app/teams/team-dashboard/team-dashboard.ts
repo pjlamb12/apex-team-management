@@ -20,6 +20,7 @@ import {
 import { addIcons } from 'ionicons';
 import {
   settingsOutline,
+  lockClosedOutline,
 } from 'ionicons/icons';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { CommonModule } from '@angular/common';
@@ -86,6 +87,7 @@ export class TeamDashboard {
   constructor() {
     addIcons({
       settingsOutline,
+      lockClosedOutline,
     });
 
     // Sync segment with current URL
@@ -113,8 +115,14 @@ export class TeamDashboard {
     try {
       const team = await firstValueFrom(this.http.get<Team>(`${this.apiUrl}/teams/${teamId}`));
       this.team.set(team);
-    } catch {
-      this.errorMessage.set('Failed to load team data. Please try again.');
+    } catch (err: any) {
+      if (err?.status === 403) {
+        this.errorMessage.set('You do not have permission to access this team.');
+      } else if (err?.status === 404) {
+        this.errorMessage.set('This team could not be found.');
+      } else {
+        this.errorMessage.set('Failed to load team data. Please try again.');
+      }
     } finally {
       this.isLoading.set(false);
     }
