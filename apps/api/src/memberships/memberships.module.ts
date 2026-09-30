@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TeamMemberEntity } from '../entities/team-member.entity';
 import { MembershipService } from './membership.service';
 
+@Global()
 @Module({
   imports: [TypeOrmModule.forFeature([TeamMemberEntity])],
   providers: [MembershipService],

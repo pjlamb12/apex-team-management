@@ -9,8 +9,11 @@ import { PdfExportService } from './export/pdf-export.service';
 import { LlmExportService } from './export/llm-export.service';
 import { ExportOptionsDto } from './dto/export-options.dto';
 import { LlmExportOptionsDto, LlmExportFormat } from './dto/llm-export-options.dto';
+import { TeamRoleGuard } from '../auth/guards/team-role.guard';
+import { TeamRoles } from '../auth/decorators/team-role.decorator';
+import { TeamRole } from '@apex-team/shared/util/models';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId')
 export class AnalyticsController {
   constructor(
@@ -23,6 +26,7 @@ export class AnalyticsController {
   ) {}
 
   @Get('events/:eventId/analytics/playing-time')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   getPlayingTime(
     @Param('eventId', ParseUUIDPipe) eventId: string,
   ) {
@@ -30,6 +34,7 @@ export class AnalyticsController {
   }
 
   @Get('analytics/performance')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   getPerformanceMetrics(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
@@ -40,6 +45,7 @@ export class AnalyticsController {
   }
 
   @Get('analytics/playing-time')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   getTeamPlayingTime(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
@@ -49,6 +55,7 @@ export class AnalyticsController {
   }
 
   @Get('players/:playerId/analytics')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   getPlayerProfile(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('playerId', ParseUUIDPipe) playerId: string,
@@ -58,6 +65,7 @@ export class AnalyticsController {
   }
 
   @Get('analytics/export/csv')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   async exportCsv(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query() options: ExportOptionsDto,
@@ -74,6 +82,7 @@ export class AnalyticsController {
   }
 
   @Get('analytics/export/pdf')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   async exportPdf(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query() options: ExportOptionsDto,
@@ -91,6 +100,7 @@ export class AnalyticsController {
   }
 
   @Get('analytics/export/llm')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   async exportLlm(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query() options: LlmExportOptionsDto,

@@ -19,12 +19,13 @@ import { TeamRoleGuard } from '../auth/guards/team-role.guard';
 import { TeamRoles } from '../auth/decorators/team-role.decorator';
 import { TeamRole } from '@apex-team/shared/util/models';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId')
 export class GoalsController {
   constructor(private readonly goalsService: GoalsService) {}
 
   @Get('goals')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findAll(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
@@ -41,6 +42,7 @@ export class GoalsController {
   }
 
   @Get('goals/summary')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   getSummary(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
@@ -49,6 +51,7 @@ export class GoalsController {
   }
 
   @Get('players/:playerId/goals')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findByPlayer(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('playerId', ParseUUIDPipe) playerId: string,
@@ -58,6 +61,7 @@ export class GoalsController {
   }
 
   @Get('goals/:goalId')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findOne(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('goalId', ParseUUIDPipe) goalId: string,
@@ -66,7 +70,6 @@ export class GoalsController {
   }
 
   @Post('players/:playerId/goals')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   create(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -77,7 +80,6 @@ export class GoalsController {
   }
 
   @Patch('goals/:goalId')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   update(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -88,7 +90,6 @@ export class GoalsController {
   }
 
   @Delete('goals/:goalId')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   delete(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -98,7 +99,6 @@ export class GoalsController {
   }
 
   @Post('goals/:goalId/notes')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   addNote(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -109,7 +109,6 @@ export class GoalsController {
   }
 
   @Delete('goals/:goalId/notes/:noteId')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   deleteNote(
     @Param('teamId', ParseUUIDPipe) teamId: string,

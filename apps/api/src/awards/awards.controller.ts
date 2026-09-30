@@ -16,12 +16,13 @@ import { TeamRoleGuard } from '../auth/guards/team-role.guard';
 import { TeamRoles } from '../auth/decorators/team-role.decorator';
 import { TeamRole } from '@apex-team/shared/util/models';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId')
 export class AwardsController {
   constructor(private readonly awardsService: AwardsService) {}
 
   @Get('awards')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findAll(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
@@ -38,6 +39,7 @@ export class AwardsController {
   }
 
   @Get('awards/summary')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   getSummary(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Query('seasonId') seasonId?: string,
@@ -46,6 +48,7 @@ export class AwardsController {
   }
 
   @Get('players/:playerId/awards')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findByPlayer(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('playerId', ParseUUIDPipe) playerId: string,
@@ -54,6 +57,7 @@ export class AwardsController {
   }
 
   @Get('events/:eventId/awards')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findByEvent(
     @Param('teamId', ParseUUIDPipe) teamId: string,
     @Param('eventId', ParseUUIDPipe) eventId: string,
@@ -62,7 +66,6 @@ export class AwardsController {
   }
 
   @Post('awards')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   create(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -72,7 +75,6 @@ export class AwardsController {
   }
 
   @Post('awards/batch')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   createBatch(
     @Param('teamId', ParseUUIDPipe) teamId: string,
@@ -82,7 +84,6 @@ export class AwardsController {
   }
 
   @Delete('awards/:awardId')
-  @UseGuards(TeamRoleGuard)
   @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   delete(
     @Param('teamId', ParseUUIDPipe) teamId: string,

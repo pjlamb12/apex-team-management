@@ -6,6 +6,7 @@ import { AttendanceEntity } from '../entities/attendance.entity';
 import { EventEntity } from '../entities/event.entity';
 import { PlayerEntity } from '../entities/player.entity';
 import { LineupEntryEntity } from '../entities/lineup-entry.entity';
+import { MembershipsModule } from '../memberships/memberships.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LineupEntryEntity } from '../entities/lineup-entry.entity';
       PlayerEntity,
       LineupEntryEntity,
     ]),
+    MembershipsModule,
   ],
   controllers: [AttendanceController],
   providers: [AttendanceService],

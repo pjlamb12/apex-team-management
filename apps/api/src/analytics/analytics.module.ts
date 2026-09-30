@@ -20,6 +20,7 @@ import { TeamEntity } from '../entities/team.entity';
 import { SeasonEntity } from '../entities/season.entity';
 import { LeagueEntity } from '../entities/league.entity';
 import { PlayerAwardEntity } from '../entities/player-award.entity';
+import { MembershipsModule } from '../memberships/memberships.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PlayerAwardEntity } from '../entities/player-award.entity';
       LeagueEntity,
       PlayerAwardEntity,
     ]),
+    MembershipsModule,
   ],
   controllers: [AnalyticsController],
   providers: [

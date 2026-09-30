@@ -38,7 +38,8 @@ import {
   copyOutline, 
   shareOutline, 
   addOutline,
-  starOutline
+  starOutline,
+  lockClosedOutline
 } from 'ionicons/icons';
 import { ControlErrorsDisplayComponent } from 'ngx-reactive-forms-utils';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
@@ -138,6 +139,7 @@ export class EditTeam {
       shareOutline,
       addOutline,
       starOutline,
+      lockClosedOutline,
     });
 
     // Load team whenever id changes
@@ -158,7 +160,11 @@ export class EditTeam {
       this.form.patchValue({
         name: team.name,
       });
-    } catch {
+    } catch (err: any) {
+      if (err?.status === 403 || err?.status === 404) {
+        void this.router.navigate(['/access-denied'], { replaceUrl: true });
+        return;
+      }
       this.errorMessage.set('Failed to load team. Please try again.');
     } finally {
       this.isLoading.set(false);

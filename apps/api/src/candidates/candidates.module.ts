@@ -5,11 +5,13 @@ import { CandidateAttendanceEntity } from '../entities/candidate-attendance.enti
 import { CandidatesService } from './candidates.service';
 import { CandidatesController } from './candidates.controller';
 import { PlayersModule } from '../players/players.module';
+import { MembershipsModule } from '../memberships/memberships.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([CandidateEntity, CandidateAttendanceEntity]),
     PlayersModule,
+    MembershipsModule,
   ],
   providers: [CandidatesService],
   controllers: [CandidatesController],

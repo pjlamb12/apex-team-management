@@ -20,6 +20,8 @@ import {
 import { addIcons } from 'ionicons';
 import {
   settingsOutline,
+  lockClosedOutline,
+  alertCircleOutline,
 } from 'ionicons/icons';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { CommonModule } from '@angular/common';
@@ -86,6 +88,8 @@ export class TeamDashboard {
   constructor() {
     addIcons({
       settingsOutline,
+      lockClosedOutline,
+      alertCircleOutline,
     });
 
     // Sync segment with current URL
@@ -113,7 +117,11 @@ export class TeamDashboard {
     try {
       const team = await firstValueFrom(this.http.get<Team>(`${this.apiUrl}/teams/${teamId}`));
       this.team.set(team);
-    } catch {
+    } catch (err: any) {
+      if (err?.status === 403 || err?.status === 404) {
+        void this.router.navigate(['/access-denied'], { replaceUrl: true });
+        return;
+      }
       this.errorMessage.set('Failed to load team data. Please try again.');
     } finally {
       this.isLoading.set(false);

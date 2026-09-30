@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlayersController } from './players.controller';
 import { PlayersService } from './players.service';
+import { MembershipService } from '../memberships/membership.service';
 
 describe('PlayersController', () => {
   let controller: PlayersController;
@@ -10,6 +11,7 @@ describe('PlayersController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PlayersController],
       providers: [
+        { provide: MembershipService, useValue: { hasRole: vi.fn().mockResolvedValue(true) } },
         {
           provide: PlayersService,
           useValue: {

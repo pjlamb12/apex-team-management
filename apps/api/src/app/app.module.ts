@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard, seconds } from '@nestjs/throttler';
 import { AuthModule } from '../auth/auth.module';
 import { TeamsModule } from '../teams/teams.module';
 import { SportsModule } from '../sports/sports.module';
@@ -58,7 +60,20 @@ import { ALL_MIGRATIONS } from '../../migrations';
     AwardsModule,
     GoalsModule,
     TacticsModule,
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: seconds(60),
+        limit: 100,
+      },
+    ]),
   ],
   controllers: [AppController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -28,6 +28,11 @@ export const appRoutes: Route[] = [
           import('./teams/teams-list/teams-list').then((m) => m.TeamsList),
       },
       {
+        path: 'access-denied',
+        loadComponent: () =>
+          import('./access-denied/access-denied').then((m) => m.AccessDenied),
+      },
+      {
         path: 'drills',
         loadChildren: () =>
           import('@apex-team/client/feature/drill-library').then((m) => m.DRILL_LIBRARY_ROUTES),

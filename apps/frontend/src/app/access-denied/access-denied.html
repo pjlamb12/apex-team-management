@@ -1,0 +1,27 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Access Denied</ion-title>
+    <ion-buttons slot="end">
+      <app-theme-toggle></app-theme-toggle>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="flex flex-col items-center justify-center min-h-[70vh] p-6 text-center">
+    <div class="bg-ap-surface-raised p-6 rounded-full mb-6 shadow-sm border border-ap-border">
+      <ion-icon name="lock-closed-outline" class="text-6xl text-ap-muted"></ion-icon>
+    </div>
+
+    <h1 class="text-2xl font-bold text-ap-text mb-2">Access Denied</h1>
+
+    <p class="text-ap-muted max-w-md mb-8 text-base">
+      You don't have permission to access this team or resource, or it may not exist.
+    </p>
+
+    <ion-button routerLink="/teams" fill="solid" color="primary">
+      <ion-icon slot="start" name="people-outline"></ion-icon>
+      Back to My Teams
+    </ion-button>
+  </div>
+</ion-content>

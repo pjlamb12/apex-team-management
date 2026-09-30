@@ -15,13 +15,17 @@ import { PracticeDrillsService } from './practice-drills.service';
 import { AddDrillToPlanDto } from './dto/add-drill-to-plan.dto';
 import { UpdatePracticeDrillDto } from './dto/update-practice-drill.dto';
 import { ReorderPracticeDrillsDto } from './dto/reorder-practice-drills.dto';
+import { TeamRoleGuard } from '../auth/guards/team-role.guard';
+import { TeamRoles } from '../auth/decorators/team-role.decorator';
+import { TeamRole } from '@apex-team/shared/util/models';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), TeamRoleGuard)
 @Controller('teams/:teamId/events/:eventId/drills')
 export class PracticeDrillsController {
   constructor(private readonly practiceDrillsService: PracticeDrillsService) {}
 
   @Get()
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   findAll(
     @Request() req: { user: { sub: string } },
     @Param('eventId') eventId: string,
@@ -30,6 +34,7 @@ export class PracticeDrillsController {
   }
 
   @Post()
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   add(
     @Request() req: { user: { sub: string } },
     @Param('eventId') eventId: string,
@@ -39,6 +44,7 @@ export class PracticeDrillsController {
   }
 
   @Patch(':id')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   update(
     @Request() req: { user: { sub: string } },
     @Param('eventId') eventId: string,
@@ -49,6 +55,7 @@ export class PracticeDrillsController {
   }
 
   @Delete(':id')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   remove(
     @Request() req: { user: { sub: string } },
     @Param('eventId') eventId: string,
@@ -58,6 +65,7 @@ export class PracticeDrillsController {
   }
 
   @Put('reorder')
+  @TeamRoles(TeamRole.HEAD_COACH, TeamRole.ASSISTANT)
   reorder(
     @Request() req: { user: { sub: string } },
     @Param('eventId') eventId: string,
