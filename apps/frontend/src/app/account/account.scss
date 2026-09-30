@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+ion-card {
+  --background: var(--ap-surface);
+}
+
+ion-item {
+  --background: var(--ap-surface-raised);
+  --color: var(--ap-text);
+}

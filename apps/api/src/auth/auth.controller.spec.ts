@@ -11,6 +11,10 @@ describe('AuthController', () => {
     signup: vi.fn(),
     login: vi.fn(),
     refresh: vi.fn(),
+    getProfile: vi.fn(),
+    updateProfile: vi.fn(),
+    changePassword: vi.fn(),
+    deleteAccount: vi.fn(),
   };
 
   const mockPasswordResetService = {
@@ -44,36 +48,88 @@ describe('AuthController', () => {
 
   describe('signup', () => {
     it('should call authService.signup', async () => {
-      const dto = { email: 'coach@test.com', password: 'Password123!', name: 'Coach' };
-      mockAuthService.signup.mockResolvedValueOnce({ user: { id: '1' }, token: 'jwt-token' });
+      const dto = { email: 'coach@test.com', password: 'Password123!', displayName: 'Coach' };
+      mockAuthService.signup.mockResolvedValueOnce({ accessToken: 'jwt-token' });
 
       const result = await controller.signup(dto);
 
       expect(mockAuthService.signup).toHaveBeenCalledWith(dto);
-      expect(result).toEqual({ user: { id: '1' }, token: 'jwt-token' });
+      expect(result).toEqual({ accessToken: 'jwt-token' });
     });
   });
 
   describe('login', () => {
     it('should call authService.login', async () => {
       const dto = { email: 'coach@test.com', password: 'Password123!' };
-      mockAuthService.login.mockResolvedValueOnce({ user: { id: '1' }, token: 'jwt-token' });
+      mockAuthService.login.mockResolvedValueOnce({ accessToken: 'jwt-token' });
 
       const result = await controller.login(dto);
 
       expect(mockAuthService.login).toHaveBeenCalledWith(dto);
-      expect(result).toEqual({ user: { id: '1' }, token: 'jwt-token' });
+      expect(result).toEqual({ accessToken: 'jwt-token' });
     });
   });
 
   describe('refresh', () => {
     it('should call authService.refresh with user details', async () => {
-      mockAuthService.refresh.mockResolvedValueOnce({ token: 'new-token' });
+      mockAuthService.refresh.mockResolvedValueOnce({ accessToken: 'new-token' });
 
       const result = await controller.refresh({ user: { sub: 'u1', email: 'coach@test.com' } });
 
       expect(mockAuthService.refresh).toHaveBeenCalledWith('u1', 'coach@test.com');
-      expect(result).toEqual({ token: 'new-token' });
+      expect(result).toEqual({ accessToken: 'new-token' });
+    });
+  });
+
+  describe('getProfile', () => {
+    it('should return user profile', async () => {
+      const profile = { id: 'u1', email: 'coach@test.com', displayName: 'Coach Alex', createdAt: new Date() };
+      mockAuthService.getProfile.mockResolvedValueOnce(profile);
+
+      const result = await controller.getProfile({ user: { sub: 'u1', email: 'coach@test.com' } });
+
+      expect(mockAuthService.getProfile).toHaveBeenCalledWith('u1');
+      expect(result).toEqual(profile);
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should update and return profile', async () => {
+      const updated = { id: 'u1', email: 'coach@test.com', displayName: 'Head Coach Alex' };
+      mockAuthService.updateProfile.mockResolvedValueOnce(updated);
+
+      const result = await controller.updateProfile(
+        { user: { sub: 'u1', email: 'coach@test.com' } },
+        { displayName: 'Head Coach Alex' },
+      );
+
+      expect(mockAuthService.updateProfile).toHaveBeenCalledWith('u1', { displayName: 'Head Coach Alex' });
+      expect(result).toEqual(updated);
+    });
+  });
+
+  describe('changePassword', () => {
+    it('should call authService.changePassword', async () => {
+      mockAuthService.changePassword.mockResolvedValueOnce({ message: 'Password updated successfully' });
+
+      const result = await controller.changePassword(
+        { user: { sub: 'u1', email: 'coach@test.com' } },
+        { currentPassword: 'OldPassword1!', newPassword: 'NewPassword1!' },
+      );
+
+      expect(mockAuthService.changePassword).toHaveBeenCalledWith('u1', 'OldPassword1!', 'NewPassword1!');
+      expect(result).toEqual({ message: 'Password updated successfully' });
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('should call authService.deleteAccount', async () => {
+      mockAuthService.deleteAccount.mockResolvedValueOnce({ message: 'Account deleted successfully' });
+
+      const result = await controller.deleteAccount({ user: { sub: 'u1', email: 'coach@test.com' } });
+
+      expect(mockAuthService.deleteAccount).toHaveBeenCalledWith('u1');
+      expect(result).toEqual({ message: 'Account deleted successfully' });
     });
   });
 
