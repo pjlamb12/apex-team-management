@@ -5,9 +5,23 @@
 
 ion-card {
   --background: var(--ap-surface);
+  --color: var(--ap-text);
+  margin: 0 !important;
+
+  ion-card-header {
+    padding: 24px 24px 8px !important;
+  }
+
+  ion-card-content {
+    padding: 8px 24px 24px !important;
+  }
 }
 
 ion-item {
   --background: var(--ap-surface-raised);
   --color: var(--ap-text);
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 8px;
+  border-radius: 12px;
 }

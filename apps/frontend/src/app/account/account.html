@@ -8,7 +8,7 @@
 </ion-header>
 
 <ion-content class="ion-padding" [fullscreen]="true">
-  <div class="max-w-2xl mx-auto space-y-6 pb-12">
+  <div class="max-w-2xl mx-auto flex flex-col gap-6 pb-12">
     @if (isLoading()) {
       <div class="flex items-center justify-center min-h-[200px]">
         <ion-spinner name="crescent"></ion-spinner>
@@ -37,12 +37,12 @@
       </div>
 
       <!-- Edit Profile Card -->
-      <ion-card class="m-0 border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
-        <ion-card-header>
+      <ion-card class="border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
+        <ion-card-header class="px-6 pt-6 pb-2">
           <ion-card-title class="text-lg font-bold text-ap-text">Profile Information</ion-card-title>
           <ion-card-subtitle class="text-xs text-ap-muted">Update your display name visible across your teams</ion-card-subtitle>
         </ion-card-header>
-        <ion-card-content class="pt-0">
+        <ion-card-content class="px-6 pb-6 pt-2">
           <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="space-y-4">
             <ion-item lines="none" class="bg-ap-surface-raised rounded-xl">
               <ion-icon name="person-circle-outline" slot="start" class="text-ap-muted"></ion-icon>
@@ -80,12 +80,12 @@
       </ion-card>
 
       <!-- Change Password Card -->
-      <ion-card class="m-0 border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
-        <ion-card-header>
+      <ion-card class="border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
+        <ion-card-header class="px-6 pt-6 pb-2">
           <ion-card-title class="text-lg font-bold text-ap-text">Security</ion-card-title>
           <ion-card-subtitle class="text-xs text-ap-muted">Change your account password</ion-card-subtitle>
         </ion-card-header>
-        <ion-card-content class="pt-0">
+        <ion-card-content class="px-6 pb-6 pt-2">
           <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="space-y-4">
             <ion-item lines="none" class="bg-ap-surface-raised rounded-xl">
               <ion-icon name="lock-closed-outline" slot="start" class="text-ap-muted"></ion-icon>
@@ -146,12 +146,12 @@
       </ion-card>
 
       <!-- Session & Sign Out Card -->
-      <ion-card class="m-0 border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
-        <ion-card-header>
+      <ion-card class="border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
+        <ion-card-header class="px-6 pt-6 pb-2">
           <ion-card-title class="text-lg font-bold text-ap-text">Session</ion-card-title>
           <ion-card-subtitle class="text-xs text-ap-muted">Manage your active sign-in</ion-card-subtitle>
         </ion-card-header>
-        <ion-card-content class="pt-0">
+        <ion-card-content class="px-6 pb-6 pt-2">
           <div class="flex items-center justify-between py-2">
             <div>
               <p class="font-medium text-sm text-ap-text">Signed in as</p>
@@ -166,7 +166,7 @@
       </ion-card>
 
       <!-- Danger Zone: Account Deletion (App Store 5.1.1(v) compliance) -->
-      <div class="p-5 rounded-2xl border border-red-500/30 bg-red-500/5 space-y-3">
+      <div class="p-6 rounded-2xl border border-red-500/30 bg-red-500/5 space-y-4">
         <div class="flex items-start gap-3">
           <div class="p-2 rounded-lg bg-red-500/10 text-red-500">
             <ion-icon name="trash-outline" class="text-xl"></ion-icon>
