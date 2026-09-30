@@ -64,7 +64,7 @@ import { ALL_MIGRATIONS } from '../../migrations';
       {
         name: 'default',
         ttl: seconds(60),
-        limit: 100,
+        limit: process.env['THROTTLE_LIMIT'] ? parseInt(process.env['THROTTLE_LIMIT'], 10) : 300,
       },
     ]),
   ],

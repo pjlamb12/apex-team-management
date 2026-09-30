@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, computed, Input, OnInit } from '@angular/core';
+import { Component, inject, signal, effect, untracked, computed, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -449,27 +449,18 @@ export class LineupEditor implements OnInit {
       const tId = this._teamId();
       const eId = this._eventId();
       if (tId && eId) {
-        void this.loadData(tId, eId);
+        untracked(() => {
+          void this.loadData(tId, eId);
+        });
       }
     });
   }
 
-  private lastLoadedKey: string | null = null;
-
   ngOnInit(): void {
-    const tId = this.teamId;
-    const eId = this.eventId;
-    if (tId && eId) {
-      void this.loadData(tId, eId);
-    }
+    // Initial data loading is handled reactively by the constructor effect when inputs are bound.
   }
 
-  public async loadData(teamId: string, eventId: string, force = false): Promise<void> {
-    const key = `${teamId}_${eventId}`;
-    if (!force && this.lastLoadedKey === key && this.isLoading()) {
-      return;
-    }
-    this.lastLoadedKey = key;
+  public async loadData(teamId: string, eventId: string, _force = false): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
