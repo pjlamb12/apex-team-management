@@ -43,6 +43,11 @@ export const appRoutes: Route[] = [
           import('@apex-team/client/feature/tactic-board').then((m) => m.TACTIC_BOARD_ROUTES),
       },
       {
+        path: 'account',
+        loadComponent: () =>
+          import('./account/account').then((m) => m.AccountSettings),
+      },
+      {
         path: 'teams/new',
         loadComponent: () =>
           import('./teams/create-team/create-team').then((m) => m.CreateTeam),

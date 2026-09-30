@@ -1,0 +1,203 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Account Settings</ion-title>
+    <ion-buttons slot="end">
+      <app-theme-toggle></app-theme-toggle>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="max-w-2xl mx-auto flex flex-col gap-6 pb-12">
+    @if (isLoading()) {
+      <div class="flex items-center justify-center min-h-[200px]">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+    } @else {
+      <!-- Profile Header Banner -->
+      <div class="bg-ap-surface p-6 rounded-2xl border border-ap-border shadow-sm flex flex-col sm:flex-row items-center gap-5">
+        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold border border-primary/20 shrink-0">
+          <ion-icon name="person-outline"></ion-icon>
+        </div>
+        <div class="flex-1 text-center sm:text-left min-w-0">
+          <h2 class="text-xl font-bold text-ap-text truncate">{{ profile()?.displayName || 'Coach' }}</h2>
+          <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-ap-muted mt-1">
+            <span class="flex items-center gap-1 truncate">
+              <ion-icon name="mail-outline"></ion-icon>
+              {{ profile()?.email }}
+            </span>
+            @if (profile()?.createdAt) {
+              <span class="flex items-center gap-1">
+                <ion-icon name="calendar-outline"></ion-icon>
+                Member since {{ profile()?.createdAt | date:'mediumDate' }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Profile Card -->
+      <ion-card class="border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
+        <ion-card-header class="px-6 pt-6 pb-2">
+          <ion-card-title class="text-lg font-bold text-ap-text">Profile Information</ion-card-title>
+          <ion-card-subtitle class="text-xs text-ap-muted">Update your display name visible across your teams</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content class="px-6 pb-6 pt-2">
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="space-y-4">
+            <ion-item lines="none" class="bg-ap-surface-raised rounded-xl">
+              <ion-icon name="person-circle-outline" slot="start" class="text-ap-muted"></ion-icon>
+              <ion-input
+                label="Display Name"
+                labelPlacement="stacked"
+                formControlName="displayName"
+                placeholder="Coach Name"
+              ></ion-input>
+            </ion-item>
+
+            @if (profileMessage()) {
+              <ion-text color="success">
+                <p class="text-xs flex items-center gap-1"><ion-icon name="checkmark-circle-outline"></ion-icon> {{ profileMessage() }}</p>
+              </ion-text>
+            }
+            @if (profileError()) {
+              <ion-text color="danger">
+                <p class="text-xs">{{ profileError() }}</p>
+              </ion-text>
+            }
+
+            <div class="flex justify-end pt-2">
+              <ion-button type="submit" [disabled]="profileForm.invalid || isSavingProfile()" size="small" fill="solid" color="primary">
+                @if (isSavingProfile()) {
+                  <ion-spinner name="crescent" slot="start"></ion-spinner>
+                  Saving...
+                } @else {
+                  Save Changes
+                }
+              </ion-button>
+            </div>
+          </form>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Change Password Card -->
+      <ion-card class="border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
+        <ion-card-header class="px-6 pt-6 pb-2">
+          <ion-card-title class="text-lg font-bold text-ap-text">Security</ion-card-title>
+          <ion-card-subtitle class="text-xs text-ap-muted">Change your account password</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content class="px-6 pb-6 pt-2">
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="space-y-4">
+            <ion-item lines="none" class="bg-ap-surface-raised rounded-xl">
+              <ion-icon name="lock-closed-outline" slot="start" class="text-ap-muted"></ion-icon>
+              <ion-input
+                type="password"
+                label="Current Password"
+                labelPlacement="stacked"
+                formControlName="currentPassword"
+                placeholder="••••••••"
+              ></ion-input>
+            </ion-item>
+
+            <ion-item lines="none" class="bg-ap-surface-raised rounded-xl">
+              <ion-icon name="key-outline" slot="start" class="text-ap-muted"></ion-icon>
+              <ion-input
+                type="password"
+                label="New Password (min 8 characters)"
+                labelPlacement="stacked"
+                formControlName="newPassword"
+                placeholder="••••••••"
+              ></ion-input>
+            </ion-item>
+
+            <ion-item lines="none" class="bg-ap-surface-raised rounded-xl">
+              <ion-icon name="key-outline" slot="start" class="text-ap-muted"></ion-icon>
+              <ion-input
+                type="password"
+                label="Confirm New Password"
+                labelPlacement="stacked"
+                formControlName="confirmPassword"
+                placeholder="••••••••"
+              ></ion-input>
+            </ion-item>
+
+            @if (passwordMessage()) {
+              <ion-text color="success">
+                <p class="text-xs flex items-center gap-1"><ion-icon name="checkmark-circle-outline"></ion-icon> {{ passwordMessage() }}</p>
+              </ion-text>
+            }
+            @if (passwordError()) {
+              <ion-text color="danger">
+                <p class="text-xs">{{ passwordError() }}</p>
+              </ion-text>
+            }
+
+            <div class="flex justify-end pt-2">
+              <ion-button type="submit" [disabled]="passwordForm.invalid || isChangingPassword()" size="small" fill="solid" color="primary">
+                @if (isChangingPassword()) {
+                  <ion-spinner name="crescent" slot="start"></ion-spinner>
+                  Updating...
+                } @else {
+                  Update Password
+                }
+              </ion-button>
+            </div>
+          </form>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Session & Sign Out Card -->
+      <ion-card class="border border-ap-border shadow-sm rounded-2xl bg-ap-surface">
+        <ion-card-header class="px-6 pt-6 pb-2">
+          <ion-card-title class="text-lg font-bold text-ap-text">Session</ion-card-title>
+          <ion-card-subtitle class="text-xs text-ap-muted">Manage your active sign-in</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content class="px-6 pb-6 pt-2">
+          <div class="flex items-center justify-between py-2">
+            <div>
+              <p class="font-medium text-sm text-ap-text">Signed in as</p>
+              <p class="text-xs text-ap-muted">{{ profile()?.email }}</p>
+            </div>
+            <ion-button (click)="logout()" fill="outline" color="medium" size="small">
+              <ion-icon slot="start" name="log-out-outline"></ion-icon>
+              Log Out
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Danger Zone: Account Deletion (App Store 5.1.1(v) compliance) -->
+      <div class="p-6 rounded-2xl border border-red-500/30 bg-red-500/5 space-y-4">
+        <div class="flex items-start gap-3">
+          <div class="p-2 rounded-lg bg-red-500/10 text-red-500">
+            <ion-icon name="trash-outline" class="text-xl"></ion-icon>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-red-600 dark:text-red-400">Delete Account</h3>
+            <p class="text-xs text-ap-muted mt-1 leading-relaxed">
+              Permanently delete your account and all associated teams, rosters, schedules, and player records.
+              This action is immediate and cannot be recovered.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <ion-button (click)="confirmDeleteAccount()" [disabled]="isDeleting()" color="danger" fill="solid" size="small">
+            @if (isDeleting()) {
+              <ion-spinner name="crescent" slot="start"></ion-spinner>
+              Deleting...
+            } @else {
+              Delete Account
+            }
+          </ion-button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <ion-toast
+    [isOpen]="!!toastMessage()"
+    [message]="toastMessage() || ''"
+    [duration]="2500"
+    (didDismiss)="toastMessage.set(null)"
+  ></ion-toast>
+</ion-content>

@@ -20,7 +20,7 @@ import {
   IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline } from 'ionicons/icons';
+import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline, personCircleOutline } from 'ionicons/icons';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 import { TeamService } from '@apex-team/client/data-access/team';
 import { SocketService } from '../../shared/services/socket.service';
@@ -76,7 +76,7 @@ export class TeamsList implements OnDestroy {
   private tapTimestamps: number[] = [];
 
   constructor() {
-    addIcons({ peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline });
+    addIcons({ peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline, personCircleOutline });
 
     this.socketService.onEvent('eventCreated', () => {
       void this.loadTeams();

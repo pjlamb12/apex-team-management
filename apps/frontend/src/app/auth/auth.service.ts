@@ -10,6 +10,13 @@ export interface AuthUser {
   displayName: string;
 }
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName: string;
+  createdAt: string;
+}
+
 const TOKEN_KEY = 'auth_token';
 
 @Injectable({ providedIn: 'root' })
@@ -47,6 +54,36 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     this.currentUser.set(null);
     this.router.navigate(['/login']);
+  }
+
+  async getProfile(): Promise<UserProfile> {
+    return firstValueFrom(
+      this.http.get<UserProfile>(`${this.apiUrl}/auth/me`)
+    );
+  }
+
+  async updateProfile(displayName: string): Promise<UserProfile> {
+    const updated = await firstValueFrom(
+      this.http.patch<UserProfile>(`${this.apiUrl}/auth/profile`, { displayName })
+    );
+    this.currentUser.update((u) => (u ? { ...u, displayName: updated.displayName } : null));
+    return updated;
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    return firstValueFrom(
+      this.http.post<{ message: string }>(`${this.apiUrl}/auth/change-password`, {
+        currentPassword,
+        newPassword,
+      })
+    );
+  }
+
+  async deleteAccount(): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<{ message: string }>(`${this.apiUrl}/auth/account`)
+    );
+    this.logout();
   }
 
   async refresh(): Promise<void> {

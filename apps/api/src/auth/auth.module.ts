@@ -8,12 +8,15 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { PasswordResetService } from './password-reset.service';
 import { UserEntity } from '../entities/user.entity';
+import { TeamsModule } from '../teams/teams.module';
 
 @Module({
   imports: [
     PassportModule,
     TypeOrmModule.forFeature([UserEntity]),
+    TeamsModule,
     JwtModule.registerAsync({
+      global: true,
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),

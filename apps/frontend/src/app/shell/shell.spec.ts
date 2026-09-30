@@ -26,11 +26,12 @@ describe('Shell', () => {
     expect(el.querySelector('ion-tabs')).toBeTruthy();
   });
 
-  it('should render an ion-tab-bar with the Teams, Drills, and Playbook tab buttons', () => {
+  it('should render an ion-tab-bar with the Teams, Drills, Playbook, and Account tab buttons', () => {
     const el: HTMLElement = fixture.nativeElement;
     const tabBar = el.querySelector('ion-tab-bar');
     expect(tabBar).toBeTruthy();
     const tabs = el.querySelectorAll('ion-tab-button');
-    expect(tabs.length).toBe(3);
+    expect(tabs.length).toBe(4);
+    expect(el.querySelector('ion-tab-button[tab="account"]')).toBeTruthy();
   });
 });
