@@ -48,7 +48,7 @@ import {
 } from 'ionicons/icons';
 import { EventsService, EventEntity, SeasonsService, LeaguesService } from '@apex-team/client/data-access/team';
 import { Season, League } from '@apex-team/shared/util/models';
-import { SocketService } from '../../../shared/services/socket.service';
+import { SocketService } from '@apex-team/client/data-access/socket';
 
 interface GroupedEvents {
   leagueName: string;

@@ -109,7 +109,7 @@ function getPositionFromSlot(slot: number, sportName?: string, positionTypes?: s
   templateUrl: './lineup-editor.html',
   styleUrl: './lineup-editor.scss',
 })
-export class LineupEditor implements OnInit {
+export class LineupEditor {
   @Input() set id(val: string) {
     this._teamId.set(val);
   }
@@ -456,8 +456,14 @@ export class LineupEditor implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    // Initial data loading is handled reactively by the constructor effect when inputs are bound.
+  // Initial data loading is handled reactively by the constructor effect when inputs are bound.
+
+  protected retry(): void {
+    const tId = this._teamId();
+    const eId = this._eventId();
+    if (tId && eId) {
+      void this.loadData(tId, eId, true);
+    }
   }
 
   public async loadData(teamId: string, eventId: string, _force = false): Promise<void> {
@@ -1043,7 +1049,7 @@ export class LineupEditor implements OnInit {
             if (this.teamId && this.eventId) {
               await firstValueFrom(
                 this.attendanceService.removePlayerFromAttendance(this.teamId, this.eventId, player.id)
-              ).catch(() => {});
+              ).catch(() => undefined);
               await this.onSave(false);
             }
             this.toastMessage.set(`Guest player ${player.firstName} removed from game.`);

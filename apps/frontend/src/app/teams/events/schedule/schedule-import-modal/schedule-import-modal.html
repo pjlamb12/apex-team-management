@@ -79,7 +79,14 @@
 
     <!-- Gemini / AI Prompt Helper Card -->
     <div class="bg-indigo-50 dark:bg-indigo-950/40 rounded-xl p-4 border border-indigo-200 dark:border-indigo-500/30 flex flex-col gap-3 shadow-md ring-1 ring-indigo-500/10">
-      <div class="flex items-center justify-between cursor-pointer" (click)="togglePromptGuide()">
+      <div
+        role="button"
+        tabindex="0"
+        class="flex items-center justify-between cursor-pointer"
+        (click)="togglePromptGuide()"
+        (keyup.enter)="togglePromptGuide()"
+        (keyup.space)="togglePromptGuide()"
+      >
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-300 dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
             <ion-icon name="sparkles-outline" class="text-xl"></ion-icon>
@@ -89,9 +96,9 @@
             <p class="text-xs text-indigo-700 dark:text-indigo-300 font-medium">Extract match details directly from an image or screenshot</p>
           </div>
         </div>
-        <ion-button fill="clear" size="small" color="medium" class="ion-no-margin">
-          <ion-icon [name]="showPromptGuide() ? 'chevron-up-outline' : 'chevron-down-outline'" slot="icon-only"></ion-icon>
-        </ion-button>
+        <div class="text-ap-muted p-1 pointer-events-none">
+          <ion-icon [name]="showPromptGuide() ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-lg"></ion-icon>
+        </div>
       </div>
 
       @if (showPromptGuide()) {
@@ -223,40 +230,40 @@
               <!-- Editable Fields Grid -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <!-- Opponent -->
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Opponent</label>
+                <label class="flex flex-col gap-1">
+                  <span class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Opponent</span>
                   <input
                     type="text"
                     [(ngModel)]="game.opponent"
                     placeholder="Opponent Name"
                     class="bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-sm text-ap-text font-bold focus:outline-none focus:border-ap-accent"
                   />
-                </div>
+                </label>
 
                 <!-- Date & Time -->
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Date & Time</label>
+                <label class="flex flex-col gap-1">
+                  <span class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Date & Time</span>
                   <input
                     type="datetime-local"
                     [(ngModel)]="game.scheduledAt"
                     class="bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-sm text-ap-text font-medium focus:outline-none focus:border-ap-accent"
                   />
-                </div>
+                </label>
 
                 <!-- Location / Field -->
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Location / Field</label>
+                <label class="flex flex-col gap-1">
+                  <span class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Location / Field</span>
                   <input
                     type="text"
                     [(ngModel)]="game.location"
                     placeholder="e.g. Field 4 or Sunset Park"
                     class="bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-xs text-ap-text focus:outline-none focus:border-ap-accent"
                   />
-                </div>
+                </label>
 
                 <!-- Uniform Color -->
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Uniform Color</label>
+                <label class="flex flex-col gap-1">
+                  <span class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Uniform Color</span>
                   <div class="flex items-center gap-2">
                     <input
                       type="text"
@@ -268,18 +275,18 @@
                       <div class="w-6 h-6 rounded-full border border-ap-border shrink-0" [style.background]="game.uniformColor"></div>
                     }
                   </div>
-                </div>
+                </label>
 
                 <!-- Notes / Context (Full Width) -->
-                <div class="flex flex-col gap-1 sm:col-span-2">
-                  <label class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Notes / Round Details</label>
+                <label class="flex flex-col gap-1 sm:col-span-2">
+                  <span class="text-[10px] font-black uppercase tracking-wider text-ap-muted">Notes / Round Details</span>
                   <input
                     type="text"
                     [(ngModel)]="game.notes"
                     placeholder="e.g. Quarterfinal, Check-in 30 mins early"
                     class="bg-ap-surface-raised border border-ap-border rounded-lg px-3 py-2 text-xs text-ap-text focus:outline-none focus:border-ap-accent"
                   />
-                </div>
+                </label>
               </div>
 
             </div>
