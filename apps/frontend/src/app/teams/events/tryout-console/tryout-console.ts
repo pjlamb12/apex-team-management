@@ -73,7 +73,7 @@ import {
   TeamService,
   PlayerEntity
 } from '@apex-team/client/data-access/team';
-import { SocketService } from '../../../shared/services/socket.service';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { FormsModule } from '@angular/forms';
 import { CandidateSelectionModal } from './candidate-selection-modal/candidate-selection-modal';
 import { CandidateModal } from './candidate-modal/candidate-modal';

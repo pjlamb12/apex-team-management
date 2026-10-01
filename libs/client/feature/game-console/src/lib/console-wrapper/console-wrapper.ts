@@ -38,7 +38,7 @@ import { EventLogViewComponent } from '../event-log/event-log';
 import { SubQueueComponent } from '../sub-queue/sub-queue';
 import { EventSyncService } from '../event-sync.service';
 import { ShootoutScorecardComponent } from '../shootout-scorecard/shootout-scorecard';
-import { SocketService } from '@apex-team/client/shared/services';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { Player, LineupEntry, getPositionFromSlot } from '@apex-team/shared/util/models';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 

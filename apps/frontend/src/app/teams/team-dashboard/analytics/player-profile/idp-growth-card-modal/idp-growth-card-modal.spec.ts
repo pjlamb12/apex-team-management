@@ -47,7 +47,7 @@ describe('IdpGrowthCardModalComponent', () => {
   });
 
   it('should call window.print when printCard is called', () => {
-    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => undefined);
     (component as any).printCard();
     expect(printSpy).toHaveBeenCalled();
   });

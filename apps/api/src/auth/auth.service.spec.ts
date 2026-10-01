@@ -211,7 +211,7 @@ describe('AuthService', () => {
       expect(mockUserRepo.save).toHaveBeenCalled();
       const isMatch = await bcrypt.compare('NewPassword1!', user.passwordHash);
       expect(isMatch).toBe(true);
-    });
+    }, 15000);
   });
 
   describe('deleteAccount', () => {

@@ -40,8 +40,8 @@
       "@apex-team/client/ui/location-modal": [
         "libs/client/ui/location-modal/src/index.ts"
       ],
-      "@apex-team/client/shared/services": [
-        "apps/frontend/src/app/shared/services/index.ts"
+      "@apex-team/client/data-access/socket": [
+        "libs/client/data-access/socket/src/index.ts"
       ],
       "@apex-team/client/feature/drill-library": [
         "libs/client/feature/drill-library/src/index.ts"

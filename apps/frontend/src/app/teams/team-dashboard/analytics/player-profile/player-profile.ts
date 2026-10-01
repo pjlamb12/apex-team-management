@@ -106,25 +106,6 @@ import { IdpGrowthCardModalComponent } from './idp-growth-card-modal/idp-growth-
   styleUrl: './player-profile.scss',
 })
 export class PlayerProfileAnalyticsComponent implements OnInit {
-  @Input() set id(val: string) {
-    this._teamId.set(val);
-  }
-  @Input() set teamId(val: string) {
-    this._teamId.set(val);
-  }
-  @Input() set playerId(val: string) {
-    this._playerId.set(val);
-  }
-  @Input() set tab(val: 'overview' | 'idp' | 'history') {
-    if (val) this.activeTab.set(val);
-  }
-  @Input() set initialTab(val: 'overview' | 'idp' | 'history') {
-    if (val) this.activeTab.set(val);
-  }
-  @Input() set seasonId(val: string | undefined) {
-    this._seasonId.set(val);
-  }
-
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly analyticsService = inject(AnalyticsService);
@@ -137,16 +118,36 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
   private _playerId = signal<string | null>(null);
   private _seasonId = signal<string | undefined>(undefined);
 
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
+
+  @Input() set teamId(val: string) {
+    this._teamId.set(val);
+  }
   public get teamId(): string {
     return this._teamId() || this.route.snapshot.paramMap.get('id') || this.route.snapshot.paramMap.get('teamId') || '';
   }
 
+  @Input() set playerId(val: string) {
+    this._playerId.set(val);
+  }
   public get playerId(): string {
     return this._playerId() || this.route.snapshot.paramMap.get('playerId') || '';
   }
 
+  @Input() set seasonId(val: string | undefined) {
+    this._seasonId.set(val);
+  }
   public get seasonId(): string | undefined {
     return this._seasonId() ?? (this.route.snapshot.queryParamMap.get('seasonId') || undefined);
+  }
+
+  @Input() set tab(val: 'overview' | 'idp' | 'history') {
+    if (val) this.activeTab.set(val);
+  }
+  @Input() set initialTab(val: 'overview' | 'idp' | 'history') {
+    if (val) this.activeTab.set(val);
   }
 
   protected profile = signal<PlayerProfileAnalytics | null>(null);

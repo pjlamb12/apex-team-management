@@ -32,7 +32,7 @@
       <ion-text color="danger">
         <p>{{ errorMessage() }}</p>
       </ion-text>
-      <ion-button fill="clear" (click)="ngOnInit()">Retry</ion-button>
+      <ion-button fill="clear" (click)="retry()">Retry</ion-button>
     </div>
   } @else {
     <div class="p-4">
@@ -55,7 +55,14 @@
       <!-- Opponent Scouting Intel Banner -->
       @if (opponentDossier(); as opp) {
         <div class="mb-4 bg-ap-surface border border-ap-border rounded-xl p-3.5 shadow-xs">
-          <div class="flex items-center justify-between cursor-pointer select-none" (click)="toggleOpponentIntel()">
+          <div
+            role="button"
+            tabindex="0"
+            class="flex items-center justify-between cursor-pointer select-none"
+            (click)="toggleOpponentIntel()"
+            (keyup.enter)="toggleOpponentIntel()"
+            (keyup.space)="toggleOpponentIntel()"
+          >
             <div class="flex flex-wrap items-center gap-2">
               <ion-icon name="shield-outline" class="text-ap-accent text-lg"></ion-icon>
               <span class="text-xs font-bold text-ap-text uppercase tracking-wider">Opponent Intel: {{ opp.name }}</span>

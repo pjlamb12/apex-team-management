@@ -39,5 +39,5 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock Element.prototype.scrollTo for Ionic segment scrollable="true" support in JSDOM
 if (typeof Element !== 'undefined' && !Element.prototype.scrollTo) {
-  Element.prototype.scrollTo = () => {};
+  Element.prototype.scrollTo = () => undefined;
 }

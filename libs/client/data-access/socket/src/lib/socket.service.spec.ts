@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { SocketService } from './socket.service';
+import { SocketService, SOCKET_AUTH_TOKEN_PROVIDER } from './socket.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { AuthService } from '../../auth/auth.service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { io } from 'socket.io-client';
 
@@ -38,7 +37,7 @@ describe('SocketService', () => {
       providers: [
         SocketService,
         { provide: RuntimeConfigLoaderService, useValue: mockConfig },
-        { provide: AuthService, useValue: mockAuth },
+        { provide: SOCKET_AUTH_TOKEN_PROVIDER, useValue: mockAuth },
       ],
     });
 

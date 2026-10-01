@@ -1,15 +1,28 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, InjectionToken, signal } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { AuthService } from '../../auth/auth.service';
 import { Subject } from 'rxjs';
+
+export interface SocketAuthTokenProvider {
+  getToken(): string | null;
+}
+
+export const SOCKET_AUTH_TOKEN_PROVIDER = new InjectionToken<SocketAuthTokenProvider>(
+  'SOCKET_AUTH_TOKEN_PROVIDER',
+  {
+    providedIn: 'root',
+    factory: () => ({
+      getToken: () => (typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null),
+    }),
+  }
+);
 
 @Injectable({
   providedIn: 'root',
 })
 export class SocketService {
   private readonly config = inject(RuntimeConfigLoaderService);
-  private readonly auth = inject(AuthService);
+  private readonly auth = inject(SOCKET_AUTH_TOKEN_PROVIDER);
   
   private socket: Socket | null = null;
   public readonly isConnected = signal(false);
@@ -28,7 +41,7 @@ export class SocketService {
       const parsed = new URL(url);
       return parsed.origin;
     } catch {
-      return url.replace('/api', '');
+      return url ? url.replace('/api', '') : 'http://localhost:3000';
     }
   }
 
@@ -166,4 +179,3 @@ export class SocketService {
     }
   }
 }
-

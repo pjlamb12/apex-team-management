@@ -33,7 +33,7 @@ import {
   PracticePacerService,
 } from '@apex-team/client/data-access/drill';
 import { EventsService, EventEntity, TeamService } from '@apex-team/client/data-access/team';
-import { SocketService } from '@apex-team/client/shared/services';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { forkJoin } from 'rxjs';
 
 import { PracticePlanTab } from '../practice-plan-tab/practice-plan-tab';

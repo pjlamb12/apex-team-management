@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonHeader,
@@ -41,7 +41,7 @@ import { PlayerProfileAnalytics } from '@apex-team/client/data-access/team';
   templateUrl: './idp-growth-card-modal.html',
   styleUrl: './idp-growth-card-modal.scss',
 })
-export class IdpGrowthCardModalComponent implements OnInit {
+export class IdpGrowthCardModalComponent {
   private readonly modalCtrl = inject(ModalController);
 
   @Input({ required: true }) teamName!: string;
@@ -61,10 +61,6 @@ export class IdpGrowthCardModalComponent implements OnInit {
       checkmarkCircleOutline,
       ribbonOutline,
     });
-  }
-
-  ngOnInit(): void {
-    // Component ready
   }
 
   protected printCard(): void {

@@ -66,7 +66,7 @@ import {
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport, OpponentsService, AwardsService } from '@apex-team/client/data-access/team';
 import { OpponentWithStats, PlayerAward } from '@apex-team/shared/util/models';
-import { SocketService } from '../../../shared/services/socket.service';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { MatchRecapModalComponent } from './match-recap-modal/match-recap-modal';
 import { AwardBadgeModalComponent } from './award-badge-modal/award-badge-modal';
 
@@ -112,18 +112,18 @@ import { AwardBadgeModalComponent } from './award-badge-modal/award-badge-modal'
   styleUrl: './game-summary.scss',
 })
 export class GameSummary implements OnDestroy {
-  @Input() set id(val: string) {
-    this._teamId.set(val);
-  }
-  @Input() set eventId(val: string) {
-    this._eventId.set(val);
-  }
-
   private _teamId = signal<string | null>(null);
   private _eventId = signal<string | null>(null);
 
+  @Input() set id(val: string) {
+    this._teamId.set(val);
+  }
   public get teamId(): string {
     return this._teamId() ?? '';
+  }
+
+  @Input() set eventId(val: string) {
+    this._eventId.set(val);
   }
   public get eventId(): string {
     return this._eventId() ?? '';

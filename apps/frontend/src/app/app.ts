@@ -4,7 +4,7 @@ import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { ToastController } from '@ionic/angular/standalone';
 import { ThemeService } from '@apex-team/client/ui/theme';
 import { AuthService } from './auth/auth.service';
-import { SocketService } from './shared/services/socket.service';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { filter, Subscription } from 'rxjs';
 
 @Component({
