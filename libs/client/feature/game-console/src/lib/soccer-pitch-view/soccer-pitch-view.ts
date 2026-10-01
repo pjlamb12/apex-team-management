@@ -46,7 +46,7 @@ export class SoccerPitchViewComponent {
 
   protected slotCoordinates = computed(() => {
     return {
-      0: { x: 50, y: 91 }, // GK
+      0: { x: 50, y: 89 }, // GK
       
       // Defenders (1-5)
       1: { x: 15, y: 74 },

@@ -44,7 +44,7 @@ describe('SoccerPitchViewComponent', () => {
     // Check GK (Slot 0)
     const gk = Array.from(playerElements).find((el: any) => el.textContent.includes('L1')) as HTMLElement;
     expect(gk.style.left).toBe('50%');
-    expect(gk.style.top).toBe('91%');
+    expect(gk.style.top).toBe('89%');
 
     // Check Midfielder (Slot 9)
     const lf = Array.from(playerElements).find((el: any) => el.textContent.includes('L2')) as HTMLElement;
