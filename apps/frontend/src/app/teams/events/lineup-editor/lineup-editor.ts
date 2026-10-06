@@ -1,7 +1,8 @@
-import { Component, inject, signal, effect, untracked, computed, Input, OnInit } from '@angular/core';
+import { Component, inject, signal, effect, untracked, computed, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import {
   IonContent,
   IonHeader,
@@ -109,7 +110,7 @@ function getPositionFromSlot(slot: number, sportName?: string, positionTypes?: s
   templateUrl: './lineup-editor.html',
   styleUrl: './lineup-editor.scss',
 })
-export class LineupEditor {
+export class LineupEditor implements OnInit, OnDestroy {
   @Input() set id(val: string) {
     this._teamId.set(val);
   }
@@ -136,6 +137,28 @@ export class LineupEditor {
   private readonly opponentsService = inject(OpponentsService);
   private readonly router = inject(Router);
   private readonly alertCtrl = inject(AlertController);
+  private readonly socketService = inject(SocketService);
+
+  private initialSlotsSignature = signal<string | null>(null);
+  private currentJoinedEventId: string | null = null;
+
+  private getSlotsSignature(slots: LineupSlot[]): string {
+    return JSON.stringify(
+      slots
+        .map((s) => ({
+          slotIndex: s.slotIndex,
+          playerId: s.playerId,
+          positionName: s.positionName,
+        }))
+        .sort((a, b) => a.slotIndex - b.slotIndex)
+    );
+  }
+
+  public readonly isDirty = computed(() => {
+    const initial = this.initialSlotsSignature();
+    if (!initial) return false;
+    return this.getSlotsSignature(this.slots()) !== initial;
+  });
 
   protected event = signal<EventEntity | null>(null);
   protected team = signal<any | null>(null);
@@ -450,13 +473,42 @@ export class LineupEditor {
       const eId = this._eventId();
       if (tId && eId) {
         untracked(() => {
+          if (this.currentJoinedEventId !== eId) {
+            if (this.currentJoinedEventId) {
+              this.socketService.leaveEvent(this.currentJoinedEventId);
+            }
+            this.currentJoinedEventId = eId;
+            this.socketService.joinEvent(eId);
+          }
           void this.loadData(tId, eId);
         });
       }
     });
   }
 
-  // Initial data loading is handled reactively by the constructor effect when inputs are bound.
+  ngOnInit(): void {
+    this.socketService.onEvent('lineupUpdated', (data: any) => {
+      if (data?.eventId && data.eventId === this._eventId()) {
+        if (!this.isDirty()) {
+          const tId = this._teamId();
+          const eId = this._eventId();
+          if (tId && eId) {
+            void this.loadData(tId, eId, true);
+          }
+        } else {
+          this.toastMessage.set('The lineup was updated on another device.');
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.currentJoinedEventId) {
+      this.socketService.offEvent('lineupUpdated');
+      this.socketService.leaveEvent(this.currentJoinedEventId);
+      this.currentJoinedEventId = null;
+    }
+  }
 
   protected retry(): void {
     const tId = this._teamId();
@@ -618,6 +670,7 @@ export class LineupEditor {
       }
 
       this.slots.set(newSlots);
+      this.initialSlotsSignature.set(this.getSlotsSignature(newSlots));
     } catch (err) {
       console.error('Failed to load lineup data', err);
       this.errorMessage.set('Failed to load data. Please try again.');
@@ -900,6 +953,12 @@ export class LineupEditor {
     const teamId = this.teamId;
     if (!eventId || !teamId) return;
 
+    // If entering the live console and no changes were made, navigate directly without touching the database
+    if (goLive && !this.isDirty()) {
+      void this.router.navigate(['/teams', teamId, 'events', eventId, 'console']);
+      return;
+    }
+
     const ev = this.event();
     const sportName = this.team()?.sport?.name;
     const fieldCount = ev?.playersOnField || (sportName === 'Volleyball' ? 6 : 11);
@@ -932,6 +991,7 @@ export class LineupEditor {
       };
 
       await firstValueFrom(this.eventsService.saveLineup(teamId, eventId, dto));
+      this.initialSlotsSignature.set(this.getSlotsSignature(this.slots()));
       
       if (goLive) {
         void this.router.navigate(['/teams', teamId, 'events', eventId, 'console']);

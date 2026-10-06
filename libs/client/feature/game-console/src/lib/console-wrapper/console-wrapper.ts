@@ -138,6 +138,21 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
           this.stateService.handleRemoteStatusUpdate(updatedEvent);
         }
       });
+      this.socketService.onEvent('lineupUpdated', (data: any) => {
+        if (data?.lineup) {
+          this.stateService.updateInitialLineup(data.lineup);
+        } else {
+          const tId = this.teamId();
+          const eId = this.eventId();
+          if (tId && eId) {
+            void firstValueFrom(this.eventsService.getLineup(tId, eId)).then((lineup) => {
+              if (lineup) {
+                this.stateService.updateInitialLineup(lineup);
+              }
+            });
+          }
+        }
+      });
     }),
     switchMap(({ teamId, eventId }) => {
       const url = this.apiUrl;
@@ -145,7 +160,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       
       return forkJoin({
         event: this.http.get<EventEntity>(`${url}/teams/${teamId}/events/${eventId}`),
-        lineup: this.http.get<LineupEntry[]>(`${url}/teams/${teamId}/events/${eventId}/lineup`),
+        lineup: this.eventsService.getLineup(teamId, eventId),
         team: this.http.get<any>(`${url}/teams/${teamId}`)
       }).pipe(
         tap(async ({ event, lineup, team }) => {
@@ -324,6 +339,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       this.socketService.offEvent('gameEventRemoved');
       this.socketService.offEvent('gameStatusUpdated');
       this.socketService.offEvent('eventUpdated');
+      this.socketService.offEvent('lineupUpdated');
       this.socketService.leaveEvent(eventId);
     }
   }
@@ -337,7 +353,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       const [event, backendEvents, lineup] = await Promise.all([
         firstValueFrom(this.http.get<EventEntity>(`${this.apiUrl}/teams/${teamId}/events/${eventId}`)),
         firstValueFrom(this.eventsService.getGameEvents(teamId, eventId)),
-        firstValueFrom(this.http.get<LineupEntry[]>(`${this.apiUrl}/teams/${teamId}/events/${eventId}/lineup`)),
+        firstValueFrom(this.eventsService.getLineup(teamId, eventId)),
       ]);
 
       if (event?.status === 'completed' || event?.status === 'abandoned_weather') {
@@ -374,6 +390,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     if (teamId && eventId) {
       void firstValueFrom(
         this.eventsService.updateEvent(teamId, eventId, {
+          status: 'in_progress',
           clockStartTime: new Date().toISOString(),
         })
       );

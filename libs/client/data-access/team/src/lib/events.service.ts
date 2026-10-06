@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, from, tap, map, catchError } from 'rxjs';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { Season, League, Opponent, MatchRecapOptions, MatchRecapResponse } from '@apex-team/shared/util/models';
+import { Season, League, Opponent, MatchRecapOptions, MatchRecapResponse, LineupEntry } from '@apex-team/shared/util/models';
 import { OfflineStorageService, NetworkStatusService } from '@apex-team/client/data-access/offline';
 
 export interface LocationEntity {
@@ -112,15 +112,7 @@ export interface UpdateEventDto {
   ignorePlayingTime?: boolean;
 }
 
-export interface LineupEntry {
-  id: string;
-  eventId: string;
-  playerId: string;
-  player: { id: string; firstName: string; lastName: string; jerseyNumber: number | null; isActive?: boolean };
-  positionName: string | null;
-  slotIndex: number | null;
-  status: 'starting' | 'bench';
-}
+export type { LineupEntry };
 
 export interface SaveLineupEntryDto {
   playerId: string;

@@ -5,13 +5,28 @@ import { LineupEntriesService } from './lineup-entries.service';
 import { LineupEntryEntity } from '../entities/lineup-entry.entity';
 import { EventEntity } from '../entities/event.entity';
 import { SaveLineupDto } from './dto/save-lineup.dto';
+import { SocketGateway } from '../socket/socket.gateway';
 
 describe('LineupEntriesService', () => {
   let service: LineupEntriesService;
   let repo: Repository<LineupEntryEntity>;
   let eventRepo: Repository<EventEntity>;
+  let mockSocketGateway: {
+    server: {
+      to: ReturnType<typeof vi.fn>;
+      emit: ReturnType<typeof vi.fn>;
+    };
+  };
 
   beforeEach(async () => {
+    const mockEmit = vi.fn();
+    mockSocketGateway = {
+      server: {
+        to: vi.fn().mockReturnValue({ emit: mockEmit }),
+        emit: mockEmit,
+      },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LineupEntriesService,
@@ -30,8 +45,12 @@ describe('LineupEntriesService', () => {
         {
           provide: getRepositoryToken(EventEntity),
           useValue: {
-            findOne: vi.fn().mockResolvedValue({ id: 'event-1', playersOnField: 9 }),
+            findOne: vi.fn().mockResolvedValue({ id: 'event-1', playersOnField: 9, season: { teamId: 'team-1' } }),
           },
+        },
+        {
+          provide: SocketGateway,
+          useValue: mockSocketGateway,
         },
       ],
     }).compile();
@@ -98,6 +117,17 @@ describe('LineupEntriesService', () => {
       // 10th should be demoted to bench with slotIndex null
       expect(calls[9][0].status).toBe('bench');
       expect(calls[9][0].slotIndex).toBeNull();
+    });
+
+    it('should emit lineupUpdated via socket gateway to event and team rooms', async () => {
+      await service.saveLineup(eventId, dto);
+
+      expect(mockSocketGateway.server.to).toHaveBeenCalledWith(`event:${eventId}`);
+      expect(mockSocketGateway.server.to).toHaveBeenCalledWith('team:team-1');
+      expect(mockSocketGateway.server.emit).toHaveBeenCalledWith(
+        'lineupUpdated',
+        expect.objectContaining({ eventId })
+      );
     });
   });
 
