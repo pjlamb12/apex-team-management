@@ -7,6 +7,7 @@ import { LiveGameStateService } from '../live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { AlertController } from '@ionic/angular/standalone';
 import { of } from 'rxjs';
+import { PlaytimeService } from '../rotation-engine/playtime.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { signal, NO_ERRORS_SCHEMA } from '@angular/core';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -426,6 +427,44 @@ describe('ConsoleWrapper', () => {
       const events = stateService.events();
       const oppFoul = events.find((e) => e.type === 'OPPONENT_FOUL');
       expect(oppFoul).toBeDefined();
+    });
+
+    it('should call team basketball timeout when callTeamBasketballTimeout is called', () => {
+      component['callTeamBasketballTimeout']();
+
+      const events = stateService.events();
+      const toEvent = events.find((e) => e.type === 'TIMEOUT');
+      expect(toEvent).toBeDefined();
+      expect(toEvent?.['payload']?.team).toBe('us');
+      expect(stateService.basketballTimeouts().teamUsed).toBe(1);
+    });
+
+    it('should log opponent basketball timeout when addOpponentBasketballTimeout is called', () => {
+      component['addOpponentBasketballTimeout']();
+
+      const events = stateService.events();
+      const toEvent = events.find((e) => e.type === 'TIMEOUT');
+      expect(toEvent).toBeDefined();
+      expect(toEvent?.['payload']?.team).toBe('opponent');
+      expect(stateService.basketballTimeouts().opponentUsed).toBe(1);
+    });
+
+    it('should toggle box score expanded state when toggleBoxScore is called', () => {
+      expect(component['isBoxScoreExpanded']()).toBe(true);
+      component['toggleBoxScore']();
+      expect(component['isBoxScoreExpanded']()).toBe(false);
+      component['toggleBoxScore']();
+      expect(component['isBoxScoreExpanded']()).toBe(true);
+    });
+
+    it('should format player minutes correctly', () => {
+      Object.defineProperty(component['playtimeService'], 'playtimeMap', {
+        value: () => ({ p1: 125, p2: 5 }),
+        configurable: true,
+      });
+      expect(component['getPlayerMinutes']('p1')).toBe('2:05');
+      expect(component['getPlayerMinutes']('p2')).toBe('0:05');
+      expect(component['getPlayerMinutes']('unknown')).toBe('0:00');
     });
   });
 });

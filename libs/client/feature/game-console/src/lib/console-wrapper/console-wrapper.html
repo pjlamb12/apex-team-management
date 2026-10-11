@@ -317,15 +317,26 @@
                   <span class="text-xs font-bold text-ap-muted">
                     Fouls: {{ stateService.basketballFouls().teamFouls }}
                   </span>
-                  @if (stateService.basketballFouls().inBonus) {
+                  @if (stateService.basketballFouls().inDoubleBonus) {
+                    <span class="text-[10px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded shadow">
+                      2x BONUS
+                    </span>
+                  } @else if (stateService.basketballFouls().inBonus) {
                     <span class="text-[10px] font-black bg-amber-500 text-black px-1.5 py-0.5 rounded shadow">
                       BONUS
                     </span>
                   }
                 </div>
               </div>
-              <div class="flex items-center justify-between px-1 text-sm font-black text-emerald-400">
-                <span>Total Score: {{ stateService.score().team }} PTS</span>
+              <div class="flex items-center justify-between px-1">
+                <span class="text-sm font-black text-emerald-400">Total Score: {{ stateService.score().team }} PTS</span>
+                <span class="text-xs font-bold text-ap-muted">TO: {{ stateService.basketballTimeouts().teamRemaining }}/{{ stateService.basketballTimeouts().limit }}</span>
+              </div>
+              <div class="w-full">
+                <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="primary" fill="outline" (click)="callTeamBasketballTimeout()" [disabled]="stateService.basketballTimeouts().teamRemaining <= 0">
+                  <ion-icon name="time-outline" slot="start"></ion-icon>
+                  Call TO ({{ stateService.basketballTimeouts().teamRemaining }} left)
+                </ion-button>
               </div>
             </div>
 
@@ -339,16 +350,24 @@
                   <span class="text-xs font-bold text-ap-muted">
                     Fouls: {{ stateService.basketballFouls().opponentFouls }}
                   </span>
-                  @if (stateService.basketballFouls().opponentInBonus) {
+                  @if (stateService.basketballFouls().opponentInDoubleBonus) {
                     <span class="text-[10px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded shadow">
+                      2x BONUS
+                    </span>
+                  } @else if (stateService.basketballFouls().opponentInBonus) {
+                    <span class="text-[10px] font-black bg-amber-500 text-black px-1.5 py-0.5 rounded shadow">
                       BONUS
                     </span>
                   }
                 </div>
               </div>
-              <div class="grid grid-cols-4 gap-1.5 w-full">
+              <div class="flex items-center justify-between px-1">
+                <span class="text-sm font-black text-red-400">Total Score: {{ stateService.score().opponent }} PTS</span>
+                <span class="text-xs font-bold text-ap-muted">TO: {{ stateService.basketballTimeouts().opponentRemaining }}/{{ stateService.basketballTimeouts().limit }}</span>
+              </div>
+              <div class="grid grid-cols-5 gap-1.5 w-full">
                 <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="danger" fill="solid" (click)="addOpponentBasketballScore(2)">
-                  +2 ({{ stateService.score().opponent }})
+                  +2
                 </ion-button>
                 <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="danger" fill="outline" (click)="addOpponentBasketballScore(3)">
                   +3
@@ -358,6 +377,9 @@
                 </ion-button>
                 <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="warning" fill="outline" (click)="addOpponentBasketballFoul()">
                   + Foul
+                </ion-button>
+                <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="medium" fill="outline" (click)="addOpponentBasketballTimeout()" [disabled]="stateService.basketballTimeouts().opponentRemaining <= 0">
+                  + TO
                 </ion-button>
               </div>
             </div>
@@ -615,70 +637,170 @@
       </div>
     }
 
-    <!-- Basketball Player Box Score -->
+    <!-- Basketball Running Line Score & Box Score -->
     @if (stateService.sportName() === 'Basketball') {
-      <div class="bg-ap-surface-raised border-t border-ap-border px-4 py-3">
-        <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted mb-2">Team Box Score</h3>
-        <div class="overflow-x-auto max-h-[220px] overflow-y-auto">
-          <table class="min-w-[700px] text-xs table-auto border-collapse">
-            <thead>
-              <tr class="border-b border-ap-border text-[10px] uppercase font-bold text-ap-muted sticky top-0 z-10 bg-ap-surface-raised">
-                <th class="py-2 text-left font-bold pl-2 bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">Player</th>
-                <th class="py-2 text-center font-bold px-2">PTS</th>
-                <th class="py-2 text-center font-bold px-2">FG</th>
-                <th class="py-2 text-center font-bold px-2">3PT</th>
-                <th class="py-2 text-center font-bold px-2">FT</th>
-                <th class="py-2 text-center font-bold px-2">REB</th>
-                <th class="py-2 text-center font-bold px-2">AST</th>
-                <th class="py-2 text-center font-bold px-2">STL</th>
-                <th class="py-2 text-center font-bold px-2">BLK</th>
-                <th class="py-2 text-center font-bold px-2">TO</th>
-                <th class="py-2 text-center font-bold pr-2">PF</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (player of stateService.players(); track player.id) {
-                <tr class="border-b border-ap-border/30 hover:bg-ap-bg/50">
-                  <td class="py-2 text-left font-bold text-ap-text pl-2 whitespace-nowrap bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
-                    {{ getPlayerShortName(player) }}
+      <div class="bg-ap-surface-raised border-t border-ap-border px-4 py-3 flex flex-col gap-3">
+        <!-- Quarter Running Line Score -->
+        <div class="flex flex-col gap-1.5">
+          <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted">Line Score</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-ap-border text-[10px] uppercase font-bold text-ap-muted">
+                  <th class="py-1 text-left font-bold pl-2">Team</th>
+                  @for (ps of stateService.basketballPeriodScores(); track ps.period) {
+                    <th class="py-1 text-center font-bold px-2.5">{{ ps.label }}</th>
+                  }
+                  <th class="py-1 text-center font-black pr-2 text-ap-text">T</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-ap-border/30">
+                  <td class="py-1.5 text-left font-bold text-ap-primary pl-2 whitespace-nowrap">
+                    {{ team()?.name ?? 'Our Team' }}
                   </td>
-                  <td class="py-2 text-center px-2 font-black text-ap-primary tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.points || 0 }}
-                  </td>
-                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.fgMade || 0 }}-{{ stateService.playerStats()[player.id]?.fgAttempted || 0 }}
-                  </td>
-                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.fg3Made || 0 }}-{{ stateService.playerStats()[player.id]?.fg3Attempted || 0 }}
-                  </td>
-                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.ftMade || 0 }}-{{ stateService.playerStats()[player.id]?.ftAttempted || 0 }}
-                  </td>
-                  <td class="py-2 text-center px-2 font-semibold text-ap-text tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.reboundsTotal || 0 }}
-                  </td>
-                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.assists || 0 }}
-                  </td>
-                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.steals || 0 }}
-                  </td>
-                  <td class="py-2 text-center px-2 text-ap-text tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.blocks || 0 }}
-                  </td>
-                  <td class="py-2 text-center px-2 text-red-500 tabular-nums">
-                    {{ stateService.playerStats()[player.id]?.turnovers || 0 }}
-                  </td>
-                  <td class="py-2 text-center pr-2 font-bold tabular-nums"
-                      [class.text-amber-500]="(stateService.playerStats()[player.id]?.fouls || 0) === stateService.foulLimit() - 1"
-                      [class.text-red-500]="(stateService.playerStats()[player.id]?.fouls || 0) >= stateService.foulLimit()"
-                      [class.text-ap-text]="(stateService.playerStats()[player.id]?.fouls || 0) < stateService.foulLimit() - 1">
-                    {{ stateService.playerStats()[player.id]?.fouls || 0 }}
+                  @for (ps of stateService.basketballPeriodScores(); track ps.period) {
+                    <td class="py-1.5 text-center px-2.5 tabular-nums text-ap-text">
+                      {{ ps.teamScore }}
+                    </td>
+                  }
+                  <td class="py-1.5 text-center pr-2 font-black tabular-nums text-ap-primary">
+                    {{ stateService.score().team }}
                   </td>
                 </tr>
-              }
-            </tbody>
-          </table>
+                <tr>
+                  <td class="py-1.5 text-left font-bold text-ap-muted pl-2 whitespace-nowrap">
+                    {{ event()?.opponent ?? 'Opponent' }}
+                  </td>
+                  @for (ps of stateService.basketballPeriodScores(); track ps.period) {
+                    <td class="py-1.5 text-center px-2.5 tabular-nums text-ap-text">
+                      {{ ps.opponentScore }}
+                    </td>
+                  }
+                  <td class="py-1.5 text-center pr-2 font-black tabular-nums text-ap-text">
+                    {{ stateService.score().opponent }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Collapsible Team Box Score -->
+        <div class="border-t border-ap-border/30 pt-2">
+          <div class="flex items-center justify-between cursor-pointer select-none py-1" (click)="toggleBoxScore()">
+            <div class="flex items-center gap-2">
+              <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted">Team Box Score</h3>
+              <span class="text-[10px] text-ap-muted/70 font-semibold">
+                ({{ stateService.basketballBoxScore().length }} players)
+              </span>
+            </div>
+            <ion-button fill="clear" size="small" class="ion-no-margin -mr-2 text-ap-muted">
+              <ion-icon [name]="isBoxScoreExpanded() ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            </ion-button>
+          </div>
+
+          @if (isBoxScoreExpanded()) {
+            <div class="overflow-x-auto max-h-[260px] overflow-y-auto mt-2">
+              <table class="min-w-[950px] text-xs table-auto border-collapse">
+                <thead>
+                  <tr class="border-b border-ap-border text-[10px] uppercase font-bold text-ap-muted sticky top-0 z-10 bg-ap-surface-raised">
+                    <th class="py-2 text-left font-bold pl-2 bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">Player</th>
+                    <th class="py-2 text-center font-bold px-2">MIN</th>
+                    <th class="py-2 text-center font-bold px-2">PTS</th>
+                    <th class="py-2 text-center font-bold px-2">FGM-A</th>
+                    <th class="py-2 text-center font-bold px-2">FG%</th>
+                    <th class="py-2 text-center font-bold px-2">3PM-A</th>
+                    <th class="py-2 text-center font-bold px-2">3P%</th>
+                    <th class="py-2 text-center font-bold px-2">FTM-A</th>
+                    <th class="py-2 text-center font-bold px-2">FT%</th>
+                    <th class="py-2 text-center font-bold px-2">OREB</th>
+                    <th class="py-2 text-center font-bold px-2">DREB</th>
+                    <th class="py-2 text-center font-bold px-2">REB</th>
+                    <th class="py-2 text-center font-bold px-2">AST</th>
+                    <th class="py-2 text-center font-bold px-2">STL</th>
+                    <th class="py-2 text-center font-bold px-2">BLK</th>
+                    <th class="py-2 text-center font-bold px-2">TO</th>
+                    <th class="py-2 text-center font-bold px-2">PF</th>
+                    <th class="py-2 text-center font-bold pr-2">+/-</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of stateService.basketballBoxScore(); track p.playerId) {
+                    <tr class="border-b border-ap-border/30 hover:bg-ap-bg/50">
+                      <td class="py-2 text-left font-bold text-ap-text pl-2 whitespace-nowrap bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
+                        <div class="flex items-center gap-1.5">
+                          <span>{{ getPlayerShortName(p.player) }}</span>
+                          @if (p.fouledOut) {
+                            <span class="text-[9px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1 rounded">FO</span>
+                          } @else if (p.foulTrouble) {
+                            <span class="text-[9px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1 rounded">FOUL 4</span>
+                          }
+                        </div>
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ getPlayerMinutes(p.playerId) }}
+                      </td>
+                      <td class="py-2 text-center px-2 font-black text-ap-primary tabular-nums">
+                        {{ p.points }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.fgMade }}-{{ p.fgAttempted }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.fgPct }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.fg3Made }}-{{ p.fg3Attempted }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.fg3Pct }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.ftMade }}-{{ p.ftAttempted }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.ftPct }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.reboundsOffensive }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.reboundsDefensive }}
+                      </td>
+                      <td class="py-2 text-center px-2 font-semibold text-ap-text tabular-nums">
+                        {{ p.reboundsTotal }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.assists }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.steals }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.blocks }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-rose-400 tabular-nums">
+                        {{ p.turnovers }}
+                      </td>
+                      <td class="py-2 text-center px-2 font-bold tabular-nums"
+                          [class.text-amber-500]="p.foulTrouble"
+                          [class.text-rose-500]="p.fouledOut"
+                          [class.text-ap-text]="!p.foulTrouble && !p.fouledOut">
+                        {{ p.fouls }}
+                      </td>
+                      <td class="py-2 text-center pr-2 font-bold tabular-nums"
+                          [class.text-emerald-400]="p.plusMinus > 0"
+                          [class.text-rose-400]="p.plusMinus < 0"
+                          [class.text-ap-text]="p.plusMinus === 0">
+                        {{ p.plusMinusFormatted }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         </div>
       </div>
     }

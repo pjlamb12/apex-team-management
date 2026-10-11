@@ -23,11 +23,29 @@ import {
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline, footballOutline, refreshOutline, shirtOutline, swapHorizontalOutline, trophyOutline, stopCircleOutline } from 'ionicons/icons';
+import {
+  chevronBackOutline,
+  playOutline,
+  pauseOutline,
+  arrowForwardOutline,
+  flagOutline,
+  settingsOutline,
+  alertCircleOutline,
+  footballOutline,
+  refreshOutline,
+  shirtOutline,
+  swapHorizontalOutline,
+  trophyOutline,
+  stopCircleOutline,
+  chevronDownOutline,
+  chevronUpOutline,
+  timeOutline,
+} from 'ionicons/icons';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
+import { PlaytimeService } from '../rotation-engine/playtime.service';
 import { EventsService, EventEntity, PlayersService, AttendanceService, PlayerEntity } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
@@ -94,6 +112,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected syncService = inject(EventSyncService);
   protected playersService = inject(PlayersService);
   protected attendanceService = inject(AttendanceService);
+  protected playtimeService = inject(PlaytimeService);
   private socketService = inject(SocketService);
   private alertCtrl = inject(AlertController);
 
@@ -260,6 +279,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected rotationAlertVisible = signal(false);
   protected selectedPlayerId = signal<string | null>(null);
   protected actionPlayer = signal<Player | null>(null);
+  protected isBoxScoreExpanded = signal<boolean>(true);
   protected popoverEvent = signal<Event | null>(null);
 
   private reconnectedSub?: import('rxjs').Subscription;
@@ -289,6 +309,9 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       swapHorizontalOutline,
       trophyOutline,
       stopCircleOutline,
+      chevronDownOutline,
+      chevronUpOutline,
+      timeOutline,
     });
 
     effect(() => {
@@ -1129,6 +1152,31 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     });
   }
 
+  protected callTeamBasketballTimeout(): void {
+    this.stateService.callTeamTimeout(
+      this.clockService.currentMinute(),
+      this.clockService.elapsedMs()
+    );
+  }
+
+  protected addOpponentBasketballTimeout(): void {
+    this.stateService.callOpponentTimeout(
+      this.clockService.currentMinute(),
+      this.clockService.elapsedMs()
+    );
+  }
+
+  protected toggleBoxScore(): void {
+    this.isBoxScoreExpanded.update((v) => !v);
+  }
+
+  protected getPlayerMinutes(playerId: string): string {
+    const totalSecs = this.playtimeService.playtimeMap()[playerId] || 0;
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+
   protected getHittingPct(kills = 0, hittingErrors = 0, hits = 0): string {
     const total = kills + hittingErrors + hits;
     if (total === 0) return '.000';
@@ -1140,7 +1188,8 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     return fixed.startsWith('0') ? fixed.substring(1) : fixed;
   }
 
-  protected getPlayerShortName(player: Player): string {
+  protected getPlayerShortName(player?: Player | null): string {
+    if (!player) return '';
     const firstInitial = player.firstName ? `${player.firstName.charAt(0)}.` : '';
     return `${player.jerseyNumber !== null && player.jerseyNumber !== undefined ? '#' + player.jerseyNumber + ' ' : ''}${player.lastName}, ${firstInitial}`;
   }

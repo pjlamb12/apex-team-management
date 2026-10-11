@@ -707,6 +707,206 @@ describe('LiveGameStateService', () => {
       expect(service.score().team).toBe(0);
       expect(service.canUndo()).toBe(false);
     });
+
+    it('should track double bonus threshold and bonus states correctly', () => {
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', {
+        bonusThreshold: 5,
+        doubleBonusThreshold: 10,
+      });
+      expect(service.bonusThreshold()).toBe(5);
+      expect(service.doubleBonusThreshold()).toBe(10);
+
+      expect(service.basketballFouls().bonusState).toBe('NONE');
+      expect(service.basketballFouls().inBonus).toBe(false);
+      expect(service.basketballFouls().inDoubleBonus).toBe(false);
+
+      // Add 5 fouls -> enters BONUS
+      for (let i = 1; i <= 5; i++) {
+        service.pushEvent({ type: 'FOUL', playerId: 'p1', timestamp: i * 10 });
+      }
+      expect(service.basketballFouls().teamFouls).toBe(5);
+      expect(service.basketballFouls().inBonus).toBe(true);
+      expect(service.basketballFouls().inDoubleBonus).toBe(false);
+      expect(service.basketballFouls().bonusState).toBe('BONUS');
+
+      // Add 5 more fouls -> enters DOUBLE_BONUS
+      for (let i = 6; i <= 10; i++) {
+        service.pushEvent({ type: 'FOUL', playerId: 'p3', timestamp: i * 10 });
+      }
+      expect(service.basketballFouls().teamFouls).toBe(10);
+      expect(service.basketballFouls().inBonus).toBe(true);
+      expect(service.basketballFouls().inDoubleBonus).toBe(true);
+      expect(service.basketballFouls().bonusState).toBe('DOUBLE_BONUS');
+
+      // Opponent fouls
+      for (let i = 1; i <= 5; i++) {
+        service.pushEvent({ type: 'OPPONENT_FOUL', timestamp: 100 + i });
+      }
+      expect(service.basketballFouls().opponentFouls).toBe(5);
+      expect(service.basketballFouls().opponentInBonus).toBe(true);
+      expect(service.basketballFouls().opponentBonusState).toBe('BONUS');
+    });
+
+    it('should track personal fouls, foul trouble, and fouled out status', () => {
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', {
+        foulLimit: 5,
+      });
+
+      // 1 to 3 fouls: normal
+      for (let i = 1; i <= 3; i++) {
+        service.pushEvent({ type: 'FOUL', playerId: 'p1', timestamp: i * 10 });
+      }
+      let stats = service.playerStats();
+      expect(stats['p1'].fouls).toBe(3);
+      expect(stats['p1'].foulTrouble).toBe(false);
+      expect(stats['p1'].fouledOut).toBe(false);
+
+      // 4 fouls: foul trouble (limit - 1)
+      service.pushEvent({ type: 'FOUL', playerId: 'p1', timestamp: 40 });
+      stats = service.playerStats();
+      expect(stats['p1'].fouls).toBe(4);
+      expect(stats['p1'].foulTrouble).toBe(true);
+      expect(stats['p1'].fouledOut).toBe(false);
+
+      // 5 fouls: fouled out
+      service.pushEvent({ type: 'FOUL', playerId: 'p1', timestamp: 50 });
+      stats = service.playerStats();
+      expect(stats['p1'].fouls).toBe(5);
+      expect(stats['p1'].foulTrouble).toBe(false);
+      expect(stats['p1'].fouledOut).toBe(true);
+    });
+
+    it('should track basketball timeouts for team and opponent', () => {
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', {
+        timeoutsLimit: 5,
+      });
+      expect(service.timeoutsLimit()).toBe(5);
+      expect(service.basketballTimeouts().teamRemaining).toBe(5);
+      expect(service.basketballTimeouts().opponentRemaining).toBe(5);
+
+      service.callTeamTimeout(1, 60000);
+      expect(service.basketballTimeouts().teamUsed).toBe(1);
+      expect(service.basketballTimeouts().teamRemaining).toBe(4);
+
+      service.callOpponentTimeout(2, 120000);
+      expect(service.basketballTimeouts().opponentUsed).toBe(1);
+      expect(service.basketballTimeouts().opponentRemaining).toBe(4);
+
+      // Legacy or shorthand OPPONENT_TIMEOUT
+      service.pushEvent({ type: 'OPPONENT_TIMEOUT', timestamp: 200 });
+      expect(service.basketballTimeouts().opponentUsed).toBe(2);
+      expect(service.basketballTimeouts().opponentRemaining).toBe(3);
+    });
+
+    it('should compute running quarter period scores and line score data', () => {
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball');
+
+      // Period 1
+      service.pushEvents([
+        { type: 'MADE_3PT', playerId: 'p1', timestamp: 10, period: 1 } as any,
+        { type: 'MADE_2PT', playerId: 'p1', timestamp: 20, period: 1 } as any,
+        { type: 'OPPONENT_SCORE', points: 3, timestamp: 30, period: 1 } as any,
+      ]);
+
+      // Period 2
+      service.pushEvents([
+        { type: 'MADE_1PT', playerId: 'p2', timestamp: 40, period: 2 } as any,
+        { type: 'OPPONENT_SCORE', points: 2, timestamp: 50, period: 2 } as any,
+      ]);
+
+      const periodScores = service.basketballPeriodScores();
+      expect(periodScores.length).toBeGreaterThanOrEqual(4);
+
+      // Q1
+      expect(periodScores[0].period).toBe(1);
+      expect(periodScores[0].label).toBe('Q1');
+      expect(periodScores[0].teamScore).toBe(5);
+      expect(periodScores[0].opponentScore).toBe(3);
+      expect(periodScores[0].teamCumulative).toBe(5);
+      expect(periodScores[0].opponentCumulative).toBe(3);
+
+      // Q2
+      expect(periodScores[1].period).toBe(2);
+      expect(periodScores[1].label).toBe('Q2');
+      expect(periodScores[1].teamScore).toBe(1);
+      expect(periodScores[1].opponentScore).toBe(2);
+      expect(periodScores[1].teamCumulative).toBe(6);
+      expect(periodScores[1].opponentCumulative).toBe(5);
+
+      // Q3 and Q4 zero deltas
+      expect(periodScores[2].teamScore).toBe(0);
+      expect(periodScores[2].teamCumulative).toBe(6);
+    });
+
+    it('should track basketball plus/minus based on on-court stints and substitutions', () => {
+      // p1 starting, p2 starting, p3 bench
+      const customLineup = [
+        { playerId: 'p1', player: { id: 'p1', firstName: 'A', lastName: 'A' }, status: 'starting' },
+        { playerId: 'p2', player: { id: 'p2', firstName: 'B', lastName: 'B' }, status: 'starting' },
+        { playerId: 'p3', player: { id: 'p3', firstName: 'C', lastName: 'C' }, status: 'bench' },
+      ];
+      service.initialize(eventId, customLineup as any, teamId, 2, undefined, 'Basketball');
+
+      // Team scores 3PT with p1 & p2 on court
+      service.pushEvent({ type: 'MADE_3PT', playerId: 'p1', timestamp: 10 });
+      let pm = service.basketballPlusMinus();
+      expect(pm['p1']).toBe(3);
+      expect(pm['p2']).toBe(3);
+      expect(pm['p3']).toBe(0);
+
+      // Opponent scores 2PT
+      service.pushEvent({ type: 'OPPONENT_SCORE', points: 2, timestamp: 20 } as any);
+      pm = service.basketballPlusMinus();
+      expect(pm['p1']).toBe(1);
+      expect(pm['p2']).toBe(1);
+      expect(pm['p3']).toBe(0);
+
+      // Sub: p1 out, p3 in
+      service.pushEvent({ type: 'SUB', playerIdOut: 'p1', playerIdIn: 'p3', timestamp: 30 });
+
+      // p3 scores 2PT
+      service.pushEvent({ type: 'MADE_2PT', playerId: 'p3', timestamp: 40 });
+      pm = service.basketballPlusMinus();
+      expect(pm['p1']).toBe(1); // p1 was off-court, remains +1
+      expect(pm['p2']).toBe(3); // p2 was on-court: 1 + 2 = +3
+      expect(pm['p3']).toBe(2); // p3 was on-court: 0 + 2 = +2
+    });
+
+    it('should aggregate full basketball box score with percentages and formatted plus/minus', () => {
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball');
+
+      service.pushEvents([
+        { type: 'MADE_2PT', playerId: 'p1', timestamp: 10 },
+        { type: 'MISSED_2PT', playerId: 'p1', timestamp: 20 },
+        { type: 'MADE_3PT', playerId: 'p1', timestamp: 30 },
+        { type: 'MADE_1PT', playerId: 'p1', timestamp: 40 },
+        { type: 'OFFENSIVE_REBOUND', playerId: 'p1', timestamp: 50 },
+        { type: 'DEFENSIVE_REBOUND', playerId: 'p1', timestamp: 60 },
+        { type: 'FOUL', playerId: 'p1', timestamp: 70 },
+      ]);
+
+      const boxScore = service.basketballBoxScore();
+      expect(boxScore.length).toBe(mockLineup.length);
+
+      const p1 = boxScore.find((p) => p.playerId === 'p1');
+      expect(p1).toBeDefined();
+      expect(p1?.points).toBe(6);
+      expect(p1?.fgMade).toBe(2);
+      expect(p1?.fgAttempted).toBe(3);
+      expect(p1?.fgPct).toBe('66.7%');
+      expect(p1?.fg3Made).toBe(1);
+      expect(p1?.fg3Attempted).toBe(1);
+      expect(p1?.fg3Pct).toBe('100.0%');
+      expect(p1?.ftMade).toBe(1);
+      expect(p1?.ftAttempted).toBe(1);
+      expect(p1?.ftPct).toBe('100.0%');
+      expect(p1?.reboundsOffensive).toBe(1);
+      expect(p1?.reboundsDefensive).toBe(1);
+      expect(p1?.reboundsTotal).toBe(2);
+      expect(p1?.fouls).toBe(1);
+      expect(p1?.plusMinus).toBe(6);
+      expect(p1?.plusMinusFormatted).toBe('+6');
+    });
   });
 });
 

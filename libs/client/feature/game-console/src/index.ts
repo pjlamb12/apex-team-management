@@ -10,4 +10,5 @@ export * from './lib/basketball-court-view/basketball-court-view';
 export * from './lib/basketball-court-view/basketball-shot-geometry';
 export * from './lib/active-player-strip/active-player-strip';
 export * from './lib/rapid-action-keypad/rapid-action-keypad';
+export * from './lib/rotation-engine/playtime.service';
 
