@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, effect, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -19,6 +19,7 @@ import {
   IonRange,
   IonSelect,
   IonSelectOption,
+  IonSpinner,
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -33,6 +34,9 @@ import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
 import { SoccerPitchViewComponent } from '../soccer-pitch-view/soccer-pitch-view';
 import { VolleyballCourtViewComponent } from '../volleyball-court-view/volleyball-court-view';
+import { BasketballCourtViewComponent, ShotLoggedPayload } from '../basketball-court-view/basketball-court-view';
+import { ActivePlayerStripComponent } from '../active-player-strip/active-player-strip';
+import { RapidActionKeypadComponent, KeypadActionPayload } from '../rapid-action-keypad/rapid-action-keypad';
 import { PlayerActionMenuComponent } from '../player-action-menu/player-action-menu';
 import { EventLogViewComponent } from '../event-log/event-log';
 import { SubQueueComponent } from '../sub-queue/sub-queue';
@@ -59,10 +63,14 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
     IonRange,
     IonSelect,
     IonSelectOption,
+    IonSpinner,
     ClockDisplayComponent,
     BenchViewComponent,
     SoccerPitchViewComponent,
     VolleyballCourtViewComponent,
+    BasketballCourtViewComponent,
+    ActivePlayerStripComponent,
+    RapidActionKeypadComponent,
     PlayerActionMenuComponent,
     EventLogViewComponent,
     SubQueueComponent,
@@ -74,6 +82,7 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
   styleUrls: ['./console-wrapper.scss'],
 })
 export class ConsoleWrapper implements OnInit, OnDestroy {
+  rapidKeypad = viewChild<RapidActionKeypadComponent>('rapidKeypad');
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
@@ -1059,6 +1068,65 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     this.stateService.pushEvent({ ...baseEvent, ...eventPayload });
     this.selectedPlayerId.set(null);
     this.actionPlayer.set(null);
+  }
+
+  protected handleBasketballShot(shot: ShotLoggedPayload): void {
+    this.stateService.pushEvent({
+      type: shot.type,
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+      playerId: shot.playerId,
+      x: shot.x,
+      y: shot.y,
+      distanceFeet: shot.distanceFeet,
+      assistorId: shot.assistorId,
+    });
+    this.selectedPlayerId.set(null);
+    this.actionPlayer.set(null);
+  }
+
+  protected handleKeypadAction(action: KeypadActionPayload): void {
+    this.stateService.pushEvent({
+      type: action.type,
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+      playerId: action.playerId,
+      ...(action.payload || {}),
+    });
+    this.selectedPlayerId.set(null);
+    this.actionPlayer.set(null);
+  }
+
+  protected handleBasketballPlayerSelected(player: Player): void {
+    const fulfilled = this.rapidKeypad()?.fulfillArmedStat(player);
+    if (!fulfilled) {
+      this.selectedPlayerId.set(player.id);
+    }
+  }
+
+  protected handleUndoAction(): void {
+    this.stateService.undoLastEvent();
+  }
+
+  protected addOpponentBasketballScore(points: number): void {
+    this.stateService.pushEvent({
+      type: 'OPPONENT_SCORE',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+      points,
+    });
+  }
+
+  protected addOpponentBasketballFoul(): void {
+    this.stateService.pushEvent({
+      type: 'OPPONENT_FOUL',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
   }
 
   protected getHittingPct(kills = 0, hittingErrors = 0, hits = 0): string {

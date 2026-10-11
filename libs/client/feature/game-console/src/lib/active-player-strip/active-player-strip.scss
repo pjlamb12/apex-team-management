@@ -1,0 +1,15 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.player-card {
+  touch-action: manipulation;
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.selected-card {
+  border-color: #f59e0b;
+}

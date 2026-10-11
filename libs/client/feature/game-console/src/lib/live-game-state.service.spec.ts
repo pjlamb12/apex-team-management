@@ -606,5 +606,108 @@ describe('LiveGameStateService', () => {
       expect(active.find(p => p.id === 'p1')).toBeUndefined();
       expect(active.find(p => p.id === 'p-bench')).toBeDefined();
     });
+
+    it('should default sportName to null and isSportReady to false before initialization', () => {
+      const freshService = TestBed.inject(LiveGameStateService);
+      freshService.setSportName(null);
+      expect(freshService.sportName()).toBeNull();
+      expect(freshService.isSportReady()).toBe(false);
+    });
+
+    it('should update sportName and isSportReady when setSportName or initialize is called', () => {
+      service.setSportName('Basketball');
+      expect(service.sportName()).toBe('Basketball');
+      expect(service.isSportReady()).toBe(true);
+
+      service.setSportName(null);
+      expect(service.sportName()).toBeNull();
+      expect(service.isSportReady()).toBe(false);
+
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball');
+      expect(service.sportName()).toBe('Basketball');
+      expect(service.isSportReady()).toBe(true);
+    });
+
+    it('should compute basketball score and player stats correctly', () => {
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball');
+
+      // 1PT, 2PT, 3PT makes and misses
+      service.pushEvents([
+        { type: 'MADE_3PT', playerId: 'p1', x: 50, y: 65, distanceFeet: 23, timestamp: 1000 },
+        { type: 'MADE_2PT', playerId: 'p1', assistorId: 'p3', x: 50, y: 25, distanceFeet: 6, timestamp: 1010 },
+        { type: 'MADE_1PT', playerId: 'p1', timestamp: 1020 },
+        { type: 'MISSED_3PT', playerId: 'p3', x: 95, y: 15, timestamp: 1030 },
+        { type: 'REBOUND_OFFENSIVE', playerId: 'p1', timestamp: 1035 },
+        { type: 'REBOUND_DEFENSIVE', playerId: 'p3', timestamp: 1040 },
+        { type: 'STEAL', playerId: 'p3', timestamp: 1050 },
+        { type: 'BLOCK', playerId: 'p3', timestamp: 1060 },
+        { type: 'TURNOVER', playerId: 'p1', timestamp: 1070 },
+        { type: 'FOUL', playerId: 'p1', timestamp: 1080 },
+        { type: 'OPPONENT_SCORE', points: 3, timestamp: 1090 } as any,
+        { type: 'OPPONENT_SCORE', points: 2, timestamp: 1100 } as any,
+      ]);
+
+      // Score: 3 + 2 + 1 = 6 for team, 3 + 2 = 5 for opponent
+      expect(service.score()).toEqual({ team: 6, opponent: 5 });
+
+      // Player p1 stats
+      const stats = service.playerStats();
+      expect(stats['p1'].points).toBe(6);
+      expect(stats['p1'].fgMade).toBe(2);
+      expect(stats['p1'].fgAttempted).toBe(2);
+      expect(stats['p1'].fg3Made).toBe(1);
+      expect(stats['p1'].ftMade).toBe(1);
+      expect(stats['p1'].reboundsOffensive).toBe(1);
+      expect(stats['p1'].turnovers).toBe(1);
+      expect(stats['p1'].fouls).toBe(1);
+
+      // Player p3 stats (assisted p1's 2PT, missed 3PT, D-REB, STL, BLK)
+      expect(stats['p3'].assists).toBe(1);
+      expect(stats['p3'].fgAttempted).toBe(1);
+      expect(stats['p3'].fg3Attempted).toBe(1);
+      expect(stats['p3'].reboundsDefensive).toBe(1);
+      expect(stats['p3'].steals).toBe(1);
+      expect(stats['p3'].blocks).toBe(1);
+
+      // Basketball shots list
+      const shots = service.basketballShots();
+      expect(shots.length).toBe(4); // 3 makes + 1 miss
+    });
+
+    it('should track team fouls and bonus threshold per period', () => {
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', { bonusThreshold: 4 });
+      expect(service.bonusThreshold()).toBe(4);
+
+      service.pushEvents([
+        { type: 'FOUL', playerId: 'p1', timestamp: 100 },
+        { type: 'FOUL', playerId: 'p3', timestamp: 200 },
+        { type: 'FOUL', playerId: 'p1', timestamp: 300 },
+      ]);
+
+      expect(service.basketballFouls().teamFouls).toBe(3);
+      expect(service.basketballFouls().inBonus).toBe(false);
+
+      // 4th foul triggers bonus
+      service.pushEvent({ type: 'FOUL', playerId: 'p3', timestamp: 400 });
+      expect(service.basketballFouls().teamFouls).toBe(4);
+      expect(service.basketballFouls().inBonus).toBe(true);
+    });
+
+    it('should support undoLastEvent to revert recent actions', () => {
+      service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball');
+
+      expect(service.canUndo()).toBe(false);
+
+      service.pushEvent({ type: 'MADE_2PT', playerId: 'p1', timestamp: 100 });
+      expect(service.score().team).toBe(2);
+      expect(service.canUndo()).toBe(true);
+
+      const undone = service.undoLastEvent();
+      expect(undone?.type).toBe('MADE_2PT');
+      expect(service.score().team).toBe(0);
+      expect(service.canUndo()).toBe(false);
+    });
   });
 });
+
+

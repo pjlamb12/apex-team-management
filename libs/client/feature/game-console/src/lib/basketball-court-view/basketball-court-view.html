@@ -1,0 +1,304 @@
+<div class="basketball-court-component flex flex-col w-full h-full select-none">
+  <!-- Top Filter & Controls Header (Hidden in lineup mode) -->
+  @if (!isLineupMode()) {
+    <div class="court-controls-bar flex flex-wrap items-center justify-between gap-2 p-2 bg-ap-surface border-b border-ap-border/60">
+      <!-- Shot Filter Segment -->
+      <div class="flex items-center gap-1.5">
+        <ion-segment [value]="shotFilter()" (ionChange)="setFilter($event.detail.value)" class="shot-filter-segment min-w-[210px] h-8">
+          <ion-segment-button value="all" class="text-xs">
+            <ion-label>All ({{ shots().length }})</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="makes" class="text-xs">
+            <ion-label class="text-emerald-400 font-bold">Makes</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="misses" class="text-xs">
+            <ion-label class="text-rose-400 font-bold">Misses</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+
+        <!-- Player Filter Chip if active -->
+        @if (filterPlayerId()) {
+          <div class="flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full text-[11px] font-semibold">
+            <span>#{{ getPlayerJersey(filterPlayerId()!) }}</span>
+            <button (click)="togglePlayerFilter(null)" class="text-amber-300 hover:text-white ml-0.5">✕</button>
+          </div>
+        }
+      </div>
+
+      <!-- Court Mode Toggle & Reset -->
+      <div class="flex items-center gap-1">
+        <ion-button size="small" fill="outline" color="medium" (click)="toggleHalfCourt()" class="text-xs font-semibold h-7 m-0">
+          {{ isHalfCourt() ? 'Half Court' : 'Full Court' }}
+        </ion-button>
+      </div>
+    </div>
+  }
+
+  <!-- Interactive Court Area -->
+  <div
+    #courtContainer
+    class="court-area-wrapper relative w-full flex-1 overflow-hidden cursor-crosshair"
+    (click)="handleCourtClick($event)"
+  >
+    <!-- Hardwood Court Background SVG -->
+    <svg
+      class="court-svg w-full h-full block absolute inset-0 pointer-events-none"
+      viewBox="0 0 500 470"
+      preserveAspectRatio="xMidYMid meet"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <!-- Hardwood Floor Pattern / Gradient -->
+        <linearGradient id="hardwoodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#18130c" />
+          <stop offset="50%" stop-color="#241a10" />
+          <stop offset="100%" stop-color="#1b140d" />
+        </linearGradient>
+
+        <pattern id="parquetLines" width="25" height="25" patternUnits="userSpaceOnUse">
+          <line x1="0" y1="0" x2="25" y2="0" stroke="rgba(245, 158, 11, 0.04)" stroke-width="1" />
+          <line x1="0" y1="0" x2="0" y2="25" stroke="rgba(245, 158, 11, 0.04)" stroke-width="1" />
+        </pattern>
+      </defs>
+
+      <!-- Floor Background -->
+      <rect width="500" height="470" fill="url(#hardwoodGrad)" />
+      <rect width="500" height="470" fill="url(#parquetLines)" />
+
+      <!-- Court Perimeter Boundary Lines -->
+      <rect x="15" y="15" width="470" height="440" fill="none" stroke="#f1f5f9" stroke-width="3" opacity="0.85" />
+
+      <!-- Center Court Circle & Half Court Line -->
+      <line x1="15" y1="455" x2="485" y2="455" stroke="#f1f5f9" stroke-width="3" opacity="0.85" />
+      <path d="M 190 455 A 60 60 0 0 1 310 455" fill="none" stroke="#f1f5f9" stroke-width="2.5" opacity="0.85" />
+      <path d="M 230 455 A 20 20 0 0 1 270 455" fill="rgba(59, 130, 246, 0.15)" stroke="#f1f5f9" stroke-width="2" opacity="0.85" />
+
+      <!-- The Key / Paint Area (12ft wide = 120 units, 19ft length = 190 units) -->
+      <rect x="190" y="15" width="120" height="190" fill="rgba(30, 58, 138, 0.25)" stroke="#f1f5f9" stroke-width="2.5" opacity="0.9" />
+
+      <!-- Free Throw Circle (Radius 60 units = 6ft) -->
+      <!-- Bottom half (inside arc towards half-court: solid) -->
+      <path d="M 190 205 A 60 60 0 0 0 310 205" fill="none" stroke="#f1f5f9" stroke-width="2.5" opacity="0.85" />
+      <!-- Top half (inside paint: dashed) -->
+      <path d="M 190 205 A 60 60 0 0 1 310 205" fill="none" stroke="#f1f5f9" stroke-width="2.5" stroke-dasharray="8,8" opacity="0.7" />
+
+      <!-- Lane Hash Marks / Ticks -->
+      <line x1="180" y1="85" x2="190" y2="85" stroke="#f1f5f9" stroke-width="2.5" />
+      <line x1="310" y1="85" x2="320" y2="85" stroke="#f1f5f9" stroke-width="2.5" />
+      <line x1="180" y1="125" x2="190" y2="125" stroke="#f1f5f9" stroke-width="2.5" />
+      <line x1="310" y1="125" x2="320" y2="125" stroke="#f1f5f9" stroke-width="2.5" />
+      <line x1="180" y1="165" x2="190" y2="165" stroke="#f1f5f9" stroke-width="2.5" />
+      <line x1="310" y1="165" x2="320" y2="165" stroke="#f1f5f9" stroke-width="2.5" />
+
+      <!-- Restricted Area Arc (Radius 40 units around rim) -->
+      <path d="M 210 55 A 40 40 0 0 0 290 55" fill="none" stroke="#f1f5f9" stroke-width="2" opacity="0.75" />
+
+      <!-- Backboard (6ft wide = 60 units, 4ft from baseline = y 55) -->
+      <line x1="220" y1="40" x2="280" y2="40" stroke="#f8fafc" stroke-width="4.5" />
+      <!-- Rim Connector -->
+      <line x1="250" y1="40" x2="250" y2="46" stroke="#f97316" stroke-width="3" />
+      <!-- Hoop Rim (Orange circle, 18in diameter) -->
+      <circle cx="250" cy="55" r="9" fill="none" stroke="#f97316" stroke-width="2.5" />
+
+      <!-- 3-Point Arc Line -->
+      <!-- Left corner straight line: x=35, y from 15 to 155 -->
+      <!-- Right corner straight line: x=465, y from 15 to 155 -->
+      <!-- Arc: from (35, 155) around rim (250, 55) to (465, 155) -->
+      <path
+        d="M 35 15 L 35 155 A 235 235 0 0 0 465 155 L 465 15"
+        fill="none"
+        stroke="#f1f5f9"
+        stroke-width="2.5"
+        opacity="0.9"
+      />
+    </svg>
+
+    <!-- Shot Chart Markers -->
+    @for (shot of filteredShots(); track shot.id || shot.x + '-' + shot.y + '-' + $index) {
+      <div
+        class="shot-marker absolute -translate-x-1/2 -translate-y-1/2 z-10 transition-transform hover:scale-125"
+        [style.left.%]="shot.x"
+        [style.top.%]="shot.y"
+        [title]="(shot.type.startsWith('MADE') ? 'Made ' : 'Missed ') + (shot.distanceFeet ? shot.distanceFeet + 'ft' : '')"
+      >
+        @if (shot.type.startsWith('MADE')) {
+          <!-- Made Shot: Green Circle with Jersey # -->
+          <div class="make-dot w-6 h-6 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-lg shadow-emerald-950/80">
+            <span class="text-[9px] font-black text-white leading-none">
+              {{ shot.playerJersey || getPlayerJersey(shot.playerId) || '●' }}
+            </span>
+          </div>
+        } @else {
+          <!-- Missed Shot: Red Cross with Jersey # -->
+          <div class="miss-cross w-6 h-6 rounded-full bg-rose-600/90 border border-rose-300 flex items-center justify-center shadow-lg shadow-rose-950/80">
+            <span class="text-[9px] font-black text-white leading-none">✕</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Lineup Mode Starter Slots (When in Lineup Editor) -->
+    @if (isLineupMode()) {
+      <!-- Empty Starter Slots -->
+      @for (slot of emptyFormationSlots(); track slot.slotIndex) {
+        <div
+          class="empty-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-20"
+          [style.left.%]="slot.x"
+          [style.top.%]="slot.y"
+          (click)="selectEmptySlot(slot.slotIndex, $event)"
+        >
+          <div class="flex flex-col items-center">
+            <div
+              class="w-11 h-11 rounded-full border-2 border-dashed flex items-center justify-center shadow-md bg-white/10 hover:bg-white/30 transition-all"
+              [class.border-amber-400]="selectedSlotIndex() === slot.slotIndex"
+              [class.bg-amber-400\/30]="selectedSlotIndex() === slot.slotIndex"
+            >
+              <ion-icon name="add-outline" class="text-white text-xl"></ion-icon>
+            </div>
+            <span class="text-[9px] font-bold text-white bg-black/80 px-1.5 py-0.5 rounded shadow mt-1">
+              {{ slot.positionName }}
+            </span>
+          </div>
+        </div>
+      }
+
+      <!-- Positioned Starter Players -->
+      @for (player of positionedPlayers(); track player.id) {
+        <div
+          class="player-slot absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-20 transition-transform hover:scale-105"
+          [style.left.%]="player.x"
+          [style.top.%]="player.y"
+          (click)="selectPlayerSlot(player, $event)"
+        >
+          <div class="flex flex-col items-center">
+            <div
+              class="w-12 h-12 rounded-full border-2 flex items-center justify-center font-black shadow-lg"
+              [class.border-amber-400]="selectedPlayerId() === player.id"
+              [class.bg-amber-500]="selectedPlayerId() === player.id"
+              [class.text-black]="selectedPlayerId() === player.id"
+              [class.border-white]="selectedPlayerId() !== player.id"
+              [class.bg-ap-surface-raised]="selectedPlayerId() !== player.id"
+              [class.text-white]="selectedPlayerId() !== player.id"
+            >
+              <span class="text-xs">#{{ player.jerseyNumber }}</span>
+            </div>
+            <span class="text-[9px] font-bold text-white bg-black/80 px-1.5 py-0.5 rounded shadow mt-1">
+              {{ player.preferredPosition || 'Player' }}
+            </span>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Instant Touch HUD Prompt (Shot Entry Overlay) -->
+    @if (activeTouch()) {
+      <div
+        class="touch-hud-overlay absolute z-30 flex flex-col items-center animate-in fade-in zoom-in-95 duration-150"
+        [style.left.%]="activeTouch()!.x"
+        [style.top.%]="activeTouch()!.y"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Target Ping Indicator -->
+        <div class="touch-target-pin w-5 h-5 rounded-full border-2 border-amber-400 bg-amber-400/40 animate-ping absolute -top-2.5 -left-2.5 pointer-events-none"></div>
+
+        <!-- HUD Card -->
+        <div class="hud-card relative -translate-x-1/2 -translate-y-full mb-3 bg-slate-900/95 border border-amber-500/50 shadow-2xl shadow-black/80 rounded-xl p-3 flex flex-col gap-2 min-w-[240px] max-w-[280px] backdrop-blur-md">
+          <!-- Header with Detected Shot Info & Close -->
+          <div class="flex items-center justify-between border-b border-white/10 pb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black text-amber-400 uppercase tracking-wide">
+                {{ activeTouch()!.overrideShotType || activeTouch()!.shotType }} Shot
+              </span>
+              <span class="text-[10px] text-slate-400">
+                ({{ activeTouch()!.distanceFeet }} ft)
+              </span>
+            </div>
+            <button
+              (click)="dismissHud()"
+              class="text-slate-400 hover:text-white text-sm font-bold px-1"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Quick 2PT / 3PT Override Buttons -->
+          <div class="grid grid-cols-3 gap-1 bg-slate-800/80 p-1 rounded-lg">
+            <button
+              type="button"
+              (click)="setShotTypeOverride('2PT')"
+              class="py-1 text-[11px] font-bold rounded transition-colors"
+              [class.bg-amber-500]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) === '2PT'"
+              [class.text-black]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) === '2PT'"
+              [class.text-slate-300]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) !== '2PT'"
+            >
+              2PT
+            </button>
+            <button
+              type="button"
+              (click)="setShotTypeOverride('3PT')"
+              class="py-1 text-[11px] font-bold rounded transition-colors"
+              [class.bg-amber-500]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) === '3PT'"
+              [class.text-black]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) === '3PT'"
+              [class.text-slate-300]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) !== '3PT'"
+            >
+              3PT
+            </button>
+            <button
+              type="button"
+              (click)="setShotTypeOverride('1PT')"
+              class="py-1 text-[11px] font-bold rounded transition-colors"
+              [class.bg-amber-500]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) === '1PT'"
+              [class.text-black]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) === '1PT'"
+              [class.text-slate-300]="(activeTouch()!.overrideShotType || activeTouch()!.shotType) !== '1PT'"
+            >
+              1PT
+            </button>
+          </div>
+
+          <!-- Shooter Selection Quick Row -->
+          @if (activePlayers().length > 0) {
+            <div class="flex items-center gap-1 overflow-x-auto py-0.5">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Shooter:</span>
+              @for (p of activePlayers(); track p.id) {
+                <button
+                  type="button"
+                  (click)="setTargetPlayer(p.id)"
+                  class="px-2 py-0.5 text-[10px] font-black rounded border transition-all"
+                  [class.bg-amber-500]="activeTouch()!.targetPlayerId === p.id"
+                  [class.text-black]="activeTouch()!.targetPlayerId === p.id"
+                  [class.border-amber-400]="activeTouch()!.targetPlayerId === p.id"
+                  [class.bg-slate-800]="activeTouch()!.targetPlayerId !== p.id"
+                  [class.text-slate-300]="activeTouch()!.targetPlayerId !== p.id"
+                  [class.border-white\/10]="activeTouch()!.targetPlayerId !== p.id"
+                >
+                  #{{ p.jerseyNumber }}
+                </button>
+              }
+            </div>
+          }
+
+          <!-- Instant Action Buttons: MADE (Green) / MISSED (Red) -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              (click)="confirmShot(true)"
+              class="py-2.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-emerald-950 flex items-center justify-center gap-1 active:scale-95 transition-all"
+            >
+              <ion-icon name="checkmark-circle" class="text-base"></ion-icon>
+              <span>MADE ({{ (activeTouch()!.overrideShotType || activeTouch()!.shotType) === '3PT' ? '+3' : (activeTouch()!.overrideShotType || activeTouch()!.shotType) === '1PT' ? '+1' : '+2' }})</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="confirmShot(false)"
+              class="py-2.5 px-3 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-rose-950 flex items-center justify-center gap-1 active:scale-95 transition-all"
+            >
+              <ion-icon name="close-circle" class="text-base"></ion-icon>
+              <span>MISSED</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

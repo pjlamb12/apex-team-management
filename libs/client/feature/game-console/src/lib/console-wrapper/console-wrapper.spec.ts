@@ -319,4 +319,113 @@ describe('ConsoleWrapper', () => {
       status: 'in_progress',
     }));
   });
+
+  it('should not render soccer-pitch-view and show loading skeleton when sportName is null or not Soccer', () => {
+    stateService.setSportName(null);
+    fixture.detectChanges();
+    let soccerPitch = fixture.nativeElement.querySelector('app-soccer-pitch-view');
+    expect(soccerPitch).toBeNull();
+
+    stateService.setSportName('Basketball');
+    fixture.detectChanges();
+    soccerPitch = fixture.nativeElement.querySelector('app-soccer-pitch-view');
+    expect(soccerPitch).toBeNull();
+  });
+
+  it('should render soccer-pitch-view only when sportName is Soccer', () => {
+    stateService.setSportName('Soccer');
+    fixture.detectChanges();
+    const soccerPitch = fixture.nativeElement.querySelector('app-soccer-pitch-view');
+    expect(soccerPitch).not.toBeNull();
+  });
+
+  describe('Basketball Courtside UX', () => {
+    beforeEach(() => {
+      stateService.setSportName('Basketball');
+      fixture.detectChanges();
+    });
+
+    it('should render basketball court view, active player strip, and rapid action keypad when sportName is Basketball', () => {
+      const courtView = fixture.nativeElement.querySelector('app-basketball-court-view');
+      const playerStrip = fixture.nativeElement.querySelector('app-active-player-strip');
+      const rapidKeypad = fixture.nativeElement.querySelector('app-rapid-action-keypad');
+
+      expect(courtView).not.toBeNull();
+      expect(playerStrip).not.toBeNull();
+      expect(rapidKeypad).not.toBeNull();
+    });
+
+    it('should log a basketball shot event when handleBasketballShot is called', () => {
+      component['handleBasketballShot']({
+        type: 'MADE_3PT',
+        playerId: 'p1',
+        x: 25.5,
+        y: 42.0,
+        distanceFeet: 23.8,
+        assistorId: 'p3',
+      });
+
+      const events = stateService.events();
+      const shotEvent = events.find((e) => e.type === 'MADE_3PT');
+      expect(shotEvent).toBeDefined();
+      expect(shotEvent?.playerId).toBe('p1');
+      expect(shotEvent?.['x']).toBe(25.5);
+      expect(shotEvent?.['y']).toBe(42.0);
+      expect(shotEvent?.['distanceFeet']).toBe(23.8);
+      expect(shotEvent?.['assistorId']).toBe('p3');
+      expect(component['selectedPlayerId']()).toBeNull();
+    });
+
+    it('should log a basketball keypad action event when handleKeypadAction is called', () => {
+      component['handleKeypadAction']({
+        type: 'DEFENSIVE_REBOUND',
+        playerId: 'p3',
+      });
+
+      const events = stateService.events();
+      const rebEvent = events.find((e) => e.type === 'DEFENSIVE_REBOUND');
+      expect(rebEvent).toBeDefined();
+      expect(rebEvent?.playerId).toBe('p3');
+      expect(component['selectedPlayerId']()).toBeNull();
+    });
+
+    it('should fulfill armed stat or select player when handleBasketballPlayerSelected is called', () => {
+      const player = { id: 'p1', firstName: 'Player', lastName: 'One' };
+      component['handleBasketballPlayerSelected'](player as any);
+
+      // No armed stat on keypad mock, so player should become selected
+      expect(component['selectedPlayerId']()).toBe('p1');
+    });
+
+    it('should undo last event when handleUndoAction is called', () => {
+      component['handleKeypadAction']({
+        type: 'STEAL',
+        playerId: 'p1',
+      });
+      const activeBefore = stateService.events().filter((e) => e.status !== 'deleted');
+      expect(activeBefore.length).toBe(1);
+
+      component['handleUndoAction']();
+      const activeAfter = stateService.events().filter((e) => e.status !== 'deleted');
+      expect(activeAfter.length).toBe(0);
+    });
+
+    it('should log opponent basketball score when addOpponentBasketballScore is called', () => {
+      component['addOpponentBasketballScore'](3);
+
+      const events = stateService.events();
+      const oppScore = events.find((e) => e.type === 'OPPONENT_SCORE');
+      expect(oppScore).toBeDefined();
+      expect(oppScore?.['points']).toBe(3);
+      expect(stateService.score().opponent).toBe(3);
+    });
+
+    it('should log opponent basketball foul when addOpponentBasketballFoul is called', () => {
+      component['addOpponentBasketballFoul']();
+
+      const events = stateService.events();
+      const oppFoul = events.find((e) => e.type === 'OPPONENT_FOUL');
+      expect(oppFoul).toBeDefined();
+    });
+  });
 });
