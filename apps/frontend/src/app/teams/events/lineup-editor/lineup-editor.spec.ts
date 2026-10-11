@@ -1,16 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { LineupEditor } from './lineup-editor';
 import { EventsService, TeamService, PlayersService, AttendanceService, OpponentsService } from '@apex-team/client/data-access/team';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { ToastController, AlertController } from '@ionic/angular/standalone';
 
 describe('LineupEditor Pitch Layout Slot Assignment', () => {
   let component: LineupEditor;
   let fixture: ComponentFixture<LineupEditor>;
+  let mockSocketService: any;
 
   beforeEach(async () => {
     const mockRuntimeConfig = {
@@ -68,6 +70,13 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
       findOrCreateOpponent: vi.fn().mockReturnValue(of({ id: 'opp-created', name: 'Thunder FC', headToHead: { wins: 0, draws: 0, losses: 0, winPercentage: 0 } })),
     };
 
+    mockSocketService = {
+      joinEvent: vi.fn(),
+      leaveEvent: vi.fn(),
+      onEvent: vi.fn(),
+      offEvent: vi.fn(),
+    };
+
     await TestBed.configureTestingModule({
       imports: [LineupEditor],
       providers: [
@@ -82,6 +91,7 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
         { provide: PlayersService, useValue: mockPlayersService },
         { provide: AttendanceService, useValue: mockAttendanceService },
         { provide: OpponentsService, useValue: mockOpponentsService },
+        { provide: SocketService, useValue: mockSocketService },
       ],
     }).compileComponents();
 
@@ -374,5 +384,37 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
     expect(p8Slot).toBeDefined();
     expect(p8Slot?.slotIndex).toBe(18);
     expect(component['selectedSlotIndex']()).toBeNull();
+  });
+
+  it('should start with isDirty as false after loading and navigate without saving when Go Live is clicked', async () => {
+    await fixture.whenStable();
+
+    expect(component.isDirty()).toBe(false);
+
+    const eventsService = TestBed.inject(EventsService);
+    const router = TestBed.inject(Router);
+    const saveSpy = vi.spyOn(eventsService, 'saveLineup');
+    const navigateSpy = vi.spyOn(router, 'navigate');
+
+    await component['onSave'](true);
+
+    expect(saveSpy).not.toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith(['/teams', 't1', 'events', 'e1', 'console']);
+  });
+
+  it('should mark isDirty as true when modifying lineup and call saveLineup when saving', async () => {
+    await fixture.whenStable();
+
+    // Modify a slot
+    component['updateSlot'](1, 'playerId', 'p10');
+    expect(component.isDirty()).toBe(true);
+
+    const eventsService = TestBed.inject(EventsService);
+    const saveSpy = vi.spyOn(eventsService, 'saveLineup').mockReturnValue(of([]));
+
+    await component['onSave'](false);
+
+    expect(saveSpy).toHaveBeenCalled();
+    expect(component.isDirty()).toBe(false);
   });
 });

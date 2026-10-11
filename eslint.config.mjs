@@ -15,6 +15,10 @@ export default [
         {
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          checkDynamicDependenciesExceptions: [
+            '@apex-team/client/feature/game-console',
+            '@apex-team/client/feature/practice-console',
+          ],
           depConstraints: [
             {
               sourceTag: '*',

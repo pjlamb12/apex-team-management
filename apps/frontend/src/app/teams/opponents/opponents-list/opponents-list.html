@@ -136,7 +136,11 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @for (opp of filteredOpponents(); track opp.id) {
           <div
+            role="button"
+            tabindex="0"
             (click)="navigateToDossier(opp.id)"
+            (keyup.enter)="navigateToDossier(opp.id)"
+            (keyup.space)="navigateToDossier(opp.id)"
             class="group relative bg-ap-surface hover:bg-ap-surface-raised border border-ap-border hover:border-ap-accent/40 rounded-xl p-4 transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer flex flex-col justify-between"
           >
             <div>

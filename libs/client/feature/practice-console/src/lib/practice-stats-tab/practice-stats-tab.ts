@@ -33,7 +33,7 @@ import {
   EventsService,
   PlayersService,
 } from '@apex-team/client/data-access/team';
-import { SocketService } from '@apex-team/client/shared/services';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { PlayerEntity } from '@apex-team/client/data-access/team';
 import { firstValueFrom } from 'rxjs';
 

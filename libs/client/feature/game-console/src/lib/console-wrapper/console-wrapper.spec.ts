@@ -7,6 +7,7 @@ import { LiveGameStateService } from '../live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { AlertController } from '@ionic/angular/standalone';
 import { of } from 'rxjs';
+import { EventsService } from '@apex-team/client/data-access/team';
 import { signal, NO_ERRORS_SCHEMA } from '@angular/core';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
@@ -305,5 +306,17 @@ describe('ConsoleWrapper', () => {
     const subInEvent = events.find(e => e.type === 'SUB' && e.playerIdIn === 'p2');
     expect(subInEvent).toBeUndefined();
     expect(component['selectedPlayerId']()).toBeNull();
+  });
+
+  it('should update event status to in_progress and start clock', () => {
+    const eventsService = TestBed.inject(EventsService);
+    const updateSpy = vi.spyOn(eventsService, 'updateEvent').mockReturnValue(of({} as any));
+
+    component['startClock']();
+
+    expect(clockServiceMock.start).toHaveBeenCalled();
+    expect(updateSpy).toHaveBeenCalledWith('team-456', 'event-123', expect.objectContaining({
+      status: 'in_progress',
+    }));
   });
 });

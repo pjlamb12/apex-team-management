@@ -23,7 +23,7 @@ import { addIcons } from 'ionicons';
 import { peopleOutline, addOutline, trashOutline, createOutline, chevronForwardOutline, personAddOutline, personCircleOutline } from 'ionicons/icons';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 import { TeamService } from '@apex-team/client/data-access/team';
-import { SocketService } from '../../shared/services/socket.service';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { JoinTeamModal } from '../join-team/join-team-modal';
 
 interface Sport {

@@ -69,7 +69,7 @@ export class MergePlayerModal implements OnInit {
   @Input() teamId!: string;
   @Input() preselectedTargetId?: string;
   @Input() preselectedSourceId?: string;
-  @Input() guestOnly: boolean = false;
+  @Input() guestOnly = false;
 
   private readonly playersService = inject(PlayersService);
   private readonly modalCtrl = inject(ModalController);

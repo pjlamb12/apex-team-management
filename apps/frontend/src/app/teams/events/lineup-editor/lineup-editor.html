@@ -8,7 +8,7 @@
       <ion-button [routerLink]="['/teams', teamId, 'schedule', eventId, 'edit']" class="mr-2">
         <ion-icon slot="icon-only" name="settings-outline"></ion-icon>
       </ion-button>
-      <ion-button (click)="onSave(false)" [disabled]="isLoading() || isSaving()">
+      <ion-button (click)="onSave(false)" [disabled]="isLoading() || isSaving() || !isDirty()">
         @if (isSaving()) {
           <ion-spinner name="crescent"></ion-spinner>
         } @else {
@@ -16,7 +16,11 @@
         }
       </ion-button>
       <ion-button (click)="onSave(true)" color="success" [strong]="true" [disabled]="isLoading() || isSaving()">
-        Go Live
+        @if (isDirty()) {
+          Save & Go Live
+        } @else {
+          Go Live
+        }
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -32,7 +36,7 @@
       <ion-text color="danger">
         <p>{{ errorMessage() }}</p>
       </ion-text>
-      <ion-button fill="clear" (click)="ngOnInit()">Retry</ion-button>
+      <ion-button fill="clear" (click)="retry()">Retry</ion-button>
     </div>
   } @else {
     <div class="p-4">
@@ -55,7 +59,14 @@
       <!-- Opponent Scouting Intel Banner -->
       @if (opponentDossier(); as opp) {
         <div class="mb-4 bg-ap-surface border border-ap-border rounded-xl p-3.5 shadow-xs">
-          <div class="flex items-center justify-between cursor-pointer select-none" (click)="toggleOpponentIntel()">
+          <div
+            role="button"
+            tabindex="0"
+            class="flex items-center justify-between cursor-pointer select-none"
+            (click)="toggleOpponentIntel()"
+            (keyup.enter)="toggleOpponentIntel()"
+            (keyup.space)="toggleOpponentIntel()"
+          >
             <div class="flex flex-wrap items-center gap-2">
               <ion-icon name="shield-outline" class="text-ap-accent text-lg"></ion-icon>
               <span class="text-xs font-bold text-ap-text uppercase tracking-wider">Opponent Intel: {{ opp.name }}</span>

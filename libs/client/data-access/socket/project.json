@@ -1,0 +1,19 @@
+{
+  "name": "client-data-access-socket",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/client/data-access/socket/src",
+  "prefix": "apex-team",
+  "tags": ["scope:client", "type:data-access"],
+  "targets": {
+    "test": {
+      "executor": "@analogjs/vitest-angular:test",
+      "options": {
+        "config": "vitest.config.mts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

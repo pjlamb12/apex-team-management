@@ -104,4 +104,45 @@ describe('Schedule', () => {
     expect(eventsService.getEvents).toHaveBeenCalledWith('t1', 'upcoming', 's1');
     expect(component['events']()).toEqual(events);
   });
+
+  describe('getEventLink', () => {
+    beforeEach(() => {
+      component.id = 't1';
+    });
+
+    it('should route scheduled game to lineup', () => {
+      const event: any = { id: 'e1', type: 'game', status: 'scheduled' };
+      expect(component['getEventLink'](event)).toEqual(['/teams', 't1', 'events', 'e1', 'lineup']);
+    });
+
+    it('should route in_progress game to console', () => {
+      const event: any = { id: 'e1', type: 'game', status: 'in_progress' };
+      expect(component['getEventLink'](event)).toEqual(['/teams', 't1', 'events', 'e1', 'console']);
+    });
+
+    it('should route game with clockStartTime to console even if status is scheduled', () => {
+      const event: any = { id: 'e1', type: 'game', status: 'scheduled', clockStartTime: Date.now() };
+      expect(component['getEventLink'](event)).toEqual(['/teams', 't1', 'events', 'e1', 'console']);
+    });
+
+    it('should route game with clockAccumulatedMs to console even if status is scheduled', () => {
+      const event: any = { id: 'e1', type: 'game', status: 'scheduled', clockAccumulatedMs: 120000 };
+      expect(component['getEventLink'](event)).toEqual(['/teams', 't1', 'events', 'e1', 'console']);
+    });
+
+    it('should route completed game to summary', () => {
+      const event: any = { id: 'e1', type: 'game', status: 'completed' };
+      expect(component['getEventLink'](event)).toEqual(['/teams', 't1', 'events', 'e1', 'summary']);
+    });
+
+    it('should route practice to practice view', () => {
+      const event: any = { id: 'e1', type: 'practice' };
+      expect(component['getEventLink'](event)).toEqual(['/teams', 't1', 'events', 'e1', 'practice']);
+    });
+
+    it('should route tryout to tryout view', () => {
+      const event: any = { id: 'e1', type: 'tryout' };
+      expect(component['getEventLink'](event)).toEqual(['/teams', 't1', 'events', 'e1', 'tryout']);
+    });
+  });
 });

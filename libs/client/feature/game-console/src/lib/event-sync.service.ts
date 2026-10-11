@@ -2,7 +2,7 @@ import { Injectable, inject, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LiveGameStateService, GameEvent } from './live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { SocketService } from '@apex-team/client/shared/services';
+import { SocketService } from '@apex-team/client/data-access/socket';
 import { catchError, retry, throwError } from 'rxjs';
 
 @Injectable({
