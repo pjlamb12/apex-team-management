@@ -32,8 +32,9 @@
         class="sport-pill"
         [class.pill-soccer]="sport === 'soccer'"
         [class.pill-volleyball]="sport === 'volleyball'"
+        [class.pill-basketball]="sport === 'basketball'"
       >
-        {{ sport === 'soccer' ? '⚽ Soccer' : '🏐 Volleyball' }}
+        {{ sport === 'soccer' ? '⚽ Soccer' : (sport === 'basketball' ? '🏀 Basketball' : '🏐 Volleyball') }}
       </span>
     </div>
 

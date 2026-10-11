@@ -30,6 +30,36 @@ describe('PitchCanvas', () => {
     expect(el.querySelector('.pitch-svg')).toBeTruthy();
   });
 
+  it('should render basketball full-court SVG when sport is basketball and pitchType is full_court', () => {
+    fixture.componentRef.setInput('sport', 'basketball');
+    fixture.componentRef.setInput('pitchType', 'full_court');
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('svg')).toBeTruthy();
+    expect(el.querySelector('#bb-wood-planks')).toBeTruthy();
+    expect(el.querySelector('.pitch-svg')).toBeTruthy();
+  });
+
+  it('should render basketball half-court SVG when sport is basketball and pitchType is half_court', () => {
+    fixture.componentRef.setInput('sport', 'basketball');
+    fixture.componentRef.setInput('pitchType', 'half_court');
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('svg')).toBeTruthy();
+    expect(el.querySelector('#bb-wood-planks')).toBeTruthy();
+    expect(el.querySelector('.pitch-svg')).toBeTruthy();
+  });
+
+  it('should render 🏀 for basketball ball token', () => {
+    fixture.componentRef.setInput('sport', 'basketball');
+    fixture.componentRef.setInput('tokens', [{ id: 'b1', label: '', team: 'ball', x: 50, y: 50 }]);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    const ballToken = el.querySelector('.token-ball');
+    expect(ballToken).toBeTruthy();
+    expect(ballToken?.textContent).toContain('🏀');
+  });
+
   it('should calculate SVG paths for drawings', () => {
     const drawing = {
       id: 'd1',
