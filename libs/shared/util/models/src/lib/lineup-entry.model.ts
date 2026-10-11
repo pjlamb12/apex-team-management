@@ -43,6 +43,14 @@ export const SOCCER_FORMATIONS: Record<number, FormationPreset[]> = {
   ],
 };
 
+export const BASKETBALL_FORMATIONS: FormationPreset[] = [
+  { name: 'Standard (PG, SG, SF, PF, C)', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+  { name: '5-Out Motion', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+  { name: '4-Out 1-In', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+  { name: '2-3 Zone', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+  { name: 'Horns (Pick & Roll)', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+];
+
 export function getDefaultSlots(count: number, sportName?: string): number[] {
   if (sportName === 'Volleyball') return [0, 1, 2, 3, 4, 5];
   if (sportName === 'Basketball') return [0, 1, 2, 3, 4];

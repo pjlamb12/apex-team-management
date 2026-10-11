@@ -70,6 +70,7 @@ export class BasketballCourtViewComponent {
   formationSlots = input<LineupSlot[]>([]);
   selectedSlotIndex = input<number | null>(null);
   playersOnField = input<number>(5);
+  formation = input<string | null>(null);
 
   // Outputs
   shotLogged = output<ShotLoggedPayload>();
@@ -95,8 +96,47 @@ export class BasketballCourtViewComponent {
     targetPlayerId?: string;
   } | null>(null);
 
-  // Default starter court slot coordinates (0: PG, 1: SG, 2: SF, 3: PF, 4: C)
+  // Starter court slot coordinates mapped by formation set
   protected slotCoordinates = computed(() => {
+    const f = this.formation();
+    if (f === '5-Out Motion') {
+      return {
+        0: { x: 50, y: 78, name: 'PG (Point)' },
+        1: { x: 82, y: 58, name: 'SG (Right Wing)' },
+        2: { x: 18, y: 58, name: 'SF (Left Wing)' },
+        3: { x: 10, y: 18, name: 'PF (Left Corner)' },
+        4: { x: 90, y: 18, name: 'C (Right Corner)' },
+      } as Record<number, { x: number; y: number; name: string }>;
+    }
+    if (f === '4-Out 1-In') {
+      return {
+        0: { x: 50, y: 76, name: 'PG (Point)' },
+        1: { x: 82, y: 55, name: 'SG (Right Wing)' },
+        2: { x: 18, y: 55, name: 'SF (Left Wing)' },
+        3: { x: 88, y: 20, name: 'PF (Right Corner)' },
+        4: { x: 50, y: 25, name: 'C (Post)' },
+      } as Record<number, { x: number; y: number; name: string }>;
+    }
+    if (f === '2-3 Zone') {
+      return {
+        0: { x: 35, y: 62, name: 'PG (Guard L)' },
+        1: { x: 65, y: 62, name: 'SG (Guard R)' },
+        2: { x: 18, y: 24, name: 'SF (Wing L)' },
+        3: { x: 50, y: 20, name: 'C (Center)' },
+        4: { x: 82, y: 24, name: 'PF (Wing R)' },
+      } as Record<number, { x: number; y: number; name: string }>;
+    }
+    if (f === 'Horns (Pick & Roll)') {
+      return {
+        0: { x: 50, y: 78, name: 'PG (Point)' },
+        1: { x: 34, y: 52, name: 'PF (High Post L)' },
+        2: { x: 66, y: 52, name: 'C (High Post R)' },
+        3: { x: 10, y: 18, name: 'SF (Corner L)' },
+        4: { x: 90, y: 18, name: 'SG (Corner R)' },
+      } as Record<number, { x: number; y: number; name: string }>;
+    }
+
+    // Default: Standard (PG, SG, SF, PF, C)
     return {
       0: { x: 50, y: 72, name: 'PG (Point Guard)' },
       1: { x: 80, y: 55, name: 'SG (Shooting Guard)' },

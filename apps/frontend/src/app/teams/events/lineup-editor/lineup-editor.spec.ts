@@ -417,4 +417,46 @@ describe('LineupEditor Pitch Layout Slot Assignment', () => {
     expect(saveSpy).toHaveBeenCalled();
     expect(component.isDirty()).toBe(false);
   });
+
+  describe('Basketball Lineup and Formation Support', () => {
+    beforeEach(() => {
+      (component as any).team.set({
+        id: 't-bball',
+        name: 'Hoop Stars',
+        sport: {
+          name: 'Basketball',
+          positionTypes: ['PG', 'SG', 'SF', 'PF', 'C'],
+        },
+      });
+      (component as any).event.set({
+        id: 'e-bball',
+        playersOnField: 5,
+        periodCount: 4,
+      });
+    });
+
+    it('should return basketball positions [PG, SG, SF, PF, C]', () => {
+      expect((component as any).positionOptions()).toEqual(['PG', 'SG', 'SF', 'PF', 'C']);
+    });
+
+    it('should return basketball formation sets in availableFormations', () => {
+      const formations = (component as any).availableFormations();
+      expect(formations.length).toBeGreaterThan(0);
+      expect(formations.some((f: any) => f.name === '5-Out Motion')).toBe(true);
+      expect(formations.some((f: any) => f.name === 'Standard (PG, SG, SF, PF, C)')).toBe(true);
+      expect(formations.some((f: any) => f.name === 'Horns (Pick & Roll)')).toBe(true);
+    });
+
+    it('should update basketballFormation when applyFormationPreset is called', () => {
+      expect((component as any).currentFormation()).toBe('Standard (PG, SG, SF, PF, C)');
+
+      (component as any).applyFormationPreset('5-Out Motion');
+      expect((component as any).basketballFormation()).toBe('5-Out Motion');
+      expect((component as any).currentFormation()).toBe('5-Out Motion');
+
+      (component as any).applyFormationPreset('2-3 Zone');
+      expect((component as any).basketballFormation()).toBe('2-3 Zone');
+      expect((component as any).currentFormation()).toBe('2-3 Zone');
+    });
+  });
 });

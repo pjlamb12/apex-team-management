@@ -53,6 +53,7 @@ import {
   getPositionFromSlot as sharedGetPositionFromSlot,
   getDefaultSlots,
   SOCCER_FORMATIONS,
+  BASKETBALL_FORMATIONS,
   FormationPreset,
 } from '@apex-team/shared/util/models';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
@@ -262,9 +263,12 @@ export class LineupEditor implements OnInit, OnDestroy {
     return ['GK', 'DEF', 'MID', 'FWD'];
   });
 
+  protected basketballFormation = signal<string>('Standard (PG, SG, SF, PF, C)');
+
   protected availableFormations = computed<FormationPreset[]>(() => {
     const sportName = this.sportName();
-    if (sportName === 'Volleyball' || sportName === 'Basketball') return [];
+    if (sportName === 'Volleyball') return [];
+    if (sportName === 'Basketball') return BASKETBALL_FORMATIONS;
     const ev = this.event();
     const fieldCount = ev?.playersOnField || 11;
     return SOCCER_FORMATIONS[fieldCount] || [];
@@ -272,7 +276,8 @@ export class LineupEditor implements OnInit, OnDestroy {
 
   protected currentFormation = computed<string | null>(() => {
     const sportName = this.sportName();
-    if (sportName === 'Volleyball' || sportName === 'Basketball') return null;
+    if (sportName === 'Volleyball') return null;
+    if (sportName === 'Basketball') return this.basketballFormation();
     const forms = this.availableFormations();
     if (forms.length === 0) return null;
 
@@ -293,11 +298,16 @@ export class LineupEditor implements OnInit, OnDestroy {
   });
 
   protected applyFormationPreset(presetName: string): void {
+    const sportName = this.team()?.sport?.name;
+    if (sportName === 'Basketball') {
+      this.basketballFormation.set(presetName);
+      return;
+    }
+
     const forms = this.availableFormations();
     const preset = forms.find((f) => f.name === presetName);
     if (!preset) return;
 
-    const sportName = this.team()?.sport?.name;
     const positionTypes = this.team()?.sport?.positionTypes || [];
 
     this.slots.update((prev) => {
