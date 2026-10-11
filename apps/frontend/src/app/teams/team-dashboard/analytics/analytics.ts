@@ -25,6 +25,7 @@ import { addIcons } from 'ionicons';
 import { 
   statsChartOutline, 
   footballOutline, 
+  basketballOutline,
   peopleOutline, 
   timeOutline, 
   trophyOutline,
@@ -190,6 +191,41 @@ export class TeamAnalytics {
       .slice(0, 5);
   });
 
+  protected topBasketballScorers = computed(() => {
+    return [...this.filteredPerformanceMetrics()]
+      .filter((m) => (m.points ?? 0) > 0)
+      .sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
+      .slice(0, 5);
+  });
+
+  protected topBasketballRebounders = computed(() => {
+    return [...this.filteredPerformanceMetrics()]
+      .filter((m) => (m.reboundsTotal ?? 0) > 0)
+      .sort((a, b) => (b.reboundsTotal ?? 0) - (a.reboundsTotal ?? 0))
+      .slice(0, 5);
+  });
+
+  protected topBasketballPlaymakers = computed(() => {
+    return [...this.filteredPerformanceMetrics()]
+      .filter((m) => m.assists > 0)
+      .sort((a, b) => b.assists - a.assists)
+      .slice(0, 5);
+  });
+
+  protected topBasketballSteals = computed(() => {
+    return [...this.filteredPerformanceMetrics()]
+      .filter((m) => (m.steals ?? 0) > 0)
+      .sort((a, b) => (b.steals ?? 0) - (a.steals ?? 0))
+      .slice(0, 5);
+  });
+
+  protected topBasketballBlocks = computed(() => {
+    return [...this.filteredPerformanceMetrics()]
+      .filter((m) => (m.blocks ?? 0) > 0)
+      .sort((a, b) => (b.blocks ?? 0) - (a.blocks ?? 0))
+      .slice(0, 5);
+  });
+
   protected filteredParticipationStats = computed(() => {
     const stats = this.participationStats();
     const isFiltered = !!(this.selectedSeasonId() || this.selectedLeagueId());
@@ -336,6 +372,7 @@ export class TeamAnalytics {
     addIcons({ 
       statsChartOutline, 
       footballOutline, 
+      basketballOutline,
       peopleOutline, 
       timeOutline, 
       trophyOutline, 
@@ -539,5 +576,15 @@ export class TeamAnalytics {
     if (ratio > 0.5) return 'heatmap-high';
     if (ratio > 0.2) return 'heatmap-mid';
     return 'heatmap-low';
+  }
+
+  protected getShootingPct(made = 0, attempted = 0): string {
+    if (!attempted || attempted === 0) return '0.0%';
+    return `${((made / attempted) * 100).toFixed(1)}%`;
+  }
+
+  protected getPerGameAvg(total = 0, gamesPlayed = 0): string {
+    if (!gamesPlayed || gamesPlayed === 0) return '0.0';
+    return (total / gamesPlayed).toFixed(1);
   }
 }

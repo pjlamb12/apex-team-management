@@ -157,6 +157,11 @@ export class TeamsList implements OnDestroy {
           label: 'Volleyball (Apex Spikers VB)',
           value: 'Volleyball',
         },
+        {
+          type: 'radio',
+          label: 'Basketball (Apex Ballers)',
+          value: 'Basketball',
+        },
       ],
       buttons: [
         { text: 'Cancel', role: 'cancel' },

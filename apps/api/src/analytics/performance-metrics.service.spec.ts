@@ -152,6 +152,55 @@ describe('PerformanceMetricsService', () => {
       // g2 did not participate, so gamesPlayed is 0 and they are filtered out
       expect(g2).toBeUndefined();
     });
+
+    it('should aggregate basketball statistics (points, rebounds, assists, steals, blocks, turnovers, fouls, shooting splits)', async () => {
+      vi.spyOn(playerRepo, 'find').mockResolvedValue([
+        { id: 'p1', firstName: 'Steph', lastName: 'Curry' },
+        { id: 'p2', firstName: 'Draymond', lastName: 'Green' },
+      ] as any);
+      vi.spyOn(eventRepo, 'find').mockResolvedValue([{ id: 'e1' }] as any);
+      vi.spyOn(attendanceRepo, 'find').mockResolvedValue([
+        { playerId: 'p1', eventId: 'e1', status: 'present' },
+        { playerId: 'p2', eventId: 'e1', status: 'present' },
+      ] as any);
+      vi.spyOn(gameEventRepo, 'find').mockResolvedValue([
+        { eventType: 'MADE_3PT', payload: { playerId: 'p1', assistorId: 'p2' } },
+        { eventType: 'MADE_2PT', payload: { playerId: 'p1', assistorId: 'p2' } },
+        { eventType: 'MADE_1PT', payload: { playerId: 'p1' } },
+        { eventType: 'MISSED_3PT', payload: { playerId: 'p1' } },
+        { eventType: 'MISSED_2PT', payload: { playerId: 'p1' } },
+        { eventType: 'MISSED_1PT', payload: { playerId: 'p1' } },
+        { eventType: 'REBOUND_OFFENSIVE', payload: { playerId: 'p2' } },
+        { eventType: 'REBOUND_DEFENSIVE', payload: { playerId: 'p2' } },
+        { eventType: 'STEAL', payload: { playerId: 'p1' } },
+        { eventType: 'BLOCK', payload: { playerId: 'p2' } },
+        { eventType: 'TURNOVER', payload: { playerId: 'p1' } },
+        { eventType: 'FOUL', payload: { playerId: 'p2' } },
+      ] as any);
+
+      const result = await service.getTeamMetrics(teamId);
+      const steph = result.find((r) => r.playerId === 'p1');
+      const dray = result.find((r) => r.playerId === 'p2');
+
+      // Steph: 3PT (3) + 2PT (2) + 1PT (1) = 6 points
+      expect(steph?.points).toBe(6);
+      expect(steph?.fgMade).toBe(2);
+      expect(steph?.fgAttempted).toBe(4);
+      expect(steph?.fg3Made).toBe(1);
+      expect(steph?.fg3Attempted).toBe(2);
+      expect(steph?.ftMade).toBe(1);
+      expect(steph?.ftAttempted).toBe(2);
+      expect(steph?.steals).toBe(1);
+      expect(steph?.turnovers).toBe(1);
+
+      // Draymond: 2 assists, 1 off reb, 1 def reb, 2 total reb, 1 block, 1 foul
+      expect(dray?.assists).toBe(2);
+      expect(dray?.reboundsOffensive).toBe(1);
+      expect(dray?.reboundsDefensive).toBe(1);
+      expect(dray?.reboundsTotal).toBe(2);
+      expect(dray?.blocks).toBe(1);
+      expect(dray?.personalFouls).toBe(1);
+    });
   });
 });
 

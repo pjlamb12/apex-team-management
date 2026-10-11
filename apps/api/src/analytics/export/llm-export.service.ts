@@ -614,6 +614,30 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
             lines.push(`  - 🧤 **${min} Save / Blocked Shot**: ${playerName}`);
           } else if (ge.eventType === 'KILL' || ge.eventType === 'ACE' || ge.eventType === 'BLOCK') {
             lines.push(`  - 🏐 **${min} ${ge.eventType}**: ${playerName}`);
+          } else if (ge.eventType === 'MADE_1PT') {
+            lines.push(`  - 🏀 **${min} Free Throw (MADE)**: ${playerName}`);
+          } else if (ge.eventType === 'MISSED_1PT') {
+            lines.push(`  - 🏀 **${min} Free Throw (MISSED)**: ${playerName}`);
+          } else if (ge.eventType === 'MADE_2PT') {
+            lines.push(`  - 🏀 **${min} 2PT Field Goal**: Scored by ${playerName}${assistName}`);
+          } else if (ge.eventType === 'MISSED_2PT') {
+            lines.push(`  - 🏀 **${min} Missed 2PT Shot**: ${playerName}`);
+          } else if (ge.eventType === 'MADE_3PT') {
+            lines.push(`  - 🏀 **${min} 3-Pointer**: Scored by ${playerName}${assistName}`);
+          } else if (ge.eventType === 'MISSED_3PT') {
+            lines.push(`  - 🏀 **${min} Missed 3-Pointer**: ${playerName}`);
+          } else if (ge.eventType === 'REBOUND_OFFENSIVE' || ge.eventType === 'OFFENSIVE_REBOUND') {
+            lines.push(`  - 🏀 **${min} Offensive Rebound**: ${playerName}`);
+          } else if (ge.eventType === 'REBOUND_DEFENSIVE' || ge.eventType === 'DEFENSIVE_REBOUND') {
+            lines.push(`  - 🏀 **${min} Defensive Rebound**: ${playerName}`);
+          } else if (ge.eventType === 'STEAL') {
+            lines.push(`  - 🏀 **${min} Steal**: ${playerName}`);
+          } else if (ge.eventType === 'TURNOVER') {
+            lines.push(`  - 🏀 **${min} Turnover**: ${playerName}`);
+          } else if (ge.eventType === 'FOUL') {
+            lines.push(`  - 🏀 **${min} Personal Foul**: ${playerName}`);
+          } else if (ge.eventType === 'OPPONENT_SCORE') {
+            lines.push(`  - 🏀 **${min} Opponent Score**: ${payload.points || 2} pts`);
           }
         });
       }
@@ -641,8 +665,44 @@ Use the comprehensive team dossier provided below to answer the coach's inquiry 
     players: PlayerEntity[];
     playtimeMap: Record<string, any>;
     playerMetrics: PlayerPerformanceMetrics[];
+    team?: TeamEntity;
   }): string {
     const lines: string[] = [];
+    const isBasketball = ctx.team?.sport?.name === 'Basketball';
+
+    if (isBasketball) {
+      lines.push(`## Player Playing Time & Positional Distribution`);
+      lines.push(`| Player | Total Min | PG % | SG % | SF % | PF % | C % | PTS | REB | AST | STL | BLK | Games |`);
+      lines.push(`| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |`);
+
+      for (const p of ctx.players) {
+        const pt = ctx.playtimeMap[p.id] || { totalSeconds: 0, positionSeconds: {} };
+        const totalMin = Math.round((pt.totalSeconds || 0) / 60);
+        const posSec = pt.positionSeconds || {};
+        const totalSec = pt.totalSeconds || 1;
+
+        const pgPct = Math.round(((posSec['PG'] || 0) / totalSec) * 100);
+        const sgPct = Math.round(((posSec['SG'] || 0) / totalSec) * 100);
+        const sfPct = Math.round(((posSec['SF'] || 0) / totalSec) * 100);
+        const pfPct = Math.round(((posSec['PF'] || 0) / totalSec) * 100);
+        const cPct = Math.round(((posSec['C'] || 0) / totalSec) * 100);
+
+        const metric = ctx.playerMetrics.find((m) => m.playerId === p.id);
+        const pts = metric?.points || 0;
+        const reb = metric?.reboundsTotal || 0;
+        const ast = metric?.assists || 0;
+        const stl = metric?.steals || 0;
+        const blk = metric?.blocks || 0;
+        const games = metric?.gamesPlayed || 0;
+
+        lines.push(
+          `| ${p.firstName} ${p.lastName}${p.isGuest ? ' (Guest)' : ''} | ${totalMin}m | ${pgPct}% | ${sgPct}% | ${sfPct}% | ${pfPct}% | ${cPct}% | ${pts} | ${reb} | ${ast} | ${stl} | ${blk} | ${games} |`,
+        );
+      }
+
+      return lines.join('\n');
+    }
+
     lines.push(`## Player Playing Time & Positional Distribution`);
     lines.push(`| Player | Total Min | GK % | DEF % | MID % | FWD % | Goals | Assists | Games |`);
     lines.push(`| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |`);

@@ -145,4 +145,71 @@ describe('TeamAnalytics', () => {
     expect(mockModal.present).toHaveBeenCalled();
     expect(mockAnalyticsService.getPerformanceMetrics).toHaveBeenCalled();
   });
+
+  describe('Basketball Analytics', () => {
+    it('should compute basketball leaderboards correctly', () => {
+      (component as any).performanceMetrics.set([
+        {
+          playerId: 'p1',
+          firstName: 'Steph',
+          lastName: 'Curry',
+          gamesPlayed: 5,
+          points: 120,
+          reboundsTotal: 25,
+          assists: 30,
+          steals: 10,
+          blocks: 2,
+        },
+        {
+          playerId: 'p2',
+          firstName: 'Giannis',
+          lastName: 'Antetokounmpo',
+          gamesPlayed: 5,
+          points: 140,
+          reboundsTotal: 60,
+          assists: 25,
+          steals: 6,
+          blocks: 12,
+        },
+        {
+          playerId: 'p3',
+          firstName: 'Chris',
+          lastName: 'Paul',
+          gamesPlayed: 5,
+          points: 50,
+          reboundsTotal: 20,
+          assists: 45,
+          steals: 15,
+          blocks: 1,
+        },
+      ]);
+
+      const topScorers = (component as any).topBasketballScorers();
+      expect(topScorers[0].playerId).toBe('p2');
+      expect(topScorers[1].playerId).toBe('p1');
+      expect(topScorers[2].playerId).toBe('p3');
+
+      const topRebounders = (component as any).topBasketballRebounders();
+      expect(topRebounders[0].playerId).toBe('p2');
+
+      const topPlaymakers = (component as any).topBasketballPlaymakers();
+      expect(topPlaymakers[0].playerId).toBe('p3');
+
+      const topSteals = (component as any).topBasketballSteals();
+      expect(topSteals[0].playerId).toBe('p3');
+
+      const topBlocks = (component as any).topBasketballBlocks();
+      expect(topBlocks[0].playerId).toBe('p2');
+    });
+
+    it('should calculate basketball shooting percentages and per-game averages correctly', () => {
+      expect((component as any).getShootingPct(10, 20)).toBe('50.0%');
+      expect((component as any).getShootingPct(1, 3)).toBe('33.3%');
+      expect((component as any).getShootingPct(0, 0)).toBe('0.0%');
+
+      expect((component as any).getPerGameAvg(50, 5)).toBe('10.0');
+      expect((component as any).getPerGameAvg(25, 4)).toBe('6.3');
+      expect((component as any).getPerGameAvg(0, 0)).toBe('0.0');
+    });
+  });
 });
