@@ -69,6 +69,12 @@ export class LeagueEntity {
   @Column({ name: 'deciding_set_point_cap', type: 'integer', nullable: true })
   decidingSetPointCap: number | null;
 
+  @Column({ name: 'foul_limit', type: 'integer', default: 5 })
+  foulLimit: number;
+
+  @Column({ name: 'bonus_threshold', type: 'integer', default: 5 })
+  bonusThreshold: number;
+
   @OneToMany(() => EventEntity, (event) => event.league)
   events: EventEntity[];
 

@@ -14,4 +14,6 @@ export interface Game {
   status?: 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather';
   goalsFor?: number;
   goalsAgainst?: number;
+  foulLimit?: number;
+  bonusThreshold?: number;
 }

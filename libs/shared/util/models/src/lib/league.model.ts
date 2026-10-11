@@ -21,6 +21,8 @@ export interface League {
   pointCap?: number | null;
   decidingSetScoreGoal?: number;
   decidingSetPointCap?: number | null;
+  foulLimit?: number;
+  bonusThreshold?: number;
 }
 
 export interface LeagueStats {

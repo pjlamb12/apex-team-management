@@ -1,4 +1,4 @@
-export type TacticSport = 'soccer' | 'volleyball';
+export type TacticSport = 'soccer' | 'volleyball' | 'basketball';
 
 export type TacticCategory =
   | 'formation'
@@ -20,7 +20,11 @@ export type VolleyballCourtType =
   | 'half_court'
   | 'rotation_grid';
 
-export type PitchType = SoccerPitchType | VolleyballCourtType;
+export type BasketballCourtType =
+  | 'full_court'
+  | 'half_court';
+
+export type PitchType = SoccerPitchType | VolleyballCourtType | BasketballCourtType;
 
 export type TokenType = 'home' | 'away' | 'ball' | 'cone' | 'target';
 

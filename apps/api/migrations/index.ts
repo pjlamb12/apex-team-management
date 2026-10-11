@@ -55,6 +55,7 @@ import { CreatePlayerAwards1784700000000 } from './1784700000000-CreatePlayerAwa
 import { CreatePlayerGoalsAndNotes1784800000000 } from './1784800000000-CreatePlayerGoalsAndNotes';
 import { CreateTacticPlays1784900000000 } from './1784900000000-CreateTacticPlays';
 import { AddOpponentOwnGoalEventDefinition1785000000000 } from './1785000000000-AddOpponentOwnGoalEventDefinition';
+import { SeedBasketballSportAndEventDefinitions1785100000000 } from './1785100000000-SeedBasketballSportAndEventDefinitions';
 
 export const ALL_MIGRATIONS = [
   InitialSchema1744934400000,
@@ -114,6 +115,7 @@ export const ALL_MIGRATIONS = [
   CreatePlayerGoalsAndNotes1784800000000,
   CreateTacticPlays1784900000000,
   AddOpponentOwnGoalEventDefinition1785000000000,
+  SeedBasketballSportAndEventDefinitions1785100000000,
 ];
 
 

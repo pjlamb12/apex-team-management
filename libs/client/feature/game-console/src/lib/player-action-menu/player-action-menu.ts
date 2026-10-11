@@ -26,7 +26,7 @@ import { Player } from '@apex-team/shared/util/models';
 })
 export class PlayerActionMenuComponent {
   player = input.required<Player>();
-  sportName = input<string>('Soccer');
+  sportName = input<string | null>('Soccer');
   actionSelected = output<{ type: string; playerId: string; payload?: any }>();
 
   isGoalkeeper = computed(() => {
