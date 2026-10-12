@@ -830,6 +830,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     const { player, event } = data;
     const currentSelectionId = this.selectedPlayerId();
     const isVolleyball = this.stateService.sportName() === 'Volleyball';
+    const isBasketball = this.stateService.sportName() === 'Basketball';
     
     // Check if one is bench and one is pitch
     const benchPlayers = this.stateService.benchPlayers();
@@ -842,18 +843,22 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     if (!currentSelectionId) {
       this.selectedPlayerId.set(player.id);
       
-      if (tappedActive) {
-        if (isVolleyball) {
-          // In volleyball, context menu shows on first click of an active player
-          this.actionPlayer.set(player);
-          this.popoverEvent.set(event);
-        }
+      if (tappedActive && isVolleyball) {
+        // In volleyball, context menu shows on first click of an active player
+        this.actionPlayer.set(player);
+        this.popoverEvent.set(event);
       }
       return;
     }
 
-    // If tapping same player, show actions (modal/popover)
+    // If tapping same player a second time: unselect if on bench or basketball court
     if (currentSelectionId === player.id) {
+      if (tappedOnBench || isBasketball) {
+        this.selectedPlayerId.set(null);
+        this.actionPlayer.set(null);
+        return;
+      }
+
       if (tappedActive) {
         this.actionPlayer.set(player);
         this.popoverEvent.set(event);
@@ -1126,7 +1131,12 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected handleBasketballPlayerSelected(player: Player): void {
     const fulfilled = this.rapidKeypad()?.fulfillArmedStat(player);
     if (!fulfilled) {
-      this.selectedPlayerId.set(player.id);
+      if (this.selectedPlayerId() === player.id) {
+        this.selectedPlayerId.set(null);
+        this.actionPlayer.set(null);
+      } else {
+        this.selectedPlayerId.set(player.id);
+      }
     }
   }
 

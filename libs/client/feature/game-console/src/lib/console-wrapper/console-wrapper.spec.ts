@@ -131,6 +131,27 @@ describe('ConsoleWrapper', () => {
     expect(component['popoverEvent']()).toBe(mockEvent);
   });
 
+  it('should deselect a bench player when clicked a second time', () => {
+    const benchPlayer = mockLineup[1].player as any;
+    const mockEvent = new MouseEvent('click');
+    component['handlePlayerSelection']({ player: benchPlayer, event: mockEvent });
+    expect(component['selectedPlayerId']()).toBe('p2');
+
+    // Clicking the bench player a second time deselects them
+    component['handlePlayerSelection']({ player: benchPlayer, event: mockEvent });
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
+
+  it('should deselect a basketball active player when clicked a second time', () => {
+    const player1 = mockLineup[0].player as any;
+    component['handleBasketballPlayerSelected'](player1);
+    expect(component['selectedPlayerId']()).toBe('p1');
+
+    // Clicking the active player a second time deselects them
+    component['handleBasketballPlayerSelected'](player1);
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
+
   it('should stage a sub when swapping bench and active player', () => {
     const activePlayer = mockLineup[0].player as any;
     const benchPlayer = mockLineup[1].player as any;
