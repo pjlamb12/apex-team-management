@@ -1,7 +1,7 @@
 <div class="basketball-court-component flex flex-col w-full h-full select-none">
   <!-- Top Filter & Controls Header (Hidden in lineup mode) -->
   @if (!isLineupMode()) {
-    <div class="court-controls-bar flex flex-wrap items-center justify-between gap-2 p-2 bg-ap-surface border-b border-ap-border/60">
+    <div class="court-controls-bar flex flex-wrap items-center justify-between gap-2 p-2 bg-ap-surface border-b border-ap-border/60 shrink-0">
       <!-- Shot Filter Segment -->
       <div class="flex items-center gap-1.5">
         <ion-segment [value]="shotFilter()" (ionChange)="setFilter($event.detail.value)" class="shot-filter-segment min-w-[210px] h-8">
@@ -36,7 +36,7 @@
 
   <!-- Interactive Court Area: Flex-centered letterbox container -->
   <div
-    class="court-area-wrapper relative w-full flex-1 overflow-hidden flex items-center justify-center p-1 sm:p-2"
+    class="court-area-wrapper relative w-full flex-1 min-h-0 overflow-hidden flex items-center justify-center p-1 sm:p-2"
     (click)="handleBackgroundClick()"
   >
     <!-- Court Surface Box: Centered, strictly locked to court aspect-ratio -->

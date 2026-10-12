@@ -112,4 +112,18 @@ describe('RapidActionKeypadComponent', () => {
     component.handleUndo();
     expect(undoEmitted).toBe(false);
   });
+
+  it('should emit playerDeselected and clear armed stat when handleDeselect is called', () => {
+    component.handleKeypadPress('STEAL');
+    expect(component.armedStat()).toBe('STEAL');
+
+    let deselectedEmitted = false;
+    component.playerDeselected.subscribe(() => {
+      deselectedEmitted = true;
+    });
+
+    component.handleDeselect();
+    expect(deselectedEmitted).toBe(true);
+    expect(component.armedStat()).toBeNull();
+  });
 });

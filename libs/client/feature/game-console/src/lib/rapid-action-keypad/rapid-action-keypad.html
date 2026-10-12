@@ -1,39 +1,54 @@
 <div class="rapid-keypad-container flex flex-col gap-2.5 p-3 bg-ap-surface/90 border border-ap-border/60 rounded-xl select-none shadow-xl">
   <!-- Keypad Header / State Banner -->
   <div
-    class="keypad-header flex items-center justify-between min-h-[36px] px-2 py-1.5 rounded-lg border transition-colors"
-    [class.bg-black\/30]="!selectedPlayer() && !armedStat()"
-    [class.border-white\/5]="!selectedPlayer() && !armedStat()"
-    [class.bg-slate-850]="selectedPlayer()"
-    [class.border-amber-400\/40]="selectedPlayer()"
-    [class.bg-amber-500\/10]="selectedPlayer()"
+    class="keypad-header flex items-center justify-between h-11 px-3 py-1.5 rounded-lg border transition-colors shrink-0"
+    [class.bg-slate-100]="!selectedPlayer() && !armedStat()"
+    [class.dark:bg-slate-900\/60]="!selectedPlayer() && !armedStat()"
+    [class.border-slate-200]="!selectedPlayer() && !armedStat()"
+    [class.dark:border-white\/10]="!selectedPlayer() && !armedStat()"
+    [class.bg-amber-500\/15]="armedStat()"
+    [class.border-amber-500\/50]="armedStat()"
+    [class.bg-slate-900]="selectedPlayer() && !armedStat()"
+    [class.border-slate-700]="selectedPlayer() && !armedStat()"
+    [class.shadow-sm]="selectedPlayer() && !armedStat()"
   >
     @if (armedStat()) {
       <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-1.5 animate-pulse text-amber-400">
-          <ion-icon name="flash-outline" class="text-sm"></ion-icon>
+        <div class="flex items-center gap-1.5 animate-pulse text-amber-500 dark:text-amber-400">
+          <ion-icon name="flash-outline" class="text-base"></ion-icon>
           <span class="text-xs font-black uppercase tracking-wider">Armed: {{ armedStat() }}</span>
           <span class="text-[10px] text-ap-muted font-normal">(Tap player)</span>
         </div>
         <button
+          type="button"
           (click)="clearArmedStat()"
-          class="text-xs font-bold text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-white/10"
+          class="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-black dark:hover:text-white px-2 py-0.5 rounded bg-black/10 dark:bg-white/10 transition-colors"
         >
           Cancel
         </button>
       </div>
     } @else if (selectedPlayer()) {
-      <div class="flex items-center gap-2 w-full text-xs font-bold">
-        <span class="min-w-[26px] h-6 px-1.5 rounded bg-amber-400 text-slate-950 font-black flex items-center justify-center text-[11px] shadow-sm">
-          #{{ selectedPlayer()!.jerseyNumber }}
-        </span>
-        <div class="flex items-center gap-1.5 truncate">
-          <span class="truncate text-white font-bold text-xs">{{ selectedPlayer()!.firstName }} {{ selectedPlayer()!.lastName }}</span>
-          <span class="text-[10px] text-amber-300/90 font-medium">({{ selectedPlayer()!.preferredPosition || 'Player' }})</span>
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-2 truncate">
+          <span class="min-w-[28px] h-7 px-1.5 rounded-md bg-amber-400 text-slate-950 font-black flex items-center justify-center text-xs shadow-sm shrink-0">
+            #{{ selectedPlayer()!.jerseyNumber }}
+          </span>
+          <div class="flex items-center gap-1.5 truncate">
+            <span class="truncate text-white font-black text-xs sm:text-sm">{{ selectedPlayer()!.firstName }} {{ selectedPlayer()!.lastName }}</span>
+            <span class="text-[11px] text-amber-300 font-bold uppercase tracking-wider shrink-0">({{ selectedPlayer()!.preferredPosition || 'Player' }})</span>
+          </div>
         </div>
+        <button
+          type="button"
+          (click)="handleDeselect()"
+          class="text-slate-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors shrink-0 ml-1"
+          title="Deselect player"
+        >
+          <ion-icon name="close-outline" class="text-base"></ion-icon>
+        </button>
       </div>
     } @else {
-      <span class="text-[11px] font-semibold text-ap-muted">
+      <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
         Select player or tap stat key
       </span>
     }
@@ -198,10 +213,10 @@
       type="button"
       (click)="handleUndo()"
       [disabled]="!canUndo()"
-      class="undo-btn w-full py-3.5 px-4 rounded-xl bg-slate-850 hover:bg-slate-750 disabled:opacity-40 disabled:pointer-events-none text-slate-200 font-bold text-xs flex items-center justify-center gap-2 border border-white/10 active:scale-98 transition-all shadow-md"
+      class="undo-btn w-full min-h-[44px] py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none text-white font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 active:scale-98 transition-all shadow-md"
     >
       <ion-icon name="arrow-undo-outline" class="text-base text-amber-400"></ion-icon>
-      <span>Undo Last Action</span>
+      <span class="text-white font-bold text-xs">Undo Last Action</span>
     </button>
   </div>
 </div>

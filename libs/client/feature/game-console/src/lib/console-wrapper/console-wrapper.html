@@ -438,12 +438,12 @@
         ></app-shootout-scorecard>
       </div>
     } @else {
-      <div class="flex flex-col sm:flex-row">
+      <div class="flex flex-col sm:flex-row items-start">
         <!-- Field / Court View -->
-        <div class="sm:flex-[2] flex min-h-[370px] sm:min-h-[650px]">
+        <div class="w-full sm:flex-[2] flex min-w-0">
           @switch (stateService.sportName()) {
             @case ('Basketball') {
-              <div class="w-full flex flex-col">
+              <div class="w-full flex flex-col min-w-0">
                 <app-active-player-strip
                   [activePlayers]="stateService.activePlayers()"
                   [selectedPlayerId]="selectedPlayerId()"
@@ -453,7 +453,7 @@
                   (playerSelected)="handleBasketballPlayerSelected($event)"
                   (emptySlotClicked)="handleBasketballEmptySlotClicked($event)"
                 ></app-active-player-strip>
-                <div class="flex-1 w-full min-h-[440px]">
+                <div class="w-full h-[480px] sm:h-[580px] min-h-0 shrink-0">
                   <app-basketball-court-view
                     class="w-full h-full block"
                     [players]="stateService.players()"
@@ -469,7 +469,7 @@
             }
             @case ('Volleyball') {
               <app-volleyball-court-view
-                class="w-full"
+                class="w-full min-h-[370px] sm:min-h-[650px]"
                 [players]="stateService.activePlayers()"
                 [initialLineup]="stateService.initialLineup()"
                 [stagedSubs]="stateService.stagedSubs()"
@@ -484,7 +484,7 @@
             }
             @case ('Soccer') {
               <app-soccer-pitch-view
-                class="w-full h-full min-h-[350px] block relative"
+                class="w-full h-full min-h-[350px] sm:min-h-[650px] block relative"
                 [players]="stateService.activePlayers()"
                 [initialLineup]="stateService.initialLineup()"
                 [stagedSubs]="stateService.stagedSubs()"
@@ -508,7 +508,7 @@
         </div>
 
         <!-- Right Column: Bench + Sub-Queue -->
-        <div class="sm:flex-1 flex flex-col border-t sm:border-t-0 sm:border-l border-ap-border bg-ap-surface-raised">
+        <div class="w-full sm:flex-1 flex flex-col border-t sm:border-t-0 sm:border-l border-ap-border bg-ap-surface-raised min-w-0">
           @if (stateService.sportName() === 'Basketball') {
             <div class="p-2 border-b border-ap-border bg-ap-surface">
               <app-rapid-action-keypad
@@ -521,6 +521,7 @@
                 (actionTriggered)="handleKeypadAction($event)"
                 (undoClicked)="handleUndoAction()"
                 (subOffClicked)="handleMoveActiveToBench()"
+                (playerDeselected)="selectedPlayerId.set(null); actionPlayer.set(null)"
               ></app-rapid-action-keypad>
             </div>
           }
@@ -528,7 +529,7 @@
             [players]="stateService.benchPlayers()"
             [stagedInIds]="stagedInIds()"
             [selectedPlayerId]="selectedPlayerId()"
-            [selectedActivePlayer]="selectedActivePlayer()"
+            [selectedActivePlayer]="stateService.sportName() === 'Basketball' ? null : selectedActivePlayer()"
             [ejectedPlayerIds]="stateService.ejectedPlayerIds()"
             [liberoDesignation]="stateService.liberoDesignation()"
             (playerSelected)="handlePlayerSelection($event)"

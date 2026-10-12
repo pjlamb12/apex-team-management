@@ -41,6 +41,7 @@ export class RapidActionKeypadComponent {
   undoClicked = output<void>();
   subOffClicked = output<Player>();
   armedStatChanged = output<string | null>();
+  playerDeselected = output<void>();
 
   // State: when stat key is tapped first without a player selected
   armedStat = signal<string | null>(null);
@@ -113,6 +114,11 @@ export class RapidActionKeypadComponent {
   public clearArmedStat(): void {
     this.armedStat.set(null);
     this.armedStatChanged.emit(null);
+  }
+
+  public handleDeselect(): void {
+    this.playerDeselected.emit();
+    this.clearArmedStat();
   }
 
   public handleUndo(): void {
