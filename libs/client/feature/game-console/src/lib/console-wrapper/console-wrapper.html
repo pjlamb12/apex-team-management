@@ -449,7 +449,9 @@
                   [selectedPlayerId]="selectedPlayerId()"
                   [playerStats]="stateService.playerStats()"
                   [foulLimit]="stateService.foulLimit()"
+                  [playersOnCourt]="stateService.playersOnField()"
                   (playerSelected)="handleBasketballPlayerSelected($event)"
+                  (emptySlotClicked)="handleBasketballEmptySlotClicked($event)"
                 ></app-active-player-strip>
                 <div class="flex-1 w-full min-h-[440px]">
                   <app-basketball-court-view

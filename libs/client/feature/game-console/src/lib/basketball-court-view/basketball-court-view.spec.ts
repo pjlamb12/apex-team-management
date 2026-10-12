@@ -72,7 +72,7 @@ describe('BasketballCourtViewComponent', () => {
   });
 
   it('should open HUD with calculated 2PT for a touch inside the arc', () => {
-    const container = component.courtContainer()?.nativeElement;
+    const container = component.courtSurface()?.nativeElement;
     expect(container).toBeDefined();
 
     vi.spyOn(container!, 'getBoundingClientRect').mockReturnValue({
@@ -98,7 +98,7 @@ describe('BasketballCourtViewComponent', () => {
   });
 
   it('should open HUD with calculated 3PT for a touch outside the arc', () => {
-    const container = component.courtContainer()?.nativeElement;
+    const container = component.courtSurface()?.nativeElement;
 
     vi.spyOn(container!, 'getBoundingClientRect').mockReturnValue({
       left: 0,
@@ -118,6 +118,17 @@ describe('BasketballCourtViewComponent', () => {
     const activeTouch = component.activeTouch();
     expect(activeTouch).not.toBeNull();
     expect(activeTouch?.shotType).toBe('3PT');
+  });
+
+  it('should toggle between half court and full court', () => {
+    expect(component.isHalfCourt()).toBe(true);
+    expect(component.courtAspectRatio()).toBe('500 / 470');
+    expect(component.courtViewBox()).toBe('0 0 500 470');
+
+    component['toggleHalfCourt']();
+    expect(component.isHalfCourt()).toBe(false);
+    expect(component.courtAspectRatio()).toBe('500 / 940');
+    expect(component.courtViewBox()).toBe('0 0 500 940');
   });
 
   it('should emit shotLogged when confirming a MADE 3PT shot', () => {

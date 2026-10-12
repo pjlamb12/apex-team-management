@@ -16,7 +16,7 @@
         <!-- Top Row: Jersey + Position -->
         <div class="flex items-center justify-between gap-1 mb-1.5">
           <div
-            class="jersey-badge w-7 h-7 rounded-lg font-black text-xs flex items-center justify-center transition-colors"
+            class="jersey-badge min-w-[32px] h-7 px-1.5 rounded-lg font-black text-xs flex items-center justify-center transition-colors"
             [class.bg-amber-400]="selectedPlayerId() === player.id"
             [class.text-black]="selectedPlayerId() === player.id"
             [class.bg-ap-surface]="selectedPlayerId() !== player.id"
@@ -61,6 +61,25 @@
             </span>
           }
         </div>
+      </div>
+    }
+
+    <!-- Empty Court Slots: Allows subbing bench players into open spots -->
+    @for (slot of emptySlots(); track slot.slotIndex) {
+      <div
+        class="empty-card cursor-pointer rounded-xl p-2.5 flex flex-col items-center justify-center transition-all duration-150 select-none border-2 border-dashed border-amber-400/60 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 min-w-[140px] sm:min-w-0"
+        (click)="handleEmptySlotClick(slot.slotIndex)"
+      >
+        <div class="flex items-center gap-1.5 mb-1 text-amber-400">
+          <ion-icon name="person-add-outline" class="text-base"></ion-icon>
+          <span class="text-xs font-black uppercase tracking-wider">+ Sub In</span>
+        </div>
+        <span class="text-[10px] font-bold text-ap-muted">
+          {{ slot.positionName }}
+        </span>
+        <span class="text-[9px] text-amber-300/80 mt-1">
+          Tap to assign
+        </span>
       </div>
     }
   </div>

@@ -16,6 +16,11 @@
   touch-action: manipulation;
 }
 
+.court-surface {
+  touch-action: manipulation;
+  user-select: none;
+}
+
 .shot-marker {
   cursor: pointer;
   transform-origin: center center;

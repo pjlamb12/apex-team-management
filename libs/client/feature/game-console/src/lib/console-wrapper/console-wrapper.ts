@@ -213,6 +213,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
                 pointCap: event?.league?.pointCap,
                 decidingSetScoreGoal: event?.league?.decidingSetScoreGoal,
                 decidingSetPointCap: event?.league?.decidingSetPointCap,
+                periodLengthMinutes: event?.periodLengthMinutes || event?.league?.periodLengthMinutes || (team?.sport?.name === 'Basketball' ? 8 : 45),
               },
               event?.opponent || undefined
             );
@@ -1127,6 +1128,77 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     if (!fulfilled) {
       this.selectedPlayerId.set(player.id);
     }
+  }
+
+  protected async handleBasketballEmptySlotClicked(slotIndex: number): Promise<void> {
+    const selId = this.selectedPlayerId();
+    const benchPlayers = this.stateService.benchPlayers();
+    const selectedBench = benchPlayers.find((p) => p.id === selId);
+
+    // If coach already selected a bench player, sub them into this slot immediately
+    if (selectedBench) {
+      const sportName = this.team()?.sport?.name || 'Basketball';
+      const posName = getPositionFromSlot(slotIndex, sportName);
+
+      this.stateService.pushEvent({
+        type: 'SUB',
+        playerIdIn: selectedBench.id,
+        slotIndex,
+        position: posName,
+        timestamp: Date.now(),
+        minuteOccurred: this.clockService.currentMinute(),
+        gameTimeMs: this.clockService.elapsedMs(),
+      });
+      this.selectedPlayerId.set(null);
+      this.actionPlayer.set(null);
+      return;
+    }
+
+    // Otherwise, present quick picker of available bench players
+    if (benchPlayers.length === 0) {
+      const alert = await this.alertCtrl.create({
+        header: 'No Bench Players',
+        message: 'No bench players are available to sub into the game.',
+        buttons: ['OK'],
+      });
+      await alert.present();
+      return;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: 'Sub Player In',
+      subHeader: 'Select a bench player for open spot',
+      inputs: benchPlayers.map((p) => ({
+        type: 'radio',
+        label: `#${p.jerseyNumber ?? ''} ${p.firstName} ${p.lastName} (${p.preferredPosition || 'Player'})`,
+        value: p.id,
+      })),
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Sub In',
+          handler: (inPlayerId) => {
+            if (inPlayerId) {
+              const sportName = this.team()?.sport?.name || 'Basketball';
+              const posName = getPositionFromSlot(slotIndex, sportName);
+
+              this.stateService.pushEvent({
+                type: 'SUB',
+                playerIdIn: inPlayerId,
+                slotIndex,
+                position: posName,
+                timestamp: Date.now(),
+                minuteOccurred: this.clockService.currentMinute(),
+                gameTimeMs: this.clockService.elapsedMs(),
+              });
+              this.selectedPlayerId.set(null);
+              this.actionPlayer.set(null);
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   protected handleUndoAction(): void {

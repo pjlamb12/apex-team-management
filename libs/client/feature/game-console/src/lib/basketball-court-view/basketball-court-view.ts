@@ -59,7 +59,7 @@ export interface ShotLoggedPayload {
   styleUrls: ['./basketball-court-view.scss'],
 })
 export class BasketballCourtViewComponent {
-  courtContainer = viewChild<ElementRef<HTMLElement>>('courtContainer');
+  courtSurface = viewChild<ElementRef<HTMLElement>>('courtSurface');
 
   // Inputs
   players = input<Player[]>([]);
@@ -82,6 +82,10 @@ export class BasketballCourtViewComponent {
   shotFilter = signal<'all' | 'makes' | 'misses'>('all');
   filterPlayerId = signal<string | null>(null);
   isHalfCourt = signal<boolean>(true);
+
+  // Dynamic aspect ratio and viewBox for half court vs full court
+  courtAspectRatio = computed(() => (this.isHalfCourt() ? '500 / 470' : '500 / 940'));
+  courtViewBox = computed(() => (this.isHalfCourt() ? '0 0 500 470' : '0 0 500 940'));
 
   // Active touch HUD state
   activeTouch = signal<{
@@ -208,17 +212,43 @@ export class BasketballCourtViewComponent {
     });
   }
 
+  // Handle background click on letterbox area
+  protected handleBackgroundClick(): void {
+    if (this.activeTouch()) {
+      this.dismissHud();
+    }
+    this.backgroundClicked.emit();
+  }
+
+  // Calculate safe transform for HUD card to avoid boundary overflow
+  protected getHudTransform(): string {
+    const touch = this.activeTouch();
+    if (!touch) return 'translate(-50%, -100%)';
+
+    let xOffset = '-50%';
+    if (touch.x < 28) {
+      xOffset = '-10%';
+    } else if (touch.x > 72) {
+      xOffset = '-90%';
+    }
+
+    const yOffset = touch.y < 35 ? '16px' : 'calc(-100% - 12px)';
+    return `translate(${xOffset}, ${yOffset})`;
+  }
+
   // Handle court tap/touch
   protected handleCourtClick(event: MouseEvent | TouchEvent): void {
+    event.stopPropagation();
+
     if (this.isLineupMode()) {
       this.backgroundClicked.emit();
       return;
     }
 
-    const containerEl = this.courtContainer()?.nativeElement;
-    if (!containerEl) return;
+    const surfaceEl = this.courtSurface()?.nativeElement;
+    if (!surfaceEl) return;
 
-    const rect = containerEl.getBoundingClientRect();
+    const rect = surfaceEl.getBoundingClientRect();
     const clientX = 'touches' in event ? event.touches[0].clientX : (event as MouseEvent).clientX;
     const clientY = 'touches' in event ? event.touches[0].clientY : (event as MouseEvent).clientY;
 

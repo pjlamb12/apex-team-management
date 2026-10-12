@@ -78,4 +78,20 @@ describe('ActivePlayerStripComponent', () => {
     expect(cards[0].classList.contains('selected-card')).toBe(true);
     expect(cards[1].classList.contains('selected-card')).toBe(false);
   });
+
+  it('should render empty slot cards and emit emptySlotClicked when under 5 players', () => {
+    // Only 4 players active
+    fixture.componentRef.setInput('activePlayers', mockActivePlayers.slice(0, 4));
+    fixture.detectChanges();
+
+    const emptyCards = fixture.nativeElement.querySelectorAll('.empty-card');
+    expect(emptyCards.length).toBe(1);
+
+    const emittedSlots: number[] = [];
+    component.emptySlotClicked.subscribe((idx) => emittedSlots.push(idx));
+
+    emptyCards[0].click();
+    expect(emittedSlots.length).toBe(1);
+    expect(emittedSlots[0]).toBe(4);
+  });
 });

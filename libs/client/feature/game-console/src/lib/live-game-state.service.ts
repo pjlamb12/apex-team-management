@@ -119,6 +119,8 @@ export class LiveGameStateService {
   public readonly lastIntervalTriggered = this._lastIntervalTriggered.asReadonly();
   public readonly rotationConfig = this._rotationConfig.asReadonly();
   public readonly sportName = this._sportName.asReadonly();
+  private _periodLengthMinutes = signal<number>(8);
+  public readonly periodLengthMinutes = this._periodLengthMinutes.asReadonly();
   private _foulLimit = signal<number>(5);
   private _bonusThreshold = signal<number>(5);
   private _doubleBonusThreshold = signal<number>(10);
@@ -984,6 +986,7 @@ export class LiveGameStateService {
       bonusThreshold?: number;
       doubleBonusThreshold?: number;
       timeoutsLimit?: number;
+      periodLengthMinutes?: number;
     },
     opponentName?: string
   ): void {
@@ -1008,6 +1011,11 @@ export class LiveGameStateService {
       if (winningRules.bonusThreshold) this._bonusThreshold.set(winningRules.bonusThreshold);
       if (winningRules.doubleBonusThreshold) this._doubleBonusThreshold.set(winningRules.doubleBonusThreshold);
       if (winningRules.timeoutsLimit) this._timeoutsLimit.set(winningRules.timeoutsLimit);
+      if (winningRules.periodLengthMinutes) {
+        this._periodLengthMinutes.set(winningRules.periodLengthMinutes);
+      } else {
+        this._periodLengthMinutes.set(sportName === 'Basketball' ? 8 : 45);
+      }
     } else {
       this._bestOfSets.set(5);
       this._setScoreGoal.set(25);
@@ -1019,6 +1027,7 @@ export class LiveGameStateService {
       this._bonusThreshold.set(5);
       this._doubleBonusThreshold.set(10);
       this._timeoutsLimit.set(5);
+      this._periodLengthMinutes.set(sportName === 'Basketball' ? 8 : 45);
     }
 
     const savedLibero = localStorage.getItem(this.getLiberoStorageKey());

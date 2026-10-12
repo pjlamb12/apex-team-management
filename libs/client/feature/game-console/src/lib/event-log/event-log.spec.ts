@@ -142,4 +142,33 @@ describe('EventLogViewComponent', () => {
     expect(events[0].playerIdA).toBe('p1');
     expect(events[0].playerIdB).toBe('p2');
   });
+
+  it('should return correct icons and colors for basketball events', () => {
+    expect(component['getEventIcon']('MADE_2PT')).toBe('basketball-outline');
+    expect(component['getEventColor']('MADE_2PT')).toBe('success');
+
+    expect(component['getEventIcon']('MISSED_3PT')).toBe('close-circle-outline');
+    expect(component['getEventColor']('MISSED_3PT')).toBe('danger');
+
+    expect(component['getEventIcon']('REBOUND_OFFENSIVE')).toBe('arrow-up-circle-outline');
+    expect(component['getEventColor']('REBOUND_OFFENSIVE')).toBe('warning');
+
+    expect(component['getEventIcon']('REBOUND_DEFENSIVE')).toBe('arrow-down-circle-outline');
+    expect(component['getEventColor']('REBOUND_DEFENSIVE')).toBe('primary');
+
+    expect(component['getEventIcon']('STEAL')).toBe('flash-outline');
+    expect(component['getEventColor']('STEAL')).toBe('warning');
+
+    expect(component['getEventIcon']('BLOCK')).toBe('shield-outline');
+    expect(component['getEventColor']('BLOCK')).toBe('primary');
+
+    expect(component['getEventIcon']('TURNOVER')).toBe('alert-circle-outline');
+    expect(component['getEventColor']('TURNOVER')).toBe('danger');
+
+    expect(component['getEventIcon']('FOUL')).toBe('alert-circle-outline');
+    expect(component['getEventColor']('FOUL')).toBe('warning');
+
+    expect(component['getEventIcon']('TIMEOUT')).toBe('time-outline');
+    expect(component['getEventColor']('TIMEOUT')).toBe('medium');
+  });
 });
