@@ -60,6 +60,20 @@ describe('BasketballCourtViewComponent', () => {
     expect(markers.length).toBe(4);
   });
 
+  it('should update shot filter button active state and counts', () => {
+    expect(component['allCount']()).toBe(4);
+    expect(component['makesCount']()).toBe(2);
+    expect(component['missesCount']()).toBe(2);
+
+    component['setFilter']('makes');
+    fixture.detectChanges();
+    expect(component.shotFilter()).toBe('makes');
+
+    component['setFilter']('misses');
+    fixture.detectChanges();
+    expect(component.shotFilter()).toBe('misses');
+  });
+
   it('should filter shots by specific player', () => {
     component['togglePlayerFilter']('p1');
     fixture.detectChanges();

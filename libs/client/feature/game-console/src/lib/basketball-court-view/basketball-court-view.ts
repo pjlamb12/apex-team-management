@@ -8,7 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonIcon, IonButton, IonSegment, IonSegmentButton, IonLabel } from '@ionic/angular/standalone';
+import { IonIcon, IonButton } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   checkmarkCircle,
@@ -54,7 +54,7 @@ export interface ShotLoggedPayload {
 @Component({
   selector: 'app-basketball-court-view',
   standalone: true,
-  imports: [CommonModule, IonIcon, IonButton, IonSegment, IonSegmentButton, IonLabel],
+  imports: [CommonModule, IonIcon, IonButton],
   templateUrl: './basketball-court-view.html',
   styleUrls: ['./basketball-court-view.scss'],
 })
@@ -82,6 +82,17 @@ export class BasketballCourtViewComponent {
   shotFilter = signal<'all' | 'makes' | 'misses'>('all');
   filterPlayerId = signal<string | null>(null);
   isHalfCourt = signal<boolean>(true);
+
+  // Counts for shot filter buttons
+  protected baseShots = computed(() => {
+    const list = this.shots().filter((s) => s.x !== undefined && s.y !== undefined);
+    const pid = this.filterPlayerId();
+    return pid ? list.filter((s) => s.playerId === pid) : list;
+  });
+
+  protected allCount = computed(() => this.baseShots().length);
+  protected makesCount = computed(() => this.baseShots().filter((s) => s.type.startsWith('MADE')).length);
+  protected missesCount = computed(() => this.baseShots().filter((s) => s.type.startsWith('MISSED')).length);
 
   // Dynamic aspect ratio and viewBox for half court vs full court
   courtAspectRatio = computed(() => (this.isHalfCourt() ? '500 / 470' : '500 / 940'));

@@ -37,8 +37,8 @@
   user-select: none;
 }
 
-.shot-filter-segment {
-  --background: rgba(255, 255, 255, 0.05);
+.shot-filter-group button {
+  touch-action: manipulation;
 }
 
 .hud-card {
