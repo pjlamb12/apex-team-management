@@ -908,6 +908,57 @@ describe('LiveGameStateService', () => {
       expect(p1?.plusMinusFormatted).toBe('+6');
     });
 
+    it('should correctly calculate plus/minus in box score for substituted players with 0 individual stats', () => {
+      // p1 starting, p2 bench
+      const customLineup = [
+        { playerId: 'p1', player: { id: 'p1', firstName: 'Devin', lastName: 'Booker' }, status: 'starting' },
+        { playerId: 'p2', player: { id: 'p2', firstName: 'Klay', lastName: 'Thompson' }, status: 'bench' },
+      ];
+      service.initialize(eventId, customLineup as any, teamId, 5, undefined, 'Basketball');
+
+      // 1. Team scores 7 points with Booker on court
+      service.pushEvents([
+        { type: 'MADE_3PT', playerId: 'p1', gameTimeMs: 10000 },
+        { type: 'MADE_2PT', playerId: 'p1', gameTimeMs: 20000 },
+        { type: 'MADE_2PT', playerId: 'p1', gameTimeMs: 30000 },
+      ]);
+
+      let boxScore = service.basketballBoxScore();
+      let booker = boxScore.find((p) => p.playerId === 'p1');
+      let klay = boxScore.find((p) => p.playerId === 'p2');
+      expect(booker?.plusMinus).toBe(7);
+      expect(booker?.plusMinusFormatted).toBe('+7');
+      expect(klay?.plusMinus).toBe(0);
+      expect(klay?.plusMinusFormatted).toBe('0');
+
+      // 2. Booker is subbed out, Klay is subbed in
+      service.pushEvent({
+        type: 'SUB',
+        playerIdOut: 'p1',
+        playerIdIn: 'p2',
+        gameTimeMs: 40000,
+      });
+
+      // 3. Team scores 6 points with Klay on court (Klay doesn't record any personal stats)
+      service.pushEvents([
+        { type: 'MADE_3PT', playerId: 'other_player', gameTimeMs: 50000 },
+        { type: 'MADE_3PT', playerId: 'other_player', gameTimeMs: 60000 },
+      ]);
+
+      boxScore = service.basketballBoxScore();
+      booker = boxScore.find((p) => p.playerId === 'p1');
+      klay = boxScore.find((p) => p.playerId === 'p2');
+
+      // Booker stays at +7
+      expect(booker?.plusMinus).toBe(7);
+      expect(booker?.plusMinusFormatted).toBe('+7');
+
+      // Klay is now +6 even with 0 individual points recorded!
+      expect(klay?.plusMinus).toBe(6);
+      expect(klay?.plusMinusFormatted).toBe('+6');
+      expect(klay?.points).toBe(0);
+    });
+
     describe('Basketball Overtime', () => {
       it('should compute isOvertime and overtimeNumber based on regulationPeriodCount', () => {
         service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', { periodCount: 4 });

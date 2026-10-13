@@ -282,24 +282,38 @@ export class LiveGameStateService {
       }
     });
 
-    events.forEach((e) => {
-      if (e.type === 'SUB') {
-        if (e.playerIdOut) onCourt.delete(e.playerIdOut);
-        if (e.playerIdIn) onCourt.add(e.playerIdIn);
-      } else if (e.type === 'MADE_1PT') {
+    // Sort events chronologically to guarantee correct order of substitutions and points
+    const sortedEvents = [...events].sort((a, b) => {
+      const timeA = a['gameTimeMs'] ?? (a.minuteOccurred ? a.minuteOccurred * 60000 : 0);
+      const timeB = b['gameTimeMs'] ?? (b.minuteOccurred ? b.minuteOccurred * 60000 : 0);
+      if (Math.abs(timeA - timeB) > 10) {
+        return timeA - timeB;
+      }
+      return (a.timestamp || 0) - (b.timestamp || 0);
+    });
+
+    sortedEvents.forEach((e) => {
+      const type = e.type || e['eventType'];
+      const payload = e['payload'] || {};
+      if (type === 'SUB') {
+        const outId = e.playerIdOut || e['outPlayerId'] || payload.outPlayerId || payload.playerIdOut;
+        const inId = e.playerIdIn || e['inPlayerId'] || payload.inPlayerId || payload.playerIdIn;
+        if (outId) onCourt.delete(outId);
+        if (inId) onCourt.add(inId);
+      } else if (type === 'MADE_1PT') {
         onCourt.forEach((id) => {
           plusMinus[id] = (plusMinus[id] || 0) + 1;
         });
-      } else if (e.type === 'MADE_2PT') {
+      } else if (type === 'MADE_2PT') {
         onCourt.forEach((id) => {
           plusMinus[id] = (plusMinus[id] || 0) + 2;
         });
-      } else if (e.type === 'MADE_3PT') {
+      } else if (type === 'MADE_3PT') {
         onCourt.forEach((id) => {
           plusMinus[id] = (plusMinus[id] || 0) + 3;
         });
-      } else if (e.type === 'OPPONENT_SCORE') {
-        const pts = Number(e['points'] ?? e['payload']?.points ?? 2);
+      } else if (type === 'OPPONENT_SCORE') {
+        const pts = Number(e['points'] ?? payload.points ?? 2);
         onCourt.forEach((id) => {
           plusMinus[id] = (plusMinus[id] || 0) - pts;
         });
@@ -311,13 +325,14 @@ export class LiveGameStateService {
 
   public readonly basketballBoxScore = computed<BasketballBoxScorePlayer[]>(() => {
     const stats = this.playerStats();
+    const pmMap = this.basketballPlusMinus();
     const lineup = this._initialLineup();
     if (this._sportName() !== 'Basketball') return [];
 
     return lineup.map((entry) => {
       const p = entry.player;
       const s = stats[p.id] || ({} as any);
-      const pm = s.plusMinus ?? 0;
+      const pm = pmMap[p.id] ?? s.plusMinus ?? 0;
       return {
         playerId: p.id,
         player: p,
@@ -852,6 +867,10 @@ export class LiveGameStateService {
     });
 
     const stats: Record<string, ReturnType<typeof createDefaultStats>> = {};
+
+    this._initialLineup().forEach((entry) => {
+      stats[entry.playerId] = createDefaultStats();
+    });
 
     events.forEach((e) => {
       const pid = e.playerId || e['scorerId'] || e['payload']?.scorerId || e['payload']?.playerId;

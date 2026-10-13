@@ -574,8 +574,8 @@ export class GameSummary implements OnDestroy {
       const type = e.eventType || e.type;
       const payload = e.payload || {};
       if (type === 'SUB') {
-        const outId = payload.outPlayerId || e.playerIdOut;
-        const inId = payload.inPlayerId || e.playerIdIn;
+        const outId = payload.outPlayerId || payload.playerIdOut || e.playerIdOut || e['outPlayerId'];
+        const inId = payload.inPlayerId || payload.playerIdIn || e.playerIdIn || e['inPlayerId'];
         if (outId) onCourt.delete(outId);
         if (inId) onCourt.add(inId);
       } else if (type === 'MADE_1PT') {
