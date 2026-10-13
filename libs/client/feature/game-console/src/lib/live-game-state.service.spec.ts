@@ -1122,12 +1122,15 @@ describe('LiveGameStateService', () => {
         { type: 'HITTING_ERROR', playerId: 'p2', period: 1, timestamp: 6 },
         { type: 'SET_ERROR', playerId: 'p1', period: 1, timestamp: 7 },
         { type: 'SERVE_RECEIVE', playerId: 'p2', period: 1, timestamp: 8, payload: { score: 0 } },
+        { type: 'SERVE_RECEIVE', playerId: 'p2', period: 1, timestamp: 8.5, payload: { score: 0, isOverpass: true, quality: 'OVERPASS' } },
         { type: 'POINT_LOST', period: 1, timestamp: 9 },
       ]);
 
       // Team points: KILL (1) + ACE (1) + BLOCK (1) + POINT_WON (1) = 4
-      // Opponent points: SERVICE_ERROR (1) + HITTING_ERROR (1) + SET_ERROR (1) + SERVE_RECEIVE 0 (1) + POINT_LOST (1) = 5
+      // Opponent points: SERVICE_ERROR (1) + HITTING_ERROR (1) + SET_ERROR (1) + SERVE_RECEIVE 0 (1) [not overpass] + POINT_LOST (1) = 5
       expect(service.score()).toEqual({ team: 4, opponent: 5 });
+      expect(service.playerStats()['p2'].passCount).toBe(2);
+      expect(service.playerStats()['p2'].overpasses).toBe(1);
     });
 
     it('should undo atomic batch of POSITION_SWAP events in single undoLastEvent', () => {

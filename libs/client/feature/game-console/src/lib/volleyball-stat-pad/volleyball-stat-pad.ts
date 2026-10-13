@@ -167,7 +167,14 @@ export class VolleyballStatPadComponent {
     if (!armed) return false;
     if (armed.type !== type) return false;
     if (payloadMatch !== undefined) {
-      return armed.payload?.score === payloadMatch?.score;
+      if (payloadMatch['isOverpass'] !== undefined) {
+        return armed.payload?.['isOverpass'] === payloadMatch['isOverpass'];
+      }
+      if (payloadMatch['score'] !== undefined) {
+        if (armed.payload?.['isOverpass']) return false;
+        return armed.payload?.['score'] === payloadMatch['score'];
+      }
+      return true;
     }
     return true;
   }

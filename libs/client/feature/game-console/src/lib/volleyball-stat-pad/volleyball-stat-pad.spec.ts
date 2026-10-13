@@ -50,6 +50,14 @@ describe('VolleyballStatPadComponent', () => {
       playerId: 'p1',
       payload: { score: 3 },
     });
+
+    // Tap Overpass
+    component.handleKeypadPress('SERVE_RECEIVE', 'Overpass', { score: 0, isOverpass: true, quality: 'OVERPASS' });
+    expect(spy).toHaveBeenCalledWith({
+      type: 'SERVE_RECEIVE',
+      playerId: 'p1',
+      payload: { score: 0, isOverpass: true, quality: 'OVERPASS' },
+    });
   });
 
   it('Flow B: should arm stat when pressed without player, then fulfill when fulfillArmedStat is called', () => {
@@ -129,5 +137,21 @@ describe('VolleyballStatPadComponent', () => {
     const spy = vi.spyOn(component.subOffClicked, 'emit');
     component.handleKeypadPress('SUB_OFF', 'Sub Off to Bench');
     expect(spy).toHaveBeenCalledWith(mockPlayer);
+  });
+
+  it('should correctly distinguish armed Overpass vs armed Pass 0', () => {
+    // Arm Overpass
+    component.handleKeypadPress('SERVE_RECEIVE', 'Overpass', { score: 0, isOverpass: true, quality: 'OVERPASS' });
+    expect(component.isStatArmed('SERVE_RECEIVE', { isOverpass: true })).toBe(true);
+    expect(component.isStatArmed('SERVE_RECEIVE', { score: 0 })).toBe(false);
+
+    // Disarm
+    component.handleKeypadPress('SERVE_RECEIVE', 'Overpass', { score: 0, isOverpass: true, quality: 'OVERPASS' });
+    expect(component.isStatArmed('SERVE_RECEIVE', { isOverpass: true })).toBe(false);
+
+    // Arm Ace Against (score 0)
+    component.handleKeypadPress('SERVE_RECEIVE', 'Pass 0 (Ace Against)', { score: 0 });
+    expect(component.isStatArmed('SERVE_RECEIVE', { score: 0 })).toBe(true);
+    expect(component.isStatArmed('SERVE_RECEIVE', { isOverpass: true })).toBe(false);
   });
 });

@@ -200,7 +200,7 @@
     <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mb-1 px-1">
       Passing (Serve Receive)
     </div>
-    <div class="grid grid-cols-4 gap-1.5">
+    <div class="grid grid-cols-5 gap-1.5">
       <button
         type="button"
         (click)="handleKeypadPress('SERVE_RECEIVE', 'Pass 3 (Perfect)', { score: 3 })"
@@ -233,7 +233,19 @@
       >
         <div class="flex flex-col items-center">
           <span class="text-xs font-black">1</span>
-          <span class="text-[8px] font-semibold text-amber-200">Out System</span>
+          <span class="text-[8px] font-semibold text-amber-200">Out Sys</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SERVE_RECEIVE', 'Overpass', { score: 0, isOverpass: true, quality: 'OVERPASS' })"
+        class="keypad-btn bg-purple-700 hover:bg-purple-600 text-white"
+        [class.armed-active]="isStatArmed('SERVE_RECEIVE', { isOverpass: true })"
+      >
+        <div class="flex flex-col items-center">
+          <span class="text-xs font-black">OP</span>
+          <span class="text-[8px] font-semibold text-purple-200">Overpass</span>
         </div>
       </button>
 

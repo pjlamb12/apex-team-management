@@ -20,6 +20,7 @@ export interface VolleyballPlayerStatsItem {
   assists?: number;
   passCount?: number;
   passScoreSum?: number;
+  overpasses?: number;
   serviceErrors?: number;
   hittingErrors?: number;
   [key: string]: unknown;

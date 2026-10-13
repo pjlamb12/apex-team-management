@@ -42,11 +42,14 @@ export class PlayerActionMenuComponent {
     this.actionSelected.emit({ type, playerId: this.player().id });
   }
 
-  protected selectPassingAction(score: number) {
+  protected selectPassingAction(score: number, isOverpass = false) {
     this.actionSelected.emit({
       type: 'SERVE_RECEIVE',
       playerId: this.player().id,
-      payload: { score }
+      payload: {
+        score,
+        ...(isOverpass ? { isOverpass: true, quality: 'OVERPASS' } : {}),
+      },
     });
   }
 }

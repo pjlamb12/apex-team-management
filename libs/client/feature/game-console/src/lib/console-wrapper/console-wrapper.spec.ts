@@ -697,6 +697,16 @@ describe('ConsoleWrapper', () => {
         payload: { score: 0 },
       });
       expect(stateService.score().opponent).toBe(2);
+
+      // Log SERVE_RECEIVE Overpass (Rally continues, opponent score does not increase)
+      component['handleKeypadAction']({
+        type: 'SERVE_RECEIVE',
+        playerId: 'p2',
+        payload: { score: 0, isOverpass: true, quality: 'OVERPASS' },
+      });
+      expect(stateService.score().opponent).toBe(2);
+      expect(stateService.playerStats()['p2'].passCount).toBe(2);
+      expect(stateService.playerStats()['p2'].overpasses).toBe(1);
     });
 
     it('should perform rotateActivePlayers and create clockwise rotation swaps', () => {

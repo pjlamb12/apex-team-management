@@ -422,7 +422,11 @@ export class LiveGameStateService {
           e.type === 'SERVICE_ERROR' ||
           e.type === 'HITTING_ERROR' ||
           e.type === 'SET_ERROR' ||
-          (e.type === 'SERVE_RECEIVE' && (e['payload']?.score === 0 || e['score'] === 0)) ||
+          (e.type === 'SERVE_RECEIVE' &&
+            (e['payload']?.score === 0 || e['score'] === 0) &&
+            !e['payload']?.isOverpass &&
+            !e['isOverpass'] &&
+            e['payload']?.quality !== 'OVERPASS') ||
           e.type === 'POINT_LOST' ||
           e.type === 'OPPONENT_GOAL'
       ).length;
@@ -706,7 +710,11 @@ export class LiveGameStateService {
           e.type === 'SERVICE_ERROR' ||
           e.type === 'HITTING_ERROR' ||
           e.type === 'SET_ERROR' ||
-          (e.type === 'SERVE_RECEIVE' && (e['payload']?.score === 0 || e['score'] === 0)) ||
+          (e.type === 'SERVE_RECEIVE' &&
+            (e['payload']?.score === 0 || e['score'] === 0) &&
+            !e['payload']?.isOverpass &&
+            !e['isOverpass'] &&
+            e['payload']?.quality !== 'OVERPASS') ||
           e.type === 'POINT_LOST' ||
           e.type === 'OPPONENT_GOAL'
       ).length;
@@ -753,7 +761,11 @@ export class LiveGameStateService {
           e.type === 'SERVICE_ERROR' ||
           e.type === 'HITTING_ERROR' ||
           e.type === 'SET_ERROR' ||
-          (e.type === 'SERVE_RECEIVE' && (e['payload']?.score === 0 || e['score'] === 0)) ||
+          (e.type === 'SERVE_RECEIVE' &&
+            (e['payload']?.score === 0 || e['score'] === 0) &&
+            !e['payload']?.isOverpass &&
+            !e['isOverpass'] &&
+            e['payload']?.quality !== 'OVERPASS') ||
           e.type === 'POINT_LOST' ||
           e.type === 'OPPONENT_GOAL'
       ).length;
@@ -845,6 +857,7 @@ export class LiveGameStateService {
       setErrors: 0,
       passCount: 0,
       passScoreSum: 0,
+      overpasses: 0,
       blockTouches: 0,
       serveAttempts: 0,
       points: 0,
@@ -910,6 +923,9 @@ export class LiveGameStateService {
         stats[pid].passCount++;
         const score = e['payload']?.score ?? e['score'] ?? 0;
         stats[pid].passScoreSum += score;
+        if (e['payload']?.isOverpass || e['isOverpass'] || e['payload']?.quality === 'OVERPASS') {
+          stats[pid].overpasses++;
+        }
       } else if (e.type === 'BLOCK_TOUCH') {
         stats[pid].blockTouches++;
       } else if (e.type === 'SERVE_ATTEMPT') {
