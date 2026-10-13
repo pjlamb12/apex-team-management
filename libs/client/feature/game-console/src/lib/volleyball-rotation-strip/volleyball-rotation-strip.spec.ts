@@ -102,11 +102,46 @@ describe('VolleyballRotationStripComponent', () => {
     expect(spy).toHaveBeenCalledWith(5);
   });
 
-  it('should emit quickLiberoSwap when quick swap button is clicked', () => {
-    const spy = vi.spyOn(component.quickLiberoSwap, 'emit');
-    const swapBtn = fixture.nativeElement.querySelector('.libero-card button');
-    expect(swapBtn).toBeTruthy();
-    swapBtn.click();
-    expect(spy).toHaveBeenCalled();
+  it('should not render embedded swap in/out buttons on player cards', () => {
+    const buttons = fixture.nativeElement.querySelectorAll('.zone-card button, .libero-card button');
+    expect(buttons.length).toBe(0);
+  });
+
+  it('should not duplicate Libero when Libero is on court and show replaced player in 7th card', () => {
+    // Put Libero in slot 5 (Zone 6)
+    const onCourtWithLibero = [
+      ...mockPlayers.slice(0, 5),
+      { ...mockLibero, slotIndex: 5 },
+    ];
+    fixture.componentRef.setInput('activePlayers', onCourtWithLibero);
+    fixture.componentRef.setInput('isLiberoOnCourt', true);
+    fixture.componentRef.setInput('replacedPlayer', mockPlayers[5]);
+    fixture.detectChanges();
+
+    const zoneCards = fixture.nativeElement.querySelectorAll('.zone-card');
+    const zone6 = zoneCards[5];
+    expect(zone6.textContent).toContain('L. Libero');
+    expect(zone6.textContent).toContain('LIBERO');
+
+    // 7th card should display the replaced player, NOT a duplicate Libero
+    const seventhCard = fixture.nativeElement.querySelector('.libero-card');
+    expect(seventhCard).toBeTruthy();
+    expect(seventhCard.textContent).toContain('D. BackMiddle');
+    expect(seventhCard.textContent).toContain('REPLACED');
+    expect(seventhCard.textContent).not.toContain('L. Libero');
+  });
+
+  it('should hide 7th card if Libero is on court and no replaced player is provided', () => {
+    const onCourtWithLibero = [
+      ...mockPlayers.slice(0, 5),
+      { ...mockLibero, slotIndex: 5 },
+    ];
+    fixture.componentRef.setInput('activePlayers', onCourtWithLibero);
+    fixture.componentRef.setInput('isLiberoOnCourt', true);
+    fixture.componentRef.setInput('replacedPlayer', null);
+    fixture.detectChanges();
+
+    const seventhCard = fixture.nativeElement.querySelector('.libero-card');
+    expect(seventhCard).toBeNull();
   });
 });

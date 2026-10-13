@@ -28,12 +28,6 @@
   }
 }
 
-.control-btn {
-  touch-action: manipulation;
-  &:active {
-    transform: scale(0.95);
-  }
-}
 
 @keyframes pulseGlow {
   0% {

@@ -537,6 +537,7 @@
                   [playerStats]="stateService.playerStats()"
                   [liberoPlayer]="volleyballLiberoPlayer()"
                   [isLiberoOnCourt]="isVolleyballLiberoOnCourt()"
+                  [replacedPlayer]="volleyballReplacedPlayer()"
                   [replacedByLiberoId]="stateService.liberoDesignation()?.replacedId || null"
                   (playerSelected)="handleVolleyballPlayerSelected($event)"
                   (emptySlotClicked)="handleEmptySlotSelection($event)"

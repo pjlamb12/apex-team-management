@@ -318,6 +318,12 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     return this.stateService.activePlayers().some((p) => p.id === liberoId);
   });
 
+  protected volleyballReplacedPlayer = computed<Player | null>(() => {
+    const replacedId = this.stateService.liberoDesignation()?.replacedId;
+    if (!replacedId) return null;
+    return this.stateService.players().find((p) => p.id === replacedId) || null;
+  });
+
   protected selectedAnyPlayer = computed<Player | null>(() => {
     const selId = this.selectedPlayerId();
     if (!selId) return null;

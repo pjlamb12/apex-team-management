@@ -41,7 +41,7 @@
 
             <!-- Server or Libero Badge -->
             @if (zone.isLibero) {
-              <span class="text-[9px] font-black uppercase tracking-wider bg-purple-600/30 text-purple-300 border border-purple-500/40 px-1 py-0.5 rounded flex items-center gap-0.5">
+              <span class="text-[9px] font-black uppercase tracking-wider bg-purple-600 text-white px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
                 <ion-icon name="shield-outline" class="text-[10px]"></ion-icon>
                 <span>LIBERO</span>
               </span>
@@ -63,47 +63,20 @@
           </div>
 
           <!-- Bottom Row: Live Stats (K, A, D, P.Avg) -->
-          <div class="flex items-center justify-between text-[10px] tabular-nums pt-1 border-t border-white/10 gap-1">
-            <span class="text-emerald-400 font-bold" title="Kills">
-              K:<strong class="text-white ml-0.5">{{ zone.stats.kills }}</strong>
+          <div class="flex items-center justify-between text-[10px] tabular-nums pt-1 border-t border-ap-border/40 gap-1">
+            <span class="text-emerald-500 dark:text-emerald-400 font-bold" title="Kills">
+              K:<strong class="text-ap-text dark:text-white ml-0.5">{{ zone.stats.kills }}</strong>
             </span>
-            <span class="text-amber-400 font-bold" title="Aces">
-              A:<strong class="text-white ml-0.5">{{ zone.stats.aces }}</strong>
+            <span class="text-amber-500 dark:text-amber-400 font-bold" title="Aces">
+              A:<strong class="text-ap-text dark:text-white ml-0.5">{{ zone.stats.aces }}</strong>
             </span>
-            <span class="text-blue-400 font-bold" title="Digs">
-              D:<strong class="text-white ml-0.5">{{ zone.stats.digs }}</strong>
+            <span class="text-blue-500 dark:text-blue-400 font-bold" title="Digs">
+              D:<strong class="text-ap-text dark:text-white ml-0.5">{{ zone.stats.digs }}</strong>
             </span>
-            <span class="text-purple-300 font-bold" title="Passing Average">
-              P:<strong class="text-white ml-0.5">{{ zone.stats.passAvg }}</strong>
+            <span class="text-purple-600 dark:text-purple-300 font-bold" title="Passing Average">
+              P:<strong class="text-ap-text dark:text-white ml-0.5">{{ zone.stats.passAvg }}</strong>
             </span>
           </div>
-
-          <!-- Quick Libero Swap Button for Back Row (Zones 1, 5, 6) when Libero exists -->
-          @if (liberoPlayer() && zone.isBackRow) {
-            <div class="mt-1.5 pt-1 border-t border-white/5 flex justify-end">
-              @if (zone.isLibero) {
-                <button
-                  type="button"
-                  (click)="handleQuickLiberoSwap(zone.player.id, $event)"
-                  class="text-[9px] font-black uppercase text-purple-300 hover:text-white bg-purple-900/40 hover:bg-purple-800/60 border border-purple-500/40 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 w-full justify-center"
-                  title="Swap Libero out for bench player"
-                >
-                  <ion-icon name="swap-horizontal-outline"></ion-icon>
-                  <span>Swap Out</span>
-                </button>
-              } @else if (!isLiberoOnCourt()) {
-                <button
-                  type="button"
-                  (click)="handleQuickLiberoSwap(zone.player.id, $event)"
-                  class="text-[9px] font-black uppercase text-amber-300 hover:text-white bg-amber-900/30 hover:bg-amber-800/50 border border-amber-500/40 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 w-full justify-center"
-                  title="Quick swap with Libero"
-                >
-                  <ion-icon name="swap-horizontal-outline"></ion-icon>
-                  <span>Libero In</span>
-                </button>
-              }
-            </div>
-          }
         </div>
       } @else {
         <!-- Empty Slot Card -->
@@ -125,92 +98,75 @@
     }
 
     <!-- Libero Touch Card (7th Card) -->
-    @if (liberoCardData(); as liberoData) {
+    <!-- 7th Touch Card: Libero on Bench OR Replaced Player on Bench -->
+    @if (liberoCardData(); as seventhData) {
       <div
         role="button"
         tabindex="0"
         class="libero-card cursor-pointer rounded-xl p-2 flex flex-col justify-between transition-all duration-150 border min-w-[135px] sm:min-w-0"
-        [class.selected-card]="selectedPlayerId() === liberoData.player.id"
-        [class.border-purple-400]="selectedPlayerId() === liberoData.player.id"
-        [class.bg-purple-500\/15]="selectedPlayerId() === liberoData.player.id"
-        [class.shadow-md]="selectedPlayerId() === liberoData.player.id"
-        [class.shadow-purple-500\/20]="selectedPlayerId() === liberoData.player.id"
-        [class.border-purple-500\/50]="selectedPlayerId() !== liberoData.player.id"
-        [class.bg-slate-900\/80]="selectedPlayerId() !== liberoData.player.id"
-        (click)="handlePlayerClick(liberoData.player)"
-        (keydown.enter)="handlePlayerClick(liberoData.player)"
-        (keydown.space)="$event.preventDefault(); handlePlayerClick(liberoData.player)"
+        [class.selected-card]="selectedPlayerId() === seventhData.player.id"
+        [class.border-purple-400]="selectedPlayerId() === seventhData.player.id"
+        [class.bg-purple-500\/15]="selectedPlayerId() === seventhData.player.id"
+        [class.shadow-md]="selectedPlayerId() === seventhData.player.id"
+        [class.shadow-purple-500\/20]="selectedPlayerId() === seventhData.player.id"
+        [class.border-ap-border]="selectedPlayerId() !== seventhData.player.id"
+        [class.bg-ap-surface-raised]="selectedPlayerId() !== seventhData.player.id"
+        (click)="handlePlayerClick(seventhData.player)"
+        (keydown.enter)="handlePlayerClick(seventhData.player)"
+        (keydown.space)="$event.preventDefault(); handlePlayerClick(seventhData.player)"
       >
-        <!-- Top Row: Libero Badge + Jersey + Status -->
+        <!-- Top Row: Badge + Jersey + Status -->
         <div class="flex items-center justify-between gap-1 mb-1">
           <div class="flex items-center gap-1">
             <div
-              class="jersey-badge min-w-[28px] h-6 px-1 rounded-md font-black text-xs flex items-center justify-center"
-              [class.bg-purple-400]="selectedPlayerId() === liberoData.player.id"
-              [class.text-black]="selectedPlayerId() === liberoData.player.id"
-              [class.bg-purple-900\/50]="selectedPlayerId() !== liberoData.player.id"
-              [class.text-purple-200]="selectedPlayerId() !== liberoData.player.id"
+              class="jersey-badge min-w-[28px] h-6 px-1 rounded-md font-black text-xs flex items-center justify-center transition-colors"
+              [class.bg-purple-500]="selectedPlayerId() === seventhData.player.id"
+              [class.text-white]="selectedPlayerId() === seventhData.player.id"
+              [class.bg-ap-surface]="selectedPlayerId() !== seventhData.player.id"
+              [class.text-ap-text]="selectedPlayerId() !== seventhData.player.id"
               [class.border]="true"
-              [class.border-purple-400\/40]="selectedPlayerId() !== liberoData.player.id"
+              [class.border-ap-border]="selectedPlayerId() !== seventhData.player.id"
             >
-              #{{ liberoData.player.jerseyNumber }}
+              #{{ seventhData.player.jerseyNumber }}
             </div>
-            <span class="text-[9px] font-black uppercase tracking-wider bg-purple-500 text-white px-1.5 py-0.5 rounded shadow">
-              LIBERO
+            <span
+              class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm"
+              [class]="seventhData.badgeClass"
+            >
+              {{ seventhData.badgeText }}
             </span>
           </div>
 
           <span
             class="text-[9px] font-black uppercase px-1 py-0.5 rounded"
-            [class.bg-emerald-500\/20]="liberoData.isOnCourt"
-            [class.text-emerald-300]="liberoData.isOnCourt"
-            [class.bg-slate-700\/40]="!liberoData.isOnCourt"
-            [class.text-slate-400]="!liberoData.isOnCourt"
+            [class]="seventhData.statusClass"
           >
-            {{ liberoData.isOnCourt ? ('Z' + liberoData.zoneNumber) : 'Bench' }}
+            {{ seventhData.statusText }}
           </span>
         </div>
 
         <!-- Middle Row: Name -->
-        <div class="truncate text-xs font-bold text-ap-text mb-1.5" [title]="liberoData.player.firstName + ' ' + liberoData.player.lastName">
-          {{ getPlayerShortName(liberoData.player) }}
+        <div class="truncate text-xs font-bold text-ap-text mb-1.5" [title]="seventhData.player.firstName + ' ' + seventhData.player.lastName">
+          {{ getPlayerShortName(seventhData.player) }}
         </div>
 
         <!-- Live Stats: Digs, P.Avg, Aces, Kills -->
-        <div class="flex items-center justify-between text-[10px] tabular-nums pt-1 border-t border-purple-500/20 gap-1">
-          <span class="text-blue-400 font-bold" title="Digs">
-            D:<strong class="text-white ml-0.5">{{ liberoData.stats.digs }}</strong>
+        <div class="flex items-center justify-between text-[10px] tabular-nums pt-1 border-t border-ap-border/40 gap-1">
+          <span class="text-blue-500 dark:text-blue-400 font-bold" title="Digs">
+            D:<strong class="text-ap-text dark:text-white ml-0.5">{{ seventhData.stats.digs }}</strong>
           </span>
-          <span class="text-purple-300 font-bold" title="Passing Average">
-            P:<strong class="text-white ml-0.5">{{ liberoData.stats.passAvg }}</strong>
+          <span class="text-purple-600 dark:text-purple-300 font-bold" title="Passing Average">
+            P:<strong class="text-ap-text dark:text-white ml-0.5">{{ seventhData.stats.passAvg }}</strong>
           </span>
-          <span class="text-amber-400 font-bold" title="Aces">
-            A:<strong class="text-white ml-0.5">{{ liberoData.stats.aces }}</strong>
+          <span class="text-amber-500 dark:text-amber-400 font-bold" title="Aces">
+            A:<strong class="text-ap-text dark:text-white ml-0.5">{{ seventhData.stats.aces }}</strong>
           </span>
-          <span class="text-emerald-400 font-bold" title="Kills">
-            K:<strong class="text-white ml-0.5">{{ liberoData.stats.kills }}</strong>
+          <span class="text-emerald-500 dark:text-emerald-400 font-bold" title="Kills">
+            K:<strong class="text-ap-text dark:text-white ml-0.5">{{ seventhData.stats.kills }}</strong>
           </span>
-        </div>
-
-        <!-- Quick Swap Action Button -->
-        <div class="mt-1.5 pt-1 border-t border-purple-500/20">
-          <button
-            type="button"
-            (click)="handleQuickLiberoSwap(undefined, $event)"
-            class="text-[9px] font-black uppercase py-0.5 px-2 rounded w-full flex items-center justify-center gap-1 transition-colors"
-            [class.bg-purple-600]="!liberoData.isOnCourt"
-            [class.hover:bg-purple-500]="!liberoData.isOnCourt"
-            [class.text-white]="!liberoData.isOnCourt"
-            [class.bg-slate-700]="liberoData.isOnCourt"
-            [class.hover:bg-slate-600]="liberoData.isOnCourt"
-            [class.text-slate-200]="liberoData.isOnCourt"
-          >
-            <ion-icon name="swap-horizontal-outline"></ion-icon>
-            <span>{{ liberoData.isOnCourt ? 'Swap Out' : 'Swap In' }}</span>
-          </button>
         </div>
       </div>
-    } @else {
+    } @else if (!liberoPlayer()) {
       <!-- Placeholder when no Libero is set -->
       <div class="rounded-xl p-2 flex flex-col items-center justify-center border border-dashed border-ap-border/40 bg-ap-surface/40 text-ap-muted min-w-[135px] sm:min-w-0 opacity-70">
         <span class="text-[9px] font-black uppercase tracking-wider text-ap-muted mb-0.5">Libero</span>

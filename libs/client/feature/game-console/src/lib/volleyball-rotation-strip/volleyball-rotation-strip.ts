@@ -56,6 +56,7 @@ export class VolleyballRotationStripComponent {
   playerStats = input<Record<string, VolleyballPlayerStatsItem>>({});
   liberoPlayer = input<Player | null>(null);
   isLiberoOnCourt = input<boolean>(false);
+  replacedPlayer = input<Player | null>(null);
   replacedByLiberoId = input<string | null>(null);
   playersOnCourt = input<number>(6);
 
@@ -111,32 +112,57 @@ export class VolleyballRotationStripComponent {
     });
   });
 
-  // Libero Card Computed Data
+  // 7th Card Computed Data: Libero on bench, or Replaced Player on bench when Libero is on court
   protected readonly liberoCardData = computed(() => {
     const libero = this.liberoPlayer();
     if (!libero) return null;
 
     const statsMap = this.playerStats();
+    const isLiberoOnCourt = this.isLiberoOnCourt();
+
+    if (isLiberoOnCourt) {
+      // Libero is on court (already shown in zoneCards): show replaced bench player if known
+      const replaced = this.replacedPlayer();
+      if (!replaced) return null;
+
+      const ps = statsMap[replaced.id];
+      const count = ps?.passCount || 0;
+      const sum = ps?.passScoreSum || 0;
+      return {
+        player: replaced,
+        isOnCourt: false,
+        isLibero: false,
+        badgeText: 'REPLACED',
+        badgeClass: 'bg-slate-700 text-slate-200',
+        statusText: 'Bench',
+        statusClass: 'bg-slate-700/40 text-slate-400',
+        stats: {
+          digs: ps?.digs || 0,
+          aces: ps?.aces || 0,
+          kills: ps?.kills || 0,
+          passAvg: count > 0 ? (sum / count).toFixed(2) : '-',
+        },
+      };
+    }
+
+    // Libero is on bench: show Libero card
     const ps = statsMap[libero.id];
     const count = ps?.passCount || 0;
     const sum = ps?.passScoreSum || 0;
-    const stats = {
-      digs: ps?.digs || 0,
-      aces: ps?.aces || 0,
-      kills: ps?.kills || 0,
-      passAvg: count > 0 ? (sum / count).toFixed(2) : '-',
-    };
-
-    const active = this.activePlayers();
-    const onCourtPlayer = active.find((p) => p.id === libero.id);
-    const isOnCourt = !!onCourtPlayer;
-    const zoneNumber = onCourtPlayer?.slotIndex !== undefined ? onCourtPlayer.slotIndex + 1 : null;
-
     return {
       player: libero,
-      isOnCourt,
-      zoneNumber,
-      stats,
+      isOnCourt: false,
+      isLibero: true,
+      badgeText: 'LIBERO',
+      badgeClass: 'bg-purple-600 text-white',
+      statusText: 'Bench',
+      statusClass: 'bg-purple-900/40 text-purple-300',
+      stats: {
+        digs: ps?.digs || 0,
+        aces: ps?.aces || 0,
+        kills: ps?.kills || 0,
+        passAvg: count > 0 ? (sum / count).toFixed(2) : '-',
+      },
     };
   });
 

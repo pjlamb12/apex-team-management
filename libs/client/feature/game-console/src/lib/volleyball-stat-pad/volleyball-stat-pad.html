@@ -55,70 +55,81 @@
   </div>
 
   <!-- Quick Match Controls: Rotate, Point Us, Point Opp, Libero Swap, Undo -->
-  <div class="quick-controls grid grid-cols-5 gap-1.5 p-1 bg-black/20 rounded-lg border border-white/5">
-    <button
-      type="button"
-      (click)="handleRotate()"
-      class="control-btn bg-amber-500 hover:bg-amber-400 text-slate-950 flex flex-col items-center justify-center p-1.5 rounded font-black text-[10px] transition-transform active:scale-95 shadow"
-      title="Rotate players clockwise"
-    >
-      <ion-icon name="refresh-outline" class="text-sm"></ion-icon>
-      <span class="uppercase tracking-tight">Rotate</span>
-    </button>
-
-    <button
-      type="button"
-      (click)="handleAddPointUs()"
-      class="control-btn bg-emerald-600 hover:bg-emerald-500 text-white flex flex-col items-center justify-center p-1.5 rounded font-black text-[10px] transition-transform active:scale-95 shadow"
-      title="Add point to our team"
-    >
-      <ion-icon name="add-circle-outline" class="text-sm"></ion-icon>
-      <span class="uppercase tracking-tight">+ Pt Us</span>
-    </button>
-
-    <button
-      type="button"
-      (click)="handleAddPointOpp()"
-      class="control-btn bg-rose-600 hover:bg-rose-500 text-white flex flex-col items-center justify-center p-1.5 rounded font-black text-[10px] transition-transform active:scale-95 shadow"
-      title="Add point to opponent"
-    >
-      <ion-icon name="remove-circle-outline" class="text-sm"></ion-icon>
-      <span class="uppercase tracking-tight">+ Pt Opp</span>
-    </button>
-
-    @if (hasLibero()) {
+  <div class="keypad-section mb-2">
+    <div class="grid grid-cols-5 gap-1.5">
       <button
         type="button"
-        (click)="handleQuickLiberoSwap()"
-        class="control-btn bg-purple-600 hover:bg-purple-500 text-white flex flex-col items-center justify-center p-1.5 rounded font-black text-[10px] transition-transform active:scale-95 shadow"
-        title="Toggle Libero swap with back row"
+        (click)="handleRotate()"
+        class="keypad-btn bg-amber-500 hover:bg-amber-400 text-slate-950"
+        title="Rotate players clockwise"
       >
-        <ion-icon name="swap-horizontal-outline" class="text-sm"></ion-icon>
-        <span class="uppercase tracking-tight">{{ isLiberoOnCourt() ? 'Lib Out' : 'Lib In' }}</span>
+        <div class="flex flex-col items-center">
+          <ion-icon name="refresh-outline" class="text-sm mb-0.5"></ion-icon>
+          <span class="text-[10px] font-black uppercase tracking-tight">Rotate</span>
+        </div>
       </button>
-    } @else {
-      <div class="control-btn flex items-center justify-center rounded text-slate-600 border border-white/5 text-[9px] font-bold text-center">
-        No Lib
-      </div>
-    }
 
-    <button
-      type="button"
-      (click)="handleUndo()"
-      [disabled]="!canUndo()"
-      class="control-btn flex flex-col items-center justify-center p-1.5 rounded font-black text-[10px] transition-transform active:scale-95 shadow"
-      [class.bg-slate-700]="canUndo()"
-      [class.hover:bg-slate-600]="canUndo()"
-      [class.text-white]="canUndo()"
-      [class.bg-slate-800\/40]="!canUndo()"
-      [class.text-slate-600]="!canUndo()"
-      [class.opacity-40]="!canUndo()"
-      [class.pointer-events-none]="!canUndo()"
-      title="Undo last logged action"
-    >
-      <ion-icon name="arrow-undo-outline" class="text-sm"></ion-icon>
-      <span class="uppercase tracking-tight">Undo</span>
-    </button>
+      <button
+        type="button"
+        (click)="handleAddPointUs()"
+        class="keypad-btn bg-emerald-600 hover:bg-emerald-500 text-white"
+        title="Add point to our team"
+      >
+        <div class="flex flex-col items-center">
+          <ion-icon name="add-circle-outline" class="text-sm mb-0.5"></ion-icon>
+          <span class="text-[10px] font-black uppercase tracking-tight">+ Pt Us</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleAddPointOpp()"
+        class="keypad-btn bg-rose-600 hover:bg-rose-500 text-white"
+        title="Add point to opponent"
+      >
+        <div class="flex flex-col items-center">
+          <ion-icon name="remove-circle-outline" class="text-sm mb-0.5"></ion-icon>
+          <span class="text-[10px] font-black uppercase tracking-tight">+ Pt Opp</span>
+        </div>
+      </button>
+
+      @if (hasLibero()) {
+        <button
+          type="button"
+          (click)="handleQuickLiberoSwap()"
+          class="keypad-btn bg-purple-600 hover:bg-purple-500 text-white"
+          title="Toggle Libero swap with back row"
+        >
+          <div class="flex flex-col items-center">
+            <ion-icon name="swap-horizontal-outline" class="text-sm mb-0.5"></ion-icon>
+            <span class="text-[10px] font-black uppercase tracking-tight">{{ isLiberoOnCourt() ? 'Lib Out' : 'Lib In' }}</span>
+          </div>
+        </button>
+      } @else {
+        <div class="keypad-btn bg-slate-800/40 text-slate-500 text-[10px] font-bold text-center flex flex-col items-center justify-center">
+          <span>No Lib</span>
+        </div>
+      }
+
+      <button
+        type="button"
+        (click)="handleUndo()"
+        [disabled]="!canUndo()"
+        class="keypad-btn text-white"
+        [class.bg-slate-700]="canUndo()"
+        [class.hover:bg-slate-600]="canUndo()"
+        [class.bg-slate-800\/40]="!canUndo()"
+        [class.text-slate-600]="!canUndo()"
+        [class.opacity-40]="!canUndo()"
+        [class.pointer-events-none]="!canUndo()"
+        title="Undo last logged action"
+      >
+        <div class="flex flex-col items-center">
+          <ion-icon name="arrow-undo-outline" class="text-sm mb-0.5"></ion-icon>
+          <span class="text-[10px] font-black uppercase tracking-tight">Undo</span>
+        </div>
+      </button>
+    </div>
   </div>
 
   <!-- Section 1: Attacking (Hitting) -->
