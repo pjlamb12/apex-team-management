@@ -227,4 +227,63 @@ describe('BasketballCourtViewComponent', () => {
 
     expect(emptySlotsEmitted).toEqual([0]);
   });
+
+  it('should compute selectedShooter and update when setTargetPlayer is called', () => {
+    component.activeTouch.set({
+      x: 50,
+      y: 50,
+      pixelX: 250,
+      pixelY: 250,
+      shotType: '2PT',
+      distanceFeet: 15,
+      zone: 'mid_range',
+      targetPlayerId: 'p1',
+    });
+
+    expect(component['selectedShooter']()?.id).toBe('p1');
+    expect(component['selectedShooter']()?.jerseyNumber).toBe(30);
+
+    component['setTargetPlayer']('p2');
+    expect(component.activeTouch()?.targetPlayerId).toBe('p2');
+    expect(component['selectedShooter']()?.id).toBe('p2');
+    expect(component['selectedShooter']()?.jerseyNumber).toBe(11);
+  });
+
+  it('should calculate safe HUD transforms preventing boundary clipping across court zones', () => {
+    // Near left edge (x < 18)
+    component.activeTouch.set({
+      x: 10,
+      y: 20,
+      pixelX: 50,
+      pixelY: 100,
+      shotType: '3PT',
+      distanceFeet: 22,
+      zone: 'corner_left',
+    });
+    expect(component['getHudTransform']()).toBe('translate(0%, 16px)');
+
+    // Near right edge (x > 82)
+    component.activeTouch.set({
+      x: 90,
+      y: 20,
+      pixelX: 450,
+      pixelY: 100,
+      shotType: '3PT',
+      distanceFeet: 22,
+      zone: 'corner_right',
+    });
+    expect(component['getHudTransform']()).toBe('translate(-100%, 16px)');
+
+    // Center court (x = 50, y = 60)
+    component.activeTouch.set({
+      x: 50,
+      y: 60,
+      pixelX: 250,
+      pixelY: 300,
+      shotType: '3PT',
+      distanceFeet: 23,
+      zone: 'top_arc',
+    });
+    expect(component['getHudTransform']()).toBe('translate(-50%, calc(-100% - 14px))');
+  });
 });

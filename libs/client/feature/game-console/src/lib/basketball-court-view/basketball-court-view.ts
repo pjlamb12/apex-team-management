@@ -244,19 +244,31 @@ export class BasketballCourtViewComponent {
     this.backgroundClicked.emit();
   }
 
+  protected selectedShooter = computed(() => {
+    const touch = this.activeTouch();
+    if (!touch) return null;
+    const targetId = touch.targetPlayerId || this.selectedPlayerId();
+    if (!targetId) return null;
+    return this.activePlayers().find((p) => p.id === targetId) || null;
+  });
+
   // Calculate safe transform for HUD card to avoid boundary overflow
   protected getHudTransform(): string {
     const touch = this.activeTouch();
     if (!touch) return 'translate(-50%, -100%)';
 
     let xOffset = '-50%';
-    if (touch.x < 28) {
-      xOffset = '-10%';
-    } else if (touch.x > 72) {
-      xOffset = '-90%';
+    if (touch.x < 18) {
+      xOffset = '0%';
+    } else if (touch.x < 35) {
+      xOffset = '-20%';
+    } else if (touch.x > 82) {
+      xOffset = '-100%';
+    } else if (touch.x > 65) {
+      xOffset = '-80%';
     }
 
-    const yOffset = touch.y < 35 ? '16px' : 'calc(-100% - 12px)';
+    const yOffset = touch.y < 38 ? '16px' : 'calc(-100% - 14px)';
     return `translate(${xOffset}, ${yOffset})`;
   }
 
