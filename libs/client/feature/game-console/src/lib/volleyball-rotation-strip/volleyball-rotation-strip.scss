@@ -30,3 +30,22 @@
 .court-grid-layout {
   min-height: 280px;
 }
+
+.view-mode-toggle {
+  touch-action: manipulation;
+}
+
+.toggle-segment {
+  touch-action: manipulation;
+  line-height: 1;
+
+  ion-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
