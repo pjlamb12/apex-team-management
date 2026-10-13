@@ -926,6 +926,7 @@ export class GameSummary implements OnDestroy {
         teamId: this.teamId,
         eventId: this.eventId,
         seasonId: this.game()?.seasonId,
+        sportName: this.sportName(),
       },
       breakpoints: [0, 0.85, 1.0],
       initialBreakpoint: 1.0,

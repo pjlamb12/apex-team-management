@@ -265,6 +265,7 @@ describe('GameSummary Event Sorting', () => {
         teamId: 'team-1',
         eventId: 'event-1',
         seasonId: undefined,
+        sportName: 'Soccer',
       },
     }));
   });

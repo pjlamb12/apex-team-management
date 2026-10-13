@@ -160,4 +160,52 @@ describe('AwardBadgeModalComponent', () => {
     (component as any).dismiss();
     expect(mockModalCtrl.dismiss).toHaveBeenCalled();
   });
+
+  it('should load basketball-specific badges and titles when sportName is Basketball', () => {
+    component.sportName = 'Basketball';
+    fixture.detectChanges();
+
+    const badges = (component as any).badges();
+    const types = badges.map((b: any) => b.type);
+    expect(types).toContain('player_of_the_game');
+    expect(types).toContain('lockdown_defender');
+    expect(types).toContain('paint_protector');
+    expect(types).toContain('sharpshooter');
+    expect(types).not.toContain('golden_gloves');
+
+    const paintProtector = badges.find((b: any) => b.type === 'paint_protector');
+    expect(paintProtector?.title).toBe('Paint Anchor & Board Beast');
+    expect(paintProtector?.description).toContain('defensive glass');
+
+    expect((component as any).modalTitle()).toBe('Award Game Badges & Honors');
+    expect((component as any).modalSubtitle()).toBe('Recognize Player of the Game, grit, defense, and teamwork');
+    expect((component as any).notesPlaceholder()).toContain('Clutch 4th-quarter stops');
+    expect((component as any).selectedBadge().type).toBe('player_of_the_game');
+  });
+
+  it('should load volleyball-specific badges when sportName is Volleyball', () => {
+    component.sportName = 'Volleyball';
+    fixture.detectChanges();
+
+    const badges = (component as any).badges();
+    const types = badges.map((b: any) => b.type);
+    expect(types).toContain('player_of_the_match');
+    expect(types).toContain('the_roof');
+    expect(types).toContain('floor_defender');
+    expect(types).toContain('set_maestro');
+    expect(types).toContain('ace_server');
+    expect(types).toContain('terminal_hitter');
+    expect(types).not.toContain('golden_gloves');
+
+    const theRoof = badges.find((b: any) => b.type === 'the_roof');
+    expect(theRoof?.title).toBe('The Roof / Net Enforcer');
+    expect(theRoof?.description).toContain('sealing the net');
+
+    const aceServer = badges.find((b: any) => b.type === 'ace_server');
+    expect(aceServer?.title).toBe('Service Specialist / Ace Hunter');
+
+    expect((component as any).modalTitle()).toBe('Award Match Badges & Honors');
+    expect((component as any).notesPlaceholder()).toContain('5-point service run');
+    expect((component as any).selectedBadge().type).toBe('player_of_the_match');
+  });
 });
