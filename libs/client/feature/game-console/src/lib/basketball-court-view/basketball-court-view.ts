@@ -8,7 +8,13 @@ import {
   viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonIcon, IonButton } from '@ionic/angular/standalone';
+import {
+  IonIcon,
+  IonButton,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   checkmarkCircle,
@@ -54,7 +60,14 @@ export interface ShotLoggedPayload {
 @Component({
   selector: 'app-basketball-court-view',
   standalone: true,
-  imports: [CommonModule, IonIcon, IonButton],
+  imports: [
+    CommonModule,
+    IonIcon,
+    IonButton,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
+  ],
   templateUrl: './basketball-court-view.html',
   styleUrls: ['./basketball-court-view.scss'],
 })

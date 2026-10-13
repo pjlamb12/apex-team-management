@@ -2,88 +2,54 @@
   <!-- Top Filter & Controls Header (Hidden in lineup mode) -->
   @if (!isLineupMode()) {
     <div class="court-controls-bar flex flex-wrap items-center justify-between gap-2 p-2 bg-ap-surface border-b border-ap-border/60 shrink-0">
-      <!-- Shot Filter Segment Button Group -->
+      <!-- Shot Filter Segment -->
       <div class="flex items-center gap-1.5">
-        <div class="shot-filter-group inline-flex items-center p-0.5 bg-slate-200/90 dark:bg-slate-900/90 border border-slate-300/80 dark:border-white/10 rounded-lg select-none gap-0.5 shadow-sm">
+        <ion-segment
+          [value]="shotFilter()"
+          (ionChange)="setFilter($event.detail.value)"
+          mode="ios"
+          class="shot-filter-segment min-w-[250px] h-8"
+        >
           <!-- All -->
-          <button
-            type="button"
-            (click)="setFilter('all')"
-            class="px-2.5 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1.5"
-            [class.bg-blue-600]="shotFilter() === 'all'"
-            [class.text-white]="shotFilter() === 'all'"
-            [class.shadow-sm]="shotFilter() === 'all'"
-            [class.text-slate-600]="shotFilter() !== 'all'"
-            [class.dark:text-slate-400]="shotFilter() !== 'all'"
-            [class.hover:text-black]="shotFilter() !== 'all'"
-            [class.dark:hover:text-white]="shotFilter() !== 'all'"
-          >
-            <span>All</span>
-            <span
-              class="text-[10px] font-bold px-1.5 py-0.2 rounded-full transition-colors"
-              [class.bg-blue-700]="shotFilter() === 'all'"
-              [class.text-white]="shotFilter() === 'all'"
-              [class.bg-slate-300\/70]="shotFilter() !== 'all'"
-              [class.dark:bg-white\/10]="shotFilter() !== 'all'"
-              [class.text-slate-700]="shotFilter() !== 'all'"
-              [class.dark:text-slate-300]="shotFilter() !== 'all'"
+          <ion-segment-button value="all" class="text-xs">
+            <ion-label
+              class="transition-all"
+              [class.font-bold]="shotFilter() === 'all'"
+              [class.text-blue-600]="shotFilter() === 'all'"
+              [class.dark:text-blue-400]="shotFilter() === 'all'"
+              [class.opacity-100]="shotFilter() === 'all'"
+              [class.text-slate-500]="shotFilter() !== 'all'"
+              [class.dark:text-slate-400]="shotFilter() !== 'all'"
+              [class.opacity-50]="shotFilter() !== 'all'"
             >
-              {{ allCount() }}
-            </span>
-          </button>
+              All ({{ allCount() }})
+            </ion-label>
+          </ion-segment-button>
 
           <!-- Makes -->
-          <button
-            type="button"
-            (click)="setFilter('makes')"
-            class="px-2.5 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1.5"
-            [class.bg-emerald-600]="shotFilter() === 'makes'"
-            [class.text-white]="shotFilter() === 'makes'"
-            [class.shadow-sm]="shotFilter() === 'makes'"
-            [class.shadow-emerald-950\/50]="shotFilter() === 'makes'"
-            [class.text-emerald-600]="shotFilter() !== 'makes'"
-            [class.dark:text-emerald-400]="shotFilter() !== 'makes'"
-            [class.hover:bg-emerald-500\/10]="shotFilter() !== 'makes'"
-          >
-            <span>Makes</span>
-            <span
-              class="text-[10px] font-bold px-1.5 py-0.2 rounded-full transition-colors"
-              [class.bg-emerald-700]="shotFilter() === 'makes'"
-              [class.text-white]="shotFilter() === 'makes'"
-              [class.bg-emerald-500\/15]="shotFilter() !== 'makes'"
-              [class.text-emerald-700]="shotFilter() !== 'makes'"
-              [class.dark:text-emerald-300]="shotFilter() !== 'makes'"
+          <ion-segment-button value="makes" class="text-xs">
+            <ion-label
+              class="text-emerald-600 dark:text-emerald-400 transition-all"
+              [class.font-bold]="shotFilter() === 'makes'"
+              [class.opacity-100]="shotFilter() === 'makes'"
+              [class.opacity-50]="shotFilter() !== 'makes'"
             >
-              {{ makesCount() }}
-            </span>
-          </button>
+              Makes ({{ makesCount() }})
+            </ion-label>
+          </ion-segment-button>
 
           <!-- Misses -->
-          <button
-            type="button"
-            (click)="setFilter('misses')"
-            class="px-2.5 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1.5"
-            [class.bg-rose-600]="shotFilter() === 'misses'"
-            [class.text-white]="shotFilter() === 'misses'"
-            [class.shadow-sm]="shotFilter() === 'misses'"
-            [class.shadow-rose-950\/50]="shotFilter() === 'misses'"
-            [class.text-rose-600]="shotFilter() !== 'misses'"
-            [class.dark:text-rose-400]="shotFilter() !== 'misses'"
-            [class.hover:bg-rose-500\/10]="shotFilter() !== 'misses'"
-          >
-            <span>Misses</span>
-            <span
-              class="text-[10px] font-bold px-1.5 py-0.2 rounded-full transition-colors"
-              [class.bg-rose-700]="shotFilter() === 'misses'"
-              [class.text-white]="shotFilter() === 'misses'"
-              [class.bg-rose-500\/15]="shotFilter() !== 'misses'"
-              [class.text-rose-700]="shotFilter() !== 'misses'"
-              [class.dark:text-rose-300]="shotFilter() !== 'misses'"
+          <ion-segment-button value="misses" class="text-xs">
+            <ion-label
+              class="text-rose-600 dark:text-rose-400 transition-all"
+              [class.font-bold]="shotFilter() === 'misses'"
+              [class.opacity-100]="shotFilter() === 'misses'"
+              [class.opacity-50]="shotFilter() !== 'misses'"
             >
-              {{ missesCount() }}
-            </span>
-          </button>
-        </div>
+              Misses ({{ missesCount() }})
+            </ion-label>
+          </ion-segment-button>
+        </ion-segment>
 
         <!-- Player Filter Chip if active -->
         @if (filterPlayerId()) {
