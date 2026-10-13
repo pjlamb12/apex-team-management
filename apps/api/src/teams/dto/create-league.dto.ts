@@ -68,4 +68,14 @@ export class CreateLeagueDto {
   @IsInt()
   @IsOptional()
   decidingSetPointCap?: number | null;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  foulLimit?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  bonusThreshold?: number;
 }

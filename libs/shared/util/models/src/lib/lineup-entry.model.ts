@@ -43,8 +43,17 @@ export const SOCCER_FORMATIONS: Record<number, FormationPreset[]> = {
   ],
 };
 
+export const BASKETBALL_FORMATIONS: FormationPreset[] = [
+  { name: 'Standard (PG, SG, SF, PF, C)', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+  { name: '5-Out Motion', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+  { name: '4-Out 1-In', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+  { name: '2-3 Zone', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+  { name: 'Horns (Pick & Roll)', slots: [0, 1, 2, 3, 4], fieldCount: 5 },
+];
+
 export function getDefaultSlots(count: number, sportName?: string): number[] {
   if (sportName === 'Volleyball') return [0, 1, 2, 3, 4, 5];
+  if (sportName === 'Basketball') return [0, 1, 2, 3, 4];
   const presets = SOCCER_FORMATIONS[count];
   if (presets && presets.length > 0) {
     return [...presets[0].slots];
@@ -53,6 +62,16 @@ export function getDefaultSlots(count: number, sportName?: string): number[] {
 }
 
 export function getPositionFromSlot(slot: number, sportName?: string): string {
+  if (sportName === 'Basketball') {
+    const basketballSlots: Record<number, string> = {
+      0: 'PG',
+      1: 'SG',
+      2: 'SF',
+      3: 'PF',
+      4: 'C',
+    };
+    return basketballSlots[slot] || 'UNKNOWN';
+  }
   if (sportName === 'Volleyball') {
     if (slot === 99) return 'Libero';
     const defaults = [

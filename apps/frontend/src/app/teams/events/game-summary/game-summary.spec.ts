@@ -265,6 +265,7 @@ describe('GameSummary Event Sorting', () => {
         teamId: 'team-1',
         eventId: 'event-1',
         seasonId: undefined,
+        sportName: 'Soccer',
       },
     }));
   });
@@ -297,5 +298,181 @@ describe('GameSummary Event Sorting', () => {
       id: 'opp-created',
       name: 'Thunder FC',
     }));
+  });
+
+  describe('Basketball Game Summary Box Scores & Shot Chart', () => {
+    beforeEach(() => {
+      (component as any).sportName.set('Basketball');
+      (component as any).game.set({
+        id: 'g-bball',
+        type: 'GAME',
+        status: 'completed',
+        periodCount: 4,
+      });
+    });
+
+    it('should format basketball period labels as quarters and overtime', () => {
+      expect((component as any).getPeriodLabel(1)).toBe('1st Quarter');
+      expect((component as any).getPeriodLabel(2)).toBe('2nd Quarter');
+      expect((component as any).getPeriodLabel(3)).toBe('3rd Quarter');
+      expect((component as any).getPeriodLabel(4)).toBe('4th Quarter');
+      expect((component as any).getPeriodLabel(5)).toBe('Overtime');
+      expect((component as any).getPeriodLabel(6)).toBe('Overtime 2');
+
+      expect((component as any).getPeriodShortLabel(1)).toBe('Q1');
+      expect((component as any).getPeriodShortLabel(2)).toBe('Q2');
+      expect((component as any).getPeriodShortLabel(3)).toBe('Q3');
+      expect((component as any).getPeriodShortLabel(4)).toBe('Q4');
+      expect((component as any).getPeriodShortLabel(5)).toBe('OT');
+      expect((component as any).getPeriodShortLabel(6)).toBe('2OT');
+    });
+
+    it('should compute basketball team score from MADE_1PT, MADE_2PT, MADE_3PT and opponent score from OPPONENT_SCORE', () => {
+      (component as any).game.set({ status: 'completed', goalsFor: null, goalsAgainst: null });
+      (component as any).gameEvents.set([
+        { id: 'b1', eventType: 'MADE_2PT', minuteOccurred: 2, payload: { period: 1, playerId: 'p1' } },
+        { id: 'b2', eventType: 'MADE_3PT', minuteOccurred: 4, payload: { period: 1, playerId: 'p2' } },
+        { id: 'b3', eventType: 'MADE_1PT', minuteOccurred: 6, payload: { period: 1, playerId: 'p1' } },
+        { id: 'b4', eventType: 'OPPONENT_SCORE', minuteOccurred: 8, payload: { period: 1, points: 2 } },
+        { id: 'b5', eventType: 'OPPONENT_SCORE', minuteOccurred: 10, payload: { period: 2, points: 3 } },
+      ]);
+
+      const score = (component as any).score();
+      // Team: 2 + 3 + 1 = 6; Opponent: 2 + 3 = 5
+      expect(score).toEqual({ team: 6, opponent: 5 });
+    });
+
+    it('should compute basketballPeriodScores broken down by quarter', () => {
+      (component as any).gameEvents.set([
+        { id: 'b1', eventType: 'MADE_2PT', minuteOccurred: 2, payload: { period: 1, playerId: 'p1' } },
+        { id: 'b2', eventType: 'OPPONENT_SCORE', minuteOccurred: 3, payload: { period: 1, points: 3 } },
+        { id: 'b3', eventType: 'MADE_3PT', minuteOccurred: 12, payload: { period: 2, playerId: 'p2' } },
+        { id: 'b4', eventType: 'OPPONENT_SCORE', minuteOccurred: 14, payload: { period: 2, points: 2 } },
+      ]);
+
+      const periodScores = (component as any).basketballPeriodScores();
+      expect(periodScores.length).toBe(4);
+      // Q1: Team 2, Opponent 3
+      expect(periodScores[0]).toEqual(expect.objectContaining({ period: 1, label: 'Q1', teamScore: 2, opponentScore: 3 }));
+      // Q2: Team 3, Opponent 2
+      expect(periodScores[1]).toEqual(expect.objectContaining({ period: 2, label: 'Q2', teamScore: 3, opponentScore: 2 }));
+      // Q3: Team 0, Opponent 0
+      expect(periodScores[2]).toEqual(expect.objectContaining({ period: 3, label: 'Q3', teamScore: 0, opponentScore: 0 }));
+      // Q4: Team 0, Opponent 0
+      expect(periodScores[3]).toEqual(expect.objectContaining({ period: 4, label: 'Q4', teamScore: 0, opponentScore: 0 }));
+    });
+
+    it('should calculate player box score statistics and team totals accurately', () => {
+      (component as any).lineup.set([
+        {
+          id: 'l1',
+          playerId: 'p1',
+          status: 'starting',
+          positionName: 'PG',
+          player: { id: 'p1', firstName: 'Stephen', lastName: 'Curry', jerseyNumber: 30 },
+        },
+        {
+          id: 'l2',
+          playerId: 'p2',
+          status: 'starting',
+          positionName: 'SG',
+          player: { id: 'p2', firstName: 'Klay', lastName: 'Thompson', jerseyNumber: 11 },
+        },
+      ]);
+
+      (component as any).gameEvents.set([
+        // p1: 3PT made (3 pts), 2PT missed, 1PT made (1 pt), offensive rebound, assist
+        { id: 'e1', eventType: 'MADE_3PT', minuteOccurred: 2, payload: { period: 1, playerId: 'p1' } },
+        { id: 'e2', eventType: 'MISSED_2PT', minuteOccurred: 3, payload: { period: 1, playerId: 'p1' } },
+        { id: 'e3', eventType: 'MADE_1PT', minuteOccurred: 4, payload: { period: 1, playerId: 'p1' } },
+        { id: 'e4', eventType: 'REBOUND_OFFENSIVE', minuteOccurred: 5, payload: { period: 1, playerId: 'p1' } },
+        { id: 'e5', eventType: 'ASSIST', minuteOccurred: 6, payload: { period: 1, playerId: 'p1' } },
+        { id: 'e6', eventType: 'STEAL', minuteOccurred: 7, payload: { period: 1, playerId: 'p1' } },
+        // p2: 2PT made (2 pts), assist attributed via shot
+        { id: 'e7', eventType: 'MADE_2PT', minuteOccurred: 8, payload: { period: 1, playerId: 'p2', assistorId: 'p1' } },
+        { id: 'e8', eventType: 'BLOCK', minuteOccurred: 9, payload: { period: 1, playerId: 'p2' } },
+        { id: 'e9', eventType: 'TURNOVER', minuteOccurred: 10, payload: { period: 1, playerId: 'p2' } },
+        { id: 'e10', eventType: 'FOUL', minuteOccurred: 11, payload: { period: 1, playerId: 'p2' } },
+        { id: 'e11', eventType: 'OPPONENT_SCORE', minuteOccurred: 12, payload: { period: 1, points: 2 } },
+      ]);
+
+      const boxScores = (component as any).basketballBoxScore();
+      const p1Stats = boxScores.find((b: any) => b.player.id === 'p1');
+      const p2Stats = boxScores.find((b: any) => b.player.id === 'p2');
+
+      expect(p1Stats).toBeDefined();
+      expect(p1Stats.points).toBe(4); // 3PT + 1PT
+      expect(p1Stats.fgMade).toBe(1); // 3PT made
+      expect(p1Stats.fgAttempted).toBe(2); // 3PT made + 2PT missed
+      expect(p1Stats.fg3Made).toBe(1);
+      expect(p1Stats.fg3Attempted).toBe(1);
+      expect(p1Stats.ftMade).toBe(1);
+      expect(p1Stats.ftAttempted).toBe(1);
+      expect(p1Stats.reboundsOffensive).toBe(1);
+      expect(p1Stats.reboundsTotal).toBe(1);
+      expect(p1Stats.assists).toBe(2); // 1 ASSIST event + 1 assistorId on e7
+      expect(p1Stats.steals).toBe(1);
+
+      expect(p2Stats).toBeDefined();
+      expect(p2Stats.points).toBe(2);
+      expect(p2Stats.fgMade).toBe(1);
+      expect(p2Stats.fgAttempted).toBe(1);
+      expect(p2Stats.blocks).toBe(1);
+      expect(p2Stats.turnovers).toBe(1);
+      expect(p2Stats.fouls).toBe(1);
+
+      const totals = (component as any).basketballTotals();
+      expect(totals.points).toBe(6); // 4 + 2
+      expect(totals.fgMade).toBe(2);
+      expect(totals.fgAttempted).toBe(3);
+      expect(totals.fgPct).toBeCloseTo(0.667, 2);
+      expect(totals.fg3Made).toBe(1);
+      expect(totals.fg3Attempted).toBe(1);
+      expect(totals.ftMade).toBe(1);
+      expect(totals.ftAttempted).toBe(1);
+      expect(totals.assists).toBe(2);
+      expect(totals.steals).toBe(1);
+      expect(totals.blocks).toBe(1);
+      expect(totals.turnovers).toBe(1);
+      expect(totals.fouls).toBe(1);
+    });
+
+    it('should extract basketballShots with coordinates and make/miss details', () => {
+      (component as any).gameEvents.set([
+        {
+          id: 's1',
+          eventType: 'MADE_2PT',
+          minuteOccurred: 3,
+          payload: { period: 1, playerId: 'p1', coordinates: { x: 50, y: 35 } },
+        },
+        {
+          id: 's2',
+          eventType: 'MISSED_3PT',
+          minuteOccurred: 7,
+          payload: { period: 1, playerId: 'p2', coordinates: { x: 80, y: 75 } },
+        },
+      ]);
+
+      const shots = (component as any).basketballShots();
+      expect(shots.length).toBe(2);
+      expect(shots[0]).toEqual(expect.objectContaining({
+        id: 's1',
+        type: 'MADE_2PT',
+        playerId: 'p1',
+        period: 1,
+        minuteOccurred: 3,
+        x: 50,
+        y: 35,
+      }));
+      expect(shots[1]).toEqual(expect.objectContaining({
+        id: 's2',
+        type: 'MISSED_3PT',
+        playerId: 'p2',
+        period: 1,
+        minuteOccurred: 7,
+        x: 80,
+        y: 75,
+      }));
+    });
   });
 });

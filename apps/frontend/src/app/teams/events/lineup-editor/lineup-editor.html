@@ -241,7 +241,7 @@
           <ion-label>List View</ion-label>
         </ion-segment-button>
         <ion-segment-button value="pitch">
-          <ion-label>{{ team()?.sport?.name === 'Volleyball' ? 'Court View' : 'Pitch View' }}</ion-label>
+          <ion-label>{{ (sportName() === 'Volleyball' || sportName() === 'Basketball') ? 'Court View' : 'Pitch View' }}</ion-label>
         </ion-segment-button>
         <ion-segment-button value="notes">
           <ion-label>Notes</ion-label>
@@ -257,7 +257,7 @@
           ></app-attendance-list>
         </div>
       } @else if (viewMode() === 'list') {
-        @if (team()?.sport?.name === 'Volleyball') {
+        @if (sportName() === 'Volleyball') {
           <div class="p-4 bg-ap-bg/50 border border-ap-border/40 rounded-lg mb-4 flex flex-col gap-3">
             <h3 class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">Libero Setup</h3>
             <div>
@@ -281,8 +281,8 @@
 
         <ion-list>
           <ion-list-header>
-            <ion-label>Starting {{ event()?.playersOnField || (team()?.sport?.name === 'Volleyball' ? 6 : 11) }}</ion-label>
-            @if (team()?.sport?.name !== 'Volleyball' && availableFormations().length > 0) {
+            <ion-label>Starting {{ event()?.playersOnField || (sportName() === 'Basketball' ? 5 : sportName() === 'Volleyball' ? 6 : 11) }}</ion-label>
+            @if (sportName() === 'Soccer' && availableFormations().length > 0) {
               <div slot="end" class="flex items-center gap-1.5 pr-2">
                 <span class="text-xs font-bold text-ap-muted uppercase tracking-wider">Formation:</span>
                 <ion-select
@@ -340,68 +340,115 @@
           }
         </ion-list>
       } @else if (viewMode() === 'pitch') {
-        @if (team()?.sport?.name === 'Volleyball') {
-          <div class="flex justify-between items-center mb-3 bg-ap-bg/40 p-2 rounded-lg border border-ap-border/30">
-            <span class="text-xs font-black text-ap-primary uppercase tracking-wider pl-1">Starting Rotation</span>
-            <ion-button size="small" color="warning" fill="outline" (click)="rotateStartingLineup()">
-              <ion-icon name="refresh-outline" slot="start"></ion-icon>
-              Rotate
-            </ion-button>
-          </div>
+        @switch (sportName()) {
+          @case ('Basketball') {
+            @if (availableFormations().length > 0) {
+              <div class="flex justify-between items-center mb-3 bg-ap-bg/40 p-2 rounded-lg border border-ap-border/30">
+                <span class="text-xs font-black text-ap-primary uppercase tracking-wider pl-1">Set / Formation</span>
+                <ion-select
+                  interface="popover"
+                  [value]="currentFormation()"
+                  (ionChange)="applyFormationPreset($event.detail.value)"
+                  class="formation-select text-xs font-bold bg-ap-surface border border-ap-border rounded px-2.5 py-1"
+                >
+                  @for (form of availableFormations(); track form.name) {
+                    <ion-select-option [value]="form.name">{{ form.name }}</ion-select-option>
+                  }
+                </ion-select>
+              </div>
+            }
 
-          <div class="court-wrapper mb-6" style="height: 500px; min-height: 440px;">
-            <app-volleyball-court-view
-              class="w-full h-full block relative"
-              style="height: 500px; min-height: 440px;"
-              [players]="pitchPlayers()"
-              [formationSlots]="slots()"
-              [selectedSlotIndex]="selectedSlotIndex()"
-              [playersOnField]="event()?.playersOnField || 6"
-              [selectedPlayerId]="selectedPlayerId()"
-              [liberoDesignation]="liberoDesignation()"
-              [showLiberoSlot]="true"
-              (playerSelected)="handlePitchPlayerSelected($event)"
-              (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
-              (backgroundClicked)="selectedPlayerId.set(null); selectedSlotIndex.set(null)"
-            >
-            </app-volleyball-court-view>
-          </div>
-        } @else {
-          @if (availableFormations().length > 0) {
-            <div class="flex justify-between items-center mb-3 bg-ap-bg/40 p-2 rounded-lg border border-ap-border/30">
-              <span class="text-xs font-black text-ap-primary uppercase tracking-wider pl-1">Formation</span>
-              <ion-select
-                interface="popover"
-                [value]="currentFormation()"
-                (ionChange)="applyFormationPreset($event.detail.value)"
-                class="formation-select text-xs font-bold bg-ap-surface border border-ap-border rounded px-2.5 py-1"
+            <div class="court-wrapper mb-6" style="height: 500px; min-height: 440px;">
+              <app-basketball-court-view
+                class="w-full h-full block relative"
+                style="height: 500px; min-height: 440px;"
+                [players]="pitchPlayers()"
+                [activePlayers]="pitchPlayers()"
+                [formationSlots]="slots()"
+                [formation]="currentFormation()"
+                [selectedSlotIndex]="selectedSlotIndex()"
+                [playersOnField]="event()?.playersOnField || 5"
+                [selectedPlayerId]="selectedPlayerId()"
+                [isLineupMode]="true"
+                (playerSelected)="handlePitchPlayerSelected($event)"
+                (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
+                (backgroundClicked)="selectedPlayerId.set(null); selectedSlotIndex.set(null)"
               >
-                @for (form of availableFormations(); track form.name) {
-                  <ion-select-option [value]="form.name">{{ form.name }}</ion-select-option>
-                }
-                @if (currentFormation() === 'Custom') {
-                  <ion-select-option value="Custom" [disabled]="true">Custom</ion-select-option>
-                }
-              </ion-select>
+              </app-basketball-court-view>
             </div>
           }
+          @case ('Volleyball') {
+            <div class="flex justify-between items-center mb-3 bg-ap-bg/40 p-2 rounded-lg border border-ap-border/30">
+              <span class="text-xs font-black text-ap-primary uppercase tracking-wider pl-1">Starting Rotation</span>
+              <ion-button size="small" color="warning" fill="outline" (click)="rotateStartingLineup()">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                Rotate
+              </ion-button>
+            </div>
 
-          <div class="pitch-wrapper mb-6" style="height: 600px; min-height: 520px;">
-            <app-soccer-pitch-view
-              class="w-full h-full block relative"
-              style="height: 600px; min-height: 520px;"
-              [players]="pitchPlayers()"
-              [formationSlots]="slots()"
-              [selectedSlotIndex]="selectedSlotIndex()"
-              [showPlaytime]="false"
-              [playersOnField]="event()?.playersOnField || 11"
-              [selectedPlayerId]="selectedPlayerId()"
-              (playerSelected)="handlePitchPlayerSelected($event)"
-              (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
-              (backgroundClicked)="selectedPlayerId.set(null); selectedSlotIndex.set(null)"
-            >
-            </app-soccer-pitch-view>
-          </div>
+            <div class="court-wrapper mb-6" style="height: 500px; min-height: 440px;">
+              <app-volleyball-court-view
+                class="w-full h-full block relative"
+                style="height: 500px; min-height: 440px;"
+                [players]="pitchPlayers()"
+                [formationSlots]="slots()"
+                [selectedSlotIndex]="selectedSlotIndex()"
+                [playersOnField]="event()?.playersOnField || 6"
+                [selectedPlayerId]="selectedPlayerId()"
+                [liberoDesignation]="liberoDesignation()"
+                [showLiberoSlot]="true"
+                (playerSelected)="handlePitchPlayerSelected($event)"
+                (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
+                (backgroundClicked)="selectedPlayerId.set(null); selectedSlotIndex.set(null)"
+              >
+              </app-volleyball-court-view>
+            </div>
+          }
+          @case ('Soccer') {
+            @if (availableFormations().length > 0) {
+              <div class="flex justify-between items-center mb-3 bg-ap-bg/40 p-2 rounded-lg border border-ap-border/30">
+                <span class="text-xs font-black text-ap-primary uppercase tracking-wider pl-1">Formation</span>
+                <ion-select
+                  interface="popover"
+                  [value]="currentFormation()"
+                  (ionChange)="applyFormationPreset($event.detail.value)"
+                  class="formation-select text-xs font-bold bg-ap-surface border border-ap-border rounded px-2.5 py-1"
+                >
+                  @for (form of availableFormations(); track form.name) {
+                    <ion-select-option [value]="form.name">{{ form.name }}</ion-select-option>
+                  }
+                  @if (currentFormation() === 'Custom') {
+                    <ion-select-option value="Custom" [disabled]="true">Custom</ion-select-option>
+                  }
+                </ion-select>
+              </div>
+            }
+
+            <div class="pitch-wrapper mb-6" style="height: 600px; min-height: 520px;">
+              <app-soccer-pitch-view
+                class="w-full h-full block relative"
+                style="height: 600px; min-height: 520px;"
+                [players]="pitchPlayers()"
+                [formationSlots]="slots()"
+                [selectedSlotIndex]="selectedSlotIndex()"
+                [showPlaytime]="false"
+                [playersOnField]="event()?.playersOnField || 11"
+                [selectedPlayerId]="selectedPlayerId()"
+                (playerSelected)="handlePitchPlayerSelected($event)"
+                (emptySlotSelected)="handlePitchEmptySlotSelected($event)"
+                (backgroundClicked)="selectedPlayerId.set(null); selectedSlotIndex.set(null)"
+              >
+              </app-soccer-pitch-view>
+            </div>
+          }
+          @default {
+            <div class="pitch-wrapper mb-6 flex items-center justify-center bg-ap-surface/40 rounded-xl border border-ap-border/40 animate-pulse" style="height: 500px; min-height: 440px;">
+              <div class="flex flex-col items-center gap-3">
+                <ion-spinner name="crescent" color="primary"></ion-spinner>
+                <span class="text-xs font-semibold text-ap-muted">Loading court layout...</span>
+              </div>
+            </div>
+          }
         }
       } @else if (viewMode() === 'notes') {
         <app-coaching-notes [teamId]="teamId" [eventId]="eventId"></app-coaching-notes>

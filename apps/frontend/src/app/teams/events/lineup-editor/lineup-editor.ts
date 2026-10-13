@@ -41,7 +41,11 @@ import {
   TeamService,
   OpponentsService,
 } from '@apex-team/client/data-access/team';
-import { SoccerPitchViewComponent, VolleyballCourtViewComponent } from '@apex-team/client/feature/game-console';
+import {
+  SoccerPitchViewComponent,
+  VolleyballCourtViewComponent,
+  BasketballCourtViewComponent,
+} from '@apex-team/client/feature/game-console';
 import {
   Player,
   OpponentWithStats,
@@ -49,6 +53,7 @@ import {
   getPositionFromSlot as sharedGetPositionFromSlot,
   getDefaultSlots,
   SOCCER_FORMATIONS,
+  BASKETBALL_FORMATIONS,
   FormationPreset,
 } from '@apex-team/shared/util/models';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
@@ -104,6 +109,7 @@ function getPositionFromSlot(slot: number, sportName?: string, positionTypes?: s
     IonToast,
     SoccerPitchViewComponent,
     VolleyballCourtViewComponent,
+    BasketballCourtViewComponent,
     AttendanceList,
     CoachingNotes,
   ],
@@ -241,25 +247,37 @@ export class LineupEditor implements OnInit, OnDestroy {
     this.viewMode.set(mode);
   }
 
+  protected sportName = computed(() => this.team()?.sport?.name ?? null);
+
   protected positionOptions = computed(() => {
     const teamObj = this.team();
     if (teamObj?.sport?.name === 'Volleyball') {
       return teamObj.sport.positionTypes || ['Setter', 'Outside Hitter', 'Opposite Hitter', 'Middle Blocker', 'Libero', 'Defensive Specialist'];
     }
+    if (teamObj?.sport?.name === 'Basketball') {
+      return ['PG', 'SG', 'SF', 'PF', 'C'];
+    }
+    if (teamObj?.sport?.positionTypes && Array.isArray(teamObj.sport.positionTypes) && teamObj.sport.positionTypes.length > 0) {
+      return teamObj.sport.positionTypes;
+    }
     return ['GK', 'DEF', 'MID', 'FWD'];
   });
 
+  protected basketballFormation = signal<string>('Standard (PG, SG, SF, PF, C)');
+
   protected availableFormations = computed<FormationPreset[]>(() => {
-    const sportName = this.team()?.sport?.name;
+    const sportName = this.sportName();
     if (sportName === 'Volleyball') return [];
+    if (sportName === 'Basketball') return BASKETBALL_FORMATIONS;
     const ev = this.event();
     const fieldCount = ev?.playersOnField || 11;
     return SOCCER_FORMATIONS[fieldCount] || [];
   });
 
   protected currentFormation = computed<string | null>(() => {
-    const sportName = this.team()?.sport?.name;
+    const sportName = this.sportName();
     if (sportName === 'Volleyball') return null;
+    if (sportName === 'Basketball') return this.basketballFormation();
     const forms = this.availableFormations();
     if (forms.length === 0) return null;
 
@@ -280,11 +298,16 @@ export class LineupEditor implements OnInit, OnDestroy {
   });
 
   protected applyFormationPreset(presetName: string): void {
+    const sportName = this.team()?.sport?.name;
+    if (sportName === 'Basketball') {
+      this.basketballFormation.set(presetName);
+      return;
+    }
+
     const forms = this.availableFormations();
     const preset = forms.find((f) => f.name === presetName);
     if (!preset) return;
 
-    const sportName = this.team()?.sport?.name;
     const positionTypes = this.team()?.sport?.positionTypes || [];
 
     this.slots.update((prev) => {
@@ -588,7 +611,7 @@ export class LineupEditor implements OnInit, OnDestroy {
 
       const sportName = team?.sport?.name;
       const positionTypes = team?.sport?.positionTypes || [];
-      const fieldCount = event.playersOnField || (sportName === 'Volleyball' ? 6 : 11);
+      const fieldCount = event.playersOnField || (sportName === 'Basketball' ? 5 : sportName === 'Volleyball' ? 6 : 11);
       const defaultSlots = getDefaultSlots(fieldCount, sportName);
 
       // Filter out absent player IDs
@@ -634,7 +657,7 @@ export class LineupEditor implements OnInit, OnDestroy {
 
       // 3. If still below fieldCount, fill in any remaining valid slot indices
       let candidateSlot = 0;
-      const maxCandidate = sportName === 'Volleyball' ? 5 : 21;
+      const maxCandidate = sportName === 'Basketball' ? 4 : sportName === 'Volleyball' ? 5 : 21;
       while (newSlots.length < fieldCount && candidateSlot <= maxCandidate) {
         if (!usedSlotIndices.has(candidateSlot)) {
           usedSlotIndices.add(candidateSlot);
@@ -708,7 +731,7 @@ export class LineupEditor implements OnInit, OnDestroy {
       const next = [...current];
       next[index] = { ...next[index], [field]: value };
       
-      if (field === 'positionName' && this.team()?.sport?.name !== 'Volleyball') {
+      if (field === 'positionName' && this.sportName() === 'Soccer') {
         const pos = value as string;
         const currentSlotIndex = next[index].slotIndex;
         const sportName = this.team()?.sport?.name;
@@ -795,7 +818,7 @@ export class LineupEditor implements OnInit, OnDestroy {
     const newPositionName = getPositionFromSlot(targetSlotIndex, sportName, positionTypes);
 
     const ev = this.event();
-    const fieldCount = ev?.playersOnField || (sportName === 'Volleyball' ? 6 : 11);
+    const fieldCount = ev?.playersOnField || (sportName === 'Basketball' ? 5 : sportName === 'Volleyball' ? 6 : 11);
 
     this.slots.update((prev) => {
       const next = prev.map((s) => ({ ...s }));
@@ -961,7 +984,7 @@ export class LineupEditor implements OnInit, OnDestroy {
 
     const ev = this.event();
     const sportName = this.team()?.sport?.name;
-    const fieldCount = ev?.playersOnField || (sportName === 'Volleyball' ? 6 : 11);
+    const fieldCount = ev?.playersOnField || (sportName === 'Basketball' ? 5 : sportName === 'Volleyball' ? 6 : 11);
 
     const startingStarters = this.slots().filter((s) => s.slotIndex !== 99 && !!s.playerId);
     if (startingStarters.length > fieldCount) {

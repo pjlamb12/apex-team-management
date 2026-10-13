@@ -141,13 +141,13 @@
               <div class="bg-ap-surface-raised border border-ap-border rounded-xl p-3">
                 <div class="text-2xl font-black text-ap-text">{{ stats.goalsFor }}</div>
                 <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mt-1">
-                  {{ sportName() === 'Volleyball' ? 'Points For' : 'Goals For' }}
+                  {{ (sportName() === 'Volleyball' || sportName() === 'Basketball') ? 'Points For' : 'Goals For' }}
                 </div>
               </div>
               <div class="bg-ap-surface-raised border border-ap-border rounded-xl p-3">
                 <div class="text-2xl font-black text-ap-text">{{ stats.goalsAgainst }}</div>
                 <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mt-1">
-                  {{ sportName() === 'Volleyball' ? 'Points Against' : 'Goals Against' }}
+                  {{ (sportName() === 'Volleyball' || sportName() === 'Basketball') ? 'Points Against' : 'Goals Against' }}
                 </div>
               </div>
               <div class="bg-ap-surface-raised border border-ap-border rounded-xl p-3">
@@ -155,7 +155,7 @@
                   {{ stats.goalDifference > 0 ? '+' + stats.goalDifference : stats.goalDifference }}
                 </div>
                 <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mt-1">
-                  {{ sportName() === 'Volleyball' ? 'Point Diff' : 'Goal Diff' }}
+                  {{ (sportName() === 'Volleyball' || sportName() === 'Basketball') ? 'Point Diff' : 'Goal Diff' }}
                 </div>
               </div>
             </div>
@@ -410,6 +410,298 @@
                         <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.digs || 0 }}</td>
                         <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.blocks || 0 }}</td>
                         <td class="px-2 py-3 text-center text-ap-text pr-4 tabular-nums">{{ m.blockTouches || 0 }}</td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </ion-card-content>
+          </ion-card>
+        } @else if (sportName() === 'Basketball') {
+          <!-- Key Performance Indicators Row (Basketball) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Top Scorers Card -->
+            <ion-card class="m-0 border border-ap-border shadow-none">
+              <ion-card-header class="px-6 pt-6 pb-4">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="basketball-outline" class="text-orange-500"></ion-icon>
+                  Top Scorers
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (m of topBasketballScorers(); track m.playerId) {
+                    <ion-item>
+                      <ion-label>
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-ap-text">
+                            {{ m.firstName }} {{ m.lastName }}
+                            @if (m.isGuest) {
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                            }
+                          </span>
+                          <div class="flex items-center gap-2">
+                            <span class="text-xl font-black text-orange-500">{{ m.points ?? 0 }}</span>
+                            <span class="text-[10px] font-bold text-ap-muted uppercase">PTS ({{ getPerGameAvg(m.points ?? 0, m.gamesPlayed) }} PPG)</span>
+                          </div>
+                        </div>
+                        <ion-progress-bar color="warning" [value]="(m.points ?? 0) / (topBasketballScorers()[0]?.points || 1)" class="h-1 mt-2 rounded-full"></ion-progress-bar>
+                      </ion-label>
+                    </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic text-sm">No points recorded.</div>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Top Rebounders Card -->
+            <ion-card class="m-0 border border-ap-border shadow-none">
+              <ion-card-header class="px-6 pt-6 pb-4">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="shield-outline" class="text-blue-500"></ion-icon>
+                  Top Rebounders
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (m of topBasketballRebounders(); track m.playerId) {
+                    <ion-item>
+                      <ion-label>
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-ap-text">
+                            {{ m.firstName }} {{ m.lastName }}
+                            @if (m.isGuest) {
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                            }
+                          </span>
+                          <div class="flex items-center gap-2">
+                            <span class="text-xl font-black text-blue-500">{{ m.reboundsTotal ?? 0 }}</span>
+                            <span class="text-[10px] font-bold text-ap-muted uppercase">REB ({{ getPerGameAvg(m.reboundsTotal ?? 0, m.gamesPlayed) }} RPG)</span>
+                          </div>
+                        </div>
+                        <ion-progress-bar color="primary" [value]="(m.reboundsTotal ?? 0) / (topBasketballRebounders()[0]?.reboundsTotal || 1)" class="h-1 mt-2 rounded-full"></ion-progress-bar>
+                      </ion-label>
+                    </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic text-sm">No rebounds recorded.</div>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Top Playmakers Card -->
+            <ion-card class="m-0 border border-ap-border shadow-none">
+              <ion-card-header class="px-6 pt-6 pb-4">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="trophy-outline" class="text-amber-500"></ion-icon>
+                  Top Playmakers
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (m of topBasketballPlaymakers(); track m.playerId) {
+                    <ion-item>
+                      <ion-label>
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-ap-text">
+                            {{ m.firstName }} {{ m.lastName }}
+                            @if (m.isGuest) {
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                            }
+                          </span>
+                          <div class="flex items-center gap-2">
+                            <span class="text-xl font-black text-amber-500">{{ m.assists }}</span>
+                            <span class="text-[10px] font-bold text-ap-muted uppercase">AST ({{ getPerGameAvg(m.assists, m.gamesPlayed) }} APG)</span>
+                          </div>
+                        </div>
+                        <ion-progress-bar color="warning" [value]="m.assists / (topBasketballPlaymakers()[0]?.assists || 1)" class="h-1 mt-2 rounded-full"></ion-progress-bar>
+                      </ion-label>
+                    </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic text-sm">No assists recorded.</div>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Top Steals Card -->
+            <ion-card class="m-0 border border-ap-border shadow-none">
+              <ion-card-header class="px-6 pt-6 pb-4">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="flash-outline" class="text-emerald-500"></ion-icon>
+                  Top Steals
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (m of topBasketballSteals(); track m.playerId) {
+                    <ion-item>
+                      <ion-label>
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-ap-text">
+                            {{ m.firstName }} {{ m.lastName }}
+                            @if (m.isGuest) {
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                            }
+                          </span>
+                          <div class="flex items-center gap-2">
+                            <span class="text-xl font-black text-emerald-500">{{ m.steals ?? 0 }}</span>
+                            <span class="text-[10px] font-bold text-ap-muted uppercase">Steals</span>
+                          </div>
+                        </div>
+                        <ion-progress-bar color="success" [value]="(m.steals ?? 0) / (topBasketballSteals()[0]?.steals || 1)" class="h-1 mt-2 rounded-full"></ion-progress-bar>
+                      </ion-label>
+                    </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic text-sm">No steals recorded.</div>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Top Blocks Card -->
+            <ion-card class="m-0 border border-ap-border shadow-none">
+              <ion-card-header class="px-6 pt-6 pb-4">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="hand-right-outline" class="text-purple-500"></ion-icon>
+                  Top Blocks
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <ion-list lines="full">
+                  @for (m of topBasketballBlocks(); track m.playerId) {
+                    <ion-item>
+                      <ion-label>
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-ap-text">
+                            {{ m.firstName }} {{ m.lastName }}
+                            @if (m.isGuest) {
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                            }
+                          </span>
+                          <div class="flex items-center gap-2">
+                            <span class="text-xl font-black text-purple-500">{{ m.blocks ?? 0 }}</span>
+                            <span class="text-[10px] font-bold text-ap-muted uppercase">Blocks</span>
+                          </div>
+                        </div>
+                        <ion-progress-bar color="secondary" [value]="(m.blocks ?? 0) / (topBasketballBlocks()[0]?.blocks || 1)" class="h-1 mt-2 rounded-full"></ion-progress-bar>
+                      </ion-label>
+                    </ion-item>
+                  } @empty {
+                    <div class="py-12 text-center text-ap-muted italic text-sm">No blocks recorded.</div>
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+          </div>
+
+          <!-- Full Roster Stats Table (Basketball) -->
+          <ion-card class="m-0 border border-ap-border shadow-none">
+            <ion-card-header class="px-6 pt-6 pb-4">
+              <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted">Roster Performance</ion-card-title>
+            </ion-card-header>
+            <ion-card-content class="p-0 overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs table-auto min-w-[950px]">
+                <thead class="bg-ap-surface-raised">
+                  <tr class="border-b border-ap-border">
+                    <th class="px-4 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted">Player</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">GP</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center font-bold text-orange-500">PTS</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-orange-500">PPG</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">FGM-A</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">FG%</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">3PM-A</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">3P%</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">FTM-A</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center">FT%</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-blue-500">REB (O/D)</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-amber-500">AST</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-emerald-500">STL</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-purple-500">BLK</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-red-500">TO</th>
+                    <th class="px-2 py-3 text-[10px] font-black uppercase tracking-tighter text-ap-muted text-center text-red-400 pr-4">PF</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-ap-border">
+                  @for (m of rosterPerformanceMetrics(); track m.playerId) {
+                    <tr class="hover:bg-ap-surface-raised transition-colors">
+                      <td class="px-4 py-3 font-bold text-ap-text player-cell">
+                        {{ m.firstName }} {{ m.lastName }}
+                        @if (m.isActive === false) {
+                          <span class="inline-flex items-center rounded-full bg-red-500/10 px-1.5 py-0.2 text-[9px] font-bold text-red-400 ml-1">Stepped Away</span>
+                        }
+                        @if (m.preferredPosition) {
+                          <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
+                        }
+                      </td>
+                      <td class="px-2 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
+                      <td class="px-2 py-3 text-center font-black text-orange-500 tabular-nums">{{ m.points ?? 0 }}</td>
+                      <td class="px-2 py-3 text-center font-bold text-orange-500 tabular-nums">{{ getPerGameAvg(m.points ?? 0, m.gamesPlayed) }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.fgMade ?? 0 }}-{{ m.fgAttempted ?? 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text font-bold tabular-nums">{{ getShootingPct(m.fgMade ?? 0, m.fgAttempted ?? 0) }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.fg3Made ?? 0 }}-{{ m.fg3Attempted ?? 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text font-bold tabular-nums">{{ getShootingPct(m.fg3Made ?? 0, m.fg3Attempted ?? 0) }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.ftMade ?? 0 }}-{{ m.ftAttempted ?? 0 }}</td>
+                      <td class="px-2 py-3 text-center text-ap-text font-bold tabular-nums">{{ getShootingPct(m.ftMade ?? 0, m.ftAttempted ?? 0) }}</td>
+                      <td class="px-2 py-3 text-center text-blue-500 font-bold tabular-nums">{{ m.reboundsTotal ?? 0 }} ({{ m.reboundsOffensive ?? 0 }}/{{ m.reboundsDefensive ?? 0 }})</td>
+                      <td class="px-2 py-3 text-center text-amber-500 font-bold tabular-nums">{{ m.assists }}</td>
+                      <td class="px-2 py-3 text-center text-emerald-500 font-bold tabular-nums">{{ m.steals ?? 0 }}</td>
+                      <td class="px-2 py-3 text-center text-purple-500 font-bold tabular-nums">{{ m.blocks ?? 0 }}</td>
+                      <td class="px-2 py-3 text-center text-red-500 tabular-nums">{{ m.turnovers ?? 0 }}</td>
+                      <td class="px-2 py-3 text-center text-red-400 pr-4 tabular-nums">{{ m.personalFouls ?? 0 }}</td>
+                    </tr>
+                  }
+
+                  @if (guestPerformanceMetrics().length > 0) {
+                    <tr class="bg-ap-surface-raised border-y border-ap-border">
+                      <td colspan="16" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-purple-400">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2">
+                            <span>Guest Players</span>
+                            <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">Guest</span>
+                          </div>
+                          <div class="flex items-center gap-3">
+                            <ion-button fill="clear" size="small" color="secondary" class="h-6 text-[10px] font-bold" (click)="openMergeModal(undefined, true)">
+                              <ion-icon name="git-merge-outline" slot="start"></ion-icon>
+                              Merge Guests
+                            </ion-button>
+                            <span class="text-[10px] font-bold text-ap-muted">{{ guestPerformanceMetrics().length }} player{{ guestPerformanceMetrics().length > 1 ? 's' : '' }}</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    @for (m of guestPerformanceMetrics(); track m.playerId) {
+                      <tr class="hover:bg-ap-surface-raised transition-colors">
+                        <td class="px-4 py-3 font-bold text-ap-text player-cell">
+                          <div class="flex items-center justify-between">
+                            <div>
+                              {{ m.firstName }} {{ m.lastName }}
+                              <span class="inline-flex items-center rounded-full bg-purple-500/10 px-1.5 py-0.2 text-[9px] font-bold text-purple-400 ml-1">Guest</span>
+                              @if (m.preferredPosition) {
+                                <span class="text-[9px] uppercase tracking-wider text-ap-muted block font-normal">{{ m.preferredPosition }}</span>
+                              }
+                            </div>
+                            <ion-button fill="clear" size="small" color="medium" class="h-6 w-6 ion-no-padding" (click)="openMergeModal(m.playerId, true)" title="Merge duplicate guest">
+                              <ion-icon name="git-merge-outline" slot="icon-only" class="text-xs"></ion-icon>
+                            </ion-button>
+                          </div>
+                        </td>
+                        <td class="px-2 py-3 text-center text-ap-muted tabular-nums">{{ m.gamesPlayed }}</td>
+                        <td class="px-2 py-3 text-center font-black text-orange-500 tabular-nums">{{ m.points ?? 0 }}</td>
+                        <td class="px-2 py-3 text-center font-bold text-orange-500 tabular-nums">{{ getPerGameAvg(m.points ?? 0, m.gamesPlayed) }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.fgMade ?? 0 }}-{{ m.fgAttempted ?? 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text font-bold tabular-nums">{{ getShootingPct(m.fgMade ?? 0, m.fgAttempted ?? 0) }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.fg3Made ?? 0 }}-{{ m.fg3Attempted ?? 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text font-bold tabular-nums">{{ getShootingPct(m.fg3Made ?? 0, m.fg3Attempted ?? 0) }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text tabular-nums">{{ m.ftMade ?? 0 }}-{{ m.ftAttempted ?? 0 }}</td>
+                        <td class="px-2 py-3 text-center text-ap-text font-bold tabular-nums">{{ getShootingPct(m.ftMade ?? 0, m.ftAttempted ?? 0) }}</td>
+                        <td class="px-2 py-3 text-center text-blue-500 font-bold tabular-nums">{{ m.reboundsTotal ?? 0 }} ({{ m.reboundsOffensive ?? 0 }}/{{ m.reboundsDefensive ?? 0 }})</td>
+                        <td class="px-2 py-3 text-center text-amber-500 font-bold tabular-nums">{{ m.assists }}</td>
+                        <td class="px-2 py-3 text-center text-emerald-500 font-bold tabular-nums">{{ m.steals ?? 0 }}</td>
+                        <td class="px-2 py-3 text-center text-purple-500 font-bold tabular-nums">{{ m.blocks ?? 0 }}</td>
+                        <td class="px-2 py-3 text-center text-red-500 tabular-nums">{{ m.turnovers ?? 0 }}</td>
+                        <td class="px-2 py-3 text-center text-red-400 pr-4 tabular-nums">{{ m.personalFouls ?? 0 }}</td>
                       </tr>
                     }
                   }

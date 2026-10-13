@@ -80,6 +80,8 @@ export class EventsService {
     let defaultPeriodCount: number | null = null;
     let defaultPeriodLengthMinutes: number | null = null;
     let defaultPlayersOnField: number | null = null;
+    let defaultFoulLimit: number | null = null;
+    let defaultBonusThreshold: number | null = null;
 
     if (dto.leagueId) {
       const league = await this.leagueRepo.findOne({ where: { id: dto.leagueId } });
@@ -87,6 +89,8 @@ export class EventsService {
         defaultPeriodCount = league.periodCount;
         defaultPeriodLengthMinutes = league.periodLengthMinutes;
         defaultPlayersOnField = league.playersOnField;
+        defaultFoulLimit = league.foulLimit;
+        defaultBonusThreshold = league.bonusThreshold;
       }
     } else {
       defaultPeriodCount = (activeSeason as any).periodCount ?? null;
@@ -100,6 +104,8 @@ export class EventsService {
       event.periodCount = dto.periodCount ?? defaultPeriodCount;
       event.periodLengthMinutes = dto.periodLengthMinutes ?? defaultPeriodLengthMinutes;
       event.playersOnField = dto.playersOnField ?? defaultPlayersOnField;
+      event.foulLimit = dto.foulLimit ?? defaultFoulLimit ?? 5;
+      event.bonusThreshold = dto.bonusThreshold ?? defaultBonusThreshold ?? 5;
     }
 
     // Automatically calculate duration for games
@@ -198,6 +204,8 @@ export class EventsService {
         periodCount: item.periodCount ?? defaultPeriodCount,
         periodLengthMinutes: item.periodLengthMinutes ?? defaultPeriodLengthMinutes,
         playersOnField: item.playersOnField ?? defaultPlayersOnField,
+        foulLimit: item.foulLimit ?? (league?.foulLimit ?? 5),
+        bonusThreshold: item.bonusThreshold ?? (league?.bonusThreshold ?? 5),
       });
 
       if (event.type === 'game' && event.periodCount && event.periodLengthMinutes) {

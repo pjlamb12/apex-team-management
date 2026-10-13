@@ -34,7 +34,7 @@ import {
   ModalController,
   IonToggle,
 } from '@ionic/angular/standalone';
-import { LiveGameStateService, ShootoutScorecardComponent, EventSyncService } from '@apex-team/client/feature/game-console';
+import { LiveGameStateService, ShootoutScorecardComponent, EventSyncService, BasketballCourtViewComponent, ShotEventRecord } from '@apex-team/client/feature/game-console';
 import { addIcons } from 'ionicons';
 import { 
   trophyOutline, 
@@ -62,6 +62,7 @@ import {
   sparklesOutline,
   shieldOutline,
   chatboxEllipsesOutline,
+  basketballOutline,
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport, OpponentsService, AwardsService } from '@apex-team/client/data-access/team';
@@ -107,6 +108,7 @@ import { AwardBadgeModalComponent } from './award-badge-modal/award-badge-modal'
     IonCol,
     CoachingNotes,
     IonToggle,
+    BasketballCourtViewComponent,
   ],
   templateUrl: './game-summary.html',
   styleUrl: './game-summary.scss',
@@ -214,7 +216,7 @@ export class GameSummary implements OnDestroy {
   protected playingTime = signal<Record<string, any>>({});
   protected playingTimeValidation = signal<PlayingTimeValidationReport | null>(null);
   protected lineup = signal<any[]>([]);
-  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime' | 'notes' | 'event-log' | 'boxscore'>('highlights');
+  protected activeSegment = signal<'highlights' | 'attendance' | 'playtime' | 'notes' | 'event-log' | 'boxscore' | 'shot-chart'>('highlights');
   protected isLoading = signal(true);
   protected errorMessage = signal<string | null>(null);
 
@@ -244,16 +246,17 @@ export class GameSummary implements OnDestroy {
 
   protected availablePeriods = computed(() => {
     const isVb = this.sportName() === 'Volleyball';
-    const defaultCount = isVb ? 3 : (this.game()?.periodCount || 2);
+    const isBb = this.sportName() === 'Basketball';
+    const defaultCount = isVb ? 3 : (isBb ? (this.game()?.periodCount || 4) : (this.game()?.periodCount || 2));
     const existingPeriods = this.gameEvents()
       .map(e => e.period ?? e.payload?.period)
       .filter((p): p is number => typeof p === 'number' && p > 0);
     const currentEditP = this.editPeriod();
-    const maxP = Math.max(defaultCount, ...existingPeriods, currentEditP, isVb ? 3 : 2);
+    const maxP = Math.max(defaultCount, ...existingPeriods, currentEditP, isVb ? 3 : (isBb ? 4 : 2));
 
     const totalPeriodsToShow = isVb
       ? Math.max(maxP, 5)
-      : Math.max(maxP, defaultCount === 2 ? 4 : defaultCount);
+      : (isBb ? Math.max(maxP, 4) : Math.max(maxP, defaultCount === 2 ? 4 : defaultCount));
 
     const periods: number[] = [];
     for (let i = 1; i <= totalPeriodsToShow; i++) {
@@ -266,20 +269,21 @@ export class GameSummary implements OnDestroy {
     if (this.sportName() === 'Volleyball') {
       return `Set ${periodNum}`;
     }
-    const count = this.game()?.periodCount || 2;
+    const isBb = this.sportName() === 'Basketball';
+    const count = isBb ? (this.game()?.periodCount || 4) : (this.game()?.periodCount || 2);
+    if (count === 4) {
+      if (periodNum === 1) return '1st Quarter';
+      if (periodNum === 2) return '2nd Quarter';
+      if (periodNum === 3) return '3rd Quarter';
+      if (periodNum === 4) return '4th Quarter';
+      return periodNum === 5 ? 'Overtime' : `Overtime ${periodNum - 4}`;
+    }
     if (count === 2) {
       if (periodNum === 1) return '1st Half';
       if (periodNum === 2) return '2nd Half';
       if (periodNum === 3) return 'Extra Time 1 (OT1)';
       if (periodNum === 4) return 'Extra Time 2 (OT2)';
       return `Period ${periodNum}`;
-    }
-    if (count === 4) {
-      if (periodNum === 1) return '1st Quarter';
-      if (periodNum === 2) return '2nd Quarter';
-      if (periodNum === 3) return '3rd Quarter';
-      if (periodNum === 4) return '4th Quarter';
-      return `Overtime ${periodNum - 4}`;
     }
     return `Period ${periodNum}`;
   }
@@ -288,20 +292,21 @@ export class GameSummary implements OnDestroy {
     if (this.sportName() === 'Volleyball') {
       return `S${periodNum}`;
     }
-    const count = this.game()?.periodCount || 2;
+    const isBb = this.sportName() === 'Basketball';
+    const count = isBb ? (this.game()?.periodCount || 4) : (this.game()?.periodCount || 2);
+    if (count === 4) {
+      if (periodNum === 1) return 'Q1';
+      if (periodNum === 2) return 'Q2';
+      if (periodNum === 3) return 'Q3';
+      if (periodNum === 4) return 'Q4';
+      return periodNum === 5 ? 'OT' : `${periodNum - 4}OT`;
+    }
     if (count === 2) {
       if (periodNum === 1) return '1H';
       if (periodNum === 2) return '2H';
       if (periodNum === 3) return 'OT1';
       if (periodNum === 4) return 'OT2';
       return `P${periodNum}`;
-    }
-    if (count === 4) {
-      if (periodNum === 1) return '1Q';
-      if (periodNum === 2) return '2Q';
-      if (periodNum === 3) return '3Q';
-      if (periodNum === 4) return '4Q';
-      return `OT${periodNum - 4}`;
     }
     return `P${periodNum}`;
   }
@@ -359,6 +364,7 @@ export class GameSummary implements OnDestroy {
   protected statsSummary = computed(() => {
     const events = this.gameEvents();
     const isVb = this.sportName() === 'Volleyball';
+    const isBb = this.sportName() === 'Basketball';
     
     if (isVb) {
       const kills = events.filter(e => e.eventType === 'KILL').length;
@@ -376,7 +382,55 @@ export class GameSummary implements OnDestroy {
         opponentShots: 0,
         teamCorners: 0,
         opponentCorners: 0,
-        teamSaves: 0
+        teamSaves: 0,
+        fgMade: 0,
+        fgAttempted: 0,
+        fgPct: 0,
+        fg3Made: 0,
+        fg3Attempted: 0,
+        fg3Pct: 0,
+        ftMade: 0,
+        ftAttempted: 0,
+        ftPct: 0,
+        reboundsTotal: 0,
+        reboundsOffensive: 0,
+        reboundsDefensive: 0,
+        assists: 0,
+        turnovers: 0,
+        steals: 0,
+        fouls: 0,
+      };
+    }
+
+    if (isBb) {
+      const totals = this.basketballTotals();
+      return {
+        kills: 0,
+        aces: 0,
+        blocks: totals.blocks,
+        digs: 0,
+        errors: totals.turnovers,
+        teamShots: totals.fgAttempted,
+        opponentShots: 0,
+        teamCorners: 0,
+        opponentCorners: 0,
+        teamSaves: 0,
+        fgMade: totals.fgMade,
+        fgAttempted: totals.fgAttempted,
+        fgPct: totals.fgPct,
+        fg3Made: totals.fg3Made,
+        fg3Attempted: totals.fg3Attempted,
+        fg3Pct: totals.fg3Pct,
+        ftMade: totals.ftMade,
+        ftAttempted: totals.ftAttempted,
+        ftPct: totals.ftPct,
+        reboundsTotal: totals.reboundsTotal,
+        reboundsOffensive: totals.reboundsOffensive,
+        reboundsDefensive: totals.reboundsDefensive,
+        assists: totals.assists,
+        turnovers: totals.turnovers,
+        steals: totals.steals,
+        fouls: totals.fouls,
       };
     }
 
@@ -395,7 +449,23 @@ export class GameSummary implements OnDestroy {
       aces: 0,
       blocks: 0,
       digs: 0,
-      errors: 0
+      errors: 0,
+      fgMade: 0,
+      fgAttempted: 0,
+      fgPct: 0,
+      fg3Made: 0,
+      fg3Attempted: 0,
+      fg3Pct: 0,
+      ftMade: 0,
+      ftAttempted: 0,
+      ftPct: 0,
+      reboundsTotal: 0,
+      reboundsOffensive: 0,
+      reboundsDefensive: 0,
+      assists: 0,
+      turnovers: 0,
+      steals: 0,
+      fouls: 0,
     };
   });
 
@@ -474,10 +544,341 @@ export class GameSummary implements OnDestroy {
     });
   });
 
+  protected basketballBoxScore = computed(() => {
+    const players = this.lineup();
+    const events = this.gameEvents();
+    const pt = this.playingTime();
+
+    // Calculate Plus/Minus
+    const plusMinusMap: Record<string, number> = {};
+    players.forEach(p => {
+      plusMinusMap[p.playerId] = 0;
+    });
+
+    const onCourt = new Set<string>();
+    players.forEach(p => {
+      if (p.status === 'starting') {
+        onCourt.add(p.playerId);
+      }
+    });
+
+    const sortedChronological = [...events].sort((a, b) => {
+      const periodA = a.period ?? a.payload?.period ?? 1;
+      const periodB = b.period ?? b.payload?.period ?? 1;
+      if (periodA !== periodB) return periodA - periodB;
+      if (a.minuteOccurred !== b.minuteOccurred) return a.minuteOccurred - b.minuteOccurred;
+      return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+    });
+
+    sortedChronological.forEach(e => {
+      const type = e.eventType || e.type;
+      const payload = e.payload || {};
+      if (type === 'SUB') {
+        const outId = payload.outPlayerId || payload.playerIdOut || e.playerIdOut || e['outPlayerId'];
+        const inId = payload.inPlayerId || payload.playerIdIn || e.playerIdIn || e['inPlayerId'];
+        if (outId) onCourt.delete(outId);
+        if (inId) onCourt.add(inId);
+      } else if (type === 'MADE_1PT') {
+        onCourt.forEach(id => {
+          plusMinusMap[id] = (plusMinusMap[id] || 0) + 1;
+        });
+      } else if (type === 'MADE_2PT') {
+        onCourt.forEach(id => {
+          plusMinusMap[id] = (plusMinusMap[id] || 0) + 2;
+        });
+      } else if (type === 'MADE_3PT') {
+        onCourt.forEach(id => {
+          plusMinusMap[id] = (plusMinusMap[id] || 0) + 3;
+        });
+      } else if (type === 'OPPONENT_SCORE') {
+        const pts = Number(payload.points ?? e.points ?? 2);
+        onCourt.forEach(id => {
+          plusMinusMap[id] = (plusMinusMap[id] || 0) - pts;
+        });
+      }
+    });
+
+    return players.map(p => {
+      const playerId = p.playerId;
+      const playerEvents = events.filter(e => {
+        const payload = e.payload || {};
+        return (
+          e.playerId === playerId ||
+          payload.playerId === playerId ||
+          payload.scorerId === playerId ||
+          payload.assistorId === playerId
+        );
+      });
+
+      const ftMade = playerEvents.filter(e => (e.eventType || e.type) === 'MADE_1PT' && (e.playerId === playerId || e.payload?.playerId === playerId || e.payload?.scorerId === playerId)).length;
+      const ftMissed = playerEvents.filter(e => (e.eventType || e.type) === 'MISSED_1PT' && (e.playerId === playerId || e.payload?.playerId === playerId || e.payload?.scorerId === playerId)).length;
+      const ftAttempted = ftMade + ftMissed;
+      const ftPct = ftAttempted > 0 ? (ftMade / ftAttempted) : 0;
+
+      const fg2Made = playerEvents.filter(e => (e.eventType || e.type) === 'MADE_2PT' && (e.playerId === playerId || e.payload?.playerId === playerId || e.payload?.scorerId === playerId)).length;
+      const fg2Missed = playerEvents.filter(e => (e.eventType || e.type) === 'MISSED_2PT' && (e.playerId === playerId || e.payload?.playerId === playerId || e.payload?.scorerId === playerId)).length;
+
+      const fg3Made = playerEvents.filter(e => (e.eventType || e.type) === 'MADE_3PT' && (e.playerId === playerId || e.payload?.playerId === playerId || e.payload?.scorerId === playerId)).length;
+      const fg3Missed = playerEvents.filter(e => (e.eventType || e.type) === 'MISSED_3PT' && (e.playerId === playerId || e.payload?.playerId === playerId || e.payload?.scorerId === playerId)).length;
+      const fg3Attempted = fg3Made + fg3Missed;
+      const fg3Pct = fg3Attempted > 0 ? (fg3Made / fg3Attempted) : 0;
+
+      const fgMade = fg2Made + fg3Made;
+      const fgAttempted = fgMade + fg2Missed + fg3Missed;
+      const fgPct = fgAttempted > 0 ? (fgMade / fgAttempted) : 0;
+
+      const points = ftMade * 1 + fg2Made * 2 + fg3Made * 3;
+
+      const reboundsOffensive = playerEvents.filter(e => {
+        const t = e.eventType || e.type;
+        return (t === 'REBOUND_OFFENSIVE' || t === 'OFFENSIVE_REBOUND') && (e.playerId === playerId || e.payload?.playerId === playerId);
+      }).length;
+
+      const reboundsDefensive = playerEvents.filter(e => {
+        const t = e.eventType || e.type;
+        return (t === 'REBOUND_DEFENSIVE' || t === 'DEFENSIVE_REBOUND') && (e.playerId === playerId || e.payload?.playerId === playerId);
+      }).length;
+
+      const reboundsTotal = reboundsOffensive + reboundsDefensive;
+
+      const assists = events.filter(e => {
+        const t = e.eventType || e.type;
+        const payload = e.payload || {};
+        if (t === 'ASSIST' && (e.playerId === playerId || payload.playerId === playerId || payload.assistorId === playerId)) {
+          return true;
+        }
+        if ((t === 'MADE_2PT' || t === 'MADE_3PT') && (payload.assistorId === playerId || e.assistorId === playerId)) {
+          return true;
+        }
+        return false;
+      }).length;
+
+      const steals = playerEvents.filter(e => (e.eventType || e.type) === 'STEAL' && (e.playerId === playerId || e.payload?.playerId === playerId)).length;
+      const blocks = playerEvents.filter(e => (e.eventType || e.type) === 'BLOCK' && (e.playerId === playerId || e.payload?.playerId === playerId)).length;
+      const turnovers = playerEvents.filter(e => (e.eventType || e.type) === 'TURNOVER' && (e.playerId === playerId || e.payload?.playerId === playerId)).length;
+      const fouls = playerEvents.filter(e => (e.eventType || e.type) === 'FOUL' && (e.playerId === playerId || e.payload?.playerId === playerId)).length;
+
+      const totalSeconds = pt[playerId]?.totalSeconds || 0;
+      const minutes = Math.round(totalSeconds / 60);
+
+      const pm = plusMinusMap[playerId] ?? 0;
+      const pmFormatted = pm > 0 ? `+${pm}` : `${pm}`;
+
+      return {
+        player: p.player,
+        playerId,
+        playerName: `${p.player.firstName} ${p.player.lastName}`,
+        jerseyNumber: p.player.jerseyNumber ?? '-',
+        position: p.positionName || p.player.preferredPosition || 'Player',
+        status: p.status,
+        minutes,
+        points,
+        fgMade,
+        fgAttempted,
+        fgPct,
+        fg3Made,
+        fg3Attempted,
+        fg3Pct,
+        ftMade,
+        ftAttempted,
+        ftPct,
+        reboundsOffensive,
+        reboundsDefensive,
+        reboundsTotal,
+        assists,
+        steals,
+        blocks,
+        turnovers,
+        fouls,
+        plusMinus: pm,
+        plusMinusFormatted: pmFormatted,
+      };
+    });
+  });
+
+  protected basketballTotals = computed(() => {
+    const box = this.basketballBoxScore();
+    const totals = {
+      minutes: box.reduce((sum, r) => sum + r.minutes, 0),
+      points: box.reduce((sum, r) => sum + r.points, 0),
+      fgMade: box.reduce((sum, r) => sum + r.fgMade, 0),
+      fgAttempted: box.reduce((sum, r) => sum + r.fgAttempted, 0),
+      fgPct: 0,
+      fg3Made: box.reduce((sum, r) => sum + r.fg3Made, 0),
+      fg3Attempted: box.reduce((sum, r) => sum + r.fg3Attempted, 0),
+      fg3Pct: 0,
+      ftMade: box.reduce((sum, r) => sum + r.ftMade, 0),
+      ftAttempted: box.reduce((sum, r) => sum + r.ftAttempted, 0),
+      ftPct: 0,
+      reboundsOffensive: box.reduce((sum, r) => sum + r.reboundsOffensive, 0),
+      reboundsDefensive: box.reduce((sum, r) => sum + r.reboundsDefensive, 0),
+      reboundsTotal: box.reduce((sum, r) => sum + r.reboundsTotal, 0),
+      assists: box.reduce((sum, r) => sum + r.assists, 0),
+      steals: box.reduce((sum, r) => sum + r.steals, 0),
+      blocks: box.reduce((sum, r) => sum + r.blocks, 0),
+      turnovers: box.reduce((sum, r) => sum + r.turnovers, 0),
+      fouls: box.reduce((sum, r) => sum + r.fouls, 0),
+    };
+    totals.fgPct = totals.fgAttempted > 0 ? totals.fgMade / totals.fgAttempted : 0;
+    totals.fg3Pct = totals.fg3Attempted > 0 ? totals.fg3Made / totals.fg3Attempted : 0;
+    totals.ftPct = totals.ftAttempted > 0 ? totals.ftMade / totals.ftAttempted : 0;
+    return totals;
+  });
+
+  protected basketballPeriodScores = computed(() => {
+    const events = this.gameEvents();
+    const periodCount = this.game()?.periodCount || 4;
+    let maxPeriod = periodCount;
+    events.forEach(e => {
+      const p = e.period ?? e.payload?.period;
+      if (typeof p === 'number' && p > maxPeriod) {
+        maxPeriod = p;
+      }
+    });
+
+    const periodScores: {
+      period: number;
+      label: string;
+      teamScore: number;
+      opponentScore: number;
+      teamCumulative: number;
+      opponentCumulative: number;
+    }[] = [];
+
+    let teamRunning = 0;
+    let opponentRunning = 0;
+
+    for (let p = 1; p <= maxPeriod; p++) {
+      const periodEvents = events.filter(e => (e.period ?? e.payload?.period ?? 1) === p);
+      let teamPts = 0;
+      let oppPts = 0;
+
+      periodEvents.forEach(e => {
+        const type = e.eventType || e.type;
+        const payload = e.payload || {};
+        if (type === 'MADE_1PT') teamPts += 1;
+        else if (type === 'MADE_2PT') teamPts += 2;
+        else if (type === 'MADE_3PT') teamPts += 3;
+        else if (type === 'OPPONENT_SCORE') {
+          const pts = Number(payload.points ?? e.points ?? 2);
+          oppPts += pts;
+        }
+      });
+
+      teamRunning += teamPts;
+      opponentRunning += oppPts;
+
+      const label = p <= 4 ? `Q${p}` : `OT${p - 4}`;
+
+      periodScores.push({
+        period: p,
+        label,
+        teamScore: teamPts,
+        opponentScore: oppPts,
+        teamCumulative: teamRunning,
+        opponentCumulative: opponentRunning,
+      });
+    }
+
+    return periodScores;
+  });
+
+  protected basketballShots = computed<ShotEventRecord[]>(() => {
+    const events = this.gameEvents();
+    const lineup = this.lineup();
+    const shotTypes = new Set([
+      'MADE_1PT',
+      'MISSED_1PT',
+      'MADE_2PT',
+      'MISSED_2PT',
+      'MADE_3PT',
+      'MISSED_3PT',
+    ]);
+
+    return events
+      .filter(e => shotTypes.has(e.eventType || e.type))
+      .map(e => {
+        const type = (e.eventType || e.type) as ShotEventRecord['type'];
+        const payload = e.payload || {};
+        const pid = (e.playerId || payload.playerId || payload.scorerId) as string;
+        const entry = lineup.find(l => l.playerId === pid);
+        return {
+          id: e.id,
+          type,
+          playerId: pid,
+          playerName: entry ? `${entry.player.firstName} ${entry.player.lastName}` : undefined,
+          playerJersey: entry?.player?.jerseyNumber ?? null,
+          x: payload.x ?? payload.coordinates?.x ?? e.x,
+          y: payload.y ?? payload.coordinates?.y ?? e.y,
+          distanceFeet: payload.distanceFeet ?? e.distanceFeet,
+          minuteOccurred: e.minuteOccurred,
+          period: e.period ?? payload.period ?? 1,
+        };
+      });
+  });
+
+  protected summaryPlayers = computed(() => this.lineup().map(l => l.player));
+  protected summaryActivePlayers = computed(() =>
+    this.lineup()
+      .filter(l => l.status === 'starting')
+      .map(l => ({ ...l.player, preferredPosition: l.positionName }))
+  );
+
+  protected basketballScoringPlays = computed(() => {
+    const lineup = this.lineup();
+    const scoringTypes = new Set(['MADE_1PT', 'MADE_2PT', 'MADE_3PT', 'OPPONENT_SCORE']);
+    return this.gameEvents()
+      .filter(e => scoringTypes.has(e.eventType || e.type))
+      .map(e => {
+        const type = e.eventType || e.type;
+        const payload = e.payload || {};
+        const isTeam = type !== 'OPPONENT_SCORE';
+        const scorerId = (e.playerId || payload.playerId || payload.scorerId) as string;
+        const entry = lineup.find(l => l.playerId === scorerId);
+        const assistorId = payload.assistorId || e.assistorId;
+        const assistorEntry = assistorId ? lineup.find(l => l.playerId === assistorId) : null;
+        let points = 2;
+        if (type === 'MADE_1PT') points = 1;
+        else if (type === 'MADE_2PT') points = 2;
+        else if (type === 'MADE_3PT') points = 3;
+        else if (type === 'OPPONENT_SCORE') points = Number(payload.points ?? e.points ?? 2);
+
+        return {
+          ...e,
+          points,
+          isTeam,
+          player: entry?.player,
+          assistorPlayer: assistorEntry?.player,
+          distanceFeet: payload.distanceFeet ?? e.distanceFeet,
+        };
+      })
+      .sort((a, b) => {
+        const periodA = a.period ?? a.payload?.period ?? 1;
+        const periodB = b.period ?? b.payload?.period ?? 1;
+        if (periodA !== periodB) return periodA - periodB;
+        if (a.minuteOccurred !== b.minuteOccurred) return a.minuteOccurred - b.minuteOccurred;
+        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+      });
+  });
+
   protected getPlayerName(playerId: string | undefined): string {
     if (!playerId) return '';
     const entry = this.lineup().find(l => l.playerId === playerId);
     return entry ? `${entry.player.firstName} ${entry.player.lastName}` : '';
+  }
+
+  protected getPlayerJersey(playerId: string | undefined): string | number {
+    if (!playerId) return '-';
+    const entry = this.lineup().find(l => l.playerId === playerId);
+    return entry?.player?.jerseyNumber ?? '-';
+  }
+
+  protected getPlayerDisplayName(playerId: string | undefined): string {
+    if (!playerId) return '';
+    const entry = this.lineup().find(l => l.playerId === playerId);
+    if (!entry) return '';
+    const jersey = entry.player?.jerseyNumber !== undefined && entry.player?.jerseyNumber !== null ? `#${entry.player.jerseyNumber} ` : '';
+    return `${jersey}${entry.player.firstName} ${entry.player.lastName}`;
   }
 
   protected openShootoutModal(): void {
@@ -525,6 +926,7 @@ export class GameSummary implements OnDestroy {
         teamId: this.teamId,
         eventId: this.eventId,
         seasonId: this.game()?.seasonId,
+        sportName: this.sportName(),
       },
       breakpoints: [0, 0.85, 1.0],
       initialBreakpoint: 1.0,
@@ -595,6 +997,7 @@ export class GameSummary implements OnDestroy {
 
   protected score = computed(() => {
     const isVB = this.sportName() === 'Volleyball';
+    const isBB = this.sportName() === 'Basketball';
     const g = this.game();
 
     if (isVB) {
@@ -609,6 +1012,26 @@ export class GameSummary implements OnDestroy {
         }
       });
       return { team: teamSets, opponent: opponentSets };
+    }
+
+    if (isBB) {
+      const events = this.gameEvents();
+      let team = 0;
+      let opponent = 0;
+      events.forEach(e => {
+        const type = e.eventType || e.type;
+        if (type === 'MADE_1PT') team += 1;
+        else if (type === 'MADE_2PT') team += 2;
+        else if (type === 'MADE_3PT') team += 3;
+        else if (type === 'OPPONENT_SCORE') {
+          const pts = Number(e['points'] ?? e['payload']?.points ?? 2);
+          opponent += pts;
+        }
+      });
+      if (events.length === 0 && g && (g.status === 'completed' || g.status === 'abandoned_weather') && g.goalsFor !== null && g.goalsAgainst !== null) {
+        return { team: g.goalsFor ?? 0, opponent: g.goalsAgainst ?? 0 };
+      }
+      return { team, opponent };
     }
 
     if (g && (g.status === 'completed' || g.status === 'abandoned_weather') && g.goalsFor !== null && g.goalsAgainst !== null) {
@@ -662,6 +1085,7 @@ export class GameSummary implements OnDestroy {
       sparklesOutline,
       shieldOutline,
       chatboxEllipsesOutline,
+      basketballOutline,
     });
 
     effect(() => {
@@ -887,15 +1311,20 @@ export class GameSummary implements OnDestroy {
   protected isOwnGoalEvent(type?: string): boolean {
     return type === 'OWN_GOAL';
   }
+
+  protected isBasketballShotEvent(type?: string): boolean {
+    return ['MADE_2PT', 'MADE_3PT', 'MISSED_2PT', 'MISSED_3PT', 'MADE_1PT', 'MISSED_1PT'].includes(type || '');
+  }
+
   protected openCreateModal(): void {
     this.isCreateMode.set(true);
-    this.createEventType.set('SUB');
+    this.createEventType.set(this.sportName() === 'Basketball' ? 'MADE_2PT' : 'SUB');
     this.editEvent.set(null);
     this.editPeriod.set(1);
     this.editMinute.set(0);
     this.editPlayerIn.set(null);
     this.editPlayerOut.set(null);
-    this.editPosition.set(this.sportName() === 'Volleyball' ? 'Setter' : 'MID');
+    this.editPosition.set(this.sportName() === 'Volleyball' ? 'Setter' : (this.sportName() === 'Basketball' ? 'PG' : 'MID'));
     this.editScorerId.set(null);
     this.editAssistorId.set(null);
     this.editPlayerId.set(null);
@@ -1008,9 +1437,19 @@ export class GameSummary implements OnDestroy {
     } else if (type === 'GOAL') {
       payload['scorerId'] = this.editScorerId();
       payload['assistorId'] = this.editAssistorId() || undefined;
+    } else if (['MADE_2PT', 'MADE_3PT'].includes(type)) {
+      payload['scorerId'] = this.editScorerId() || this.editPlayerId();
+      payload['playerId'] = this.editScorerId() || this.editPlayerId();
+      if (this.editAssistorId()) {
+        payload['assistorId'] = this.editAssistorId();
+      }
+    } else if (['MADE_1PT', 'MISSED_1PT', 'MISSED_2PT', 'MISSED_3PT'].includes(type)) {
+      payload['playerId'] = this.editScorerId() || this.editPlayerId();
+    } else if (type === 'OPPONENT_SCORE') {
+      payload['points'] = 2;
     } else if (type === 'OWN_GOAL') {
       payload['playerId'] = this.editPlayerId();
-    } else if (type === 'OPPONENT_OWN_GOAL' || type === 'OPPONENT_GOAL' || type === 'OPPONENT_SHOT' || type === 'OPPONENT_CORNER_KICK') {
+    } else if (type === 'OPPONENT_OWN_GOAL' || type === 'OPPONENT_GOAL' || type === 'OPPONENT_SHOT' || type === 'OPPONENT_CORNER_KICK' || type === 'OPPONENT_FOUL' || type === 'TIMEOUT') {
       // No player associated
     } else if (type === 'ASSIST') {
       payload['assistorId'] = this.editPlayerId() || undefined;
@@ -1099,9 +1538,21 @@ export class GameSummary implements OnDestroy {
     } else if (event.eventType === 'GOAL') {
       payload['scorerId'] = this.editScorerId();
       payload['assistorId'] = this.editAssistorId() || undefined;
+    } else if (['MADE_2PT', 'MADE_3PT'].includes(event.eventType)) {
+      payload['scorerId'] = this.editScorerId() || this.editPlayerId();
+      payload['playerId'] = this.editScorerId() || this.editPlayerId();
+      if (this.editAssistorId()) {
+        payload['assistorId'] = this.editAssistorId();
+      } else {
+        delete payload['assistorId'];
+      }
+    } else if (['MADE_1PT', 'MISSED_1PT', 'MISSED_2PT', 'MISSED_3PT'].includes(event.eventType)) {
+      payload['playerId'] = this.editScorerId() || this.editPlayerId();
+    } else if (event.eventType === 'OPPONENT_SCORE') {
+      payload['points'] = payload['points'] || 2;
     } else if (event.eventType === 'OWN_GOAL') {
       payload['playerId'] = this.editPlayerId();
-    } else if (event.eventType === 'OPPONENT_OWN_GOAL' || event.eventType === 'OPPONENT_GOAL' || event.eventType === 'OPPONENT_SHOT' || event.eventType === 'OPPONENT_CORNER_KICK') {
+    } else if (event.eventType === 'OPPONENT_OWN_GOAL' || event.eventType === 'OPPONENT_GOAL' || event.eventType === 'OPPONENT_SHOT' || event.eventType === 'OPPONENT_CORNER_KICK' || event.eventType === 'OPPONENT_FOUL' || event.eventType === 'TIMEOUT') {
       // No player associated
     } else if (event.eventType === 'ASSIST') {
       payload['assistorId'] = this.editPlayerId();

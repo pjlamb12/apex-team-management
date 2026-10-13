@@ -164,7 +164,7 @@ export class TacticBoard implements OnInit {
   onSportChange(sport: TacticSport): void {
     if (this.currentSport() === sport) return;
     this.tacticsService.setSport(sport);
-    this.pitchType.set(sport === 'soccer' ? 'full_pitch' : 'full_court');
+    this.pitchType.set(sport === 'soccer' ? 'full_pitch' : (sport === 'basketball' ? 'half_court' : 'full_court'));
     this.resetToDefaultPreset(sport);
   }
 
@@ -184,6 +184,16 @@ export class TacticBoard implements OnInit {
         { id: '10', label: '9', role: 'ST', team: 'home', x: 75, y: 50 },
         { id: '11', label: '11', role: 'LW', team: 'home', x: 70, y: 18 },
         { id: 'ball', label: '', team: 'ball', x: 38, y: 53 },
+      ]);
+    } else if (sport === 'basketball') {
+      this.pitchType.set('half_court');
+      this.tokens.set([
+        { id: 'b1', label: '1', role: 'PG', team: 'home', x: 50, y: 75 },
+        { id: 'b2', label: '2', role: 'SG', team: 'home', x: 82, y: 56 },
+        { id: 'b3', label: '3', role: 'SF', team: 'home', x: 18, y: 56 },
+        { id: 'b4', label: '4', role: 'PF', team: 'home', x: 12, y: 22 },
+        { id: 'b5', label: '5', role: 'C', team: 'home', x: 88, y: 22 },
+        { id: 'ball', label: '', team: 'ball', x: 50, y: 79 },
       ]);
     } else {
       this.pitchType.set('full_court');

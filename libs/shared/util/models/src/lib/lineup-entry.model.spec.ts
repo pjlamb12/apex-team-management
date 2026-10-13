@@ -27,6 +27,11 @@ describe('lineup-entry.model', () => {
       const slots = getDefaultSlots(6, 'Volleyball');
       expect(slots).toEqual([0, 1, 2, 3, 4, 5]);
     });
+
+    it('should return 5 court slots for Basketball', () => {
+      const slots = getDefaultSlots(5, 'Basketball');
+      expect(slots).toEqual([0, 1, 2, 3, 4]);
+    });
   });
 
   describe('getPositionFromSlot', () => {
@@ -54,6 +59,19 @@ describe('lineup-entry.model', () => {
 
     it('should map slot 99 to Libero for Volleyball', () => {
       expect(getPositionFromSlot(99, 'Volleyball')).toBe('Libero');
+    });
+
+    it('should map slots 0-4 to PG, SG, SF, PF, C for Basketball', () => {
+      expect(getPositionFromSlot(0, 'Basketball')).toBe('PG');
+      expect(getPositionFromSlot(1, 'Basketball')).toBe('SG');
+      expect(getPositionFromSlot(2, 'Basketball')).toBe('SF');
+      expect(getPositionFromSlot(3, 'Basketball')).toBe('PF');
+      expect(getPositionFromSlot(4, 'Basketball')).toBe('C');
+    });
+
+    it('should return UNKNOWN for out of range Basketball slot', () => {
+      expect(getPositionFromSlot(5, 'Basketball')).toBe('UNKNOWN');
+      expect(getPositionFromSlot(99, 'Basketball')).toBe('UNKNOWN');
     });
   });
 });

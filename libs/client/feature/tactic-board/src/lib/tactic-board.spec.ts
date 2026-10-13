@@ -80,6 +80,24 @@ describe('TacticBoard', () => {
     expect(component.pitchType()).toBe('full_court');
   });
 
+  it('should switch sport to basketball when requested and set half_court with 5 starters + ball', () => {
+    component.onSportChange('basketball');
+    expect(mockTacticsService.setSport).toHaveBeenCalledWith('basketball');
+    expect(component.pitchType()).toBe('half_court');
+    // Check 5 home players + 1 ball
+    const tokens = component.tokens();
+    expect(tokens.length).toBe(6);
+    expect(tokens.filter((t) => t.team === 'home').length).toBe(5);
+    expect(tokens.some((t) => t.team === 'ball')).toBe(true);
+  });
+
+  it('should allow toggling basketball pitch type between half_court and full_court', () => {
+    component.onSportChange('basketball');
+    expect(component.pitchType()).toBe('half_court');
+    component.pitchType.set('full_court');
+    expect(component.pitchType()).toBe('full_court');
+  });
+
   it('should add player tokens and update history', () => {
     const initialCount = component.tokens().length;
     component.addPlayerToken('home');

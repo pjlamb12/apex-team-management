@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, effect, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -19,20 +19,44 @@ import {
   IonRange,
   IonSelect,
   IonSelectOption,
+  IonSpinner,
   AlertController,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, playOutline, pauseOutline, arrowForwardOutline, flagOutline, settingsOutline, alertCircleOutline, footballOutline, refreshOutline, shirtOutline, swapHorizontalOutline, trophyOutline, stopCircleOutline } from 'ionicons/icons';
+import {
+  chevronBackOutline,
+  playOutline,
+  pauseOutline,
+  arrowForwardOutline,
+  flagOutline,
+  settingsOutline,
+  alertCircleOutline,
+  footballOutline,
+  refreshOutline,
+  shirtOutline,
+  swapHorizontalOutline,
+  trophyOutline,
+  stopCircleOutline,
+  chevronDownOutline,
+  chevronUpOutline,
+  timeOutline,
+  addCircleOutline,
+} from 'ionicons/icons';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
+import { PlaytimeService } from '../rotation-engine/playtime.service';
 import { EventsService, EventEntity, PlayersService, AttendanceService, PlayerEntity } from '@apex-team/client/data-access/team';
 import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
 import { SoccerPitchViewComponent } from '../soccer-pitch-view/soccer-pitch-view';
 import { VolleyballCourtViewComponent } from '../volleyball-court-view/volleyball-court-view';
+import { BasketballCourtViewComponent, ShotLoggedPayload } from '../basketball-court-view/basketball-court-view';
+import { ActivePlayerStripComponent } from '../active-player-strip/active-player-strip';
+import { RapidActionKeypadComponent, KeypadActionPayload } from '../rapid-action-keypad/rapid-action-keypad';
 import { PlayerActionMenuComponent } from '../player-action-menu/player-action-menu';
 import { EventLogViewComponent } from '../event-log/event-log';
 import { SubQueueComponent } from '../sub-queue/sub-queue';
@@ -59,10 +83,14 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
     IonRange,
     IonSelect,
     IonSelectOption,
+    IonSpinner,
     ClockDisplayComponent,
     BenchViewComponent,
     SoccerPitchViewComponent,
     VolleyballCourtViewComponent,
+    BasketballCourtViewComponent,
+    ActivePlayerStripComponent,
+    RapidActionKeypadComponent,
     PlayerActionMenuComponent,
     EventLogViewComponent,
     SubQueueComponent,
@@ -74,6 +102,7 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
   styleUrls: ['./console-wrapper.scss'],
 })
 export class ConsoleWrapper implements OnInit, OnDestroy {
+  rapidKeypad = viewChild<RapidActionKeypadComponent>('rapidKeypad');
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
@@ -85,8 +114,10 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected syncService = inject(EventSyncService);
   protected playersService = inject(PlayersService);
   protected attendanceService = inject(AttendanceService);
+  protected playtimeService = inject(PlaytimeService);
   private socketService = inject(SocketService);
   private alertCtrl = inject(AlertController);
+  private toastCtrl = inject(ToastController);
 
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
@@ -185,6 +216,8 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
                 pointCap: event?.league?.pointCap,
                 decidingSetScoreGoal: event?.league?.decidingSetScoreGoal,
                 decidingSetPointCap: event?.league?.decidingSetPointCap,
+                periodCount: event?.periodCount || event?.league?.periodCount || (team?.sport?.name === 'Basketball' ? 4 : (team?.sport?.name === 'Volleyball' ? 3 : 2)),
+                periodLengthMinutes: event?.periodLengthMinutes || event?.league?.periodLengthMinutes || (team?.sport?.name === 'Basketball' ? 8 : 45),
               },
               event?.opponent || undefined
             );
@@ -251,6 +284,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected rotationAlertVisible = signal(false);
   protected selectedPlayerId = signal<string | null>(null);
   protected actionPlayer = signal<Player | null>(null);
+  protected isBoxScoreExpanded = signal<boolean>(true);
   protected popoverEvent = signal<Event | null>(null);
 
   private reconnectedSub?: import('rxjs').Subscription;
@@ -263,6 +297,43 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     const selId = this.selectedPlayerId();
     if (!selId) return null;
     return this.stateService.activePlayers().find(p => p.id === selId) || null;
+  });
+
+  protected isBasketball = computed(() => this.stateService.sportName() === 'Basketball');
+
+  protected isRegulationEnd = computed(() => {
+    if (!this.isBasketball()) return false;
+    return this.stateService.currentPeriod() === this.stateService.regulationPeriodCount();
+  });
+
+  protected isOvertime = computed(() => {
+    if (!this.isBasketball()) return false;
+    return this.stateService.currentPeriod() > this.stateService.regulationPeriodCount();
+  });
+
+  protected isGameTied = computed(() => {
+    const score = this.stateService.score();
+    return score.team === score.opponent;
+  });
+
+  protected canAddBasketballOvertime = computed(() => {
+    return (this.isRegulationEnd() || this.isOvertime()) && this.isGameTied();
+  });
+
+  protected basketballPeriodActionLabel = computed(() => {
+    const currentPeriod = this.stateService.currentPeriod();
+    const regCount = this.stateService.regulationPeriodCount();
+    const isTied = this.isGameTied();
+
+    if (currentPeriod < regCount) {
+      return regCount === 2 ? 'Next Half' : 'Next Quarter';
+    }
+    if (currentPeriod === regCount) {
+      return isTied ? 'Add Overtime' : 'End Game';
+    }
+    // Overtime
+    const otNum = currentPeriod - regCount;
+    return isTied ? `Add OT ${otNum + 1}` : 'End Game';
   });
 
   constructor() {
@@ -280,6 +351,21 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       swapHorizontalOutline,
       trophyOutline,
       stopCircleOutline,
+      chevronDownOutline,
+      chevronUpOutline,
+      timeOutline,
+      addCircleOutline,
+    });
+
+    // Auto-stop countdown clock when period length is reached in Basketball
+    effect(() => {
+      if (!this.isBasketball() || !this.isRunning()) return;
+      const elapsedMs = this.clockService.elapsedMs();
+      const periodLengthMs = (this.stateService.periodLengthMinutes() || 8) * 60 * 1000;
+      if (periodLengthMs > 0 && elapsedMs >= periodLengthMs) {
+        void this.clockService.stop();
+        void Haptics.notification({ type: NotificationType.Warning }).catch(() => {});
+      }
     });
 
     effect(() => {
@@ -305,10 +391,17 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     });
 
     effect(() => {
+      const currentServiceEventId = this.stateService.eventId();
+      const eventId = this.eventId();
+      const teamId = this.teamId();
       const status = this.stateService.status();
-      if (status === 'completed' || status === 'abandoned_weather') {
-        const teamId = this.teamId();
-        const eventId = this.eventId();
+
+      // Only navigate if stateService has been initialized specifically for THIS event
+      if (
+        currentServiceEventId &&
+        currentServiceEventId === eventId &&
+        (status === 'completed' || status === 'abandoned_weather')
+      ) {
         if (teamId && eventId) {
           this.clockService.stop();
           void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
@@ -317,9 +410,19 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     });
 
     effect(() => {
+      const currentServiceEventId = this.stateService.eventId();
+      const eventId = this.eventId();
       const matchRes = this.stateService.matchResult();
       const status = this.stateService.status();
-      if (matchRes && status !== 'completed' && status !== 'abandoned_weather') {
+
+      // Only auto-end if stateService has been initialized specifically for THIS event
+      if (
+        currentServiceEventId &&
+        currentServiceEventId === eventId &&
+        matchRes &&
+        status !== 'completed' &&
+        status !== 'abandoned_weather'
+      ) {
         void this.autoEndGame();
       }
     });
@@ -342,6 +445,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       this.socketService.offEvent('lineupUpdated');
       this.socketService.leaveEvent(eventId);
     }
+    this.stateService.reset();
   }
 
   public async refreshState(): Promise<void> {
@@ -601,7 +705,143 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     await alert.present();
   }
 
+  protected async promptAddOvertime(): Promise<void> {
+    const currentPeriod = this.stateService.currentPeriod();
+    const regCount = this.stateService.regulationPeriodCount();
+    const nextOtNum = Math.max(1, currentPeriod - regCount + 1);
+    const score = this.stateService.score();
+    const defaultMinutes = this.stateService.overtimePeriodLengthMinutes() || 4;
+
+    const alert = await this.alertCtrl.create({
+      header: nextOtNum > 1 ? `Start Overtime ${nextOtNum}` : 'Start Overtime',
+      subHeader: `Score is tied (${score.team} - ${score.opponent})`,
+      message: `Set the duration in minutes for Overtime ${nextOtNum}:`,
+      inputs: [
+        {
+          name: 'overtimeMinutes',
+          type: 'number',
+          min: 1,
+          max: 30,
+          value: defaultMinutes,
+          placeholder: 'Minutes (e.g. 4)',
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Start Overtime',
+          role: 'confirm',
+          handler: (data) => {
+            const minutes = parseInt(data.overtimeMinutes, 10);
+            const validMinutes = isNaN(minutes) || minutes <= 0 ? defaultMinutes : minutes;
+            void this.executeStartOvertime(validMinutes);
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  protected async executeStartOvertime(minutes: number): Promise<void> {
+    if (this.isTransitioningPeriod()) return;
+    this.isTransitioningPeriod.set(true);
+
+    try {
+      const currentPeriod = this.stateService.currentPeriod();
+      const nextPeriod = currentPeriod + 1;
+      const gameTimeMs = this.clockService.elapsedMs();
+
+      // 1. End current period
+      this.stateService.pushEvent({
+        type: 'PERIOD_END',
+        timestamp: Date.now(),
+        minuteOccurred: this.clockService.currentMinute(),
+        gameTimeMs,
+      });
+
+      // 2. Set overtime length for next period
+      this.stateService.setOvertimeLength(minutes, nextPeriod);
+
+      // 3. Log OVERTIME_START event
+      this.stateService.pushEvent({
+        type: 'OVERTIME_START',
+        timestamp: Date.now() + 1,
+        minuteOccurred: 1,
+        gameTimeMs: 0,
+        period: nextPeriod,
+        overtimeMinutes: minutes,
+      });
+
+      // 4. Reset clock for fresh countdown
+      await this.clockService.stop();
+      await this.clockService.reset();
+      this.stateService.setLastIntervalTriggered(0);
+
+      // 5. Sync to backend
+      const teamId = this.teamId();
+      const eventId = this.eventId();
+      if (teamId && eventId) {
+        await firstValueFrom(
+          this.eventsService.updateEvent(teamId, eventId, {
+            currentPeriod: this.stateService.currentPeriod(),
+            clockStartTime: null,
+            clockAccumulatedMs: 0,
+          })
+        );
+      }
+
+      const toast = await this.toastCtrl.create({
+        message: `Overtime ${nextPeriod - this.stateService.regulationPeriodCount()} started (${minutes} min)`,
+        duration: 2500,
+        color: 'warning',
+        position: 'top',
+      });
+      await toast.present();
+    } finally {
+      this.isTransitioningPeriod.set(false);
+    }
+  }
+
   protected async nextPeriod(): Promise<void> {
+    if (this.isBasketball()) {
+      if (this.canAddBasketballOvertime()) {
+        await this.promptAddOvertime();
+        return;
+      }
+      if (this.isRegulationEnd() || this.isOvertime()) {
+        // One team is winning!
+        const score = this.stateService.score();
+        const winningTeam =
+          score.team > score.opponent
+            ? (this.team()?.name ?? 'Our Team')
+            : (this.event()?.opponent ?? 'Opponent');
+        const alert = await this.alertCtrl.create({
+          header: this.isOvertime() ? 'Overtime Finished' : 'End of Regulation',
+          message: `${winningTeam} is winning (${score.team} - ${score.opponent}). Would you like to complete the game as Final?`,
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+            },
+            {
+              text: 'Complete Game',
+              role: 'confirm',
+              handler: () => {
+                void this.performEndGame('completed');
+              },
+            },
+          ],
+        });
+        await alert.present();
+        return;
+      }
+      await this.executeNextPeriod();
+      return;
+    }
+
     const isVolleyball = this.stateService.sportName() === 'Volleyball';
     const setResult = this.stateService.currentSetResult();
     const score = this.stateService.score();
@@ -689,6 +929,41 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected async endGame(): Promise<void> {
+    if (this.canAddBasketballOvertime()) {
+      const score = this.stateService.score();
+      const alert = await this.alertCtrl.create({
+        header: 'Game Tied',
+        message: `The game is currently tied (${score.team} - ${score.opponent}). Basketball games typically decide a winner with Overtime. Would you like to add Overtime or conclude the match?`,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+          },
+          {
+            text: 'Add Overtime',
+            handler: () => {
+              void this.promptAddOvertime();
+            },
+          },
+          {
+            text: 'Call Game (Weather Stoppage)',
+            handler: () => {
+              void this.performEndGame('abandoned_weather');
+            },
+          },
+          {
+            text: 'Complete Game (Final as Tie)',
+            role: 'confirm',
+            handler: () => {
+              void this.performEndGame('completed');
+            },
+          },
+        ],
+      });
+      await alert.present();
+      return;
+    }
+
     const alert = await this.alertCtrl.create({
       header: 'End Game',
       message: 'Choose how you would like to end this match:',
@@ -797,6 +1072,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     const { player, event } = data;
     const currentSelectionId = this.selectedPlayerId();
     const isVolleyball = this.stateService.sportName() === 'Volleyball';
+    const isBasketball = this.stateService.sportName() === 'Basketball';
     
     // Check if one is bench and one is pitch
     const benchPlayers = this.stateService.benchPlayers();
@@ -809,18 +1085,22 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     if (!currentSelectionId) {
       this.selectedPlayerId.set(player.id);
       
-      if (tappedActive) {
-        if (isVolleyball) {
-          // In volleyball, context menu shows on first click of an active player
-          this.actionPlayer.set(player);
-          this.popoverEvent.set(event);
-        }
+      if (tappedActive && isVolleyball) {
+        // In volleyball, context menu shows on first click of an active player
+        this.actionPlayer.set(player);
+        this.popoverEvent.set(event);
       }
       return;
     }
 
-    // If tapping same player, show actions (modal/popover)
+    // If tapping same player a second time: unselect if on bench or basketball court
     if (currentSelectionId === player.id) {
+      if (tappedOnBench || isBasketball) {
+        this.selectedPlayerId.set(null);
+        this.actionPlayer.set(null);
+        return;
+      }
+
       if (tappedActive) {
         this.actionPlayer.set(player);
         this.popoverEvent.set(event);
@@ -1061,6 +1341,166 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     this.actionPlayer.set(null);
   }
 
+  protected handleBasketballShot(shot: ShotLoggedPayload): void {
+    this.stateService.pushEvent({
+      type: shot.type,
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+      playerId: shot.playerId,
+      x: shot.x,
+      y: shot.y,
+      distanceFeet: shot.distanceFeet,
+      assistorId: shot.assistorId,
+    });
+    this.selectedPlayerId.set(null);
+    this.actionPlayer.set(null);
+  }
+
+  protected handleKeypadAction(action: KeypadActionPayload): void {
+    this.stateService.pushEvent({
+      type: action.type,
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+      playerId: action.playerId,
+      ...(action.payload || {}),
+    });
+    this.selectedPlayerId.set(null);
+    this.actionPlayer.set(null);
+  }
+
+  protected handleBasketballPlayerSelected(player: Player): void {
+    const fulfilled = this.rapidKeypad()?.fulfillArmedStat(player);
+    if (!fulfilled) {
+      if (this.selectedPlayerId() === player.id) {
+        this.selectedPlayerId.set(null);
+        this.actionPlayer.set(null);
+      } else {
+        this.selectedPlayerId.set(player.id);
+      }
+    }
+  }
+
+  protected async handleBasketballEmptySlotClicked(slotIndex: number): Promise<void> {
+    const selId = this.selectedPlayerId();
+    const benchPlayers = this.stateService.benchPlayers();
+    const selectedBench = benchPlayers.find((p) => p.id === selId);
+
+    // If coach already selected a bench player, sub them into this slot immediately
+    if (selectedBench) {
+      const sportName = this.team()?.sport?.name || 'Basketball';
+      const posName = getPositionFromSlot(slotIndex, sportName);
+
+      this.stateService.pushEvent({
+        type: 'SUB',
+        playerIdIn: selectedBench.id,
+        slotIndex,
+        position: posName,
+        timestamp: Date.now(),
+        minuteOccurred: this.clockService.currentMinute(),
+        gameTimeMs: this.clockService.elapsedMs(),
+      });
+      this.selectedPlayerId.set(null);
+      this.actionPlayer.set(null);
+      return;
+    }
+
+    // Otherwise, present quick picker of available bench players
+    if (benchPlayers.length === 0) {
+      const alert = await this.alertCtrl.create({
+        header: 'No Bench Players',
+        message: 'No bench players are available to sub into the game.',
+        buttons: ['OK'],
+      });
+      await alert.present();
+      return;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: 'Sub Player In',
+      subHeader: 'Select a bench player for open spot',
+      inputs: benchPlayers.map((p) => ({
+        type: 'radio',
+        label: `#${p.jerseyNumber ?? ''} ${p.firstName} ${p.lastName} (${p.preferredPosition || 'Player'})`,
+        value: p.id,
+      })),
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Sub In',
+          handler: (inPlayerId) => {
+            if (inPlayerId) {
+              const sportName = this.team()?.sport?.name || 'Basketball';
+              const posName = getPositionFromSlot(slotIndex, sportName);
+
+              this.stateService.pushEvent({
+                type: 'SUB',
+                playerIdIn: inPlayerId,
+                slotIndex,
+                position: posName,
+                timestamp: Date.now(),
+                minuteOccurred: this.clockService.currentMinute(),
+                gameTimeMs: this.clockService.elapsedMs(),
+              });
+              this.selectedPlayerId.set(null);
+              this.actionPlayer.set(null);
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  protected handleUndoAction(): void {
+    this.stateService.undoLastEvent();
+  }
+
+  protected addOpponentBasketballScore(points: number): void {
+    this.stateService.pushEvent({
+      type: 'OPPONENT_SCORE',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+      points,
+    });
+  }
+
+  protected addOpponentBasketballFoul(): void {
+    this.stateService.pushEvent({
+      type: 'OPPONENT_FOUL',
+      timestamp: Date.now(),
+      minuteOccurred: this.clockService.currentMinute(),
+      gameTimeMs: this.clockService.elapsedMs(),
+    });
+  }
+
+  protected callTeamBasketballTimeout(): void {
+    this.stateService.callTeamTimeout(
+      this.clockService.currentMinute(),
+      this.clockService.elapsedMs()
+    );
+  }
+
+  protected addOpponentBasketballTimeout(): void {
+    this.stateService.callOpponentTimeout(
+      this.clockService.currentMinute(),
+      this.clockService.elapsedMs()
+    );
+  }
+
+  protected toggleBoxScore(): void {
+    this.isBoxScoreExpanded.update((v) => !v);
+  }
+
+  protected getPlayerMinutes(playerId: string): string {
+    const totalSecs = this.playtimeService.playtimeMap()[playerId] || 0;
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+
   protected getHittingPct(kills = 0, hittingErrors = 0, hits = 0): string {
     const total = kills + hittingErrors + hits;
     if (total === 0) return '.000';
@@ -1072,7 +1512,8 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     return fixed.startsWith('0') ? fixed.substring(1) : fixed;
   }
 
-  protected getPlayerShortName(player: Player): string {
+  protected getPlayerShortName(player?: Player | null): string {
+    if (!player) return '';
     const firstInitial = player.firstName ? `${player.firstName.charAt(0)}.` : '';
     return `${player.jerseyNumber !== null && player.jerseyNumber !== undefined ? '#' + player.jerseyNumber + ' ' : ''}${player.lastName}, ${firstInitial}`;
   }

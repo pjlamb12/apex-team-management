@@ -5,8 +5,8 @@
         <ion-icon name="trophy-outline" class="text-xl"></ion-icon>
       </div>
       <div>
-        <ion-title class="p-0 text-base font-bold text-ap-text">Award Match Badges & Honors</ion-title>
-        <p class="text-xs text-ap-muted">Recognize Player of the Match, grit, defense, and teamwork</p>
+        <ion-title class="p-0 text-base font-bold text-ap-text">{{ modalTitle() }}</ion-title>
+        <p class="text-xs text-ap-muted">{{ modalSubtitle() }}</p>
       </div>
     </div>
     <ion-buttons slot="end">
@@ -56,11 +56,11 @@
       <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between px-1">
           <span class="text-xs font-bold uppercase tracking-wider text-ap-muted">2. Choose Honor / Badge</span>
-          <span class="text-xs text-indigo-400 font-medium">{{ badges.length }} Badges</span>
+          <span class="text-xs text-indigo-400 font-medium">{{ badges().length }} Badges</span>
         </div>
 
         <div class="badge-grid">
-          @for (badge of badges; track badge.type) {
+          @for (badge of badges(); track badge.type) {
             <button
               type="button"
               (click)="selectBadge(badge)"
@@ -92,7 +92,7 @@
         </div>
 
         <ion-textarea
-          placeholder="e.g. Incredible 1v1 defensive stops in the 2nd half, keeping the clean sheet intact!"
+          [placeholder]="notesPlaceholder()"
           [(ngModel)]="coachNotes"
           [autoGrow]="true"
           rows="2"
@@ -121,7 +121,7 @@
       @if (eventAwards().length > 0) {
         <div class="bg-ap-surface rounded-2xl border border-ap-border p-5 flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between border-b border-ap-border pb-3">
-            <span class="text-xs font-bold uppercase tracking-wider text-ap-text">Honors Awarded This Match ({{ eventAwards().length }})</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-ap-text">Honors Awarded This {{ isBasketball() ? 'Game' : 'Match' }} ({{ eventAwards().length }})</span>
           </div>
 
           <div class="flex flex-col gap-2.5">

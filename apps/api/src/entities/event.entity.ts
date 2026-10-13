@@ -88,6 +88,12 @@ export class EventEntity {
   @Column({ name: 'players_on_field', type: 'int', nullable: true })
   playersOnField: number | null;
 
+  @Column({ name: 'foul_limit', type: 'int', default: 5, nullable: true })
+  foulLimit: number | null;
+
+  @Column({ name: 'bonus_threshold', type: 'int', default: 5, nullable: true })
+  bonusThreshold: number | null;
+
   @Column({ name: 'current_period', type: 'int', default: 1 })
   currentPeriod: number;
 

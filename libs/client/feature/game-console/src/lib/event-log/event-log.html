@@ -20,6 +20,8 @@
           <ion-badge slot="start" color="light">
             @if (stateService.sportName() === 'Volleyball') {
               S{{ event.period || event.payload?.period || 1 }}
+            } @else if (stateService.sportName() === 'Basketball') {
+              Q{{ event.period || event.payload?.period || 1 }}
             } @else {
               {{ event.minuteOccurred }}'
             }
@@ -100,9 +102,24 @@
               <p>
                 Hit by: {{ getPlayerName(event.playerId) }}
               </p>
+            } @else if (event.type === 'OPPONENT_SCORE') {
+              <p>
+                +{{ event['points'] || event.payload?.points || 2 }} pts ({{ stateService.opponentName() || 'Opponent' }})
+              </p>
+            } @else if (event.type === 'OPPONENT_FOUL') {
+              <p>
+                Foul on {{ stateService.opponentName() || 'Opponent' }}
+              </p>
+            } @else if (event.type === 'TIMEOUT' || event.type === 'OPPONENT_TIMEOUT') {
+              <p>
+                {{ event.type === 'TIMEOUT' ? stateService.teamName() : (stateService.opponentName() || 'Opponent') }} Timeout
+              </p>
             } @else if (event.playerId) {
               <p>
                 {{ getPlayerName(event.playerId) }}
+                @if (event.distanceFeet) {
+                  • {{ event.distanceFeet }}ft
+                }
               </p>
             }
           </ion-label>

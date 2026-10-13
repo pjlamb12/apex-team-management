@@ -34,6 +34,16 @@
             <span>🏐</span>
             <span>Volleyball</span>
           </button>
+
+          <button
+            type="button"
+            class="sport-btn"
+            [class.active-basketball]="currentSport() === 'basketball'"
+            (click)="onSportChange('basketball')"
+          >
+            <span>🏀</span>
+            <span>Basketball</span>
+          </button>
         </div>
       </div>
 
@@ -132,6 +142,23 @@
                 (click)="pitchType.set('half_pitch')"
               >
                 Half Pitch / Box
+              </button>
+            } @else if (currentSport() === 'basketball') {
+              <button
+                type="button"
+                class="view-btn"
+                [class.active-view]="pitchType() === 'half_court'"
+                (click)="pitchType.set('half_court')"
+              >
+                Half Court
+              </button>
+              <button
+                type="button"
+                class="view-btn"
+                [class.active-view]="pitchType() === 'full_court'"
+                (click)="pitchType.set('full_court')"
+              >
+                Full Court
               </button>
             } @else {
               <button

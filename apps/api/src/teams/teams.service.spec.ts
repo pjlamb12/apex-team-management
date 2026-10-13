@@ -167,4 +167,51 @@ describe('TeamsService', () => {
       expect(teamRepo.remove).toHaveBeenCalledWith(expect.objectContaining(mockTeam));
     });
   });
+
+  describe('seedDemo', () => {
+    it('should seed a demo basketball team with 12 players, past game 64-58, and future events', async () => {
+      const mockManager = {
+        findOne: vi.fn().mockImplementation((entity, opts) => {
+          if (opts?.where?.name === 'Basketball') {
+            return Promise.resolve({ id: 'sport-bball', name: 'Basketball' });
+          }
+          return Promise.resolve(null);
+        }),
+        create: vi.fn().mockImplementation((entity, data) => ({ ...data, id: 'seeded-id' })),
+        save: vi.fn().mockImplementation((entity, data) => Promise.resolve({ ...data, id: data.id || 'saved-id' })),
+      };
+
+      const mockDataSource = {
+        transaction: vi.fn().mockImplementation((cb) => cb(mockManager)),
+        getRepository: vi.fn().mockReturnValue({
+          find: vi.fn().mockResolvedValue([]),
+          delete: vi.fn().mockResolvedValue({}),
+        }),
+      };
+
+      (service as any).dataSource = mockDataSource;
+
+      const team = await service.seedDemo('coach-1', 'Basketball');
+
+      expect(team.name).toBe('Apex Ballers (Demo)');
+      expect(mockManager.create).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          name: 'Utah Metro Basketball League - U14',
+          playersOnField: 5,
+          periodCount: 4,
+          periodLengthMinutes: 8,
+        })
+      );
+      expect(mockManager.create).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          opponent: 'Thunder Basketball',
+          goalsFor: 64,
+          goalsAgainst: 58,
+          playersOnField: 5,
+        })
+      );
+    });
+  });
 });

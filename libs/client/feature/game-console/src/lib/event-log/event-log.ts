@@ -1,7 +1,7 @@
 import { Component, inject, computed, ViewChild, ElementRef, signal, effect } from '@angular/core';
 import { IonList, IonItem, IonLabel, IonButton, IonIcon, IonBadge, IonNote, IonListHeader, ToastController, IonSpinner } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline, trashOutline, arrowDownCircleOutline, arrowUpCircleOutline } from 'ionicons/icons';
+import { arrowUndoOutline, footballOutline, starOutline, cardOutline, swapHorizontalOutline, helpOutline, shieldOutline, flagOutline, timeOutline, flashOutline, ribbonOutline, handRightOutline, closeCircleOutline, alertCircleOutline, syncOutline, addCircleOutline, removeCircleOutline, arrowForwardOutline, trashOutline, arrowDownCircleOutline, arrowUpCircleOutline, basketballOutline } from 'ionicons/icons';
 import { LiveGameStateService, GameEvent } from '../live-game-state.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { firstValueFrom } from 'rxjs';
@@ -93,7 +93,8 @@ export class EventLogViewComponent {
       addCircleOutline,
       removeCircleOutline,
       arrowForwardOutline,
-      trashOutline
+      trashOutline,
+      basketballOutline
     });
 
     effect(() => {
@@ -126,7 +127,8 @@ export class EventLogViewComponent {
       case 'ASSIST': return 'star-outline';
       case 'YELLOW_CARD':
       case 'RED_CARD': return 'card-outline';
-      case 'SUB': return 'swap-horizontal-outline';
+      case 'SUB':
+      case 'SUBSTITUTION': return 'swap-horizontal-outline';
       case 'BLOCKED_SHOT':
       case 'BLOCKED_PENALTY': return 'shield-outline';
       case 'SHOOTOUT_KICK': return 'football-outline';
@@ -153,6 +155,22 @@ export class EventLogViewComponent {
       case 'SET_ATTEMPT': return 'arrow-forward-outline';
       case 'SET_ASSIST': return 'star-outline';
       case 'SET_ERROR': return 'close-circle-outline';
+      // Basketball events
+      case 'MADE_1PT':
+      case 'MADE_2PT':
+      case 'MADE_3PT': return 'basketball-outline';
+      case 'MISSED_1PT':
+      case 'MISSED_2PT':
+      case 'MISSED_3PT': return 'close-circle-outline';
+      case 'REBOUND_OFFENSIVE': return 'arrow-up-circle-outline';
+      case 'REBOUND_DEFENSIVE': return 'arrow-down-circle-outline';
+      case 'STEAL': return 'flash-outline';
+      case 'TURNOVER': return 'alert-circle-outline';
+      case 'FOUL': return 'alert-circle-outline';
+      case 'OPPONENT_FOUL': return 'flag-outline';
+      case 'OPPONENT_SCORE': return 'basketball-outline';
+      case 'TIMEOUT':
+      case 'OPPONENT_TIMEOUT': return 'time-outline';
       default: return 'help-outline';
     }
   }
@@ -165,7 +183,8 @@ export class EventLogViewComponent {
       case 'OWN_GOAL': return 'danger';
       case 'YELLOW_CARD': return 'warning';
       case 'RED_CARD': return 'danger';
-      case 'SUB': return 'tertiary';
+      case 'SUB':
+      case 'SUBSTITUTION': return 'tertiary';
       case 'BLOCKED_SHOT': return 'primary';
       case 'BLOCKED_PENALTY': return 'success';
       case 'SHOOTOUT_KICK': return 'medium';
@@ -192,6 +211,22 @@ export class EventLogViewComponent {
       case 'SET_ATTEMPT': return 'medium';
       case 'SET_ASSIST': return 'primary';
       case 'SET_ERROR': return 'danger';
+      // Basketball events
+      case 'MADE_1PT':
+      case 'MADE_2PT':
+      case 'MADE_3PT': return 'success';
+      case 'MISSED_1PT':
+      case 'MISSED_2PT':
+      case 'MISSED_3PT': return 'danger';
+      case 'REBOUND_OFFENSIVE': return 'warning';
+      case 'REBOUND_DEFENSIVE': return 'primary';
+      case 'STEAL': return 'warning';
+      case 'TURNOVER': return 'danger';
+      case 'FOUL': return 'warning';
+      case 'OPPONENT_FOUL': return 'medium';
+      case 'OPPONENT_SCORE': return 'danger';
+      case 'TIMEOUT':
+      case 'OPPONENT_TIMEOUT': return 'medium';
       default: return 'medium';
     }
   }

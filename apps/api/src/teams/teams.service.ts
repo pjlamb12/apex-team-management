@@ -104,10 +104,11 @@ export class TeamsService {
       }
 
       const isVolleyball = sportName === 'Volleyball';
+      const isBasketball = sportName === 'Basketball';
 
       // 2. Create the team
       const team = manager.create(TeamEntity, {
-        name: isVolleyball ? 'Apex Spikers VB (Demo)' : 'Apex Rangers FC (Demo)',
+        name: isVolleyball ? 'Apex Spikers VB (Demo)' : isBasketball ? 'Apex Ballers (Demo)' : 'Apex Rangers FC (Demo)',
         sportId: sport.id,
         coachId: userId,
         joinCode: this.joinCodeService.generate(),
@@ -126,7 +127,7 @@ export class TeamsService {
       // 4. Create a location
       const location = manager.create(LocationEntity, {
         teamId: savedTeam.id,
-        name: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
+        name: isVolleyball ? 'Apex Sports Complex - Court 1' : isBasketball ? 'Apex Sports Complex - Court 2' : 'Apex Sports Complex - Pitch 1',
         address: '123 Apex Way',
         city: 'Salt Lake City',
         state: 'UT',
@@ -143,21 +144,21 @@ export class TeamsService {
         startDate: '2026-08-01',
         endDate: '2026-11-30',
         isActive: true,
-        defaultPracticeLocation: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
+        defaultPracticeLocation: isVolleyball ? 'Apex Sports Complex - Court 1' : isBasketball ? 'Apex Sports Complex - Court 2' : 'Apex Sports Complex - Pitch 1',
       });
       const savedSeason = await manager.save(SeasonEntity, season);
 
       // 6. Create a league
       const league = manager.create(LeagueEntity, {
         seasonId: savedSeason.id,
-        name: isVolleyball ? 'Utah Metro Volleyball League - U14' : 'Utah Metro Soccer League - U12',
+        name: isVolleyball ? 'Utah Metro Volleyball League - U14' : isBasketball ? 'Utah Metro Basketball League - U14' : 'Utah Metro Soccer League - U12',
         type: 'league',
         isActive: true,
-        playersOnField: isVolleyball ? 6 : 9,
-        periodCount: isVolleyball ? 3 : 2,
-        periodLengthMinutes: isVolleyball ? 20 : 30,
-        defaultHomeVenue: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
-        defaultHomeColor: isVolleyball ? 'Blue' : 'Red',
+        playersOnField: isVolleyball ? 6 : isBasketball ? 5 : 9,
+        periodCount: isVolleyball ? 3 : isBasketball ? 4 : 2,
+        periodLengthMinutes: isVolleyball ? 20 : isBasketball ? 8 : 30,
+        defaultHomeVenue: isVolleyball ? 'Apex Sports Complex - Court 1' : isBasketball ? 'Apex Sports Complex - Court 2' : 'Apex Sports Complex - Pitch 1',
+        defaultHomeColor: isVolleyball ? 'Blue' : isBasketball ? 'Orange' : 'Red',
         defaultAwayColor: 'White',
         homeLocationId: savedLocation.id,
       });
@@ -194,7 +195,22 @@ export class TeamsService {
         { firstName: 'Mary', lastName: 'Lake', jerseyNumber: 17, preferredPosition: 'Libero' },
       ];
 
-      const playerSpecs = isVolleyball ? volleyballPlayerSpecs : soccerPlayerSpecs;
+      const basketballPlayerSpecs = [
+        { firstName: 'Steph', lastName: 'Curry', jerseyNumber: 30, preferredPosition: 'PG' },
+        { firstName: 'Klay', lastName: 'Thompson', jerseyNumber: 11, preferredPosition: 'SG' },
+        { firstName: 'LeBron', lastName: 'James', jerseyNumber: 23, preferredPosition: 'SF' },
+        { firstName: 'Kevin', lastName: 'Durant', jerseyNumber: 35, preferredPosition: 'PF' },
+        { firstName: 'Nikola', lastName: 'Jokic', jerseyNumber: 15, preferredPosition: 'C' },
+        { firstName: 'Chris', lastName: 'Paul', jerseyNumber: 3, preferredPosition: 'PG' },
+        { firstName: 'Devin', lastName: 'Booker', jerseyNumber: 1, preferredPosition: 'SG' },
+        { firstName: 'Kawhi', lastName: 'Leonard', jerseyNumber: 2, preferredPosition: 'SF' },
+        { firstName: 'Giannis', lastName: 'Antetokounmpo', jerseyNumber: 34, preferredPosition: 'PF' },
+        { firstName: 'Joel', lastName: 'Embiid', jerseyNumber: 21, preferredPosition: 'C' },
+        { firstName: 'Jayson', lastName: 'Tatum', jerseyNumber: 0, preferredPosition: 'SF' },
+        { firstName: 'Anthony', lastName: 'Davis', jerseyNumber: 8, preferredPosition: 'PF' },
+      ];
+
+      const playerSpecs = isVolleyball ? volleyballPlayerSpecs : isBasketball ? basketballPlayerSpecs : soccerPlayerSpecs;
 
       const savedPlayers: PlayerEntity[] = [];
       for (const spec of playerSpecs) {
@@ -222,29 +238,30 @@ export class TeamsService {
         seasonId: savedSeason.id,
         leagueId: savedLeague.id,
         type: 'game',
-        opponent: isVolleyball ? 'Thunder VB' : 'Thunder FC',
+        opponent: isVolleyball ? 'Thunder VB' : isBasketball ? 'Thunder Basketball' : 'Thunder FC',
         scheduledAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        durationMinutes: 60,
-        location: isVolleyball ? 'Thunder VB Arena' : 'Thunder FC Field',
+        durationMinutes: isBasketball ? 48 : 60,
+        location: isVolleyball ? 'Thunder VB Arena' : isBasketball ? 'Thunder Fieldhouse' : 'Thunder FC Field',
         isHomeGame: false,
         status: 'completed',
-        goalsFor: isVolleyball ? 2 : 3, // Sets won for Volleyball, Goals for Soccer
-        goalsAgainst: 1,
-        periodCount: isVolleyball ? 3 : 2,
-        periodLengthMinutes: isVolleyball ? 20 : 30,
-        playersOnField: isVolleyball ? 6 : 9,
-        currentPeriod: isVolleyball ? 3 : 2,
+        goalsFor: isVolleyball ? 2 : isBasketball ? 64 : 3, // Sets won for Volleyball, Points for Basketball, Goals for Soccer
+        goalsAgainst: isVolleyball ? 1 : isBasketball ? 58 : 1,
+        periodCount: isVolleyball ? 3 : isBasketball ? 4 : 2,
+        periodLengthMinutes: isVolleyball ? 20 : isBasketball ? 8 : 30,
+        playersOnField: isVolleyball ? 6 : isBasketball ? 5 : 9,
+        currentPeriod: isVolleyball ? 3 : isBasketball ? 4 : 2,
       });
       const savedPastGame = await manager.save(EventEntity, pastGame);
 
       // Attendance for past game
       for (const player of savedPlayers) {
-        const isInjured = !isVolleyball && player.firstName === 'Cristiano' && player.lastName === 'Ronaldo';
+        const isInjured = (!isVolleyball && !isBasketball && player.firstName === 'Cristiano' && player.lastName === 'Ronaldo') ||
+          (isBasketball && player.firstName === 'Chris' && player.lastName === 'Paul');
         const attendance = manager.create(AttendanceEntity, {
           eventId: savedPastGame.id,
           playerId: player.id,
           status: isInjured ? 'injured' : 'present',
-          notes: isInjured ? 'Slight hamstring strain' : null,
+          notes: isInjured ? (isBasketball ? 'Slight ankle sprain' : 'Slight hamstring strain') : null,
         });
         await manager.save(AttendanceEntity, attendance);
       }
@@ -271,7 +288,15 @@ export class TeamsService {
         { first: 'Tori', pos: 'Middle Blocker', slot: 5 },
       ];
 
-      const startingLineup = isVolleyball ? volleyballStartingLineup : soccerStartingLineup;
+      const basketballStartingLineup = [
+        { first: 'Steph', pos: 'PG', slot: 0 },
+        { first: 'Klay', pos: 'SG', slot: 1 },
+        { first: 'LeBron', pos: 'SF', slot: 2 },
+        { first: 'Kevin', pos: 'PF', slot: 3 },
+        { first: 'Nikola', pos: 'C', slot: 4 },
+      ];
+
+      const startingLineup = isVolleyball ? volleyballStartingLineup : isBasketball ? basketballStartingLineup : soccerStartingLineup;
 
       for (const player of savedPlayers) {
         const starter = startingLineup.find((s) => s.first === player.firstName);
@@ -423,6 +448,90 @@ export class TeamsService {
           minuteOccurred: 0,
           payload: { scorerId: pMap('Madi').id }
         }));
+      } else if (isBasketball) {
+        // Basketball Game events: 64-58 victory vs Thunder Basketball
+        const bballEvents = [
+          // Period 1 (16 - 14)
+          { eventType: 'MADE_2PT', period: 1, minuteOccurred: 1, payload: { scorerId: pMap('LeBron').id, coordinates: { x: 45, y: 35 } } },
+          { eventType: 'REBOUND_OFFENSIVE', period: 1, minuteOccurred: 1, payload: { playerId: pMap('Nikola').id } },
+          { eventType: 'MADE_2PT', period: 1, minuteOccurred: 2, payload: { scorerId: pMap('Nikola').id, assistorId: pMap('Steph').id, coordinates: { x: 50, y: 20 } } },
+          { eventType: 'OPPONENT_SCORE', period: 1, minuteOccurred: 3, payload: { points: 2 } },
+          { eventType: 'MADE_3PT', period: 1, minuteOccurred: 4, payload: { scorerId: pMap('Steph').id, assistorId: pMap('LeBron').id, coordinates: { x: 25, y: 70 } } },
+          { eventType: 'FOUL', period: 1, minuteOccurred: 5, payload: { playerId: pMap('Kevin').id } },
+          { eventType: 'OPPONENT_SCORE', period: 1, minuteOccurred: 5, payload: { points: 2 } },
+          { eventType: 'STEAL', period: 1, minuteOccurred: 6, payload: { playerId: pMap('Steph').id } },
+          { eventType: 'MADE_2PT', period: 1, minuteOccurred: 6, payload: { scorerId: pMap('Klay').id, assistorId: pMap('Steph').id, coordinates: { x: 30, y: 40 } } },
+          { eventType: 'OPPONENT_SCORE', period: 1, minuteOccurred: 6, payload: { points: 3 } },
+          { eventType: 'MADE_1PT', period: 1, minuteOccurred: 7, payload: { scorerId: pMap('Nikola').id } },
+          { eventType: 'MADE_1PT', period: 1, minuteOccurred: 7, payload: { scorerId: pMap('Nikola').id } },
+          { eventType: 'OPPONENT_SCORE', period: 1, minuteOccurred: 7, payload: { points: 2 } },
+          { eventType: 'MADE_3PT', period: 1, minuteOccurred: 8, payload: { scorerId: pMap('Klay').id, assistorId: pMap('Nikola').id, coordinates: { x: 75, y: 68 } } },
+          { eventType: 'MADE_2PT', period: 1, minuteOccurred: 8, payload: { scorerId: pMap('LeBron').id, coordinates: { x: 50, y: 15 } } },
+          { eventType: 'OPPONENT_SCORE', period: 1, minuteOccurred: 8, payload: { points: 5 } },
+
+          // Period 2 (18 - 15) -> Total: 34 - 29
+          { eventType: 'BLOCK', period: 2, minuteOccurred: 1, payload: { playerId: pMap('Giannis').id } },
+          { eventType: 'REBOUND_DEFENSIVE', period: 2, minuteOccurred: 1, payload: { playerId: pMap('Giannis').id } },
+          { eventType: 'MADE_2PT', period: 2, minuteOccurred: 2, payload: { scorerId: pMap('Giannis').id, coordinates: { x: 50, y: 12 } } },
+          { eventType: 'TURNOVER', period: 2, minuteOccurred: 3, payload: { playerId: pMap('Devin').id } },
+          { eventType: 'OPPONENT_SCORE', period: 2, minuteOccurred: 3, payload: { points: 2 } },
+          { eventType: 'MADE_3PT', period: 2, minuteOccurred: 4, payload: { scorerId: pMap('Devin').id, coordinates: { x: 35, y: 72 } } },
+          { eventType: 'OPPONENT_SCORE', period: 2, minuteOccurred: 4, payload: { points: 2 } },
+          { eventType: 'MADE_2PT', period: 2, minuteOccurred: 5, payload: { scorerId: pMap('Kevin').id, assistorId: pMap('Steph').id, coordinates: { x: 60, y: 45 } } },
+          { eventType: 'OPPONENT_SCORE', period: 2, minuteOccurred: 5, payload: { points: 3 } },
+          { eventType: 'MADE_3PT', period: 2, minuteOccurred: 6, payload: { scorerId: pMap('Steph').id, coordinates: { x: 50, y: 75 } } },
+          { eventType: 'OPPONENT_SCORE', period: 2, minuteOccurred: 6, payload: { points: 2 } },
+          { eventType: 'MADE_2PT', period: 2, minuteOccurred: 7, payload: { scorerId: pMap('Kevin').id, assistorId: pMap('LeBron').id, coordinates: { x: 40, y: 38 } } },
+          { eventType: 'MADE_2PT', period: 2, minuteOccurred: 7, payload: { scorerId: pMap('LeBron').id, coordinates: { x: 52, y: 22 } } },
+          { eventType: 'OPPONENT_SCORE', period: 2, minuteOccurred: 7, payload: { points: 3 } },
+          { eventType: 'MADE_3PT', period: 2, minuteOccurred: 8, payload: { scorerId: pMap('Klay').id, assistorId: pMap('Nikola').id, coordinates: { x: 80, y: 65 } } },
+          { eventType: 'MADE_1PT', period: 2, minuteOccurred: 8, payload: { scorerId: pMap('Giannis').id } },
+          { eventType: 'OPPONENT_SCORE', period: 2, minuteOccurred: 8, payload: { points: 3 } },
+
+          // Period 3 (14 - 15) -> Total: 48 - 44
+          { eventType: 'MADE_2PT', period: 3, minuteOccurred: 1, payload: { scorerId: pMap('Nikola').id, coordinates: { x: 48, y: 18 } } },
+          { eventType: 'OPPONENT_SCORE', period: 3, minuteOccurred: 2, payload: { points: 2 } },
+          { eventType: 'STEAL', period: 3, minuteOccurred: 3, payload: { playerId: pMap('Klay').id } },
+          { eventType: 'MADE_3PT', period: 3, minuteOccurred: 3, payload: { scorerId: pMap('Steph').id, coordinates: { x: 22, y: 70 } } },
+          { eventType: 'OPPONENT_SCORE', period: 3, minuteOccurred: 4, payload: { points: 3 } },
+          { eventType: 'MADE_2PT', period: 3, minuteOccurred: 5, payload: { scorerId: pMap('LeBron').id, coordinates: { x: 50, y: 20 } } },
+          { eventType: 'OPPONENT_SCORE', period: 3, minuteOccurred: 5, payload: { points: 2 } },
+          { eventType: 'BLOCK', period: 3, minuteOccurred: 6, payload: { playerId: pMap('Nikola').id } },
+          { eventType: 'MADE_2PT', period: 3, minuteOccurred: 6, payload: { scorerId: pMap('Kevin').id, assistorId: pMap('Steph').id, coordinates: { x: 65, y: 35 } } },
+          { eventType: 'OPPONENT_SCORE', period: 3, minuteOccurred: 6, payload: { points: 3 } },
+          { eventType: 'MADE_3PT', period: 3, minuteOccurred: 7, payload: { scorerId: pMap('Klay').id, assistorId: pMap('LeBron').id, coordinates: { x: 78, y: 66 } } },
+          { eventType: 'OPPONENT_SCORE', period: 3, minuteOccurred: 7, payload: { points: 3 } },
+          { eventType: 'MADE_2PT', period: 3, minuteOccurred: 8, payload: { scorerId: pMap('Giannis').id, coordinates: { x: 50, y: 15 } } },
+          { eventType: 'OPPONENT_SCORE', period: 3, minuteOccurred: 8, payload: { points: 2 } },
+
+          // Period 4 (16 - 14) -> Total: 64 - 58
+          { eventType: 'MADE_2PT', period: 4, minuteOccurred: 1, payload: { scorerId: pMap('Steph').id, coordinates: { x: 42, y: 30 } } },
+          { eventType: 'OPPONENT_SCORE', period: 4, minuteOccurred: 2, payload: { points: 2 } },
+          { eventType: 'MADE_3PT', period: 4, minuteOccurred: 3, payload: { scorerId: pMap('Steph').id, coordinates: { x: 28, y: 72 } } },
+          { eventType: 'OPPONENT_SCORE', period: 4, minuteOccurred: 3, payload: { points: 3 } },
+          { eventType: 'STEAL', period: 4, minuteOccurred: 4, payload: { playerId: pMap('LeBron').id } },
+          { eventType: 'MADE_2PT', period: 4, minuteOccurred: 4, payload: { scorerId: pMap('LeBron').id, coordinates: { x: 50, y: 16 } } },
+          { eventType: 'OPPONENT_SCORE', period: 4, minuteOccurred: 5, payload: { points: 2 } },
+          { eventType: 'MADE_2PT', period: 4, minuteOccurred: 5, payload: { scorerId: pMap('Nikola').id, assistorId: pMap('Steph').id, coordinates: { x: 49, y: 22 } } },
+          { eventType: 'OPPONENT_SCORE', period: 4, minuteOccurred: 6, payload: { points: 2 } },
+          { eventType: 'MADE_3PT', period: 4, minuteOccurred: 7, payload: { scorerId: pMap('Klay').id, assistorId: pMap('Nikola').id, coordinates: { x: 74, y: 70 } } },
+          { eventType: 'OPPONENT_SCORE', period: 4, minuteOccurred: 7, payload: { points: 3 } },
+          { eventType: 'FOUL', period: 4, minuteOccurred: 7, payload: { playerId: pMap('Steph').id } },
+          { eventType: 'OPPONENT_SCORE', period: 4, minuteOccurred: 8, payload: { points: 2 } },
+          { eventType: 'MADE_2PT', period: 4, minuteOccurred: 8, payload: { scorerId: pMap('Kevin').id, assistorId: pMap('Steph').id, coordinates: { x: 55, y: 40 } } },
+          { eventType: 'MADE_1PT', period: 4, minuteOccurred: 8, payload: { scorerId: pMap('Steph').id } },
+          { eventType: 'MADE_1PT', period: 4, minuteOccurred: 8, payload: { scorerId: pMap('Steph').id } },
+        ];
+
+        for (const ev of bballEvents) {
+          await manager.save(GameEventEntity, manager.create(GameEventEntity, {
+            eventId: savedPastGame.id,
+            eventType: ev.eventType,
+            period: ev.period,
+            minuteOccurred: ev.minuteOccurred,
+            payload: ev.payload,
+          }));
+        }
       } else {
         // Soccer Game events
         // Goal 1: Erling assisted by Kevin at minute 12
@@ -475,16 +584,16 @@ export class TeamsService {
         seasonId: savedSeason.id,
         leagueId: savedLeague.id,
         type: 'game',
-        opponent: isVolleyball ? 'Lightning VB' : 'Lightning SC',
+        opponent: isVolleyball ? 'Lightning VB' : isBasketball ? 'Lightning Basketball' : 'Lightning SC',
         scheduledAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-        durationMinutes: 60,
-        location: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
+        durationMinutes: isBasketball ? 48 : 60,
+        location: isVolleyball ? 'Apex Sports Complex - Court 1' : isBasketball ? 'Apex Sports Complex - Court 2' : 'Apex Sports Complex - Pitch 1',
         locationId: savedLocation.id,
         isHomeGame: true,
         status: 'scheduled',
-        periodCount: isVolleyball ? 3 : 2,
-        periodLengthMinutes: isVolleyball ? 20 : 30,
-        playersOnField: isVolleyball ? 6 : 9,
+        periodCount: isVolleyball ? 3 : isBasketball ? 4 : 2,
+        periodLengthMinutes: isVolleyball ? 20 : isBasketball ? 8 : 30,
+        playersOnField: isVolleyball ? 6 : isBasketball ? 5 : 9,
         currentPeriod: 1,
       });
       const savedFutureGame = await manager.save(EventEntity, futureGame);
@@ -505,7 +614,7 @@ export class TeamsService {
         type: 'practice',
         scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
         durationMinutes: 90,
-        location: isVolleyball ? 'Apex Sports Complex - Court 1' : 'Apex Sports Complex - Pitch 1',
+        location: isVolleyball ? 'Apex Sports Complex - Court 1' : isBasketball ? 'Apex Sports Complex - Court 2' : 'Apex Sports Complex - Pitch 1',
         locationId: savedLocation.id,
         status: 'scheduled',
       });
@@ -515,20 +624,20 @@ export class TeamsService {
       const practiceDrill1 = manager.create(PracticeDrillEntity, {
         eventId: savedFuturePractice.id,
         drillId: null,
-        customName: isVolleyball ? 'Serve & Receive Warmup' : 'Rondo (5v2 Warmup)',
+        customName: isVolleyball ? 'Serve & Receive Warmup' : isBasketball ? 'Three-Man Weave & Layup Lines' : 'Rondo (5v2 Warmup)',
         sequence: 1,
         durationMinutes: 15,
-        notes: isVolleyball ? 'Focus on clean underhand/overhead passing and target areas.' : 'Focus on quick, 1-touch passing and moving to open space.',
+        notes: isVolleyball ? 'Focus on clean underhand/overhead passing and target areas.' : isBasketball ? 'Fastbreak passing on the move, focusing on crisp chest passes and finishing strong at the rim.' : 'Focus on quick, 1-touch passing and moving to open space.',
       });
       await manager.save(PracticeDrillEntity, practiceDrill1);
 
       const practiceDrill2 = manager.create(PracticeDrillEntity, {
         eventId: savedFuturePractice.id,
         drillId: null,
-        customName: isVolleyball ? '6v6 Transition Play' : 'Shooting on Crosses',
+        customName: isVolleyball ? '6v6 Transition Play' : isBasketball ? '5v5 Shell Drill & Transition Defense' : 'Shooting on Crosses',
         sequence: 2,
         durationMinutes: 25,
-        notes: isVolleyball ? 'Simulated match play focusing on free ball and down ball transition attacking.' : 'Winger crosses from deep, attacking midfielders and strikers timing their runs into the box.',
+        notes: isVolleyball ? 'Simulated match play focusing on free ball and down ball transition attacking.' : isBasketball ? 'Defensive communication, denying middle penetration, and fastbreak recovery.' : 'Winger crosses from deep, attacking midfielders and strikers timing their runs into the box.',
       });
       await manager.save(PracticeDrillEntity, practiceDrill2);
 

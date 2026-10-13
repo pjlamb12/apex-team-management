@@ -76,6 +76,16 @@ export class CreateEventDto {
   @IsOptional()
   playersOnField?: number;
 
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  foulLimit?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  bonusThreshold?: number;
+
   @IsString()
   @IsOptional()
   recurrenceRule?: string;

@@ -28,6 +28,7 @@ import { addIcons } from 'ionicons';
 import { 
   statsChartOutline, 
   footballOutline, 
+  basketballOutline,
   peopleOutline, 
   timeOutline, 
   trophyOutline,
@@ -166,6 +167,7 @@ export class PlayerProfileAnalyticsComponent implements OnInit {
     addIcons({ 
       statsChartOutline, 
       footballOutline, 
+      basketballOutline,
       peopleOutline, 
       timeOutline, 
       trophyOutline,

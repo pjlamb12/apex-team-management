@@ -1,12 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConsoleWrapper } from './console-wrapper';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService } from '../live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, ToastController } from '@ionic/angular/standalone';
 import { of } from 'rxjs';
+import { PlaytimeService } from '../rotation-engine/playtime.service';
 import { EventsService } from '@apex-team/client/data-access/team';
 import { signal, NO_ERRORS_SCHEMA } from '@angular/core';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -18,6 +19,8 @@ describe('ConsoleWrapper', () => {
   let httpMock: any;
   let routeMock: any;
   let configMock: any;
+  let alertControllerMock: any;
+  let toastControllerMock: any;
   let stateService: LiveGameStateService;
 
   const mockLineup = [
@@ -52,6 +55,7 @@ describe('ConsoleWrapper', () => {
       currentMinute: vi.fn().mockReturnValue(0),
       start: vi.fn(),
       stop: vi.fn(),
+      reset: vi.fn().mockImplementation(() => Promise.resolve()),
       initialize: vi.fn(),
     };
 
@@ -77,7 +81,13 @@ describe('ConsoleWrapper', () => {
       getConfigObjectKey: vi.fn().mockReturnValue('http://api.test'),
     };
 
-    const alertControllerMock = {
+    alertControllerMock = {
+      create: vi.fn().mockImplementation(() => Promise.resolve({
+        present: vi.fn().mockImplementation(() => Promise.resolve())
+      }))
+    };
+
+    toastControllerMock = {
       create: vi.fn().mockImplementation(() => Promise.resolve({
         present: vi.fn().mockImplementation(() => Promise.resolve())
       }))
@@ -91,6 +101,7 @@ describe('ConsoleWrapper', () => {
         { provide: LiveClockService, useValue: clockServiceMock },
         { provide: RuntimeConfigLoaderService, useValue: configMock },
         { provide: AlertController, useValue: alertControllerMock },
+        { provide: ToastController, useValue: toastControllerMock },
         LiveGameStateService,
       ],
     })
@@ -128,6 +139,27 @@ describe('ConsoleWrapper', () => {
     expect(component['selectedPlayerId']()).toBe('p1');
     expect(component['actionPlayer']()).toBe(player1);
     expect(component['popoverEvent']()).toBe(mockEvent);
+  });
+
+  it('should deselect a bench player when clicked a second time', () => {
+    const benchPlayer = mockLineup[1].player as any;
+    const mockEvent = new MouseEvent('click');
+    component['handlePlayerSelection']({ player: benchPlayer, event: mockEvent });
+    expect(component['selectedPlayerId']()).toBe('p2');
+
+    // Clicking the bench player a second time deselects them
+    component['handlePlayerSelection']({ player: benchPlayer, event: mockEvent });
+    expect(component['selectedPlayerId']()).toBeNull();
+  });
+
+  it('should deselect a basketball active player when clicked a second time', () => {
+    const player1 = mockLineup[0].player as any;
+    component['handleBasketballPlayerSelected'](player1);
+    expect(component['selectedPlayerId']()).toBe('p1');
+
+    // Clicking the active player a second time deselects them
+    component['handleBasketballPlayerSelected'](player1);
+    expect(component['selectedPlayerId']()).toBeNull();
   });
 
   it('should stage a sub when swapping bench and active player', () => {
@@ -318,5 +350,290 @@ describe('ConsoleWrapper', () => {
     expect(updateSpy).toHaveBeenCalledWith('team-456', 'event-123', expect.objectContaining({
       status: 'in_progress',
     }));
+  });
+
+  it('should not render soccer-pitch-view and show loading skeleton when sportName is null or not Soccer', () => {
+    stateService.setSportName(null);
+    fixture.detectChanges();
+    let soccerPitch = fixture.nativeElement.querySelector('app-soccer-pitch-view');
+    expect(soccerPitch).toBeNull();
+
+    stateService.setSportName('Basketball');
+    fixture.detectChanges();
+    soccerPitch = fixture.nativeElement.querySelector('app-soccer-pitch-view');
+    expect(soccerPitch).toBeNull();
+  });
+
+  it('should render soccer-pitch-view only when sportName is Soccer', () => {
+    stateService.setSportName('Soccer');
+    fixture.detectChanges();
+    const soccerPitch = fixture.nativeElement.querySelector('app-soccer-pitch-view');
+    expect(soccerPitch).not.toBeNull();
+  });
+
+  describe('Basketball Courtside UX', () => {
+    beforeEach(() => {
+      stateService.initialize(
+        'event-123',
+        mockLineup as any,
+        'team-456',
+        5,
+        'Apex Team',
+        'Basketball',
+        { periodCount: 4, periodLengthMinutes: 8 }
+      );
+      fixture.detectChanges();
+    });
+
+    it('should render basketball court view, active player strip, and rapid action keypad when sportName is Basketball', () => {
+      const courtView = fixture.nativeElement.querySelector('app-basketball-court-view');
+      const playerStrip = fixture.nativeElement.querySelector('app-active-player-strip');
+      const rapidKeypad = fixture.nativeElement.querySelector('app-rapid-action-keypad');
+
+      expect(courtView).not.toBeNull();
+      expect(playerStrip).not.toBeNull();
+      expect(rapidKeypad).not.toBeNull();
+    });
+
+    it('should log a basketball shot event when handleBasketballShot is called', () => {
+      component['handleBasketballShot']({
+        type: 'MADE_3PT',
+        playerId: 'p1',
+        x: 25.5,
+        y: 42.0,
+        distanceFeet: 23.8,
+        assistorId: 'p3',
+      });
+
+      const events = stateService.events();
+      const shotEvent = events.find((e) => e.type === 'MADE_3PT');
+      expect(shotEvent).toBeDefined();
+      expect(shotEvent?.playerId).toBe('p1');
+      expect(shotEvent?.['x']).toBe(25.5);
+      expect(shotEvent?.['y']).toBe(42.0);
+      expect(shotEvent?.['distanceFeet']).toBe(23.8);
+      expect(shotEvent?.['assistorId']).toBe('p3');
+      expect(component['selectedPlayerId']()).toBeNull();
+    });
+
+    it('should log a basketball keypad action event when handleKeypadAction is called', () => {
+      component['handleKeypadAction']({
+        type: 'DEFENSIVE_REBOUND',
+        playerId: 'p3',
+      });
+
+      const events = stateService.events();
+      const rebEvent = events.find((e) => e.type === 'DEFENSIVE_REBOUND');
+      expect(rebEvent).toBeDefined();
+      expect(rebEvent?.playerId).toBe('p3');
+      expect(component['selectedPlayerId']()).toBeNull();
+    });
+
+    it('should fulfill armed stat or select player when handleBasketballPlayerSelected is called', () => {
+      const player = { id: 'p1', firstName: 'Player', lastName: 'One' };
+      component['handleBasketballPlayerSelected'](player as any);
+
+      // No armed stat on keypad mock, so player should become selected
+      expect(component['selectedPlayerId']()).toBe('p1');
+    });
+
+    it('should undo last event when handleUndoAction is called', () => {
+      component['handleKeypadAction']({
+        type: 'STEAL',
+        playerId: 'p1',
+      });
+      const activeBefore = stateService.events().filter((e) => e.status !== 'deleted');
+      expect(activeBefore.length).toBe(1);
+
+      component['handleUndoAction']();
+      const activeAfter = stateService.events().filter((e) => e.status !== 'deleted');
+      expect(activeAfter.length).toBe(0);
+    });
+
+    it('should log opponent basketball score when addOpponentBasketballScore is called', () => {
+      component['addOpponentBasketballScore'](3);
+
+      const events = stateService.events();
+      const oppScore = events.find((e) => e.type === 'OPPONENT_SCORE');
+      expect(oppScore).toBeDefined();
+      expect(oppScore?.['points']).toBe(3);
+      expect(stateService.score().opponent).toBe(3);
+    });
+
+    it('should log opponent basketball foul when addOpponentBasketballFoul is called', () => {
+      component['addOpponentBasketballFoul']();
+
+      const events = stateService.events();
+      const oppFoul = events.find((e) => e.type === 'OPPONENT_FOUL');
+      expect(oppFoul).toBeDefined();
+    });
+
+    it('should call team basketball timeout when callTeamBasketballTimeout is called', () => {
+      component['callTeamBasketballTimeout']();
+
+      const events = stateService.events();
+      const toEvent = events.find((e) => e.type === 'TIMEOUT');
+      expect(toEvent).toBeDefined();
+      expect(toEvent?.['payload']?.team).toBe('us');
+      expect(stateService.basketballTimeouts().teamUsed).toBe(1);
+    });
+
+    it('should log opponent basketball timeout when addOpponentBasketballTimeout is called', () => {
+      component['addOpponentBasketballTimeout']();
+
+      const events = stateService.events();
+      const toEvent = events.find((e) => e.type === 'TIMEOUT');
+      expect(toEvent).toBeDefined();
+      expect(toEvent?.['payload']?.team).toBe('opponent');
+      expect(stateService.basketballTimeouts().opponentUsed).toBe(1);
+    });
+
+    it('should toggle box score expanded state when toggleBoxScore is called', () => {
+      expect(component['isBoxScoreExpanded']()).toBe(true);
+      component['toggleBoxScore']();
+      expect(component['isBoxScoreExpanded']()).toBe(false);
+      component['toggleBoxScore']();
+      expect(component['isBoxScoreExpanded']()).toBe(true);
+    });
+
+    it('should format player minutes correctly', () => {
+      Object.defineProperty(component['playtimeService'], 'playtimeMap', {
+        value: () => ({ p1: 125, p2: 5 }),
+        configurable: true,
+      });
+      expect(component['getPlayerMinutes']('p1')).toBe('2:05');
+      expect(component['getPlayerMinutes']('p2')).toBe('0:05');
+      expect(component['getPlayerMinutes']('unknown')).toBe('0:00');
+    });
+
+    it('should determine when overtime can be added', () => {
+      // In period 1, tied 0-0 -> cannot add overtime (game is still in regulation)
+      expect(component['canAddBasketballOvertime']()).toBe(false);
+
+      // Advance to period 4 (regulation end)
+      stateService.pushEvents([
+        { type: 'PERIOD_END', timestamp: 1 },
+        { type: 'PERIOD_END', timestamp: 2 },
+        { type: 'PERIOD_END', timestamp: 3 },
+      ]);
+      expect(stateService.currentPeriod()).toBe(4);
+      expect(component['isRegulationEnd']()).toBe(true);
+
+      // Score is tied (0-0), regulation is finished -> can add overtime!
+      expect(component['canAddBasketballOvertime']()).toBe(true);
+
+      // One team scores -> not tied anymore
+      component['handleKeypadAction']({ type: 'MADE_2PT', playerId: 'p1' });
+      expect(component['canAddBasketballOvertime']()).toBe(false);
+
+      // Opponent scores to tie -> can add overtime again
+      component['addOpponentBasketballScore'](2);
+      expect(component['canAddBasketballOvertime']()).toBe(true);
+    });
+
+    it('should format basketball period action label correctly across regulation and overtime', () => {
+      // Period 1
+      expect(component['basketballPeriodActionLabel']()).toBe('Next Quarter');
+
+      // Period 4, tied
+      stateService.pushEvents([
+        { type: 'PERIOD_END', timestamp: 1 },
+        { type: 'PERIOD_END', timestamp: 2 },
+        { type: 'PERIOD_END', timestamp: 3 },
+      ]);
+      expect(component['basketballPeriodActionLabel']()).toBe('Add Overtime');
+
+      // Period 4, team ahead
+      component['handleKeypadAction']({ type: 'MADE_2PT', playerId: 'p1' });
+      expect(component['basketballPeriodActionLabel']()).toBe('End Game');
+
+      // Period 5 (OT1), tied
+      stateService.pushEvent({ type: 'OPPONENT_SCORE', points: 2, timestamp: 4 } as any);
+      stateService.pushEvent({ type: 'PERIOD_END', timestamp: 5 });
+      expect(stateService.currentPeriod()).toBe(5);
+      expect(component['basketballPeriodActionLabel']()).toBe('Add OT 2');
+    });
+
+    it('should open prompt to add overtime when promptAddOvertime is called', async () => {
+      await component['promptAddOvertime']();
+      expect(alertControllerMock.create).toHaveBeenCalled();
+    });
+
+    it('should execute overtime transition when executeStartOvertime is called', async () => {
+      // Advance to period 4
+      stateService.pushEvents([
+        { type: 'PERIOD_END', timestamp: 1 },
+        { type: 'PERIOD_END', timestamp: 2 },
+        { type: 'PERIOD_END', timestamp: 3 },
+      ]);
+
+      await component['executeStartOvertime'](4);
+
+      expect(stateService.currentPeriod()).toBe(5);
+      expect(stateService.isOvertime()).toBe(true);
+      expect(stateService.overtimePeriodLengthMinutes()).toBe(4);
+      expect(clockServiceMock.stop).toHaveBeenCalled();
+      expect(clockServiceMock.reset).toHaveBeenCalled();
+      expect(httpMock.patch).toHaveBeenCalled();
+      expect(toastControllerMock.create).toHaveBeenCalled();
+    });
+
+    it('should trigger promptAddOvertime via nextPeriod if game is tied at regulation end', async () => {
+      const promptSpy = vi.spyOn(component as any, 'promptAddOvertime');
+      stateService.pushEvents([
+        { type: 'PERIOD_END', timestamp: 1 },
+        { type: 'PERIOD_END', timestamp: 2 },
+        { type: 'PERIOD_END', timestamp: 3 },
+      ]);
+      expect(component['canAddBasketballOvertime']()).toBe(true);
+
+      await component['nextPeriod']();
+      expect(promptSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Lifecycle and Stale Event Protection', () => {
+    it('should reset stateService when component is destroyed', () => {
+      stateService.initialize('event-123', mockLineup, 'team-456', 11, 'My Team', 'Soccer');
+      expect(stateService.eventId()).toBe('event-123');
+
+      component.ngOnDestroy();
+
+      expect(stateService.eventId()).toBeNull();
+      expect(stateService.status()).toBe('in_progress');
+    });
+
+    it('should not navigate to summary when stateService has completed status from another event', () => {
+      const router = TestBed.inject(Router);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true as any);
+
+      // State service holds a completed game from a DIFFERENT event
+      stateService.initialize('other-event-789', mockLineup, 'team-456');
+      stateService.endGame('completed');
+      expect(stateService.status()).toBe('completed');
+      expect(stateService.eventId()).toBe('other-event-789');
+
+      TestBed.flushEffects();
+
+      expect(navigateSpy).not.toHaveBeenCalled();
+    });
+
+    it('should navigate to summary when stateService status becomes completed for the current event', () => {
+      const router = TestBed.inject(Router);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true as any);
+
+      // State service initialized for THIS event ('event-123')
+      stateService.initialize('event-123', mockLineup, 'team-456');
+      stateService.endGame('completed');
+      expect(stateService.status()).toBe('completed');
+      expect(stateService.eventId()).toBe('event-123');
+
+      TestBed.flushEffects();
+
+      expect(navigateSpy).toHaveBeenCalledWith(
+        ['/teams', 'team-456', 'events', 'event-123', 'summary'],
+        { replaceUrl: true }
+      );
+    });
   });
 });

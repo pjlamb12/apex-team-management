@@ -1,0 +1,86 @@
+<div class="active-player-strip-container w-full bg-ap-surface/80 border-b border-ap-border/70 p-2 overflow-x-auto">
+  <div class="flex items-center gap-2 min-w-max sm:min-w-0 sm:grid sm:grid-cols-5">
+    @for (player of activePlayers(); track player.id) {
+      <div
+        class="player-card cursor-pointer rounded-xl p-2.5 flex flex-col justify-between transition-all duration-150 select-none border min-w-[140px] sm:min-w-0"
+        [class.selected-card]="selectedPlayerId() === player.id"
+        [class.border-amber-400]="selectedPlayerId() === player.id"
+        [class.bg-amber-500\/10]="selectedPlayerId() === player.id"
+        [class.shadow-md]="selectedPlayerId() === player.id"
+        [class.shadow-amber-500\/20]="selectedPlayerId() === player.id"
+        [class.border-ap-border\/50]="selectedPlayerId() !== player.id"
+        [class.bg-ap-surface-raised\/60]="selectedPlayerId() !== player.id"
+        [class.hover:border-ap-border]="selectedPlayerId() !== player.id"
+        (click)="handlePlayerClick(player)"
+      >
+        <!-- Top Row: Jersey + Position -->
+        <div class="flex items-center justify-between gap-1 mb-1.5">
+          <div
+            class="jersey-badge min-w-[32px] h-7 px-1.5 rounded-lg font-black text-xs flex items-center justify-center transition-colors"
+            [class.bg-amber-400]="selectedPlayerId() === player.id"
+            [class.text-black]="selectedPlayerId() === player.id"
+            [class.bg-ap-surface]="selectedPlayerId() !== player.id"
+            [class.text-ap-text]="selectedPlayerId() !== player.id"
+            [class.border]="true"
+            [class.border-white\/10]="selectedPlayerId() !== player.id"
+          >
+            #{{ player.jerseyNumber }}
+          </div>
+
+          <span class="text-[10px] font-black uppercase tracking-wider text-ap-muted px-1 py-0.5 bg-black/20 rounded">
+            {{ player.preferredPosition || 'G' }}
+          </span>
+        </div>
+
+        <!-- Middle Row: Player Name -->
+        <div class="truncate text-xs font-bold text-ap-text mb-2" [title]="player.firstName + ' ' + player.lastName">
+          {{ player.lastName ? (player.firstName[0] + '. ' + player.lastName) : player.firstName }}
+        </div>
+
+        <!-- Bottom Row: PTS + Personal Fouls -->
+        <div class="flex items-center justify-between pt-1 border-t border-white/5">
+          <!-- Live Points -->
+          <span class="text-[11px] font-black text-emerald-400">
+            {{ getPlayerPoints(player.id) }} <span class="text-[9px] font-semibold text-ap-muted">PTS</span>
+          </span>
+
+          <!-- Personal Fouls Badge -->
+          @if (isFouledOut(player.id)) {
+            <span class="text-[10px] font-black bg-rose-600 text-white px-1.5 py-0.5 rounded flex items-center gap-0.5 animate-pulse">
+              <ion-icon name="alert-circle-outline" class="text-xs"></ion-icon>
+              <span>{{ getPlayerFouls(player.id) }} PF</span>
+            </span>
+          } @else if (isFoulWarning(player.id)) {
+            <span class="text-[10px] font-black bg-amber-500/90 text-black px-1.5 py-0.5 rounded flex items-center gap-0.5">
+              <ion-icon name="warning-outline" class="text-xs"></ion-icon>
+              <span>{{ getPlayerFouls(player.id) }} PF</span>
+            </span>
+          } @else {
+            <span class="text-[10px] font-bold text-ap-muted bg-white/5 px-1.5 py-0.5 rounded">
+              {{ getPlayerFouls(player.id) }} PF
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Empty Court Slots: Allows subbing bench players into open spots -->
+    @for (slot of emptySlots(); track slot.slotIndex) {
+      <div
+        class="empty-card cursor-pointer rounded-xl p-2.5 flex flex-col items-center justify-center transition-all duration-150 select-none border-2 border-dashed border-amber-400/60 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 min-w-[140px] sm:min-w-0"
+        (click)="handleEmptySlotClick(slot.slotIndex)"
+      >
+        <div class="flex items-center gap-1.5 mb-1 text-amber-400">
+          <ion-icon name="person-add-outline" class="text-base"></ion-icon>
+          <span class="text-xs font-black uppercase tracking-wider">+ Sub In</span>
+        </div>
+        <span class="text-[10px] font-bold text-ap-muted">
+          {{ slot.positionName }}
+        </span>
+        <span class="text-[9px] text-amber-300/80 mt-1">
+          Tap to assign
+        </span>
+      </div>
+    }
+  </div>
+</div>

@@ -640,6 +640,94 @@ describe('EventsService', () => {
       await expect(service.logEvent(eventId, invalidDto, userId)).rejects.toThrow(BadRequestException);
     });
 
+    it('should accept valid basketball shot event with coordinates and assistorId', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: {
+          team: {
+            coachId: userId,
+            sport: {
+              name: 'Basketball',
+              eventDefinitions: [
+                {
+                  type: 'MADE_2PT',
+                  payloadSchema: {
+                    type: 'object',
+                    properties: {
+                      playerId: { type: 'string', format: 'uuid' },
+                      x: { type: 'number' },
+                      y: { type: 'number' },
+                      distanceFeet: { type: 'number' },
+                      assistorId: { type: 'string', format: 'uuid' },
+                    },
+                    required: ['playerId'],
+                    additionalProperties: true,
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+
+      const shotDto = {
+        eventType: 'MADE_2PT',
+        payload: {
+          playerId: '123e4567-e89b-12d3-a456-426614174000',
+          x: 25.4,
+          y: 40.2,
+          distanceFeet: 15.5,
+          assistorId: '223e4567-e89b-12d3-a456-426614174001',
+        },
+      };
+
+      const result = await service.logEvent(eventId, shotDto, userId);
+      expect(result).toBeDefined();
+      expect(result.eventType).toBe('MADE_2PT');
+    });
+
+    it('should reject invalid basketball shot event with non-numeric coordinates', async () => {
+      const mockEvent = {
+        id: eventId,
+        season: {
+          team: {
+            coachId: userId,
+            sport: {
+              name: 'Basketball',
+              eventDefinitions: [
+                {
+                  type: 'MADE_2PT',
+                  payloadSchema: {
+                    type: 'object',
+                    properties: {
+                      playerId: { type: 'string', format: 'uuid' },
+                      x: { type: 'number' },
+                      y: { type: 'number' },
+                      distanceFeet: { type: 'number' },
+                    },
+                    required: ['playerId'],
+                    additionalProperties: true,
+                  },
+                },
+              ],
+            },
+          },
+        },
+      };
+      vi.spyOn(eventRepo, 'findOne').mockResolvedValue(mockEvent as any);
+
+      const invalidShotDto = {
+        eventType: 'MADE_2PT',
+        payload: {
+          playerId: '123e4567-e89b-12d3-a456-426614174000',
+          x: 'invalid-coord',
+        },
+      };
+
+      await expect(service.logEvent(eventId, invalidShotDto, userId)).rejects.toThrow(BadRequestException);
+    });
+
     it('should create a game event if logged in user is an assistant coach', async () => {
       const mockEvent = {
         id: eventId,

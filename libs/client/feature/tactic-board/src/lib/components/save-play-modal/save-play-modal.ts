@@ -61,7 +61,7 @@ export class SavePlayModal implements OnInit {
       this.tagsInput = (this.existingPlay.tags || []).join(', ');
       this.notes = this.existingPlay.notes || '';
     } else {
-      this.title = this.sport === 'soccer' ? '4-3-3 Formation' : '5-1 System';
+      this.title = this.sport === 'soccer' ? '4-3-3 Formation' : (this.sport === 'basketball' ? '5-Out Motion' : '5-1 System');
     }
   }
 

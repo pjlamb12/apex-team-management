@@ -167,6 +167,46 @@
       </div>
     }
 
+    <!-- Basketball Overtime / Tie Banner -->
+    @if (canAddBasketballOvertime()) {
+      <div class="m-4 p-4 bg-amber-500/10 border-2 border-amber-500/80 rounded-xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div class="flex items-center gap-3 text-amber-500">
+          <ion-icon name="time-outline" class="text-3xl shrink-0"></ion-icon>
+          <div>
+            <div class="text-base font-black uppercase tracking-wider text-amber-500">
+              {{ isOvertime() ? 'Overtime Tied' : 'Regulation Tied' }} ({{ stateService.score().team }} - {{ stateService.score().opponent }})
+            </div>
+            <p class="text-xs text-ap-text font-medium m-0">
+              The score is tied. Add an overtime period to decide the winner.
+            </p>
+          </div>
+        </div>
+        <ion-button color="warning" fill="solid" (click)="promptAddOvertime()" [disabled]="isTransitioningPeriod()">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          {{ basketballPeriodActionLabel() }}
+        </ion-button>
+      </div>
+    } @else if (isOvertime() && !isGameTied()) {
+      <!-- Basketball Overtime Completed Banner -->
+      <div class="m-4 p-4 bg-emerald-500/10 border-2 border-emerald-500/80 rounded-xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div class="flex items-center gap-3 text-emerald-500">
+          <ion-icon name="trophy-outline" class="text-3xl shrink-0"></ion-icon>
+          <div>
+            <div class="text-base font-black uppercase tracking-wider text-emerald-500">
+              Overtime Period Complete!
+            </div>
+            <p class="text-xs text-ap-text font-medium m-0">
+              <strong>{{ stateService.score().team > stateService.score().opponent ? (team()?.name ?? 'Our Team') : (event()?.opponent ?? 'Opponent') }}</strong> leads ({{ stateService.score().team }} - {{ stateService.score().opponent }}).
+            </p>
+          </div>
+        </div>
+        <ion-button color="success" fill="solid" (click)="endGame()">
+          <ion-icon name="flag-outline" slot="start"></ion-icon>
+          Complete Game
+        </ion-button>
+      </div>
+    }
+
     <!-- Top Bar: Clock and Quick Actions (Two Rows) -->
     <div class="flex flex-col gap-3 p-4 bg-ap-surface-raised border-b border-ap-border shrink-0">
       <!-- Row 1: Clock & Control Buttons -->
@@ -177,136 +217,272 @@
             <div class="flex items-center gap-2">
               <span class="text-sm font-bold uppercase tracking-wider bg-amber-500/20 text-amber-500 px-3 py-1 rounded">Volleyball Mode</span>
             </div>
-          } @else {
+          } @else if (stateService.sportName() !== null) {
             <app-clock-display></app-clock-display>
+          } @else {
+            <div class="h-10 w-32 bg-ap-surface/40 rounded-xl animate-pulse"></div>
           }
         </div>
 
         <!-- Buttons: 2-col grid on mobile, single row on desktop -->
         <div class="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-          @if (stateService.sportName() === 'Volleyball') {
-            <ion-button color="warning" (click)="rotateActivePlayers()">
-              <ion-icon name="refresh-outline" slot="start"></ion-icon>
-              Rotate
-            </ion-button>
+          @switch (stateService.sportName()) {
+            @case ('Volleyball') {
+              <ion-button color="warning" (click)="rotateActivePlayers()">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                Rotate
+              </ion-button>
 
-            @if (!stateService.currentSetResult()) {
-              <ion-button color="warning" fill="outline" (click)="confirmEndSetEarly()">
-                <ion-icon name="stop-circle-outline" slot="start"></ion-icon>
-                End Set
+              @if (!stateService.currentSetResult()) {
+                <ion-button color="warning" fill="outline" (click)="confirmEndSetEarly()">
+                  <ion-icon name="stop-circle-outline" slot="start"></ion-icon>
+                  End Set
+                </ion-button>
+              }
+
+              <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
+                <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+                Next Set
+              </ion-button>
+
+              <ion-button color="danger" fill="solid" (click)="endGame()">
+                <ion-icon name="flag-outline" slot="start"></ion-icon>
+                End Match
               </ion-button>
             }
+            @case ('Basketball') {
+              @if (isRunning()) {
+                <ion-button color="warning" (click)="stopClock()">
+                  <ion-icon name="pause-outline" slot="start"></ion-icon>
+                  Pause
+                </ion-button>
+              } @else {
+                <ion-button color="success" (click)="startClock()">
+                  <ion-icon name="play-outline" slot="start"></ion-icon>
+                  Start
+                </ion-button>
+              }
 
-            <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
-              <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
-              Next Set
-            </ion-button>
+              @if (canAddBasketballOvertime()) {
+                <ion-button color="warning" fill="solid" (click)="promptAddOvertime()" [disabled]="isTransitioningPeriod()">
+                  <ion-icon name="time-outline" slot="start"></ion-icon>
+                  {{ basketballPeriodActionLabel() }}
+                </ion-button>
 
-            <ion-button color="danger" fill="solid" (click)="endGame()">
-              <ion-icon name="flag-outline" slot="start"></ion-icon>
-              End Match
-            </ion-button>
-          } @else {
-            @if (isRunning()) {
-              <ion-button color="warning" (click)="stopClock()">
-                <ion-icon name="pause-outline" slot="start"></ion-icon>
-                Pause
+                <ion-button color="danger" fill="outline" (click)="endGame()">
+                  <ion-icon name="flag-outline" slot="start"></ion-icon>
+                  End Game
+                </ion-button>
+              } @else if ((isRegulationEnd() || isOvertime()) && !isGameTied()) {
+                <ion-button color="success" fill="solid" (click)="endGame()">
+                  <ion-icon name="trophy-outline" slot="start"></ion-icon>
+                  Complete Game
+                </ion-button>
+              } @else {
+                <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
+                  <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+                  {{ basketballPeriodActionLabel() }}
+                </ion-button>
+
+                <ion-button color="danger" fill="solid" (click)="endGame()">
+                  <ion-icon name="flag-outline" slot="start"></ion-icon>
+                  End Game
+                </ion-button>
+              }
+            }
+            @case ('Soccer') {
+              @if (isRunning()) {
+                <ion-button color="warning" (click)="stopClock()">
+                  <ion-icon name="pause-outline" slot="start"></ion-icon>
+                  Pause
+                </ion-button>
+              } @else {
+                <ion-button color="success" (click)="startClock()">
+                  <ion-icon name="play-outline" slot="start"></ion-icon>
+                  Start
+                </ion-button>
+              }
+
+              <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
+                <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+                Next Period
               </ion-button>
-            } @else {
-              <ion-button color="success" (click)="startClock()">
-                <ion-icon name="play-outline" slot="start"></ion-icon>
-                Start
+
+              @if (!isShootoutActive()) {
+                <ion-button color="secondary" fill="solid" (click)="startShootout()">
+                  <ion-icon name="football-outline" slot="start"></ion-icon>
+                  Shootout
+                </ion-button>
+              }
+
+              <ion-button color="danger" fill="solid" (click)="endGame()">
+                <ion-icon name="flag-outline" slot="start"></ion-icon>
+                End Game
               </ion-button>
             }
-
-            <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
-              <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
-              Next Period
-            </ion-button>
-
-            @if (!isShootoutActive()) {
-              <ion-button color="secondary" fill="solid" (click)="startShootout()">
-                <ion-icon name="football-outline" slot="start"></ion-icon>
-                Shootout
-              </ion-button>
+            @default {
+              <div class="flex items-center gap-2 h-9 px-3 text-xs text-ap-muted animate-pulse">
+                <span>Loading controls...</span>
+              </div>
             }
-
-            <ion-button color="danger" fill="solid" (click)="endGame()">
-              <ion-icon name="flag-outline" slot="start"></ion-icon>
-              End Game
-            </ion-button>
           }
         </div>
       </div>
 
       <!-- Row 2: Team-Wide Stats Groups -->
       <div class="stats-row-container border-t border-ap-border/30 pt-3">
-        @if (stateService.sportName() === 'Volleyball') {
-          <!-- Our Team Stats Group -->
-          <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
-            <div class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">
-              {{ team()?.name ?? 'Our Team' }}
-            </div>
-            <div class="grid grid-cols-2 gap-2 w-full">
-              <ion-button class="ion-no-margin w-full" size="small" color="success" fill="solid" (click)="addTeamPoint()">
-                + Point ({{ stateService.score().team }})
-              </ion-button>
-              <div class="flex items-center justify-center text-[10px] text-ap-primary font-bold px-2">
-                Sets won: {{ stateService.setsWon().team }}
+        @switch (stateService.sportName()) {
+          @case ('Volleyball') {
+            <!-- Our Team Stats Group -->
+            <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+              <div class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">
+                {{ team()?.name ?? 'Our Team' }}
+              </div>
+              <div class="grid grid-cols-2 gap-2 w-full">
+                <ion-button class="ion-no-margin w-full" size="small" color="success" fill="solid" (click)="addTeamPoint()">
+                  + Point ({{ stateService.score().team }})
+                </ion-button>
+                <div class="flex items-center justify-center text-[10px] text-ap-primary font-bold px-2">
+                  Sets won: {{ stateService.setsWon().team }}
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Opponent Stats Group -->
-          <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
-            <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
-              {{ event()?.opponent ?? 'Opponent' }}
-            </div>
-            <div class="grid grid-cols-2 gap-2 w-full">
-              <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentPoint()">
-                + Point ({{ stateService.score().opponent }})
-              </ion-button>
-              <div class="flex items-center justify-center text-[10px] text-ap-muted font-bold px-2">
-                Sets won: {{ stateService.setsWon().opponent }}
+            <!-- Opponent Stats Group -->
+            <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+              <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
+                {{ event()?.opponent ?? 'Opponent' }}
+              </div>
+              <div class="grid grid-cols-2 gap-2 w-full">
+                <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentPoint()">
+                  + Point ({{ stateService.score().opponent }})
+                </ion-button>
+                <div class="flex items-center justify-center text-[10px] text-ap-muted font-bold px-2">
+                  Sets won: {{ stateService.setsWon().opponent }}
+                </div>
               </div>
             </div>
-          </div>
-        } @else {
-          <!-- Our Team Stats Group -->
-          <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
-            <div class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">
-              {{ team()?.name ?? 'Our Team' }}
+          }
+          @case ('Basketball') {
+            <!-- Our Team Basket Stats -->
+            <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+              <div class="flex items-center justify-between px-1">
+                <span class="text-xs font-black text-ap-primary uppercase tracking-wider">
+                  {{ team()?.name ?? 'Our Team' }}
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold text-ap-muted">
+                    Fouls: {{ stateService.basketballFouls().teamFouls }}
+                  </span>
+                  @if (stateService.basketballFouls().inDoubleBonus) {
+                    <span class="text-[10px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded shadow">
+                      2x BONUS
+                    </span>
+                  } @else if (stateService.basketballFouls().inBonus) {
+                    <span class="text-[10px] font-black bg-amber-500 text-black px-1.5 py-0.5 rounded shadow">
+                      BONUS
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="flex items-center justify-between px-1">
+                <span class="text-sm font-black text-emerald-400">Total Score: {{ stateService.score().team }} PTS</span>
+                <span class="text-xs font-bold text-ap-muted">TO: {{ stateService.basketballTimeouts().teamRemaining }}/{{ stateService.basketballTimeouts().limit }}</span>
+              </div>
+              <div class="w-full">
+                <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="primary" fill="outline" (click)="callTeamBasketballTimeout()" [disabled]="stateService.basketballTimeouts().teamRemaining <= 0">
+                  <ion-icon name="time-outline" slot="start"></ion-icon>
+                  Call TO ({{ stateService.basketballTimeouts().teamRemaining }} left)
+                </ion-button>
+              </div>
             </div>
-            <div class="grid grid-cols-2 gap-2 w-full">
-              <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="solid" (click)="addTeamShot()">
-                + Shot ({{ stateService.statsSummary().teamShots }})
-              </ion-button>
-              <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="outline" (click)="addTeamCorner()">
-                + Corner ({{ stateService.statsSummary().teamCorners }})
-              </ion-button>
-            </div>
-          </div>
 
-          <!-- Opponent Stats Group -->
-          <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
-            <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
-              {{ event()?.opponent ?? 'Opponent' }}
+            <!-- Opponent Basket Stats -->
+            <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+              <div class="flex items-center justify-between px-1">
+                <span class="text-xs font-black text-ap-muted uppercase tracking-wider">
+                  {{ event()?.opponent ?? 'Opponent' }}
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold text-ap-muted">
+                    Fouls: {{ stateService.basketballFouls().opponentFouls }}
+                  </span>
+                  @if (stateService.basketballFouls().opponentInDoubleBonus) {
+                    <span class="text-[10px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded shadow">
+                      2x BONUS
+                    </span>
+                  } @else if (stateService.basketballFouls().opponentInBonus) {
+                    <span class="text-[10px] font-black bg-amber-500 text-black px-1.5 py-0.5 rounded shadow">
+                      BONUS
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="flex items-center justify-between px-1">
+                <span class="text-sm font-black text-red-400">Total Score: {{ stateService.score().opponent }} PTS</span>
+                <span class="text-xs font-bold text-ap-muted">TO: {{ stateService.basketballTimeouts().opponentRemaining }}/{{ stateService.basketballTimeouts().limit }}</span>
+              </div>
+              <div class="grid grid-cols-5 gap-1.5 w-full">
+                <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="danger" fill="solid" (click)="addOpponentBasketballScore(2)">
+                  +2
+                </ion-button>
+                <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="danger" fill="outline" (click)="addOpponentBasketballScore(3)">
+                  +3
+                </ion-button>
+                <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="danger" fill="outline" (click)="addOpponentBasketballScore(1)">
+                  +1 FT
+                </ion-button>
+                <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="warning" fill="outline" (click)="addOpponentBasketballFoul()">
+                  + Foul
+                </ion-button>
+                <ion-button class="ion-no-margin w-full text-xs font-bold" size="small" color="medium" fill="outline" (click)="addOpponentBasketballTimeout()" [disabled]="stateService.basketballTimeouts().opponentRemaining <= 0">
+                  + TO
+                </ion-button>
+              </div>
             </div>
-            <div class="grid grid-cols-2 gap-2 w-full">
-              <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
-                + Goal ({{ stateService.score().opponent }})
-              </ion-button>
-              <ion-button class="ion-no-margin w-full" size="small" color="success" fill="solid" (click)="addOpponentOwnGoal()">
-                + Own Goal (+1 Us)
-              </ion-button>
-              <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="solid" (click)="addOpponentShot()">
-                + Shot ({{ stateService.statsSummary().opponentShots }})
-              </ion-button>
-              <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="outline" (click)="addOpponentCorner()">
-                + Corner ({{ stateService.statsSummary().opponentCorners }})
-              </ion-button>
+          }
+          @case ('Soccer') {
+            <!-- Our Team Stats Group -->
+            <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+              <div class="text-xs font-black text-ap-primary uppercase tracking-wider px-1">
+                {{ team()?.name ?? 'Our Team' }}
+              </div>
+              <div class="grid grid-cols-2 gap-2 w-full">
+                <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="solid" (click)="addTeamShot()">
+                  + Shot ({{ stateService.statsSummary().teamShots }})
+                </ion-button>
+                <ion-button class="ion-no-margin w-full" size="small" color="primary" fill="outline" (click)="addTeamCorner()">
+                  + Corner ({{ stateService.statsSummary().teamCorners }})
+                </ion-button>
+              </div>
             </div>
-          </div>
+
+            <!-- Opponent Stats Group -->
+            <div class="flex-1 flex flex-col gap-2 p-3 bg-ap-bg/50 rounded-lg border border-ap-border/40">
+              <div class="text-xs font-black text-ap-muted uppercase tracking-wider px-1">
+                {{ event()?.opponent ?? 'Opponent' }}
+              </div>
+              <div class="grid grid-cols-2 gap-2 w-full">
+                <ion-button class="ion-no-margin w-full" size="small" color="danger" fill="solid" (click)="addOpponentGoal()">
+                  + Goal ({{ stateService.score().opponent }})
+                </ion-button>
+                <ion-button class="ion-no-margin w-full" size="small" color="success" fill="solid" (click)="addOpponentOwnGoal()">
+                  + Own Goal (+1 Us)
+                </ion-button>
+                <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="solid" (click)="addOpponentShot()">
+                  + Shot ({{ stateService.statsSummary().opponentShots }})
+                </ion-button>
+                <ion-button class="ion-no-margin w-full" size="small" color="medium" fill="outline" (click)="addOpponentCorner()">
+                  + Corner ({{ stateService.statsSummary().opponentCorners }})
+                </ion-button>
+              </div>
+            </div>
+          }
+          @default {
+            <div class="w-full flex items-center justify-center p-3 text-xs text-ap-muted">
+              <span>Loading game stats...</span>
+            </div>
+          }
         }
       </div>
     </div>
@@ -319,46 +495,98 @@
         ></app-shootout-scorecard>
       </div>
     } @else {
-      <div class="flex flex-col sm:flex-row">
+      <div class="flex flex-col sm:flex-row items-start">
         <!-- Field / Court View -->
-        <div class="sm:flex-[2] flex min-h-[370px] sm:min-h-[650px]">
-          @if (stateService.sportName() === 'Volleyball') {
-            <app-volleyball-court-view
-              class="w-full"
-              [players]="stateService.activePlayers()"
-              [initialLineup]="stateService.initialLineup()"
-              [stagedSubs]="stateService.stagedSubs()"
-              [playersOnField]="stateService.playersOnField()"
-              [selectedPlayerId]="selectedPlayerId()"
-              [playerStats]="stateService.playerStats()"
-              [liberoDesignation]="stateService.liberoDesignation()"
-              (playerSelected)="handlePlayerSelection($event)"
-              (emptySlotSelected)="handleEmptySlotSelection($event)"
-              (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
-            </app-volleyball-court-view>
-          } @else {
-            <app-soccer-pitch-view
-              class="w-full h-full min-h-[350px] block relative"
-              [players]="stateService.activePlayers()"
-              [initialLineup]="stateService.initialLineup()"
-              [stagedSubs]="stateService.stagedSubs()"
-              [playersOnField]="stateService.playersOnField()"
-              [selectedPlayerId]="selectedPlayerId()"
-              [playerCardCounts]="stateService.playerCardCounts()"
-              (playerSelected)="handlePlayerSelection($event)"
-              (emptySlotSelected)="handleEmptySlotSelection($event)"
-              (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
-            </app-soccer-pitch-view>
+        <div class="w-full sm:flex-[2] flex min-w-0">
+          @switch (stateService.sportName()) {
+            @case ('Basketball') {
+              <div class="w-full flex flex-col min-w-0">
+                <app-active-player-strip
+                  [activePlayers]="stateService.activePlayers()"
+                  [selectedPlayerId]="selectedPlayerId()"
+                  [playerStats]="stateService.playerStats()"
+                  [foulLimit]="stateService.foulLimit()"
+                  [playersOnCourt]="stateService.playersOnField()"
+                  (playerSelected)="handleBasketballPlayerSelected($event)"
+                  (emptySlotClicked)="handleBasketballEmptySlotClicked($event)"
+                ></app-active-player-strip>
+                <div class="w-full h-[480px] sm:h-[580px] min-h-0 shrink-0">
+                  <app-basketball-court-view
+                    class="w-full h-full block"
+                    [players]="stateService.players()"
+                    [activePlayers]="stateService.activePlayers()"
+                    [selectedPlayerId]="selectedPlayerId()"
+                    [shots]="stateService.basketballShots()"
+                    (shotLogged)="handleBasketballShot($event)"
+                    (playerSelected)="handlePlayerSelection($event)"
+                    (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)"
+                  ></app-basketball-court-view>
+                </div>
+              </div>
+            }
+            @case ('Volleyball') {
+              <app-volleyball-court-view
+                class="w-full min-h-[370px] sm:min-h-[650px]"
+                [players]="stateService.activePlayers()"
+                [initialLineup]="stateService.initialLineup()"
+                [stagedSubs]="stateService.stagedSubs()"
+                [playersOnField]="stateService.playersOnField()"
+                [selectedPlayerId]="selectedPlayerId()"
+                [playerStats]="stateService.playerStats()"
+                [liberoDesignation]="stateService.liberoDesignation()"
+                (playerSelected)="handlePlayerSelection($event)"
+                (emptySlotSelected)="handleEmptySlotSelection($event)"
+                (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
+              </app-volleyball-court-view>
+            }
+            @case ('Soccer') {
+              <app-soccer-pitch-view
+                class="w-full h-full min-h-[350px] sm:min-h-[650px] block relative"
+                [players]="stateService.activePlayers()"
+                [initialLineup]="stateService.initialLineup()"
+                [stagedSubs]="stateService.stagedSubs()"
+                [playersOnField]="stateService.playersOnField()"
+                [selectedPlayerId]="selectedPlayerId()"
+                [playerCardCounts]="stateService.playerCardCounts()"
+                (playerSelected)="handlePlayerSelection($event)"
+                (emptySlotSelected)="handleEmptySlotSelection($event)"
+                (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
+              </app-soccer-pitch-view>
+            }
+            @default {
+              <div class="w-full h-full min-h-[350px] flex items-center justify-center bg-ap-surface/40 rounded-xl border border-ap-border/40 animate-pulse">
+                <div class="flex flex-col items-center gap-3">
+                  <ion-spinner name="crescent" color="primary"></ion-spinner>
+                  <span class="text-xs font-semibold text-ap-muted">Loading court layout...</span>
+                </div>
+              </div>
+            }
           }
         </div>
 
         <!-- Right Column: Bench + Sub-Queue -->
-        <div class="sm:flex-1 flex flex-col border-t sm:border-t-0 sm:border-l border-ap-border bg-ap-surface-raised">
+        <div class="w-full sm:flex-1 flex flex-col border-t sm:border-t-0 sm:border-l border-ap-border bg-ap-surface-raised min-w-0">
+          @if (stateService.sportName() === 'Basketball') {
+            <div class="p-2 border-b border-ap-border bg-ap-surface">
+              <app-rapid-action-keypad
+                #rapidKeypad
+                [selectedPlayer]="selectedActivePlayer()"
+                [activePlayers]="stateService.activePlayers()"
+                [canUndo]="stateService.canUndo()"
+                [teamFouls]="stateService.basketballFouls().teamFouls"
+                [bonusThreshold]="stateService.bonusThreshold()"
+                (actionTriggered)="handleKeypadAction($event)"
+                (undoClicked)="handleUndoAction()"
+                (subOffClicked)="handleMoveActiveToBench()"
+                (playerDeselected)="selectedPlayerId.set(null); actionPlayer.set(null)"
+              ></app-rapid-action-keypad>
+            </div>
+          }
           <app-bench-view
             [players]="stateService.benchPlayers()"
             [stagedInIds]="stagedInIds()"
             [selectedPlayerId]="selectedPlayerId()"
-            [selectedActivePlayer]="selectedActivePlayer()"
+            [selectedActivePlayer]="stateService.sportName() === 'Basketball' ? null : selectedActivePlayer()"
             [ejectedPlayerIds]="stateService.ejectedPlayerIds()"
             [liberoDesignation]="stateService.liberoDesignation()"
             (playerSelected)="handlePlayerSelection($event)"
@@ -465,6 +693,174 @@
               }
             </tbody>
           </table>
+        </div>
+      </div>
+    }
+
+    <!-- Basketball Running Line Score & Box Score -->
+    @if (stateService.sportName() === 'Basketball') {
+      <div class="bg-ap-surface-raised border-t border-ap-border px-4 py-3 flex flex-col gap-3">
+        <!-- Quarter Running Line Score -->
+        <div class="flex flex-col gap-1.5">
+          <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted">Line Score</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-ap-border text-[10px] uppercase font-bold text-ap-muted">
+                  <th class="py-1 text-left font-bold pl-2">Team</th>
+                  @for (ps of stateService.basketballPeriodScores(); track ps.period) {
+                    <th class="py-1 text-center font-bold px-2.5">{{ ps.label }}</th>
+                  }
+                  <th class="py-1 text-center font-black pr-2 text-ap-text">T</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-ap-border/30">
+                  <td class="py-1.5 text-left font-bold text-ap-primary pl-2 whitespace-nowrap">
+                    {{ team()?.name ?? 'Our Team' }}
+                  </td>
+                  @for (ps of stateService.basketballPeriodScores(); track ps.period) {
+                    <td class="py-1.5 text-center px-2.5 tabular-nums text-ap-text">
+                      {{ ps.teamScore }}
+                    </td>
+                  }
+                  <td class="py-1.5 text-center pr-2 font-black tabular-nums text-ap-primary">
+                    {{ stateService.score().team }}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 text-left font-bold text-ap-muted pl-2 whitespace-nowrap">
+                    {{ event()?.opponent ?? 'Opponent' }}
+                  </td>
+                  @for (ps of stateService.basketballPeriodScores(); track ps.period) {
+                    <td class="py-1.5 text-center px-2.5 tabular-nums text-ap-text">
+                      {{ ps.opponentScore }}
+                    </td>
+                  }
+                  <td class="py-1.5 text-center pr-2 font-black tabular-nums text-ap-text">
+                    {{ stateService.score().opponent }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Collapsible Team Box Score -->
+        <div class="border-t border-ap-border/30 pt-2">
+          <div class="flex items-center justify-between cursor-pointer select-none py-1" (click)="toggleBoxScore()">
+            <div class="flex items-center gap-2">
+              <h3 class="text-xs font-black uppercase tracking-wider text-ap-muted">Team Box Score</h3>
+              <span class="text-[10px] text-ap-muted/70 font-semibold">
+                ({{ stateService.basketballBoxScore().length }} players)
+              </span>
+            </div>
+            <ion-button fill="clear" size="small" class="ion-no-margin -mr-2 text-ap-muted">
+              <ion-icon [name]="isBoxScoreExpanded() ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            </ion-button>
+          </div>
+
+          @if (isBoxScoreExpanded()) {
+            <div class="overflow-x-auto max-h-[260px] overflow-y-auto mt-2">
+              <table class="min-w-[950px] text-xs table-auto border-collapse">
+                <thead>
+                  <tr class="border-b border-ap-border text-[10px] uppercase font-bold text-ap-muted sticky top-0 z-10 bg-ap-surface-raised">
+                    <th class="py-2 text-left font-bold pl-2 bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">Player</th>
+                    <th class="py-2 text-center font-bold px-2">MIN</th>
+                    <th class="py-2 text-center font-bold px-2">PTS</th>
+                    <th class="py-2 text-center font-bold px-2">FGM-A</th>
+                    <th class="py-2 text-center font-bold px-2">FG%</th>
+                    <th class="py-2 text-center font-bold px-2">3PM-A</th>
+                    <th class="py-2 text-center font-bold px-2">3P%</th>
+                    <th class="py-2 text-center font-bold px-2">FTM-A</th>
+                    <th class="py-2 text-center font-bold px-2">FT%</th>
+                    <th class="py-2 text-center font-bold px-2">OREB</th>
+                    <th class="py-2 text-center font-bold px-2">DREB</th>
+                    <th class="py-2 text-center font-bold px-2">REB</th>
+                    <th class="py-2 text-center font-bold px-2">AST</th>
+                    <th class="py-2 text-center font-bold px-2">STL</th>
+                    <th class="py-2 text-center font-bold px-2">BLK</th>
+                    <th class="py-2 text-center font-bold px-2">TO</th>
+                    <th class="py-2 text-center font-bold px-2">PF</th>
+                    <th class="py-2 text-center font-bold pr-2">+/-</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of stateService.basketballBoxScore(); track p.playerId) {
+                    <tr class="border-b border-ap-border/30 hover:bg-ap-bg/50">
+                      <td class="py-2 text-left font-bold text-ap-text pl-2 whitespace-nowrap bg-ap-surface-raised sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
+                        <div class="flex items-center gap-1.5">
+                          <span>{{ getPlayerShortName(p.player) }}</span>
+                          @if (p.fouledOut) {
+                            <span class="text-[9px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1 rounded">FO</span>
+                          } @else if (p.foulTrouble) {
+                            <span class="text-[9px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1 rounded">FOUL 4</span>
+                          }
+                        </div>
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ getPlayerMinutes(p.playerId) }}
+                      </td>
+                      <td class="py-2 text-center px-2 font-black text-ap-primary tabular-nums">
+                        {{ p.points }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.fgMade }}-{{ p.fgAttempted }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.fgPct }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.fg3Made }}-{{ p.fg3Attempted }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.fg3Pct }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.ftMade }}-{{ p.ftAttempted }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.ftPct }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.reboundsOffensive }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-muted tabular-nums">
+                        {{ p.reboundsDefensive }}
+                      </td>
+                      <td class="py-2 text-center px-2 font-semibold text-ap-text tabular-nums">
+                        {{ p.reboundsTotal }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.assists }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.steals }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-ap-text tabular-nums">
+                        {{ p.blocks }}
+                      </td>
+                      <td class="py-2 text-center px-2 text-rose-400 tabular-nums">
+                        {{ p.turnovers }}
+                      </td>
+                      <td class="py-2 text-center px-2 font-bold tabular-nums"
+                          [class.text-amber-500]="p.foulTrouble"
+                          [class.text-rose-500]="p.fouledOut"
+                          [class.text-ap-text]="!p.foulTrouble && !p.fouledOut">
+                        {{ p.fouls }}
+                      </td>
+                      <td class="py-2 text-center pr-2 font-bold tabular-nums"
+                          [class.text-emerald-400]="p.plusMinus > 0"
+                          [class.text-rose-400]="p.plusMinus < 0"
+                          [class.text-ap-text]="p.plusMinus === 0">
+                        {{ p.plusMinusFormatted }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         </div>
       </div>
     }

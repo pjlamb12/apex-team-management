@@ -38,6 +38,9 @@ export class CreateAwardDto {
     'growth',
     'goalkeeping',
     'finishing',
+    'rebounding',
+    'serving',
+    'blocking',
   ])
   category: AwardCategory;
 

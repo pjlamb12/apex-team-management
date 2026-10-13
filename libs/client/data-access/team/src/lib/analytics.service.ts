@@ -32,6 +32,19 @@ export interface PlayerPerformanceMetrics {
   setErrors?: number;
   passCount?: number;
   passScoreSum?: number;
+  points?: number;
+  reboundsOffensive?: number;
+  reboundsDefensive?: number;
+  reboundsTotal?: number;
+  steals?: number;
+  turnovers?: number;
+  personalFouls?: number;
+  fgMade?: number;
+  fgAttempted?: number;
+  fg3Made?: number;
+  fg3Attempted?: number;
+  ftMade?: number;
+  ftAttempted?: number;
 }
 
 export interface PlayerPlaytime {
@@ -69,6 +82,19 @@ export interface PlayerHistoryEntry {
   digs?: number;
   serviceErrors?: number;
   hittingErrors?: number;
+  points?: number;
+  reboundsOffensive?: number;
+  reboundsDefensive?: number;
+  reboundsTotal?: number;
+  steals?: number;
+  turnovers?: number;
+  personalFouls?: number;
+  fgMade?: number;
+  fgAttempted?: number;
+  fg3Made?: number;
+  fg3Attempted?: number;
+  ftMade?: number;
+  ftAttempted?: number;
 }
 
 export interface PlayerProfileAnalytics {
@@ -94,6 +120,27 @@ export interface PlayerProfileAnalytics {
   totalDigs?: number;
   totalServiceErrors?: number;
   totalHittingErrors?: number;
+  totalPoints?: number;
+  totalReboundsOffensive?: number;
+  totalReboundsDefensive?: number;
+  totalReboundsTotal?: number;
+  totalSteals?: number;
+  totalTurnovers?: number;
+  totalPersonalFouls?: number;
+  totalFgMade?: number;
+  totalFgAttempted?: number;
+  totalFg3Made?: number;
+  totalFg3Attempted?: number;
+  totalFtMade?: number;
+  totalFtAttempted?: number;
+  ppg?: number;
+  rpg?: number;
+  apg?: number;
+  spg?: number;
+  bpg?: number;
+  fgPct?: number;
+  fg3Pct?: number;
+  ftPct?: number;
 }
 
 @Injectable({

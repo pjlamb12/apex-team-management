@@ -36,6 +36,19 @@ export interface PlayerPerformanceMetrics {
   setErrors?: number;
   passCount?: number;
   passScoreSum?: number;
+  points?: number;
+  reboundsOffensive?: number;
+  reboundsDefensive?: number;
+  reboundsTotal?: number;
+  steals?: number;
+  turnovers?: number;
+  personalFouls?: number;
+  fgMade?: number;
+  fgAttempted?: number;
+  fg3Made?: number;
+  fg3Attempted?: number;
+  ftMade?: number;
+  ftAttempted?: number;
 }
 
 @Injectable()
@@ -298,6 +311,80 @@ export class PerformanceMetricsService {
           const score = payload.score ?? ge.payload?.score ?? 0;
           metricsMap[playerId].passScoreSum = (metricsMap[playerId].passScoreSum || 0) + score;
         }
+      } else if (ge.eventType === 'MADE_1PT') {
+        const playerId = payload.playerId || payload.scorerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].ftMade = (metricsMap[playerId].ftMade || 0) + 1;
+          metricsMap[playerId].ftAttempted = (metricsMap[playerId].ftAttempted || 0) + 1;
+          metricsMap[playerId].points = (metricsMap[playerId].points || 0) + 1;
+        }
+      } else if (ge.eventType === 'MISSED_1PT') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].ftAttempted = (metricsMap[playerId].ftAttempted || 0) + 1;
+        }
+      } else if (ge.eventType === 'MADE_2PT') {
+        const playerId = payload.playerId || payload.scorerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].fgMade = (metricsMap[playerId].fgMade || 0) + 1;
+          metricsMap[playerId].fgAttempted = (metricsMap[playerId].fgAttempted || 0) + 1;
+          metricsMap[playerId].points = (metricsMap[playerId].points || 0) + 2;
+        }
+        const assistorId = payload.assistorId;
+        if (assistorId && metricsMap[assistorId]) {
+          metricsMap[assistorId].assists++;
+        }
+      } else if (ge.eventType === 'MISSED_2PT') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].fgAttempted = (metricsMap[playerId].fgAttempted || 0) + 1;
+        }
+      } else if (ge.eventType === 'MADE_3PT') {
+        const playerId = payload.playerId || payload.scorerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].fgMade = (metricsMap[playerId].fgMade || 0) + 1;
+          metricsMap[playerId].fgAttempted = (metricsMap[playerId].fgAttempted || 0) + 1;
+          metricsMap[playerId].fg3Made = (metricsMap[playerId].fg3Made || 0) + 1;
+          metricsMap[playerId].fg3Attempted = (metricsMap[playerId].fg3Attempted || 0) + 1;
+          metricsMap[playerId].points = (metricsMap[playerId].points || 0) + 3;
+        }
+        const assistorId = payload.assistorId;
+        if (assistorId && metricsMap[assistorId]) {
+          metricsMap[assistorId].assists++;
+        }
+      } else if (ge.eventType === 'MISSED_3PT') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].fgAttempted = (metricsMap[playerId].fgAttempted || 0) + 1;
+          metricsMap[playerId].fg3Attempted = (metricsMap[playerId].fg3Attempted || 0) + 1;
+        }
+      } else if (ge.eventType === 'REBOUND_OFFENSIVE' || ge.eventType === 'OFFENSIVE_REBOUND') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].reboundsOffensive = (metricsMap[playerId].reboundsOffensive || 0) + 1;
+          metricsMap[playerId].reboundsTotal = (metricsMap[playerId].reboundsTotal || 0) + 1;
+        }
+      } else if (ge.eventType === 'REBOUND_DEFENSIVE' || ge.eventType === 'DEFENSIVE_REBOUND') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].reboundsDefensive = (metricsMap[playerId].reboundsDefensive || 0) + 1;
+          metricsMap[playerId].reboundsTotal = (metricsMap[playerId].reboundsTotal || 0) + 1;
+        }
+      } else if (ge.eventType === 'STEAL') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].steals = (metricsMap[playerId].steals || 0) + 1;
+        }
+      } else if (ge.eventType === 'TURNOVER') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].turnovers = (metricsMap[playerId].turnovers || 0) + 1;
+        }
+      } else if (ge.eventType === 'FOUL') {
+        const playerId = payload.playerId;
+        if (playerId && metricsMap[playerId]) {
+          metricsMap[playerId].personalFouls = (metricsMap[playerId].personalFouls || 0) + 1;
+        }
       }
     });
 
@@ -333,7 +420,20 @@ export class PerformanceMetricsService {
       setAssists: 0,
       setErrors: 0,
       passCount: 0,
-      passScoreSum: 0
+      passScoreSum: 0,
+      points: 0,
+      reboundsOffensive: 0,
+      reboundsDefensive: 0,
+      reboundsTotal: 0,
+      steals: 0,
+      turnovers: 0,
+      personalFouls: 0,
+      fgMade: 0,
+      fgAttempted: 0,
+      fg3Made: 0,
+      fg3Attempted: 0,
+      ftMade: 0,
+      ftAttempted: 0
     };
   }
 }

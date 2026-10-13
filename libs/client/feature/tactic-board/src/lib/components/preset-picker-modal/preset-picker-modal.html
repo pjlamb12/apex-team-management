@@ -7,7 +7,7 @@
         </div>
         <div>
           <h2 class="modal-heading">
-            Load {{ sport === 'soccer' ? 'Soccer' : 'Volleyball' }} Preset
+            Load {{ sport === 'soccer' ? 'Soccer' : (sport === 'basketball' ? 'Basketball' : 'Volleyball') }} Preset
           </h2>
           <p class="modal-subheading">Select standard formations, systems, and set pieces</p>
         </div>
@@ -42,7 +42,25 @@
         [class.active]="activeCategory === 'formation'"
         (click)="activeCategory = 'formation'"
       >
-        Formations / Systems
+        Formations / Sets
+      </button>
+
+      <button
+        type="button"
+        class="preset-filter-pill"
+        [class.active]="activeCategory === 'offensive'"
+        (click)="activeCategory = 'offensive'"
+      >
+        Offense
+      </button>
+
+      <button
+        type="button"
+        class="preset-filter-pill"
+        [class.active]="activeCategory === 'defensive'"
+        (click)="activeCategory = 'defensive'"
+      >
+        Defense
       </button>
 
       <button
@@ -51,7 +69,7 @@
         [class.active]="activeCategory === 'set_piece'"
         (click)="activeCategory = 'set_piece'"
       >
-        Set Pieces & Routines
+        Set Pieces / Inbounds
       </button>
     </div>
 
@@ -68,6 +86,7 @@
                 class="preset-type-badge"
                 [class.badge-formation]="preset.category === 'formation'"
                 [class.badge-set-piece]="preset.category === 'set_piece'"
+                [class.badge-offensive]="preset.category === 'offensive'"
                 [class.badge-defensive]="preset.category === 'defensive'"
               >
                 {{ preset.category.replace('_', ' ') }}
@@ -87,7 +106,7 @@
 
           <div class="preset-item-footer">
             <span class="pitch-type-text">
-              {{ preset.pitchType === 'half_pitch' ? 'Half Pitch' : 'Full Pitch / Court' }}
+              {{ preset.pitchType === 'half_court' ? 'Half Court' : (preset.pitchType === 'half_pitch' ? 'Half Pitch' : 'Full Pitch / Court') }}
             </span>
             <span class="load-preset-text">
               Load Preset →

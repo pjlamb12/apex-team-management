@@ -173,7 +173,7 @@
       }
 
       <!-- Shootout Result Banner -->
-      @if (sportName() !== 'Volleyball') {
+      @if (sportName() === 'Soccer') {
         @if (hasShootout()) {
           <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
             <div class="bg-gradient-to-r from-blue-950 to-blue-900 p-5 text-white">
@@ -241,10 +241,10 @@
                 <ion-icon name="stats-chart-outline" class="text-blue-500 mt-1"></ion-icon>
                 <div>
                   <div class="font-bold text-ap-text">
-                    {{ sportName() === 'Volleyball' ? (g.periodCount || 3) + ' Sets' : (g.periodCount || 2) + ' Periods' }}
+                    {{ sportName() === 'Volleyball' ? (g.periodCount || 3) + ' Sets' : (sportName() === 'Basketball' ? (g.periodCount || 4) + ' Quarters' : (g.periodCount || 2) + ' Periods') }}
                   </div>
                   <div class="text-xs text-ap-muted">
-                    {{ sportName() === 'Volleyball' ? 'Best of ' + (g.periodCount || 3) : (g.periodLengthMinutes || 45) + 'm length' }}
+                    {{ sportName() === 'Volleyball' ? 'Best of ' + (g.periodCount || 3) : (g.periodLengthMinutes || (sportName() === 'Basketball' ? 10 : 45)) + 'm length' }}
                   </div>
                 </div>
               </div>
@@ -388,6 +388,67 @@
                   <span class="text-2xl font-black text-orange-500">{{ statsSummary().errors }}</span>
                 </div>
               </ion-card-content>
+            } @else if (sportName() === 'Basketball') {
+              <ion-card-content class="px-6 pb-6 flex flex-col gap-4">
+                <!-- Field Goals Row -->
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-[10px] font-black text-ap-muted uppercase tracking-widest">Field Goals</span>
+                  <div class="text-right">
+                    <span class="text-xl font-black text-ap-text">{{ statsSummary().fgMade }}/{{ statsSummary().fgAttempted }}</span>
+                    <span class="text-xs font-bold text-amber-500 ml-1.5 font-mono">({{ statsSummary().fgPct | percent:'1.1-1' }})</span>
+                  </div>
+                </div>
+                <!-- Divider Line -->
+                <div class="h-px bg-ap-border/60"></div>
+                <!-- 3-Pointers Row -->
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-[10px] font-black text-ap-muted uppercase tracking-widest">3-Point FG</span>
+                  <div class="text-right">
+                    <span class="text-xl font-black text-ap-text">{{ statsSummary().fg3Made }}/{{ statsSummary().fg3Attempted }}</span>
+                    <span class="text-xs font-bold text-blue-400 ml-1.5 font-mono">({{ statsSummary().fg3Pct | percent:'1.1-1' }})</span>
+                  </div>
+                </div>
+                <!-- Divider Line -->
+                <div class="h-px bg-ap-border/60"></div>
+                <!-- Free Throws Row -->
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-[10px] font-black text-ap-muted uppercase tracking-widest">Free Throws</span>
+                  <div class="text-right">
+                    <span class="text-xl font-black text-ap-text">{{ statsSummary().ftMade }}/{{ statsSummary().ftAttempted }}</span>
+                    <span class="text-xs font-bold text-emerald-400 ml-1.5 font-mono">({{ statsSummary().ftPct | percent:'1.1-1' }})</span>
+                  </div>
+                </div>
+                <!-- Divider Line -->
+                <div class="h-px bg-ap-border/60"></div>
+                <!-- Rebounds Row -->
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-[10px] font-black text-ap-muted uppercase tracking-widest">Total Rebounds</span>
+                  <div class="text-right">
+                    <span class="text-2xl font-black text-ap-text">{{ statsSummary().reboundsTotal }}</span>
+                    <span class="text-[10px] font-bold text-ap-muted block font-mono">{{ statsSummary().reboundsOffensive }} OREB / {{ statsSummary().reboundsDefensive }} DREB</span>
+                  </div>
+                </div>
+                <!-- Divider Line -->
+                <div class="h-px bg-ap-border/60"></div>
+                <!-- Playmaking Row -->
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-[10px] font-black text-ap-muted uppercase tracking-widest">Assists / Turnovers</span>
+                  <div class="text-right">
+                    <span class="text-xl font-black text-blue-400">{{ statsSummary().assists }} AST</span>
+                    <span class="text-xs font-bold text-rose-400 ml-1.5">/ {{ statsSummary().turnovers }} TO</span>
+                  </div>
+                </div>
+                <!-- Divider Line -->
+                <div class="h-px bg-ap-border/60"></div>
+                <!-- Defense Row -->
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-[10px] font-black text-ap-muted uppercase tracking-widest">Steals / Blocks</span>
+                  <div class="text-right">
+                    <span class="text-xl font-black text-emerald-400">{{ statsSummary().steals }} STL</span>
+                    <span class="text-xs font-bold text-indigo-400 ml-1.5">/ {{ statsSummary().blocks }} BLK</span>
+                  </div>
+                </div>
+              </ion-card-content>
             } @else {
               <ion-card-content class="px-6 pb-6 flex flex-col gap-4">
                 <!-- Shots Row -->
@@ -481,9 +542,14 @@
             <ion-segment-button value="event-log">
               <ion-label class="text-xs font-bold">Event<br>Log</ion-label>
             </ion-segment-button>
-            @if (sportName() === 'Volleyball') {
+            @if (sportName() === 'Volleyball' || sportName() === 'Basketball') {
               <ion-segment-button value="boxscore">
                 <ion-label class="text-xs font-bold">Box Score</ion-label>
+              </ion-segment-button>
+            }
+            @if (sportName() === 'Basketball') {
+              <ion-segment-button value="shot-chart">
+                <ion-label class="text-xs font-bold">Shot Chart</ion-label>
               </ion-segment-button>
             }
           </ion-segment>
@@ -590,6 +656,106 @@
                     } @empty {
                       <div class="py-12 text-center text-ap-muted italic">
                         No sets completed yet.
+                      </div>
+                    }
+                  </ion-list>
+                </ion-card-content>
+              </ion-card>
+            } @else if (sportName() === 'Basketball') {
+              <!-- Quarter Line Score Card -->
+              <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
+                <ion-card-header class="px-6 pt-6 pb-2">
+                  <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                    <ion-icon name="basketball-outline" class="text-amber-500"></ion-icon>
+                    Quarter Line Score
+                  </ion-card-title>
+                </ion-card-header>
+                <ion-card-content class="p-0">
+                  <div class="overflow-x-auto w-full">
+                    <table class="w-full divide-y divide-ap-border/60 text-center text-sm text-ap-text">
+                      <thead class="bg-ap-surface-hover/30 text-xs font-bold text-ap-muted uppercase">
+                        <tr>
+                          <th class="px-4 py-3 text-left font-black">Team</th>
+                          @for (ps of basketballPeriodScores(); track ps.period) {
+                            <th class="px-3 py-3 font-black">{{ ps.label }}</th>
+                          }
+                          <th class="px-4 py-3 font-black">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-ap-border/40 font-mono">
+                        <tr>
+                          <td class="px-4 py-3 text-left font-sans font-bold text-ap-text truncate">{{ game()?.season?.team?.name || 'Our Team' }}</td>
+                          @for (ps of basketballPeriodScores(); track ps.period) {
+                            <td class="px-3 py-3 text-blue-400 font-bold">{{ ps.teamScore }}</td>
+                          }
+                          <td class="px-4 py-3 font-black text-base text-ap-text">{{ score().team }}</td>
+                        </tr>
+                        <tr>
+                          <td class="px-4 py-3 text-left font-sans font-bold text-ap-muted truncate">{{ game()?.opponent || 'Opponent' }}</td>
+                          @for (ps of basketballPeriodScores(); track ps.period) {
+                            <td class="px-3 py-3 text-ap-muted">{{ ps.opponentScore }}</td>
+                          }
+                          <td class="px-4 py-3 font-black text-base text-ap-text">{{ score().opponent }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+
+              <!-- Basketball Scoring Plays Timeline -->
+              <ion-card class="m-0">
+                <ion-card-header class="px-6 pt-6 pb-2">
+                  <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                    <ion-icon name="basketball-outline"></ion-icon>
+                    Scoring Plays Timeline
+                  </ion-card-title>
+                </ion-card-header>
+                <ion-card-content class="p-0">
+                  <ion-list lines="full">
+                    @for (play of basketballScoringPlays(); track play.id) {
+                      <ion-item class="goal-item">
+                        <div slot="start" class="w-14 text-center font-mono font-bold text-blue-400 border-r border-ap-border h-full flex flex-col items-center justify-center py-1">
+                          <span class="text-sm leading-none">{{ play.minuteOccurred }}'</span>
+                          <span class="text-[9px] text-ap-muted font-bold tracking-tight mt-0.5 uppercase">{{ getPeriodShortLabel(play.period ?? play.payload?.period ?? 1) }}</span>
+                        </div>
+                        <ion-label class="pl-4">
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                              <ion-icon
+                                [name]="play.isTeam ? 'arrow-up-circle' : 'arrow-down-circle'"
+                                [color]="play.isTeam ? 'success' : 'danger'"
+                                class="text-xl"
+                              ></ion-icon>
+                              <div>
+                                <div class="font-bold text-ap-text leading-tight">
+                                  @if (play.isTeam) {
+                                    <span class="font-black text-amber-400">+{{ play.points }} PTS</span>
+                                    @if (play.player; as p) {
+                                      <span class="text-ap-text font-normal block text-xs mt-0.5">
+                                        {{ play.eventType === 'MADE_3PT' ? '3PT Field Goal' : (play.eventType === 'MADE_2PT' ? '2PT Field Goal' : 'Free Throw') }} by #{{ p.jerseyNumber }} {{ p.firstName }} {{ p.lastName }}
+                                      </span>
+                                    }
+                                    @if (play.assistorPlayer; as ap) {
+                                      <span class="text-emerald-400 font-normal block text-[11px] mt-0.5">Assisted by #{{ ap.jerseyNumber }} {{ ap.firstName }} {{ ap.lastName }}</span>
+                                    }
+                                  } @else {
+                                    <span class="font-black text-rose-400">Opponent Score (+{{ play.points }} PTS)</span>
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                            <div class="text-right">
+                              <ion-badge [color]="play.isTeam ? 'primary' : 'medium'" class="text-[10px] uppercase font-bold">
+                                {{ play.eventType === 'MADE_3PT' ? '3-Pointer' : (play.eventType === 'MADE_2PT' ? '2-Pointer' : (play.eventType === 'MADE_1PT' ? 'Free Throw' : 'Score')) }}
+                              </ion-badge>
+                            </div>
+                          </div>
+                        </ion-label>
+                      </ion-item>
+                    } @empty {
+                      <div class="py-12 text-center text-ap-muted italic">
+                        No scoring plays logged for this match.
                       </div>
                     }
                   </ion-list>
@@ -728,6 +894,177 @@
                       }
                     </tbody>
                   </table>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          }
+
+          @if (activeSegment() === 'boxscore' && sportName() === 'Basketball') {
+            <!-- Quarter Line Score -->
+            <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
+              <ion-card-header class="px-6 pt-6 pb-2">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="basketball-outline" class="text-amber-500"></ion-icon>
+                  Running Line Score
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <div class="overflow-x-auto w-full">
+                  <table class="w-full divide-y divide-ap-border/60 text-center text-sm text-ap-text">
+                    <thead class="bg-ap-surface-hover/30 text-xs font-bold text-ap-muted uppercase">
+                      <tr>
+                        <th class="px-4 py-3 text-left font-black">Team</th>
+                        @for (ps of basketballPeriodScores(); track ps.period) {
+                          <th class="px-3 py-3 font-black">{{ ps.label }}</th>
+                        }
+                        <th class="px-4 py-3 font-black">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ap-border/40 font-mono">
+                      <tr>
+                        <td class="px-4 py-3 text-left font-sans font-bold text-ap-text truncate">{{ game()?.season?.team?.name || 'Our Team' }}</td>
+                        @for (ps of basketballPeriodScores(); track ps.period) {
+                          <td class="px-3 py-3 text-blue-400 font-bold">{{ ps.teamScore }}</td>
+                        }
+                        <td class="px-4 py-3 font-black text-base text-ap-text">{{ score().team }}</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3 text-left font-sans font-bold text-ap-muted truncate">{{ game()?.opponent || 'Opponent' }}</td>
+                        @for (ps of basketballPeriodScores(); track ps.period) {
+                          <td class="px-3 py-3 text-ap-muted">{{ ps.opponentScore }}</td>
+                        }
+                        <td class="px-4 py-3 font-black text-base text-ap-text">{{ score().opponent }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Basketball Box Score Table -->
+            <ion-card class="m-0 overflow-hidden border border-ap-border shadow-none">
+              <ion-card-header class="px-6 pt-6 pb-2">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="stats-chart-outline" class="text-amber-500"></ion-icon>
+                  Basketball Box Score
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <div class="overflow-x-auto w-full">
+                  <table class="min-w-[950px] w-full divide-y divide-ap-border/60 text-left text-sm text-ap-text">
+                    <thead class="bg-ap-surface-hover/30 text-xs font-bold text-ap-muted uppercase">
+                      <tr>
+                        <th class="px-4 py-3 font-black">Player</th>
+                        <th class="px-3 py-3 text-center font-black">MIN</th>
+                        <th class="px-3 py-3 text-center font-black text-amber-400">PTS</th>
+                        <th class="px-3 py-3 text-center font-black">FGM-A</th>
+                        <th class="px-3 py-3 text-center font-black">FG%</th>
+                        <th class="px-3 py-3 text-center font-black">3PM-A</th>
+                        <th class="px-3 py-3 text-center font-black">3P%</th>
+                        <th class="px-3 py-3 text-center font-black">FTM-A</th>
+                        <th class="px-3 py-3 text-center font-black">FT%</th>
+                        <th class="px-3 py-3 text-center font-black">OREB</th>
+                        <th class="px-3 py-3 text-center font-black">DREB</th>
+                        <th class="px-3 py-3 text-center font-black">REB</th>
+                        <th class="px-3 py-3 text-center font-black">AST</th>
+                        <th class="px-3 py-3 text-center font-black">STL</th>
+                        <th class="px-3 py-3 text-center font-black">BLK</th>
+                        <th class="px-3 py-3 text-center font-black text-rose-400">TO</th>
+                        <th class="px-3 py-3 text-center font-black">PF</th>
+                        <th class="px-3 py-3 text-center font-black">+/-</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ap-border/40 font-mono text-xs">
+                      @for (row of basketballBoxScore(); track row.playerId) {
+                        <tr class="hover:bg-ap-surface-hover/20 transition-colors">
+                          <td class="px-4 py-3 whitespace-nowrap font-sans font-medium text-sm">
+                            <div class="flex items-center gap-2">
+                              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-ap-primary/10 text-ap-primary text-[10px] font-bold font-mono">
+                                #{{ row.jerseyNumber }}
+                              </span>
+                              <div>
+                                <span class="font-bold">{{ row.playerName }}</span>
+                                <span class="text-[10px] uppercase font-bold text-ap-muted ml-1.5">{{ row.position }}</span>
+                                @if (row.status === 'starting') {
+                                  <ion-badge color="success" mode="ios" class="text-[8px] px-1 py-0 ml-1">START</ion-badge>
+                                }
+                              </div>
+                            </div>
+                          </td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center text-ap-muted">{{ row.minutes }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center font-black text-sm text-amber-400">{{ row.points }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center">{{ row.fgMade }}-{{ row.fgAttempted }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center">{{ row.fgPct | percent:'1.0-0' }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center">{{ row.fg3Made }}-{{ row.fg3Attempted }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center">{{ row.fg3Pct | percent:'1.0-0' }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center">{{ row.ftMade }}-{{ row.ftAttempted }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center">{{ row.ftPct | percent:'1.0-0' }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center text-ap-muted">{{ row.reboundsOffensive }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center text-ap-muted">{{ row.reboundsDefensive }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center font-bold text-ap-text">{{ row.reboundsTotal }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center font-bold text-blue-400">{{ row.assists }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center text-emerald-400">{{ row.steals }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center text-indigo-400">{{ row.blocks }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center text-rose-400">{{ row.turnovers }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center" [class.text-rose-500]="row.fouls >= 5">{{ row.fouls }}</td>
+                          <td class="px-3 py-3 whitespace-nowrap text-center font-bold" [ngClass]="row.plusMinus > 0 ? 'text-emerald-400' : (row.plusMinus < 0 ? 'text-rose-400' : 'text-ap-muted')">
+                            {{ row.plusMinusFormatted }}
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="18" class="px-6 py-8 text-center text-ap-muted italic font-sans">
+                            No player roster or game events recorded.
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                    @if (basketballBoxScore().length > 0) {
+                      <tfoot class="bg-ap-surface-raised font-mono text-xs border-t-2 border-ap-border font-bold">
+                        <tr>
+                          <td class="px-4 py-3 font-sans uppercase tracking-wider text-xs font-black text-ap-text">Team Totals</td>
+                          <td class="px-3 py-3 text-center text-ap-muted">{{ basketballTotals().minutes }}</td>
+                          <td class="px-3 py-3 text-center text-amber-400 font-black text-sm">{{ basketballTotals().points }}</td>
+                          <td class="px-3 py-3 text-center">{{ basketballTotals().fgMade }}-{{ basketballTotals().fgAttempted }}</td>
+                          <td class="px-3 py-3 text-center">{{ basketballTotals().fgPct | percent:'1.0-0' }}</td>
+                          <td class="px-3 py-3 text-center">{{ basketballTotals().fg3Made }}-{{ basketballTotals().fg3Attempted }}</td>
+                          <td class="px-3 py-3 text-center">{{ basketballTotals().fg3Pct | percent:'1.0-0' }}</td>
+                          <td class="px-3 py-3 text-center">{{ basketballTotals().ftMade }}-{{ basketballTotals().ftAttempted }}</td>
+                          <td class="px-3 py-3 text-center">{{ basketballTotals().ftPct | percent:'1.0-0' }}</td>
+                          <td class="px-3 py-3 text-center text-ap-muted">{{ basketballTotals().reboundsOffensive }}</td>
+                          <td class="px-3 py-3 text-center text-ap-muted">{{ basketballTotals().reboundsDefensive }}</td>
+                          <td class="px-3 py-3 text-center text-ap-text font-black">{{ basketballTotals().reboundsTotal }}</td>
+                          <td class="px-3 py-3 text-center text-blue-400 font-black">{{ basketballTotals().assists }}</td>
+                          <td class="px-3 py-3 text-center text-emerald-400">{{ basketballTotals().steals }}</td>
+                          <td class="px-3 py-3 text-center text-indigo-400">{{ basketballTotals().blocks }}</td>
+                          <td class="px-3 py-3 text-center text-rose-400">{{ basketballTotals().turnovers }}</td>
+                          <td class="px-3 py-3 text-center">{{ basketballTotals().fouls }}</td>
+                          <td class="px-3 py-3 text-center text-ap-muted">-</td>
+                        </tr>
+                      </tfoot>
+                    }
+                  </table>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          }
+
+          @if (activeSegment() === 'shot-chart' && sportName() === 'Basketball') {
+            <ion-card class="m-0 overflow-hidden border border-ap-border shadow-none">
+              <ion-card-header class="px-6 pt-6 pb-2">
+                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                  <ion-icon name="basketball-outline" class="text-amber-500"></ion-icon>
+                  Interactive Shot Chart
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content class="p-0">
+                <div class="h-[520px] w-full flex flex-col">
+                  <app-basketball-court-view
+                    [shots]="basketballShots()"
+                    [players]="summaryPlayers()"
+                    [activePlayers]="summaryActivePlayers()"
+                    [isLineupMode]="false"
+                  ></app-basketball-court-view>
                 </div>
               </ion-card-content>
             </ion-card>
@@ -890,6 +1227,78 @@
                                 <span class="text-blue-400 font-normal block text-xs mt-0.5">
                                   Assisted by: {{ getPlayerName(event.payload?.assistorId) }}
                                 </span>
+                              } @else if (event.eventType === 'MADE_3PT') {
+                                <span class="text-amber-400 font-normal block text-xs mt-0.5">
+                                  🏀 3PT by {{ getPlayerDisplayName(event.payload?.scorerId || event.payload?.playerId || event.playerId) }}
+                                  @if (event.payload?.distanceFeet) {
+                                    <span class="text-ap-muted font-mono">({{ event.payload.distanceFeet }} ft)</span>
+                                  }
+                                  @if (event.payload?.assistorId) {
+                                    <span class="text-emerald-400 block text-[11px] mt-0.5">Assist: {{ getPlayerDisplayName(event.payload?.assistorId) }}</span>
+                                  }
+                                </span>
+                              } @else if (event.eventType === 'MISSED_3PT') {
+                                <span class="text-ap-muted font-normal block text-xs mt-0.5">
+                                  Missed 3PT by {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'MADE_2PT') {
+                                <span class="text-amber-400 font-normal block text-xs mt-0.5">
+                                  🏀 2PT by {{ getPlayerDisplayName(event.payload?.scorerId || event.payload?.playerId || event.playerId) }}
+                                  @if (event.payload?.distanceFeet) {
+                                    <span class="text-ap-muted font-mono">({{ event.payload.distanceFeet }} ft)</span>
+                                  }
+                                  @if (event.payload?.assistorId) {
+                                    <span class="text-emerald-400 block text-[11px] mt-0.5">Assist: {{ getPlayerDisplayName(event.payload?.assistorId) }}</span>
+                                  }
+                                </span>
+                              } @else if (event.eventType === 'MISSED_2PT') {
+                                <span class="text-ap-muted font-normal block text-xs mt-0.5">
+                                  Missed 2PT by {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'MADE_1PT') {
+                                <span class="text-amber-400 font-normal block text-xs mt-0.5">
+                                  🏀 Free Throw Made by {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'MISSED_1PT') {
+                                <span class="text-ap-muted font-normal block text-xs mt-0.5">
+                                  Missed Free Throw by {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'REBOUND_OFFENSIVE' || event.eventType === 'OFFENSIVE_REBOUND') {
+                                <span class="text-blue-400 font-normal block text-xs mt-0.5">
+                                  Offensive Rebound: {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'REBOUND_DEFENSIVE' || event.eventType === 'DEFENSIVE_REBOUND') {
+                                <span class="text-blue-400 font-normal block text-xs mt-0.5">
+                                  Defensive Rebound: {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'BLOCK') {
+                                <span class="text-indigo-400 font-normal block text-xs mt-0.5">
+                                  🛑 Block by {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'STEAL') {
+                                <span class="text-emerald-400 font-normal block text-xs mt-0.5">
+                                  ⚡ Steal by {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'TURNOVER') {
+                                <span class="text-rose-400 font-normal block text-xs mt-0.5">
+                                  Turnover: {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'FOUL') {
+                                <span class="text-rose-400 font-normal block text-xs mt-0.5">
+                                  ⚠️ Personal Foul on {{ getPlayerDisplayName(event.payload?.playerId || event.playerId) }}
+                                </span>
+                              } @else if (event.eventType === 'OPPONENT_SCORE') {
+                                <span class="text-rose-400 font-normal block text-xs mt-0.5">
+                                  Opponent Score (+{{ event.payload?.points || event.points || 2 }} PTS)
+                                </span>
+                              } @else if (event.eventType === 'OPPONENT_FOUL') {
+                                <span class="text-emerald-400 font-normal block text-xs mt-0.5">
+                                  Opponent Foul
+                                </span>
+                              } @else if (event.eventType === 'TIMEOUT') {
+                                <span class="text-ap-muted font-normal block text-xs mt-0.5">
+                                  Timeout Called
+                                </span>
                               } @else if (event.payload?.playerId || event.playerId) {
                                 <span class="text-ap-muted font-normal block text-xs mt-0.5">
                                   Player: {{ getPlayerName(event.payload?.playerId || event.playerId) }}
@@ -969,6 +1378,25 @@
                   <ion-select-option value="POINT_WON">Point Won</ion-select-option>
                   <ion-select-option value="POINT_LOST">Point Lost</ion-select-option>
                   <ion-select-option value="POSITION_SWAP">Position Swap</ion-select-option>
+                } @else if (sportName() === 'Basketball') {
+                  <ion-select-option value="MADE_2PT">2PT Field Goal (MADE)</ion-select-option>
+                  <ion-select-option value="MISSED_2PT">2PT Field Goal (MISSED)</ion-select-option>
+                  <ion-select-option value="MADE_3PT">3PT Field Goal (MADE)</ion-select-option>
+                  <ion-select-option value="MISSED_3PT">3PT Field Goal (MISSED)</ion-select-option>
+                  <ion-select-option value="MADE_1PT">Free Throw (MADE)</ion-select-option>
+                  <ion-select-option value="MISSED_1PT">Free Throw (MISSED)</ion-select-option>
+                  <ion-select-option value="REBOUND_DEFENSIVE">Defensive Rebound</ion-select-option>
+                  <ion-select-option value="REBOUND_OFFENSIVE">Offensive Rebound</ion-select-option>
+                  <ion-select-option value="ASSIST">Assist (AST)</ion-select-option>
+                  <ion-select-option value="STEAL">Steal (STL)</ion-select-option>
+                  <ion-select-option value="BLOCK">Block (BLK)</ion-select-option>
+                  <ion-select-option value="TURNOVER">Turnover (TO)</ion-select-option>
+                  <ion-select-option value="FOUL">Personal Foul (PF)</ion-select-option>
+                  <ion-select-option value="OPPONENT_SCORE">Opponent Score</ion-select-option>
+                  <ion-select-option value="OPPONENT_FOUL">Opponent Foul</ion-select-option>
+                  <ion-select-option value="TIMEOUT">Timeout</ion-select-option>
+                  <ion-select-option value="SUB">Substitution (SUB)</ion-select-option>
+                  <ion-select-option value="POSITION_SWAP">Position Swap (SWAP)</ion-select-option>
                 } @else {
                   <ion-select-option value="SUB">Substitution (SUB)</ion-select-option>
                   <ion-select-option value="POSITION_SWAP">Position Swap (SWAP)</ion-select-option>
@@ -989,7 +1417,7 @@
           <!-- Period Select -->
           <ion-item class="bg-ap-surface rounded-lg">
             <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">
-              {{ sportName() === 'Volleyball' ? 'Set' : 'Period' }}
+              {{ sportName() === 'Volleyball' ? 'Set' : (sportName() === 'Basketball' ? 'Quarter' : 'Period') }}
             </ion-label>
             <ion-select [value]="editPeriod()" (ionChange)="onEditPeriodChange($event)" class="text-ap-text">
               @for (p of availablePeriods(); track p) {
@@ -1038,6 +1466,12 @@
                   <ion-select-option value="Middle Blocker">Middle Blocker</ion-select-option>
                   <ion-select-option value="Libero">Libero</ion-select-option>
                   <ion-select-option value="Defensive Specialist">Defensive Specialist</ion-select-option>
+                } @else if (sportName() === 'Basketball') {
+                  <ion-select-option value="PG">Point Guard (PG)</ion-select-option>
+                  <ion-select-option value="SG">Shooting Guard (SG)</ion-select-option>
+                  <ion-select-option value="SF">Small Forward (SF)</ion-select-option>
+                  <ion-select-option value="PF">Power Forward (PF)</ion-select-option>
+                  <ion-select-option value="C">Center (C)</ion-select-option>
                 } @else {
                   <ion-select-option value="GK">Goalkeeper</ion-select-option>
                   <ion-select-option value="DEF">Defender</ion-select-option>
@@ -1069,6 +1503,12 @@
                   <ion-select-option value="Middle Blocker">Middle Blocker</ion-select-option>
                   <ion-select-option value="Libero">Libero</ion-select-option>
                   <ion-select-option value="Defensive Specialist">Defensive Specialist</ion-select-option>
+                } @else if (sportName() === 'Basketball') {
+                  <ion-select-option value="PG">Point Guard (PG)</ion-select-option>
+                  <ion-select-option value="SG">Shooting Guard (SG)</ion-select-option>
+                  <ion-select-option value="SF">Small Forward (SF)</ion-select-option>
+                  <ion-select-option value="PF">Power Forward (PF)</ion-select-option>
+                  <ion-select-option value="C">Center (C)</ion-select-option>
                 } @else {
                   <ion-select-option value="GK">Goalkeeper</ion-select-option>
                   <ion-select-option value="DEF">Defender</ion-select-option>
@@ -1102,6 +1542,12 @@
                     <ion-select-option value="Middle Blocker">Middle Blocker</ion-select-option>
                     <ion-select-option value="Libero">Libero</ion-select-option>
                     <ion-select-option value="Defensive Specialist">Defensive Specialist</ion-select-option>
+                  } @else if (sportName() === 'Basketball') {
+                    <ion-select-option value="PG">Point Guard (PG)</ion-select-option>
+                    <ion-select-option value="SG">Shooting Guard (SG)</ion-select-option>
+                    <ion-select-option value="SF">Small Forward (SF)</ion-select-option>
+                    <ion-select-option value="PF">Power Forward (PF)</ion-select-option>
+                    <ion-select-option value="C">Center (C)</ion-select-option>
                   } @else {
                     <ion-select-option value="GK">Goalkeeper</ion-select-option>
                     <ion-select-option value="DEF">Defender</ion-select-option>
@@ -1111,10 +1557,10 @@
                 </ion-select>
               </ion-item>
             }
-          } @else if ((!isCreateMode() && isGoalEvent(editEvent()?.eventType)) || (isCreateMode() && createEventType() === 'GOAL')) {
+          } @else if ((!isCreateMode() && (isGoalEvent(editEvent()?.eventType) || ['MADE_2PT', 'MADE_3PT'].includes(editEvent()?.eventType))) || (isCreateMode() && (createEventType() === 'GOAL' || ['MADE_2PT', 'MADE_3PT'].includes(createEventType())))) {
             <!-- Scorer -->
             <ion-item class="bg-ap-surface rounded-lg">
-              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Scorer</ion-label>
+              <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Shooter / Scorer</ion-label>
               <ion-select [value]="editScorerId()" (ionChange)="editScorerId.set($event.detail.value)" class="text-ap-text">
                 @for (p of lineup(); track p.playerId) {
                   <ion-select-option [value]="p.playerId">{{ p.player.firstName }} {{ p.player.lastName }}</ion-select-option>
@@ -1142,7 +1588,7 @@
                 }
               </ion-select>
             </ion-item>
-          } @else if ((!isCreateMode() && (editEvent()?.playerId || editEvent()?.payload?.playerId || editEvent()?.payload?.assistorId || editEvent()?.eventType === 'ASSIST' || ['KILL', 'ACE', 'BLOCK', 'DIG', 'SERVICE_ERROR', 'HITTING_ERROR', 'POINT_WON', 'POINT_LOST'].includes(editEvent()?.eventType))) || (isCreateMode() && ['ASSIST', 'SHOT', 'YELLOW_CARD', 'RED_CARD', 'KILL', 'ACE', 'BLOCK', 'DIG', 'SERVICE_ERROR', 'HITTING_ERROR', 'POINT_WON', 'POINT_LOST'].includes(createEventType()))) {
+          } @else if ((!isCreateMode() && (editEvent()?.playerId || editEvent()?.payload?.playerId || editEvent()?.payload?.assistorId || editEvent()?.eventType === 'ASSIST' || ['KILL', 'ACE', 'BLOCK', 'DIG', 'SERVICE_ERROR', 'HITTING_ERROR', 'POINT_WON', 'POINT_LOST', 'MADE_1PT', 'MISSED_1PT', 'MISSED_2PT', 'MISSED_3PT', 'REBOUND_OFFENSIVE', 'REBOUND_DEFENSIVE', 'STEAL', 'TURNOVER', 'FOUL'].includes(editEvent()?.eventType))) || (isCreateMode() && ['ASSIST', 'SHOT', 'YELLOW_CARD', 'RED_CARD', 'KILL', 'ACE', 'BLOCK', 'DIG', 'SERVICE_ERROR', 'HITTING_ERROR', 'POINT_WON', 'POINT_LOST', 'MADE_1PT', 'MISSED_1PT', 'MISSED_2PT', 'MISSED_3PT', 'REBOUND_OFFENSIVE', 'REBOUND_DEFENSIVE', 'STEAL', 'TURNOVER', 'FOUL'].includes(createEventType()))) {
             <!-- General Player -->
             <ion-item class="bg-ap-surface rounded-lg">
               <ion-label position="stacked" class="font-bold text-xs uppercase tracking-widest text-ap-muted mb-2">Player</ion-label>

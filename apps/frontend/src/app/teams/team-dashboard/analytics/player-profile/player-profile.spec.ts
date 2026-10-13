@@ -163,4 +163,65 @@ describe('PlayerProfileAnalyticsComponent', () => {
     await (component as any).dismiss();
     expect(mockModalCtrl.dismiss).toHaveBeenCalled();
   });
+
+  it('should load basketball profile and configure basketball analytics', async () => {
+    mockTeamService.getTeam.mockResolvedValueOnce({ id: 't1', name: 'Apex Ballers', sport: { name: 'Basketball' } });
+    mockAnalyticsService.getPlayerProfile.mockReturnValueOnce(of({
+      playerId: 'p1',
+      player: {
+        id: 'p1',
+        firstName: 'Marcus',
+        lastName: 'Smart',
+        jerseyNumber: 36,
+        preferredPosition: 'PG',
+      },
+      totalGamesPlayed: 5,
+      totalMinutes: 160,
+      totalPoints: 75,
+      totalReboundsTotal: 25,
+      totalAssists: 35,
+      totalSteals: 12,
+      totalBlocks: 4,
+      ppg: 15.0,
+      rpg: 5.0,
+      apg: 7.0,
+      spg: 2.4,
+      bpg: 0.8,
+      fgPct: 45.5,
+      fg3Pct: 37.5,
+      ftPct: 83.3,
+      totalFgMade: 25,
+      totalFgAttempted: 55,
+      totalFg3Made: 9,
+      totalFg3Attempted: 24,
+      totalFtMade: 16,
+      totalFtAttempted: 19,
+      positionDistribution: { PG: 9600 },
+      history: [
+        {
+          eventId: 'e1',
+          eventName: 'Game 1',
+          eventType: 'game',
+          scheduledAt: new Date('2026-10-01'),
+          status: 'present',
+          goals: 0,
+          assists: 7,
+          blockedShots: 0,
+          blockedPenaltyKicks: 0,
+          playingTimeSeconds: 1920,
+          points: 18,
+          reboundsTotal: 6,
+          steals: 3,
+          blocks: 1,
+          personalFouls: 2,
+        },
+      ],
+    }));
+
+    await (component as any).loadData();
+    expect((component as any).sportName()).toBe('Basketball');
+    expect((component as any).profile()?.ppg).toBe(15.0);
+    expect((component as any).profile()?.fgPct).toBe(45.5);
+    expect((component as any).profile()?.history[0].points).toBe(18);
+  });
 });

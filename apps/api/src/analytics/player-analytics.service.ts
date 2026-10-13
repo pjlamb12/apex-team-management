@@ -26,6 +26,19 @@ export interface PlayerHistoryEntry {
   digs?: number;
   serviceErrors?: number;
   hittingErrors?: number;
+  points?: number;
+  reboundsOffensive?: number;
+  reboundsDefensive?: number;
+  reboundsTotal?: number;
+  steals?: number;
+  turnovers?: number;
+  personalFouls?: number;
+  fgMade?: number;
+  fgAttempted?: number;
+  fg3Made?: number;
+  fg3Attempted?: number;
+  ftMade?: number;
+  ftAttempted?: number;
 }
 
 export interface PlayerProfileAnalytics {
@@ -52,6 +65,27 @@ export interface PlayerProfileAnalytics {
   totalDigs?: number;
   totalServiceErrors?: number;
   totalHittingErrors?: number;
+  totalPoints?: number;
+  totalReboundsOffensive?: number;
+  totalReboundsDefensive?: number;
+  totalReboundsTotal?: number;
+  totalSteals?: number;
+  totalTurnovers?: number;
+  totalPersonalFouls?: number;
+  totalFgMade?: number;
+  totalFgAttempted?: number;
+  totalFg3Made?: number;
+  totalFg3Attempted?: number;
+  totalFtMade?: number;
+  totalFtAttempted?: number;
+  ppg?: number;
+  rpg?: number;
+  apg?: number;
+  spg?: number;
+  bpg?: number;
+  fgPct?: number;
+  fg3Pct?: number;
+  ftPct?: number;
 }
 
 @Injectable()
@@ -122,7 +156,28 @@ export class PlayerAnalyticsService {
         totalBlocks: 0,
         totalDigs: 0,
         totalServiceErrors: 0,
-        totalHittingErrors: 0
+        totalHittingErrors: 0,
+        totalPoints: 0,
+        totalReboundsOffensive: 0,
+        totalReboundsDefensive: 0,
+        totalReboundsTotal: 0,
+        totalSteals: 0,
+        totalTurnovers: 0,
+        totalPersonalFouls: 0,
+        totalFgMade: 0,
+        totalFgAttempted: 0,
+        totalFg3Made: 0,
+        totalFg3Attempted: 0,
+        totalFtMade: 0,
+        totalFtAttempted: 0,
+        ppg: 0,
+        rpg: 0,
+        apg: 0,
+        spg: 0,
+        bpg: 0,
+        fgPct: 0,
+        fg3Pct: 0,
+        ftPct: 0,
       };
     }
 
@@ -149,6 +204,19 @@ export class PlayerAnalyticsService {
     let totalDigs = 0;
     let totalServiceErrors = 0;
     let totalHittingErrors = 0;
+    let totalPoints = 0;
+    let totalReboundsOffensive = 0;
+    let totalReboundsDefensive = 0;
+    let totalReboundsTotal = 0;
+    let totalSteals = 0;
+    let totalTurnovers = 0;
+    let totalPersonalFouls = 0;
+    let totalFgMade = 0;
+    let totalFgAttempted = 0;
+    let totalFg3Made = 0;
+    let totalFg3Attempted = 0;
+    let totalFtMade = 0;
+    let totalFtAttempted = 0;
     let totalSeconds = 0;
     let gamesPlayed = 0;
     const positionDistribution: Record<string, number> = {};
@@ -167,10 +235,23 @@ export class PlayerAnalyticsService {
       let eventDigs = 0;
       let eventServiceErrors = 0;
       let eventHittingErrors = 0;
+      let eventPoints = 0;
+      let eventReboundsOffensive = 0;
+      let eventReboundsDefensive = 0;
+      let eventReboundsTotal = 0;
+      let eventSteals = 0;
+      let eventTurnovers = 0;
+      let eventPersonalFouls = 0;
+      let eventFgMade = 0;
+      let eventFgAttempted = 0;
+      let eventFg3Made = 0;
+      let eventFg3Attempted = 0;
+      let eventFtMade = 0;
+      let eventFtAttempted = 0;
       let playingTime = 0;
 
       if (event.type === 'game') {
-        // Calculate goals/assists/volleyball metrics for this specific game
+        // Calculate goals/assists/volleyball/basketball metrics for this specific game
         const matchEvents = gameEvents.filter(ge => ge.eventId === event.id);
         matchEvents.forEach(ge => {
           const payload = ge.payload as any;
@@ -199,6 +280,61 @@ export class PlayerAnalyticsService {
              if (payload.playerId === playerId) eventServiceErrors++;
           } else if (ge.eventType === 'HITTING_ERROR') {
              if (payload.playerId === playerId) eventHittingErrors++;
+          } else if (ge.eventType === 'MADE_1PT') {
+            if (payload.playerId === playerId || payload.scorerId === playerId) {
+              eventFtMade++;
+              eventFtAttempted++;
+              eventPoints += 1;
+            }
+          } else if (ge.eventType === 'MISSED_1PT') {
+            if (payload.playerId === playerId) {
+              eventFtAttempted++;
+            }
+          } else if (ge.eventType === 'MADE_2PT') {
+            if (payload.playerId === playerId || payload.scorerId === playerId) {
+              eventFgMade++;
+              eventFgAttempted++;
+              eventPoints += 2;
+            }
+            if (payload.assistorId === playerId) {
+              eventAssists++;
+            }
+          } else if (ge.eventType === 'MISSED_2PT') {
+            if (payload.playerId === playerId) {
+              eventFgAttempted++;
+            }
+          } else if (ge.eventType === 'MADE_3PT') {
+            if (payload.playerId === playerId || payload.scorerId === playerId) {
+              eventFgMade++;
+              eventFgAttempted++;
+              eventFg3Made++;
+              eventFg3Attempted++;
+              eventPoints += 3;
+            }
+            if (payload.assistorId === playerId) {
+              eventAssists++;
+            }
+          } else if (ge.eventType === 'MISSED_3PT') {
+            if (payload.playerId === playerId) {
+              eventFgAttempted++;
+              eventFg3Attempted++;
+            }
+          } else if (ge.eventType === 'REBOUND_OFFENSIVE' || ge.eventType === 'OFFENSIVE_REBOUND') {
+            if (payload.playerId === playerId) {
+              eventReboundsOffensive++;
+              eventReboundsTotal++;
+            }
+          } else if (ge.eventType === 'REBOUND_DEFENSIVE' || ge.eventType === 'DEFENSIVE_REBOUND') {
+            if (payload.playerId === playerId) {
+              eventReboundsDefensive++;
+              eventReboundsTotal++;
+            }
+          } else if (ge.eventType === 'STEAL') {
+            if (payload.playerId === playerId) eventSteals++;
+          } else if (ge.eventType === 'TURNOVER') {
+            if (payload.playerId === playerId) eventTurnovers++;
+          } else if (ge.eventType === 'FOUL') {
+            if (payload.playerId === playerId) eventPersonalFouls++;
           }
         });
 
@@ -238,6 +374,19 @@ export class PlayerAnalyticsService {
         totalDigs += eventDigs;
         totalServiceErrors += eventServiceErrors;
         totalHittingErrors += eventHittingErrors;
+        totalPoints += eventPoints;
+        totalReboundsOffensive += eventReboundsOffensive;
+        totalReboundsDefensive += eventReboundsDefensive;
+        totalReboundsTotal += eventReboundsTotal;
+        totalSteals += eventSteals;
+        totalTurnovers += eventTurnovers;
+        totalPersonalFouls += eventPersonalFouls;
+        totalFgMade += eventFgMade;
+        totalFgAttempted += eventFgAttempted;
+        totalFg3Made += eventFg3Made;
+        totalFg3Attempted += eventFg3Attempted;
+        totalFtMade += eventFtMade;
+        totalFtAttempted += eventFtAttempted;
         totalSeconds += playingTime;
       }
 
@@ -257,7 +406,20 @@ export class PlayerAnalyticsService {
         blocks: eventBlocks,
         digs: eventDigs,
         serviceErrors: eventServiceErrors,
-        hittingErrors: eventHittingErrors
+        hittingErrors: eventHittingErrors,
+        points: eventPoints,
+        reboundsOffensive: eventReboundsOffensive,
+        reboundsDefensive: eventReboundsDefensive,
+        reboundsTotal: eventReboundsTotal,
+        steals: eventSteals,
+        turnovers: eventTurnovers,
+        personalFouls: eventPersonalFouls,
+        fgMade: eventFgMade,
+        fgAttempted: eventFgAttempted,
+        fg3Made: eventFg3Made,
+        fg3Attempted: eventFg3Attempted,
+        ftMade: eventFtMade,
+        ftAttempted: eventFtAttempted
       });
     }
 
@@ -282,6 +444,27 @@ export class PlayerAnalyticsService {
       totalDigs,
       totalServiceErrors,
       totalHittingErrors,
+      totalPoints,
+      totalReboundsOffensive,
+      totalReboundsDefensive,
+      totalReboundsTotal,
+      totalSteals,
+      totalTurnovers,
+      totalPersonalFouls,
+      totalFgMade,
+      totalFgAttempted,
+      totalFg3Made,
+      totalFg3Attempted,
+      totalFtMade,
+      totalFtAttempted,
+      ppg: gamesPlayed > 0 ? Math.round((totalPoints / gamesPlayed) * 10) / 10 : 0,
+      rpg: gamesPlayed > 0 ? Math.round((totalReboundsTotal / gamesPlayed) * 10) / 10 : 0,
+      apg: gamesPlayed > 0 ? Math.round((totalAssists / gamesPlayed) * 10) / 10 : 0,
+      spg: gamesPlayed > 0 ? Math.round((totalSteals / gamesPlayed) * 10) / 10 : 0,
+      bpg: gamesPlayed > 0 ? Math.round((totalBlocks / gamesPlayed) * 10) / 10 : 0,
+      fgPct: totalFgAttempted > 0 ? Math.round((totalFgMade / totalFgAttempted) * 1000) / 10 : 0,
+      fg3Pct: totalFg3Attempted > 0 ? Math.round((totalFg3Made / totalFg3Attempted) * 1000) / 10 : 0,
+      ftPct: totalFtAttempted > 0 ? Math.round((totalFtMade / totalFtAttempted) * 1000) / 10 : 0,
       totalMinutes: isVolleyball ? totalSeconds : Math.floor(totalSeconds / 60),
       positionDistribution,
       history

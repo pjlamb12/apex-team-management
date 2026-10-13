@@ -45,7 +45,7 @@ export class PresetPickerModal {
 
   @Input({ required: true }) sport: TacticSport = 'soccer';
 
-  activeCategory: 'all' | 'formation' | 'set_piece' = 'all';
+  activeCategory: 'all' | 'formation' | 'set_piece' | 'offensive' | 'defensive' = 'all';
 
   readonly soccerPresets: PresetFormation[] = [
     {
@@ -295,12 +295,200 @@ export class PresetPickerModal {
     },
   ];
 
+  readonly basketballPresets: PresetFormation[] = [
+    {
+      id: 'bb_5out_motion',
+      title: '5-Out Motion',
+      category: 'offensive',
+      sport: 'basketball',
+      pitchType: 'half_court',
+      description: 'Open-post perimeter motion creating continuous drive, kick, and backdoor cut opportunities.',
+      tokens: [
+        { id: 'b1', label: '1', role: 'PG', team: 'home', x: 50, y: 75 },
+        { id: 'b2', label: '2', role: 'SG', team: 'home', x: 82, y: 56 },
+        { id: 'b3', label: '3', role: 'SF', team: 'home', x: 18, y: 56 },
+        { id: 'b4', label: '4', role: 'PF', team: 'home', x: 12, y: 22 },
+        { id: 'b5', label: '5', role: 'C', team: 'home', x: 88, y: 22 },
+        { id: 'ball', label: '', team: 'ball', x: 50, y: 79 },
+      ],
+      drawings: [
+        {
+          id: 'd_pass1',
+          tool: 'pass',
+          color: '#facc15',
+          width: 3,
+          points: [{ x: 50, y: 75 }, { x: 78, y: 58 }],
+        },
+        {
+          id: 'd_cut1',
+          tool: 'run',
+          color: '#38bdf8',
+          width: 3,
+          points: [{ x: 50, y: 75 }, { x: 50, y: 24 }],
+        },
+      ],
+    },
+    {
+      id: 'bb_4out_1in',
+      title: '4-Out 1-In',
+      category: 'offensive',
+      sport: 'basketball',
+      pitchType: 'half_court',
+      description: '4 perimeter shooters surrounding 1 active low-post center with high-low and entry pass options.',
+      tokens: [
+        { id: 'b1', label: '1', role: 'PG', team: 'home', x: 50, y: 76 },
+        { id: 'b2', label: '2', role: 'SG', team: 'home', x: 80, y: 56 },
+        { id: 'b3', label: '3', role: 'SF', team: 'home', x: 20, y: 56 },
+        { id: 'b4', label: '4', role: 'PF', team: 'home', x: 14, y: 22 },
+        { id: 'b5', label: '5', role: 'C', team: 'home', x: 62, y: 26 },
+        { id: 'ball', label: '', team: 'ball', x: 50, y: 80 },
+      ],
+      drawings: [
+        {
+          id: 'd_entry',
+          tool: 'pass',
+          color: '#facc15',
+          width: 3,
+          points: [{ x: 80, y: 56 }, { x: 64, y: 28 }],
+        },
+      ],
+    },
+    {
+      id: 'bb_23_zone',
+      title: '2-3 Zone Defense',
+      category: 'defensive',
+      sport: 'basketball',
+      pitchType: 'half_court',
+      description: 'Compact 2-3 zone wall protecting the paint, baseline drives, and controlling defensive rebounds.',
+      tokens: [
+        { id: 'b1', label: '1', role: 'Top G', team: 'home', x: 38, y: 64 },
+        { id: 'b2', label: '2', role: 'Top G', team: 'home', x: 62, y: 64 },
+        { id: 'b3', label: '3', role: 'Wing F', team: 'home', x: 22, y: 32 },
+        { id: 'b5', label: '5', role: 'Rim C', team: 'home', x: 50, y: 28 },
+        { id: 'b4', label: '4', role: 'Wing F', team: 'home', x: 78, y: 32 },
+      ],
+      drawings: [],
+    },
+    {
+      id: 'bb_m2m_defense',
+      title: 'Man-to-Man Defense',
+      category: 'defensive',
+      sport: 'basketball',
+      pitchType: 'half_court',
+      description: 'Tight on-ball containment with active help-side positioning in the lane and gap denial.',
+      tokens: [
+        { id: 'd1', label: 'D1', role: 'On-Ball', team: 'away', x: 50, y: 68 },
+        { id: 'd2', label: 'D2', role: 'Deny Wing', team: 'away', x: 74, y: 52 },
+        { id: 'd3', label: 'D3', role: 'Deny Wing', team: 'away', x: 26, y: 52 },
+        { id: 'd4', label: 'D4', role: 'Help Low', team: 'away', x: 30, y: 32 },
+        { id: 'd5', label: 'D5', role: 'Post Deny', team: 'away', x: 58, y: 28 },
+        { id: 'o1', label: '1', role: 'Ball', team: 'home', x: 50, y: 76 },
+        { id: 'ball', label: '', team: 'ball', x: 50, y: 80 },
+      ],
+      drawings: [],
+    },
+    {
+      id: 'bb_horns_pnr',
+      title: 'Horns / High Pick & Roll',
+      category: 'offensive',
+      sport: 'basketball',
+      pitchType: 'half_court',
+      description: 'Two high posts at the elbows setting double ball screens with roll and pop actions.',
+      tokens: [
+        { id: 'b1', label: '1', role: 'PG', team: 'home', x: 50, y: 78 },
+        { id: 'b4', label: '4', role: 'PF', team: 'home', x: 38, y: 50 },
+        { id: 'b5', label: '5', role: 'C', team: 'home', x: 62, y: 50 },
+        { id: 'b2', label: '2', role: 'SG', team: 'home', x: 88, y: 18 },
+        { id: 'b3', label: '3', role: 'SF', team: 'home', x: 12, y: 18 },
+        { id: 'ball', label: '', team: 'ball', x: 50, y: 82 },
+      ],
+      drawings: [
+        {
+          id: 'd_screen',
+          tool: 'run',
+          color: '#38bdf8',
+          width: 3,
+          points: [{ x: 50, y: 78 }, { x: 58, y: 64 }, { x: 50, y: 30 }],
+        },
+        {
+          id: 'd_roll',
+          tool: 'run',
+          color: '#4ade80',
+          width: 3,
+          points: [{ x: 62, y: 50 }, { x: 52, y: 20 }],
+        },
+      ],
+    },
+    {
+      id: 'bb_131_zone',
+      title: '1-3-1 Zone Defense',
+      category: 'defensive',
+      sport: 'basketball',
+      pitchType: 'half_court',
+      description: 'Aggressive trapping zone defense with top point disruptor, wing trappers, high post anchor, and baseline runner.',
+      tokens: [
+        { id: 'b1', label: '1', role: 'Top Point', team: 'home', x: 50, y: 72 },
+        { id: 'b3', label: '3', role: 'Left Wing', team: 'home', x: 22, y: 48 },
+        { id: 'b5', label: '5', role: 'Center', team: 'home', x: 50, y: 44 },
+        { id: 'b2', label: '2', role: 'Right Wing', team: 'home', x: 78, y: 48 },
+        { id: 'b4', label: '4', role: 'Baseline Rover', team: 'home', x: 50, y: 18 },
+      ],
+      drawings: [],
+    },
+    {
+      id: 'bb_blob_box',
+      title: 'Baseline Out-of-Bounds (BLOB)',
+      category: 'set_piece',
+      sport: 'basketball',
+      pitchType: 'half_court',
+      description: 'Box formation inbounds play with cross screens generating a corner three or quick lob.',
+      tokens: [
+        { id: 'b1', label: '1', role: 'Inbounder', team: 'home', x: 34, y: 2 },
+        { id: 'b2', label: '2', role: 'Shooter', team: 'home', x: 40, y: 22 },
+        { id: 'b3', label: '3', role: 'Wing', team: 'home', x: 60, y: 22 },
+        { id: 'b4', label: '4', role: 'Screener', team: 'home', x: 40, y: 44 },
+        { id: 'b5', label: '5', role: 'Rim Runner', team: 'home', x: 60, y: 44 },
+        { id: 'ball', label: '', team: 'ball', x: 34, y: 0 },
+      ],
+      drawings: [
+        {
+          id: 'd_screen1',
+          tool: 'run',
+          color: '#38bdf8',
+          width: 3,
+          points: [{ x: 40, y: 44 }, { x: 38, y: 26 }],
+        },
+        {
+          id: 'd_flare',
+          tool: 'run',
+          color: '#4ade80',
+          width: 3,
+          points: [{ x: 40, y: 22 }, { x: 16, y: 14 }],
+        },
+        {
+          id: 'd_inbound_pass',
+          tool: 'pass',
+          color: '#facc15',
+          width: 3,
+          points: [{ x: 34, y: 2 }, { x: 18, y: 14 }],
+        },
+      ],
+    },
+  ];
+
   constructor() {
     addIcons({ closeOutline, flashOutline, gridOutline, footballOutline });
   }
 
   get presets(): PresetFormation[] {
-    const list = this.sport === 'soccer' ? this.soccerPresets : this.volleyballPresets;
+    let list: PresetFormation[];
+    if (this.sport === 'soccer') {
+      list = this.soccerPresets;
+    } else if (this.sport === 'basketball') {
+      list = this.basketballPresets;
+    } else {
+      list = this.volleyballPresets;
+    }
     if (this.activeCategory === 'all') return list;
     return list.filter((p) => p.category === this.activeCategory);
   }

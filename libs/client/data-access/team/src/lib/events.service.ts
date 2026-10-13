@@ -41,6 +41,8 @@ export interface EventEntity {
   periodCount?: number | null;
   periodLengthMinutes?: number | null;
   playersOnField?: number | null;
+  foulLimit?: number | null;
+  bonusThreshold?: number | null;
   currentPeriod?: number;
   clockStartTime?: string | null;
   clockAccumulatedMs?: number;

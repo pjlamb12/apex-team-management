@@ -80,6 +80,16 @@ export class UpdateEventDto {
   @IsOptional()
   playersOnField?: number;
 
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  foulLimit?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  bonusThreshold?: number;
+
   @IsString()
   @IsOptional()
   status?: 'scheduled' | 'in_progress' | 'completed' | 'abandoned_weather';

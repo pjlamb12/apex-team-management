@@ -1,4 +1,4 @@
-import { Component, inject, signal, Input, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -44,6 +44,7 @@ import {
   Player,
   AwardBadgeDefinition,
   DEFAULT_BADGE_PRESETS,
+  getSportBadgePresets,
 } from '@apex-team/shared/util/models';
 
 @Component({
@@ -76,7 +77,42 @@ export class AwardBadgeModalComponent implements OnInit {
   @Input({ required: true }) eventId!: string;
   @Input() seasonId?: string;
 
-  protected readonly badges: AwardBadgeDefinition[] = DEFAULT_BADGE_PRESETS;
+  private readonly _sportName = signal<string | null>(null);
+
+  @Input()
+  set sportName(value: string | null | undefined) {
+    this._sportName.set(value ?? null);
+    const sportBadges = getSportBadgePresets(value);
+    this.badges.set(sportBadges);
+    if (!this.selectedBadge() || !sportBadges.some((b) => b.type === this.selectedBadge().type)) {
+      this.selectedBadge.set(sportBadges[0]);
+    }
+  }
+  get sportName(): string | null {
+    return this._sportName();
+  }
+
+  protected readonly badges = signal<AwardBadgeDefinition[]>(DEFAULT_BADGE_PRESETS);
+  protected readonly isBasketball = computed(() => (this._sportName() || '').trim().toLowerCase().includes('basket'));
+  protected readonly isVolleyball = computed(() => (this._sportName() || '').trim().toLowerCase().includes('volley'));
+  protected readonly modalTitle = computed(() =>
+    this.isBasketball() ? 'Award Game Badges & Honors' : 'Award Match Badges & Honors'
+  );
+  protected readonly modalSubtitle = computed(() =>
+    this.isBasketball()
+      ? 'Recognize Player of the Game, grit, defense, and teamwork'
+      : 'Recognize Player of the Match, grit, defense, and teamwork'
+  );
+  protected readonly notesPlaceholder = computed(() => {
+    if (this.isBasketball()) {
+      return 'e.g. Clutch 4th-quarter stops, commanding the glass, and sealing the win!';
+    }
+    if (this.isVolleyball()) {
+      return 'e.g. Incredible diving digs and a huge 5-point service run in the 3rd set!';
+    }
+    return 'e.g. Incredible 1v1 defensive stops in the 2nd half, keeping the clean sheet intact!';
+  });
+
   protected readonly players = signal<Player[]>([]);
   protected readonly eventAwards = signal<PlayerAward[]>([]);
   protected readonly selectedPlayerId = signal<string | null>(null);
@@ -110,6 +146,13 @@ export class AwardBadgeModalComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    if (this._sportName()) {
+      const sportBadges = getSportBadgePresets(this._sportName());
+      this.badges.set(sportBadges);
+      if (!this.selectedBadge() || !sportBadges.some((b) => b.type === this.selectedBadge().type)) {
+        this.selectedBadge.set(sportBadges[0]);
+      }
+    }
     await this.loadData();
   }
 

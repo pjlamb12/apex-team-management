@@ -305,5 +305,41 @@ describe('LlmExportService', () => {
       expect(result.prompt).toContain('Leo Messi — "Player of the Match"');
       expect(result.prompt).toContain('Honors & Badges Earned (1)');
     });
+
+    it('should format basketball events and positional playtime table for Basketball sport', async () => {
+      teamRepo.findOne.mockResolvedValue({
+        id: 'team-1',
+        name: 'Apex Ballers',
+        sport: { name: 'Basketball' },
+      });
+      playerRepo.find.mockResolvedValue([
+        { id: 'p1', firstName: 'Steph', lastName: 'Curry', jerseyNumber: 30, preferredPosition: 'PG', isGuest: false, isActive: true },
+      ]);
+      eventRepo.find.mockResolvedValue([
+        { id: 'g1', type: 'game', status: 'completed', opponent: 'Suns', scheduledAt: new Date() },
+      ]);
+      gameEventRepo.find.mockResolvedValue([
+        { eventId: 'g1', eventType: 'MADE_3PT', minuteOccurred: 4, payload: { playerId: 'p1' } },
+        { eventId: 'g1', eventType: 'STEAL', minuteOccurred: 5, payload: { playerId: 'p1' } },
+        { eventId: 'g1', eventType: 'REBOUND_DEFENSIVE', minuteOccurred: 6, payload: { playerId: 'p1' } },
+      ]);
+      performanceMetricsService.getTeamMetrics.mockResolvedValue([
+        { playerId: 'p1', points: 3, reboundsTotal: 1, steals: 1, assists: 0, blocks: 0, gamesPlayed: 1 },
+      ]);
+      playingTimeService.calculateForTeam.mockResolvedValue({
+        p1: { totalSeconds: 1200, positionSeconds: { PG: 1200 } },
+      });
+
+      const result = await service.generate('team-1', {
+        template: LlmPromptTemplate.GAME_STRATEGY,
+      });
+
+      expect(result.prompt).toContain('Sport**: Basketball');
+      expect(result.prompt).toContain('🏀 **4\' 3-Pointer**: Scored by Steph Curry');
+      expect(result.prompt).toContain('🏀 **5\' Steal**: Steph Curry');
+      expect(result.prompt).toContain('🏀 **6\' Defensive Rebound**: Steph Curry');
+      expect(result.prompt).toContain('| PG % | SG % | SF % | PF % | C % | PTS | REB | AST | STL | BLK | Games |');
+      expect(result.prompt).toContain('Steph Curry');
+    });
   });
 });
