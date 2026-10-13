@@ -176,4 +176,18 @@ describe('VolleyballRotationStripComponent', () => {
     expect(fixture.nativeElement.querySelector('.court-grid-layout')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('.strip-layout')).toBeNull();
   });
+
+  it('should toggle active class on view mode toggle buttons when clicked', () => {
+    const buttons = fixture.nativeElement.querySelectorAll('.view-mode-toggle button');
+    expect(buttons.length).toBe(2);
+    expect(buttons[0].classList.contains('active')).toBe(true);
+    expect(buttons[1].classList.contains('active')).toBe(false);
+
+    buttons[1].click();
+    fixture.detectChanges();
+
+    expect(buttons[0].classList.contains('active')).toBe(false);
+    expect(buttons[1].classList.contains('active')).toBe(true);
+  });
 });
+

@@ -18,42 +18,26 @@
       </div>
 
       <!-- View Mode Toggle -->
-      <div class="view-mode-toggle inline-flex items-center p-0.5 sm:p-1 bg-slate-200/90 dark:bg-slate-800/90 rounded-full border border-slate-300 dark:border-white/10 shadow-inner gap-1">
+      <div class="view-mode-toggle" role="group" aria-label="Rotation view mode">
         <button
           type="button"
           (click)="setLayoutMode('court-grid')"
-          class="toggle-segment px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-black transition-all duration-150 flex items-center gap-1.5 select-none"
-          [class.bg-amber-500]="layoutMode() === 'court-grid'"
-          [class.text-slate-950]="layoutMode() === 'court-grid'"
-          [class.shadow-sm]="layoutMode() === 'court-grid'"
-          [class.text-slate-600]="layoutMode() !== 'court-grid'"
-          [class.dark:text-slate-300]="layoutMode() !== 'court-grid'"
-          [class.hover:text-slate-950]="layoutMode() !== 'court-grid'"
-          [class.dark:hover:text-white]="layoutMode() !== 'court-grid'"
-          [class.hover:bg-black\/5]="layoutMode() !== 'court-grid'"
-          [class.dark:hover:bg-white\/5]="layoutMode() !== 'court-grid'"
+          class="toggle-segment"
+          [class.active]="layoutMode() === 'court-grid'"
           title="Court Grid View (2x3)"
         >
-          <ion-icon name="grid-outline" class="text-xs sm:text-sm shrink-0"></ion-icon>
-          <span class="tracking-tight whitespace-nowrap">Court Grid</span>
+          <ion-icon name="grid-outline"></ion-icon>
+          <span>Court Grid</span>
         </button>
         <button
           type="button"
           (click)="setLayoutMode('strip')"
-          class="toggle-segment px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-black transition-all duration-150 flex items-center gap-1.5 select-none"
-          [class.bg-amber-500]="layoutMode() === 'strip'"
-          [class.text-slate-950]="layoutMode() === 'strip'"
-          [class.shadow-sm]="layoutMode() === 'strip'"
-          [class.text-slate-600]="layoutMode() !== 'strip'"
-          [class.dark:text-slate-300]="layoutMode() !== 'strip'"
-          [class.hover:text-slate-950]="layoutMode() !== 'strip'"
-          [class.dark:hover:text-white]="layoutMode() !== 'strip'"
-          [class.hover:bg-black\/5]="layoutMode() !== 'strip'"
-          [class.dark:hover:bg-white\/5]="layoutMode() !== 'strip'"
+          class="toggle-segment"
+          [class.active]="layoutMode() === 'strip'"
           title="Horizontal Strip View"
         >
-          <ion-icon name="list-outline" class="text-xs sm:text-sm shrink-0"></ion-icon>
-          <span class="tracking-tight whitespace-nowrap">Strip</span>
+          <ion-icon name="list-outline"></ion-icon>
+          <span>Strip</span>
         </button>
       </div>
     </div>
