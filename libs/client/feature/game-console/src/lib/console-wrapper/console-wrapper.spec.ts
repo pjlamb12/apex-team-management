@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConsoleWrapper } from './console-wrapper';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService } from '../live-game-state.service';
@@ -589,6 +589,51 @@ describe('ConsoleWrapper', () => {
 
       await component['nextPeriod']();
       expect(promptSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Lifecycle and Stale Event Protection', () => {
+    it('should reset stateService when component is destroyed', () => {
+      stateService.initialize('event-123', mockLineup, 'team-456', 11, 'My Team', 'Soccer');
+      expect(stateService.eventId()).toBe('event-123');
+
+      component.ngOnDestroy();
+
+      expect(stateService.eventId()).toBeNull();
+      expect(stateService.status()).toBe('in_progress');
+    });
+
+    it('should not navigate to summary when stateService has completed status from another event', () => {
+      const router = TestBed.inject(Router);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true as any);
+
+      // State service holds a completed game from a DIFFERENT event
+      stateService.initialize('other-event-789', mockLineup, 'team-456');
+      stateService.endGame('completed');
+      expect(stateService.status()).toBe('completed');
+      expect(stateService.eventId()).toBe('other-event-789');
+
+      TestBed.flushEffects();
+
+      expect(navigateSpy).not.toHaveBeenCalled();
+    });
+
+    it('should navigate to summary when stateService status becomes completed for the current event', () => {
+      const router = TestBed.inject(Router);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true as any);
+
+      // State service initialized for THIS event ('event-123')
+      stateService.initialize('event-123', mockLineup, 'team-456');
+      stateService.endGame('completed');
+      expect(stateService.status()).toBe('completed');
+      expect(stateService.eventId()).toBe('event-123');
+
+      TestBed.flushEffects();
+
+      expect(navigateSpy).toHaveBeenCalledWith(
+        ['/teams', 'team-456', 'events', 'event-123', 'summary'],
+        { replaceUrl: true }
+      );
     });
   });
 });

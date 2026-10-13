@@ -391,10 +391,17 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     });
 
     effect(() => {
+      const currentServiceEventId = this.stateService.eventId();
+      const eventId = this.eventId();
+      const teamId = this.teamId();
       const status = this.stateService.status();
-      if (status === 'completed' || status === 'abandoned_weather') {
-        const teamId = this.teamId();
-        const eventId = this.eventId();
+
+      // Only navigate if stateService has been initialized specifically for THIS event
+      if (
+        currentServiceEventId &&
+        currentServiceEventId === eventId &&
+        (status === 'completed' || status === 'abandoned_weather')
+      ) {
         if (teamId && eventId) {
           this.clockService.stop();
           void this.router.navigate(['/teams', teamId, 'events', eventId, 'summary'], { replaceUrl: true });
@@ -403,9 +410,19 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     });
 
     effect(() => {
+      const currentServiceEventId = this.stateService.eventId();
+      const eventId = this.eventId();
       const matchRes = this.stateService.matchResult();
       const status = this.stateService.status();
-      if (matchRes && status !== 'completed' && status !== 'abandoned_weather') {
+
+      // Only auto-end if stateService has been initialized specifically for THIS event
+      if (
+        currentServiceEventId &&
+        currentServiceEventId === eventId &&
+        matchRes &&
+        status !== 'completed' &&
+        status !== 'abandoned_weather'
+      ) {
         void this.autoEndGame();
       }
     });
@@ -428,6 +445,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       this.socketService.offEvent('lineupUpdated');
       this.socketService.leaveEvent(eventId);
     }
+    this.stateService.reset();
   }
 
   public async refreshState(): Promise<void> {

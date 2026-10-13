@@ -1174,6 +1174,20 @@ export class LiveGameStateService {
     this.cleanStagedSubs();
   }
 
+  public reset(): void {
+    this._eventId.set(null);
+    this._teamId.set(null);
+    this._initialLineup.set([]);
+    this._events.set([]);
+    this._stagedSubs.set([]);
+    this._lastIntervalTriggered.set(0);
+    this._currentPeriod.set(1);
+    this._status.set('in_progress');
+    this._sportName.set(null);
+    this._forceSetCompleted.set(false);
+    this._liberoId.set(null);
+  }
+
   public updateRotationConfig(config: Partial<RotationConfig>): void {
     this._rotationConfig.update((prev) => ({ ...prev, ...config }));
     this.saveConfig();

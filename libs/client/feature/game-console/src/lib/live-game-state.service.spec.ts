@@ -58,6 +58,25 @@ describe('LiveGameStateService', () => {
     expect(service.benchPlayers()[0].id).toBe('p2');
   });
 
+  it('should reset all state signals to clean defaults when reset() is called', () => {
+    service.initialize(eventId, mockLineup, teamId, 11, 'My Team', 'Soccer');
+    service.endGame('completed');
+    expect(service.status()).toBe('completed');
+    expect(service.eventId()).toBe(eventId);
+
+    service.reset();
+
+    expect(service.eventId()).toBeNull();
+    expect(service.teamId()).toBeNull();
+    expect(service.status()).toBe('in_progress');
+    expect(service.sportName()).toBeNull();
+    expect(service.events()).toHaveLength(0);
+    expect(service.initialLineup()).toHaveLength(0);
+    expect(service.stagedSubs()).toHaveLength(0);
+    expect(service.lastIntervalTriggered()).toBe(0);
+    expect(service.currentPeriod()).toBe(1);
+  });
+
   it('should exclude stepped-away (isActive: false) players from benchPlayers', () => {
     const lineupWithInactive = [
       ...mockLineup,
