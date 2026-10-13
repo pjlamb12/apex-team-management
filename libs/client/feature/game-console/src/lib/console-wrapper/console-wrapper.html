@@ -543,21 +543,6 @@
                   (emptySlotClicked)="handleEmptySlotSelection($event)"
                   (quickLiberoSwap)="handleQuickLiberoSwap($event)"
                 ></app-volleyball-rotation-strip>
-                <div class="w-full min-h-[350px] sm:min-h-[520px]">
-                  <app-volleyball-court-view
-                    class="w-full h-full block"
-                    [players]="stateService.activePlayers()"
-                    [initialLineup]="stateService.initialLineup()"
-                    [stagedSubs]="stateService.stagedSubs()"
-                    [playersOnField]="stateService.playersOnField()"
-                    [selectedPlayerId]="selectedPlayerId()"
-                    [playerStats]="stateService.playerStats()"
-                    [liberoDesignation]="stateService.liberoDesignation()"
-                    (playerSelected)="handleVolleyballCourtPlayerSelected($event)"
-                    (emptySlotSelected)="handleEmptySlotSelection($event)"
-                    (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
-                  </app-volleyball-court-view>
-                </div>
               </div>
             }
             @case ('Soccer') {

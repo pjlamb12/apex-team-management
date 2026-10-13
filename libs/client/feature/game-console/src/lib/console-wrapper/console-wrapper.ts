@@ -54,7 +54,6 @@ import { ClockDisplayComponent } from '../clock-display/clock-display';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
 import { SoccerPitchViewComponent } from '../soccer-pitch-view/soccer-pitch-view';
-import { VolleyballCourtViewComponent } from '../volleyball-court-view/volleyball-court-view';
 import { VolleyballRotationStripComponent } from '../volleyball-rotation-strip/volleyball-rotation-strip';
 import { VolleyballStatPadComponent } from '../volleyball-stat-pad/volleyball-stat-pad';
 import { BasketballCourtViewComponent, ShotLoggedPayload } from '../basketball-court-view/basketball-court-view';
@@ -90,7 +89,6 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
     ClockDisplayComponent,
     BenchViewComponent,
     SoccerPitchViewComponent,
-    VolleyballCourtViewComponent,
     VolleyballRotationStripComponent,
     VolleyballStatPadComponent,
     BasketballCourtViewComponent,
@@ -1414,19 +1412,6 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
         this.actionPlayer.set(null);
       } else {
         this.selectedPlayerId.set(player.id);
-        this.actionPlayer.set(null);
-      }
-    }
-  }
-
-  protected handleVolleyballCourtPlayerSelected(event: { player: Player; event: Event }): void {
-    const fulfilled = this.volleyballKeypad()?.fulfillArmedStat(event.player);
-    if (!fulfilled) {
-      if (this.selectedPlayerId() === event.player.id) {
-        this.selectedPlayerId.set(null);
-        this.actionPlayer.set(null);
-      } else {
-        this.selectedPlayerId.set(event.player.id);
         this.actionPlayer.set(null);
       }
     }

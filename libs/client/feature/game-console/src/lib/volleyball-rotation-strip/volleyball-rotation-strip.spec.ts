@@ -47,7 +47,7 @@ describe('VolleyballRotationStripComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render all 6 rotation zones and the Libero card', () => {
+  it('should render all 6 rotation zones and the Libero card in court-grid mode', () => {
     const zoneCards = fixture.nativeElement.querySelectorAll('.zone-card');
     expect(zoneCards.length).toBe(6);
 
@@ -57,17 +57,33 @@ describe('VolleyballRotationStripComponent', () => {
     expect(liberoCard.textContent).toContain('LIBERO');
   });
 
+  it('should organize court-grid into Front Row (Z4, Z3, Z2) and Back Row (Z5, Z6, Z1)', () => {
+    const grids = fixture.nativeElement.querySelectorAll('.court-grid-layout .grid');
+    expect(grids.length).toBe(2);
+
+    const frontCards = grids[0].querySelectorAll('.zone-card');
+    expect(frontCards.length).toBe(3);
+    expect(frontCards[0].getAttribute('data-zone')).toBe('4');
+    expect(frontCards[1].getAttribute('data-zone')).toBe('3');
+    expect(frontCards[2].getAttribute('data-zone')).toBe('2');
+
+    const backCards = grids[1].querySelectorAll('.zone-card');
+    expect(backCards.length).toBe(3);
+    expect(backCards[0].getAttribute('data-zone')).toBe('5');
+    expect(backCards[1].getAttribute('data-zone')).toBe('6');
+    expect(backCards[2].getAttribute('data-zone')).toBe('1');
+  });
+
   it('should prominently highlight Zone 1 with the SERVER badge', () => {
-    const zoneCards = fixture.nativeElement.querySelectorAll('.zone-card');
-    const zone1 = zoneCards[0];
+    const zone1 = fixture.nativeElement.querySelector('[data-zone="1"]');
+    expect(zone1).toBeTruthy();
     expect(zone1.textContent).toContain('SERVER');
     expect(zone1.textContent).toContain('#1');
     expect(zone1.textContent).toContain('Server');
   });
 
   it('should display live stats including Kills, Aces, Digs, and Passing Average', () => {
-    const zoneCards = fixture.nativeElement.querySelectorAll('.zone-card');
-    const zone1 = zoneCards[0];
+    const zone1 = fixture.nativeElement.querySelector('[data-zone="1"]');
     expect(zone1.textContent).toContain('K:3');
     expect(zone1.textContent).toContain('A:2');
     expect(zone1.textContent).toContain('D:5');
@@ -76,25 +92,25 @@ describe('VolleyballRotationStripComponent', () => {
 
   it('should emit playerSelected when a zone card is clicked', () => {
     const spy = vi.spyOn(component.playerSelected, 'emit');
-    const zoneCards = fixture.nativeElement.querySelectorAll('.zone-card');
-    zoneCards[0].click();
+    const zone1 = fixture.nativeElement.querySelector('[data-zone="1"]') as HTMLElement;
+    zone1.click();
     expect(spy).toHaveBeenCalledWith(mockPlayers[0]);
   });
 
   it('should emit playerSelected when the Libero card is clicked', () => {
     const spy = vi.spyOn(component.playerSelected, 'emit');
-    const liberoCard = fixture.nativeElement.querySelector('.libero-card');
+    const liberoCard = fixture.nativeElement.querySelector('.libero-card') as HTMLElement;
     liberoCard.click();
     expect(spy).toHaveBeenCalledWith(mockLibero);
   });
 
   it('should render empty slot card and emit emptySlotClicked when tapped', () => {
     const spy = vi.spyOn(component.emptySlotClicked, 'emit');
-    // Provide only 5 players, leaving slot 5 empty
+    // Provide only 5 players, leaving slot 5 (Zone 6) empty
     fixture.componentRef.setInput('activePlayers', mockPlayers.slice(0, 5));
     fixture.detectChanges();
 
-    const emptyCard = fixture.nativeElement.querySelector('.empty-card');
+    const emptyCard = fixture.nativeElement.querySelector('.empty-card') as HTMLElement;
     expect(emptyCard).toBeTruthy();
     expect(emptyCard.textContent).toContain('Z6 Sub In');
 
@@ -118,8 +134,7 @@ describe('VolleyballRotationStripComponent', () => {
     fixture.componentRef.setInput('replacedPlayer', mockPlayers[5]);
     fixture.detectChanges();
 
-    const zoneCards = fixture.nativeElement.querySelectorAll('.zone-card');
-    const zone6 = zoneCards[5];
+    const zone6 = fixture.nativeElement.querySelector('[data-zone="6"]');
     expect(zone6.textContent).toContain('L. Libero');
     expect(zone6.textContent).toContain('LIBERO');
 
@@ -143,5 +158,22 @@ describe('VolleyballRotationStripComponent', () => {
 
     const seventhCard = fixture.nativeElement.querySelector('.libero-card');
     expect(seventhCard).toBeNull();
+  });
+
+  it('should toggle layoutMode between court-grid and strip', () => {
+    component.setLayoutMode('strip');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.strip-layout')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.court-grid-layout')).toBeNull();
+
+    const stripCards = fixture.nativeElement.querySelectorAll('.zone-card');
+    expect(stripCards.length).toBe(6);
+
+    component.setLayoutMode('court-grid');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.court-grid-layout')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.strip-layout')).toBeNull();
   });
 });
