@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.zone-card,
+.libero-card,
+.empty-card {
+  touch-action: manipulation;
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.selected-card {
+  outline: 2px solid #f59e0b;
+  outline-offset: 1px;
+}
+
+.server-badge {
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}

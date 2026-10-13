@@ -42,8 +42,9 @@ import {
   chevronUpOutline,
   timeOutline,
   addCircleOutline,
+  arrowUndoOutline,
 } from 'ionicons/icons';
-import { Haptics, NotificationType } from '@capacitor/haptics';
+import { Haptics, NotificationType, ImpactStyle } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
@@ -54,6 +55,8 @@ import { RuntimeConfigLoaderService } from 'runtime-config-loader';
 import { BenchViewComponent } from '../bench-view/bench-view';
 import { SoccerPitchViewComponent } from '../soccer-pitch-view/soccer-pitch-view';
 import { VolleyballCourtViewComponent } from '../volleyball-court-view/volleyball-court-view';
+import { VolleyballRotationStripComponent } from '../volleyball-rotation-strip/volleyball-rotation-strip';
+import { VolleyballStatPadComponent } from '../volleyball-stat-pad/volleyball-stat-pad';
 import { BasketballCourtViewComponent, ShotLoggedPayload } from '../basketball-court-view/basketball-court-view';
 import { ActivePlayerStripComponent } from '../active-player-strip/active-player-strip';
 import { RapidActionKeypadComponent, KeypadActionPayload } from '../rapid-action-keypad/rapid-action-keypad';
@@ -88,6 +91,8 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
     BenchViewComponent,
     SoccerPitchViewComponent,
     VolleyballCourtViewComponent,
+    VolleyballRotationStripComponent,
+    VolleyballStatPadComponent,
     BasketballCourtViewComponent,
     ActivePlayerStripComponent,
     RapidActionKeypadComponent,
@@ -103,6 +108,7 @@ import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 })
 export class ConsoleWrapper implements OnInit, OnDestroy {
   rapidKeypad = viewChild<RapidActionKeypadComponent>('rapidKeypad');
+  volleyballKeypad = viewChild<VolleyballStatPadComponent>('volleyballKeypad');
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
@@ -299,6 +305,25 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     return this.stateService.activePlayers().find(p => p.id === selId) || null;
   });
 
+  protected volleyballLiberoPlayer = computed<Player | null>(() => {
+    const liberoId = this.stateService.liberoId();
+    if (!liberoId) return null;
+    const lineup = this.stateService.initialLineup();
+    return lineup.find((e) => e.playerId === liberoId)?.player || null;
+  });
+
+  protected isVolleyballLiberoOnCourt = computed<boolean>(() => {
+    const liberoId = this.stateService.liberoId();
+    if (!liberoId) return false;
+    return this.stateService.activePlayers().some((p) => p.id === liberoId);
+  });
+
+  protected selectedAnyPlayer = computed<Player | null>(() => {
+    const selId = this.selectedPlayerId();
+    if (!selId) return null;
+    return this.stateService.players().find((p) => p.id === selId) || null;
+  });
+
   protected isBasketball = computed(() => this.stateService.sportName() === 'Basketball');
 
   protected isRegulationEnd = computed(() => {
@@ -355,6 +380,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       chevronUpOutline,
       timeOutline,
       addCircleOutline,
+      arrowUndoOutline,
     });
 
     // Auto-stop countdown clock when period length is reached in Basketball
@@ -1358,16 +1384,54 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected handleKeypadAction(action: KeypadActionPayload): void {
+    const isScorerEvent = action.type === 'KILL' || action.type === 'ACE' || action.type === 'GOAL';
     this.stateService.pushEvent({
       type: action.type,
       timestamp: Date.now(),
       minuteOccurred: this.clockService.currentMinute(),
       gameTimeMs: this.clockService.elapsedMs(),
       playerId: action.playerId,
+      ...(isScorerEvent ? { scorerId: action.playerId } : {}),
       ...(action.payload || {}),
     });
     this.selectedPlayerId.set(null);
     this.actionPlayer.set(null);
+  }
+
+  protected handleVolleyballPlayerSelected(player: Player): void {
+    const fulfilled = this.volleyballKeypad()?.fulfillArmedStat(player);
+    if (!fulfilled) {
+      if (this.selectedPlayerId() === player.id) {
+        this.selectedPlayerId.set(null);
+        this.actionPlayer.set(null);
+      } else {
+        this.selectedPlayerId.set(player.id);
+        this.actionPlayer.set(null);
+      }
+    }
+  }
+
+  protected handleVolleyballCourtPlayerSelected(event: { player: Player; event: Event }): void {
+    const fulfilled = this.volleyballKeypad()?.fulfillArmedStat(event.player);
+    if (!fulfilled) {
+      if (this.selectedPlayerId() === event.player.id) {
+        this.selectedPlayerId.set(null);
+        this.actionPlayer.set(null);
+      } else {
+        this.selectedPlayerId.set(event.player.id);
+        this.actionPlayer.set(null);
+      }
+    }
+  }
+
+  protected handleQuickLiberoSwap(swapData?: { backRowPlayerId?: string }): void {
+    const targetPlayerId = swapData?.backRowPlayerId;
+    const success = this.stateService.quickLiberoSwap(targetPlayerId);
+    if (success) {
+      this.selectedPlayerId.set(null);
+      this.actionPlayer.set(null);
+      void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+    }
   }
 
   protected handleBasketballPlayerSelected(player: Player): void {
@@ -1455,6 +1519,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
   protected handleUndoAction(): void {
     this.stateService.undoLastEvent();
+    void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
   }
 
   protected addOpponentBasketballScore(points: number): void {

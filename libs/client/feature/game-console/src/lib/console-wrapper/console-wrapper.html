@@ -37,6 +37,11 @@
       </div>
     </ion-title>
     <ion-buttons slot="end">
+      @if (stateService.canUndo()) {
+        <ion-button (click)="handleUndoAction()" fill="clear" color="warning" class="header-undo-btn" title="Undo last action">
+          <ion-icon name="arrow-undo-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      }
       <ion-button id="rotation-settings-button" fill="clear">
         <ion-icon name="settings-outline" slot="icon-only"></ion-icon>
       </ion-button>
@@ -525,19 +530,34 @@
               </div>
             }
             @case ('Volleyball') {
-              <app-volleyball-court-view
-                class="w-full min-h-[370px] sm:min-h-[650px]"
-                [players]="stateService.activePlayers()"
-                [initialLineup]="stateService.initialLineup()"
-                [stagedSubs]="stateService.stagedSubs()"
-                [playersOnField]="stateService.playersOnField()"
-                [selectedPlayerId]="selectedPlayerId()"
-                [playerStats]="stateService.playerStats()"
-                [liberoDesignation]="stateService.liberoDesignation()"
-                (playerSelected)="handlePlayerSelection($event)"
-                (emptySlotSelected)="handleEmptySlotSelection($event)"
-                (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
-              </app-volleyball-court-view>
+              <div class="w-full flex flex-col min-w-0">
+                <app-volleyball-rotation-strip
+                  [activePlayers]="stateService.activePlayers()"
+                  [selectedPlayerId]="selectedPlayerId()"
+                  [playerStats]="stateService.playerStats()"
+                  [liberoPlayer]="volleyballLiberoPlayer()"
+                  [isLiberoOnCourt]="isVolleyballLiberoOnCourt()"
+                  [replacedByLiberoId]="stateService.liberoDesignation()?.replacedId || null"
+                  (playerSelected)="handleVolleyballPlayerSelected($event)"
+                  (emptySlotClicked)="handleEmptySlotSelection($event)"
+                  (quickLiberoSwap)="handleQuickLiberoSwap($event)"
+                ></app-volleyball-rotation-strip>
+                <div class="w-full min-h-[350px] sm:min-h-[520px]">
+                  <app-volleyball-court-view
+                    class="w-full h-full block"
+                    [players]="stateService.activePlayers()"
+                    [initialLineup]="stateService.initialLineup()"
+                    [stagedSubs]="stateService.stagedSubs()"
+                    [playersOnField]="stateService.playersOnField()"
+                    [selectedPlayerId]="selectedPlayerId()"
+                    [playerStats]="stateService.playerStats()"
+                    [liberoDesignation]="stateService.liberoDesignation()"
+                    (playerSelected)="handleVolleyballCourtPlayerSelected($event)"
+                    (emptySlotSelected)="handleEmptySlotSelection($event)"
+                    (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)">
+                  </app-volleyball-court-view>
+                </div>
+              </div>
             }
             @case ('Soccer') {
               <app-soccer-pitch-view
@@ -581,12 +601,31 @@
                 (playerDeselected)="selectedPlayerId.set(null); actionPlayer.set(null)"
               ></app-rapid-action-keypad>
             </div>
+          } @else if (stateService.sportName() === 'Volleyball') {
+            <div class="p-2 border-b border-ap-border bg-ap-surface">
+              <app-volleyball-stat-pad
+                #volleyballKeypad
+                [selectedPlayer]="selectedAnyPlayer()"
+                [activePlayers]="stateService.activePlayers()"
+                [canUndo]="stateService.canUndo()"
+                [isLiberoOnCourt]="isVolleyballLiberoOnCourt()"
+                [hasLibero]="!!stateService.liberoId()"
+                (actionTriggered)="handleKeypadAction($event)"
+                (undoClicked)="handleUndoAction()"
+                (subOffClicked)="handleMoveActiveToBench()"
+                (playerDeselected)="selectedPlayerId.set(null); actionPlayer.set(null)"
+                (rotateClicked)="rotateActivePlayers()"
+                (addPointUs)="addTeamPoint()"
+                (addPointOpp)="addOpponentPoint()"
+                (quickLiberoSwap)="handleQuickLiberoSwap()"
+              ></app-volleyball-stat-pad>
+            </div>
           }
           <app-bench-view
             [players]="stateService.benchPlayers()"
             [stagedInIds]="stagedInIds()"
             [selectedPlayerId]="selectedPlayerId()"
-            [selectedActivePlayer]="stateService.sportName() === 'Basketball' ? null : selectedActivePlayer()"
+            [selectedActivePlayer]="(stateService.sportName() === 'Basketball' || stateService.sportName() === 'Volleyball') ? null : selectedActivePlayer()"
             [ejectedPlayerIds]="stateService.ejectedPlayerIds()"
             [liberoDesignation]="stateService.liberoDesignation()"
             (playerSelected)="handlePlayerSelection($event)"

@@ -636,4 +636,91 @@ describe('ConsoleWrapper', () => {
       );
     });
   });
+
+  describe('Volleyball Courtside UX', () => {
+    const vballLineup: LineupEntry[] = [
+      { playerId: 'p1', player: { id: 'p1', firstName: 'John', lastName: 'Server', jerseyNumber: 1 }, status: 'starting', slotIndex: 0 },
+      { playerId: 'p2', player: { id: 'p2', firstName: 'Jane', lastName: 'Hitter', jerseyNumber: 2 }, status: 'starting', slotIndex: 1 },
+      { playerId: 'p3', player: { id: 'p3', firstName: 'Bob', lastName: 'Middle', jerseyNumber: 3, preferredPosition: 'Middle Blocker' }, status: 'starting', slotIndex: 4 },
+      { playerId: 'p4', player: { id: 'p4', firstName: 'Lucy', lastName: 'Libero', jerseyNumber: 99, preferredPosition: 'Libero' }, status: 'bench' },
+    ];
+
+    beforeEach(() => {
+      stateService.initialize('event-123', vballLineup, 'team-456', 6, 'Volleyball Team', 'Volleyball');
+      stateService.setLiberoId('p4');
+      fixture.detectChanges();
+    });
+
+    it('should render volleyball rotation strip and stat pad when sportName is Volleyball', () => {
+      const rotationStrip = fixture.nativeElement.querySelector('app-volleyball-rotation-strip');
+      const statPad = fixture.nativeElement.querySelector('app-volleyball-stat-pad');
+      expect(rotationStrip).toBeTruthy();
+      expect(statPad).toBeTruthy();
+    });
+
+    it('should select player without opening popover when volleyball player is selected', () => {
+      component['handleVolleyballPlayerSelected'](vballLineup[0].player);
+      expect(component['selectedPlayerId']()).toBe('p1');
+      expect(component['actionPlayer']()).toBeNull();
+    });
+
+    it('should log stat and update score when handleKeypadAction is called for volleyball', () => {
+      expect(stateService.score().team).toBe(0);
+
+      // Log KILL (+Pt)
+      component['handleKeypadAction']({
+        type: 'KILL',
+        playerId: 'p2',
+      });
+
+      expect(stateService.score().team).toBe(1);
+      expect(stateService.playerStats()['p2'].kills).toBe(1);
+
+      // Log BLOCK (+Pt)
+      component['handleKeypadAction']({
+        type: 'BLOCK',
+        playerId: 'p3',
+      });
+      expect(stateService.score().team).toBe(2);
+
+      // Log SERVICE_ERROR (Opp Pt)
+      component['handleKeypadAction']({
+        type: 'SERVICE_ERROR',
+        playerId: 'p1',
+      });
+      expect(stateService.score().opponent).toBe(1);
+
+      // Log SERVE_RECEIVE 0 (Ace Against / Opp Pt)
+      component['handleKeypadAction']({
+        type: 'SERVE_RECEIVE',
+        playerId: 'p2',
+        payload: { score: 0 },
+      });
+      expect(stateService.score().opponent).toBe(2);
+    });
+
+    it('should perform rotateActivePlayers and create clockwise rotation swaps', () => {
+      const pushSpy = vi.spyOn(stateService, 'pushEvents');
+      component['rotateActivePlayers']();
+      expect(pushSpy).toHaveBeenCalled();
+      const pushedSwaps = pushSpy.mock.calls[0][0];
+      expect(pushedSwaps.length).toBe(5);
+      expect(pushedSwaps.every((s: any) => s.type === 'POSITION_SWAP')).toBe(true);
+    });
+
+    it('should execute quickLiberoSwap to swap Libero in and out', () => {
+      const quickSwapSpy = vi.spyOn(stateService, 'quickLiberoSwap');
+      component['handleQuickLiberoSwap']();
+      expect(quickSwapSpy).toHaveBeenCalled();
+    });
+
+    it('should revert last event on handleUndoAction', () => {
+      component['handleKeypadAction']({ type: 'ACE', playerId: 'p1' });
+      expect(stateService.score().team).toBe(1);
+      expect(stateService.canUndo()).toBe(true);
+
+      component['handleUndoAction']();
+      expect(stateService.score().team).toBe(0);
+    });
+  });
 });
