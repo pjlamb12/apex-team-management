@@ -46,7 +46,7 @@ import {
 } from 'ionicons/icons';
 import { Haptics, NotificationType, ImpactStyle } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
-import { LiveGameStateService, RotationConfig } from '../live-game-state.service';
+import { LiveGameStateService } from '../live-game-state.service';
 import { RotationService } from '../rotation-engine/rotation.service';
 import { PlaytimeService } from '../rotation-engine/playtime.service';
 import { EventsService, EventEntity, PlayersService, AttendanceService, PlayerEntity } from '@apex-team/client/data-access/team';
@@ -66,7 +66,7 @@ import { SubQueueComponent } from '../sub-queue/sub-queue';
 import { EventSyncService } from '../event-sync.service';
 import { ShootoutScorecardComponent } from '../shootout-scorecard/shootout-scorecard';
 import { SocketService } from '@apex-team/client/data-access/socket';
-import { Player, LineupEntry, getPositionFromSlot } from '@apex-team/shared/util/models';
+import { Player, getPositionFromSlot } from '@apex-team/shared/util/models';
 import { ThemeToggle } from '@apex-team/client/ui/theme-toggle';
 
 @Component({
@@ -396,7 +396,9 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       const periodLengthMs = (this.stateService.periodLengthMinutes() || 8) * 60 * 1000;
       if (periodLengthMs > 0 && elapsedMs >= periodLengthMs) {
         void this.clockService.stop();
-        void Haptics.notification({ type: NotificationType.Warning }).catch(() => {});
+        void Haptics.notification({ type: NotificationType.Warning }).catch(() => {
+          /* ignore haptics error */
+        });
       }
     });
 
@@ -1436,7 +1438,9 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     if (success) {
       this.selectedPlayerId.set(null);
       this.actionPlayer.set(null);
-      void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+      void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {
+        /* ignore haptics error */
+      });
     }
   }
 
@@ -1525,7 +1529,9 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
 
   protected handleUndoAction(): void {
     this.stateService.undoLastEvent();
-    void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+    void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {
+      /* ignore haptics error */
+    });
   }
 
   protected addOpponentBasketballScore(points: number): void {
@@ -1778,7 +1784,9 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
             }
             await firstValueFrom(
               this.attendanceService.removePlayerFromAttendance(tId, eId, player.id)
-            ).catch(() => {});
+            ).catch(() => {
+              /* ignore error */
+            });
             const updatedLineup = await firstValueFrom(
               this.eventsService.getLineup(tId, eId)
             ).catch(() => []);
