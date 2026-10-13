@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { LiveClockService } from '../live-clock.service';
 import { LiveGameStateService } from '../live-game-state.service';
 import { RuntimeConfigLoaderService } from 'runtime-config-loader';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, ToastController } from '@ionic/angular/standalone';
 import { of } from 'rxjs';
 import { PlaytimeService } from '../rotation-engine/playtime.service';
 import { EventsService } from '@apex-team/client/data-access/team';
@@ -19,6 +19,8 @@ describe('ConsoleWrapper', () => {
   let httpMock: any;
   let routeMock: any;
   let configMock: any;
+  let alertControllerMock: any;
+  let toastControllerMock: any;
   let stateService: LiveGameStateService;
 
   const mockLineup = [
@@ -53,6 +55,7 @@ describe('ConsoleWrapper', () => {
       currentMinute: vi.fn().mockReturnValue(0),
       start: vi.fn(),
       stop: vi.fn(),
+      reset: vi.fn().mockImplementation(() => Promise.resolve()),
       initialize: vi.fn(),
     };
 
@@ -78,7 +81,13 @@ describe('ConsoleWrapper', () => {
       getConfigObjectKey: vi.fn().mockReturnValue('http://api.test'),
     };
 
-    const alertControllerMock = {
+    alertControllerMock = {
+      create: vi.fn().mockImplementation(() => Promise.resolve({
+        present: vi.fn().mockImplementation(() => Promise.resolve())
+      }))
+    };
+
+    toastControllerMock = {
       create: vi.fn().mockImplementation(() => Promise.resolve({
         present: vi.fn().mockImplementation(() => Promise.resolve())
       }))
@@ -92,6 +101,7 @@ describe('ConsoleWrapper', () => {
         { provide: LiveClockService, useValue: clockServiceMock },
         { provide: RuntimeConfigLoaderService, useValue: configMock },
         { provide: AlertController, useValue: alertControllerMock },
+        { provide: ToastController, useValue: toastControllerMock },
         LiveGameStateService,
       ],
     })
@@ -363,7 +373,15 @@ describe('ConsoleWrapper', () => {
 
   describe('Basketball Courtside UX', () => {
     beforeEach(() => {
-      stateService.setSportName('Basketball');
+      stateService.initialize(
+        'event-123',
+        mockLineup as any,
+        'team-456',
+        5,
+        'Apex Team',
+        'Basketball',
+        { periodCount: 4, periodLengthMinutes: 8 }
+      );
       fixture.detectChanges();
     });
 
@@ -486,6 +504,91 @@ describe('ConsoleWrapper', () => {
       expect(component['getPlayerMinutes']('p1')).toBe('2:05');
       expect(component['getPlayerMinutes']('p2')).toBe('0:05');
       expect(component['getPlayerMinutes']('unknown')).toBe('0:00');
+    });
+
+    it('should determine when overtime can be added', () => {
+      // In period 1, tied 0-0 -> cannot add overtime (game is still in regulation)
+      expect(component['canAddBasketballOvertime']()).toBe(false);
+
+      // Advance to period 4 (regulation end)
+      stateService.pushEvents([
+        { type: 'PERIOD_END', timestamp: 1 },
+        { type: 'PERIOD_END', timestamp: 2 },
+        { type: 'PERIOD_END', timestamp: 3 },
+      ]);
+      expect(stateService.currentPeriod()).toBe(4);
+      expect(component['isRegulationEnd']()).toBe(true);
+
+      // Score is tied (0-0), regulation is finished -> can add overtime!
+      expect(component['canAddBasketballOvertime']()).toBe(true);
+
+      // One team scores -> not tied anymore
+      component['handleKeypadAction']({ type: 'MADE_2PT', playerId: 'p1' });
+      expect(component['canAddBasketballOvertime']()).toBe(false);
+
+      // Opponent scores to tie -> can add overtime again
+      component['addOpponentBasketballScore'](2);
+      expect(component['canAddBasketballOvertime']()).toBe(true);
+    });
+
+    it('should format basketball period action label correctly across regulation and overtime', () => {
+      // Period 1
+      expect(component['basketballPeriodActionLabel']()).toBe('Next Quarter');
+
+      // Period 4, tied
+      stateService.pushEvents([
+        { type: 'PERIOD_END', timestamp: 1 },
+        { type: 'PERIOD_END', timestamp: 2 },
+        { type: 'PERIOD_END', timestamp: 3 },
+      ]);
+      expect(component['basketballPeriodActionLabel']()).toBe('Add Overtime');
+
+      // Period 4, team ahead
+      component['handleKeypadAction']({ type: 'MADE_2PT', playerId: 'p1' });
+      expect(component['basketballPeriodActionLabel']()).toBe('End Game');
+
+      // Period 5 (OT1), tied
+      stateService.pushEvent({ type: 'OPPONENT_SCORE', points: 2, timestamp: 4 } as any);
+      stateService.pushEvent({ type: 'PERIOD_END', timestamp: 5 });
+      expect(stateService.currentPeriod()).toBe(5);
+      expect(component['basketballPeriodActionLabel']()).toBe('Add OT 2');
+    });
+
+    it('should open prompt to add overtime when promptAddOvertime is called', async () => {
+      await component['promptAddOvertime']();
+      expect(alertControllerMock.create).toHaveBeenCalled();
+    });
+
+    it('should execute overtime transition when executeStartOvertime is called', async () => {
+      // Advance to period 4
+      stateService.pushEvents([
+        { type: 'PERIOD_END', timestamp: 1 },
+        { type: 'PERIOD_END', timestamp: 2 },
+        { type: 'PERIOD_END', timestamp: 3 },
+      ]);
+
+      await component['executeStartOvertime'](4);
+
+      expect(stateService.currentPeriod()).toBe(5);
+      expect(stateService.isOvertime()).toBe(true);
+      expect(stateService.overtimePeriodLengthMinutes()).toBe(4);
+      expect(clockServiceMock.stop).toHaveBeenCalled();
+      expect(clockServiceMock.reset).toHaveBeenCalled();
+      expect(httpMock.patch).toHaveBeenCalled();
+      expect(toastControllerMock.create).toHaveBeenCalled();
+    });
+
+    it('should trigger promptAddOvertime via nextPeriod if game is tied at regulation end', async () => {
+      const promptSpy = vi.spyOn(component as any, 'promptAddOvertime');
+      stateService.pushEvents([
+        { type: 'PERIOD_END', timestamp: 1 },
+        { type: 'PERIOD_END', timestamp: 2 },
+        { type: 'PERIOD_END', timestamp: 3 },
+      ]);
+      expect(component['canAddBasketballOvertime']()).toBe(true);
+
+      await component['nextPeriod']();
+      expect(promptSpy).toHaveBeenCalled();
     });
   });
 });

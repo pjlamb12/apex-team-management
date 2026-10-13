@@ -907,6 +907,129 @@ describe('LiveGameStateService', () => {
       expect(p1?.plusMinus).toBe(6);
       expect(p1?.plusMinusFormatted).toBe('+6');
     });
+
+    describe('Basketball Overtime', () => {
+      it('should compute isOvertime and overtimeNumber based on regulationPeriodCount', () => {
+        service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', { periodCount: 4 });
+
+        expect(service.regulationPeriodCount()).toBe(4);
+        expect(service.currentPeriod()).toBe(1);
+        expect(service.isOvertime()).toBe(false);
+        expect(service.overtimeNumber()).toBe(0);
+        expect(service.periodLengthMinutes()).toBe(8);
+
+        // Advance to Period 4 (regulation end)
+        service.pushEvents([
+          { type: 'PERIOD_END', timestamp: 1 },
+          { type: 'PERIOD_END', timestamp: 2 },
+          { type: 'PERIOD_END', timestamp: 3 },
+        ]);
+        expect(service.currentPeriod()).toBe(4);
+        expect(service.isOvertime()).toBe(false);
+        expect(service.overtimeNumber()).toBe(0);
+
+        // Advance to Period 5 (OT1)
+        service.pushEvent({ type: 'PERIOD_END', timestamp: 4 });
+        expect(service.currentPeriod()).toBe(5);
+        expect(service.isOvertime()).toBe(true);
+        expect(service.overtimeNumber()).toBe(1);
+        expect(service.periodLengthMinutes()).toBe(4); // Default OT length
+
+        // Advance to Period 6 (OT2)
+        service.pushEvent({ type: 'PERIOD_END', timestamp: 5 });
+        expect(service.currentPeriod()).toBe(6);
+        expect(service.isOvertime()).toBe(true);
+        expect(service.overtimeNumber()).toBe(2);
+      });
+
+      it('should allow setting custom overtime duration per period', () => {
+        service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', { periodCount: 4 });
+
+        // Advance to period 5
+        service.pushEvents([
+          { type: 'PERIOD_END', timestamp: 1 },
+          { type: 'PERIOD_END', timestamp: 2 },
+          { type: 'PERIOD_END', timestamp: 3 },
+          { type: 'PERIOD_END', timestamp: 4 },
+        ]);
+
+        service.setOvertimeLength(5, 5);
+        expect(service.overtimePeriodLengthMinutes()).toBe(5);
+        expect(service.periodLengths()[5]).toBe(5);
+        expect(service.periodLengthMinutes()).toBe(5);
+
+        // Next OT (period 6) set to 3 minutes
+        service.pushEvent({ type: 'PERIOD_END', timestamp: 5 });
+        service.setOvertimeLength(3, 6);
+        expect(service.periodLengths()[5]).toBe(5);
+        expect(service.periodLengths()[6]).toBe(3);
+        expect(service.periodLengthMinutes()).toBe(3);
+      });
+
+      it('should restore overtime period lengths from OVERTIME_START events when recomputing', () => {
+        service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', { periodCount: 4 });
+
+        service.pushEvents([
+          { type: 'PERIOD_END', timestamp: 1 },
+          { type: 'PERIOD_END', timestamp: 2 },
+          { type: 'PERIOD_END', timestamp: 3 },
+          { type: 'PERIOD_END', timestamp: 4 },
+          { type: 'OVERTIME_START', period: 5, overtimeMinutes: 3, timestamp: 5 },
+        ]);
+
+        expect(service.currentPeriod()).toBe(5);
+        expect(service.periodLengths()[5]).toBe(3);
+        expect(service.periodLengthMinutes()).toBe(3);
+      });
+
+      it('should format basketball period scores with Q1..Q4 and OT1..OTn', () => {
+        service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', { periodCount: 4 });
+
+        // 4 regulation periods + 2 overtimes
+        service.pushEvents([
+          { type: 'MADE_2PT', playerId: 'p1', period: 1, timestamp: 1 },
+          { type: 'PERIOD_END', timestamp: 2 },
+          { type: 'MADE_3PT', playerId: 'p1', period: 2, timestamp: 3 },
+          { type: 'PERIOD_END', timestamp: 4 },
+          { type: 'OPPONENT_SCORE', points: 2, period: 3, timestamp: 5 } as any,
+          { type: 'PERIOD_END', timestamp: 6 },
+          { type: 'MADE_2PT', playerId: 'p1', period: 4, timestamp: 7 },
+          { type: 'PERIOD_END', timestamp: 8 },
+          { type: 'MADE_2PT', playerId: 'p1', period: 5, timestamp: 9 },
+          { type: 'PERIOD_END', timestamp: 10 },
+          { type: 'MADE_1PT', playerId: 'p1', period: 6, timestamp: 11 },
+        ]);
+
+        const periodScores = service.basketballPeriodScores();
+        expect(periodScores.length).toBe(6);
+        expect(periodScores[0].label).toBe('Q1');
+        expect(periodScores[1].label).toBe('Q2');
+        expect(periodScores[2].label).toBe('Q3');
+        expect(periodScores[3].label).toBe('Q4');
+        expect(periodScores[4].label).toBe('OT1');
+        expect(periodScores[5].label).toBe('OT2');
+        expect(periodScores[4].teamScore).toBe(2);
+        expect(periodScores[5].teamScore).toBe(1);
+      });
+
+      it('should format basketball period scores with H1..H2 when regulation period count is 2', () => {
+        service.initialize(eventId, mockLineup, teamId, 5, undefined, 'Basketball', { periodCount: 2 });
+
+        service.pushEvents([
+          { type: 'MADE_2PT', playerId: 'p1', period: 1, timestamp: 1 },
+          { type: 'PERIOD_END', timestamp: 2 },
+          { type: 'MADE_2PT', playerId: 'p1', period: 2, timestamp: 3 },
+          { type: 'PERIOD_END', timestamp: 4 },
+          { type: 'MADE_2PT', playerId: 'p1', period: 3, timestamp: 5 },
+        ]);
+
+        const periodScores = service.basketballPeriodScores();
+        expect(periodScores.length).toBe(3);
+        expect(periodScores[0].label).toBe('H1');
+        expect(periodScores[1].label).toBe('H2');
+        expect(periodScores[2].label).toBe('OT1');
+      });
+    });
   });
 });
 

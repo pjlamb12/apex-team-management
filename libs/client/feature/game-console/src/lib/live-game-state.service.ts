@@ -119,8 +119,34 @@ export class LiveGameStateService {
   public readonly lastIntervalTriggered = this._lastIntervalTriggered.asReadonly();
   public readonly rotationConfig = this._rotationConfig.asReadonly();
   public readonly sportName = this._sportName.asReadonly();
-  private _periodLengthMinutes = signal<number>(8);
-  public readonly periodLengthMinutes = this._periodLengthMinutes.asReadonly();
+  private _regulationPeriodCount = signal<number>(4);
+  public readonly regulationPeriodCount = this._regulationPeriodCount.asReadonly();
+  private _regulationPeriodLengthMinutes = signal<number>(8);
+  public readonly regulationPeriodLengthMinutes = this._regulationPeriodLengthMinutes.asReadonly();
+  private _overtimePeriodLengthMinutes = signal<number>(4);
+  public readonly overtimePeriodLengthMinutes = this._overtimePeriodLengthMinutes.asReadonly();
+  private _periodLengths = signal<Record<number, number>>({});
+  public readonly periodLengths = this._periodLengths.asReadonly();
+
+  public readonly periodLengthMinutes = computed(() => {
+    const period = this._currentPeriod();
+    const custom = this._periodLengths()[period];
+    if (custom !== undefined) {
+      return custom;
+    }
+    if (period > this._regulationPeriodCount()) {
+      return this._overtimePeriodLengthMinutes();
+    }
+    return this._regulationPeriodLengthMinutes();
+  });
+
+  public readonly isOvertime = computed(() => {
+    return this._currentPeriod() > this._regulationPeriodCount();
+  });
+
+  public readonly overtimeNumber = computed(() => {
+    return Math.max(0, this._currentPeriod() - this._regulationPeriodCount());
+  });
   private _foulLimit = signal<number>(5);
   private _bonusThreshold = signal<number>(5);
   private _doubleBonusThreshold = signal<number>(10);
@@ -196,7 +222,8 @@ export class LiveGameStateService {
     const events = this._events().filter((e) => e.status !== 'deleted');
     const currentPeriod = this._currentPeriod();
 
-    let maxPeriod = Math.max(4, currentPeriod);
+    const regCount = this._regulationPeriodCount();
+    let maxPeriod = Math.max(regCount, currentPeriod);
     events.forEach((e) => {
       const p = e['period'] ?? e['payload']?.period;
       if (p && p > maxPeriod) maxPeriod = p;
@@ -224,7 +251,7 @@ export class LiveGameStateService {
       teamRunning += teamPts;
       opponentRunning += oppPts;
 
-      const label = p <= 4 ? `Q${p}` : `OT${p - 4}`;
+      const label = p <= regCount ? (regCount === 2 ? `H${p}` : `Q${p}`) : `OT${p - regCount}`;
 
       periodScores.push({
         period: p,
@@ -987,6 +1014,7 @@ export class LiveGameStateService {
       doubleBonusThreshold?: number;
       timeoutsLimit?: number;
       periodLengthMinutes?: number;
+      periodCount?: number;
     },
     opponentName?: string
   ): void {
@@ -1011,11 +1039,14 @@ export class LiveGameStateService {
       if (winningRules.bonusThreshold) this._bonusThreshold.set(winningRules.bonusThreshold);
       if (winningRules.doubleBonusThreshold) this._doubleBonusThreshold.set(winningRules.doubleBonusThreshold);
       if (winningRules.timeoutsLimit) this._timeoutsLimit.set(winningRules.timeoutsLimit);
-      if (winningRules.periodLengthMinutes) {
-        this._periodLengthMinutes.set(winningRules.periodLengthMinutes);
+      if (winningRules.periodCount) {
+        this._regulationPeriodCount.set(winningRules.periodCount);
       } else {
-        this._periodLengthMinutes.set(sportName === 'Basketball' ? 8 : 45);
+        this._regulationPeriodCount.set(sportName === 'Basketball' ? 4 : (sportName === 'Volleyball' ? 3 : 2));
       }
+      const len = winningRules.periodLengthMinutes ?? (sportName === 'Basketball' ? 8 : 45);
+      this._regulationPeriodLengthMinutes.set(len);
+      this._overtimePeriodLengthMinutes.set(sportName === 'Basketball' ? Math.max(1, Math.round(len / 2)) : 5);
     } else {
       this._bestOfSets.set(5);
       this._setScoreGoal.set(25);
@@ -1027,7 +1058,10 @@ export class LiveGameStateService {
       this._bonusThreshold.set(5);
       this._doubleBonusThreshold.set(10);
       this._timeoutsLimit.set(5);
-      this._periodLengthMinutes.set(sportName === 'Basketball' ? 8 : 45);
+      this._regulationPeriodCount.set(sportName === 'Basketball' ? 4 : (sportName === 'Volleyball' ? 3 : 2));
+      const len = sportName === 'Basketball' ? 8 : 45;
+      this._regulationPeriodLengthMinutes.set(len);
+      this._overtimePeriodLengthMinutes.set(sportName === 'Basketball' ? Math.max(1, Math.round(len / 2)) : 5);
     }
 
     const savedLibero = localStorage.getItem(this.getLiberoStorageKey());
@@ -1135,11 +1169,35 @@ export class LiveGameStateService {
     this._sportName.set(sport);
   }
 
+  public setOvertimeLength(minutes: number, period?: number): void {
+    this._overtimePeriodLengthMinutes.set(minutes);
+    if (period !== undefined) {
+      this._periodLengths.update((prev) => ({ ...prev, [period]: minutes }));
+    }
+    this.save();
+  }
+
   private recomputePeriodFromEvents(): void {
-    const activePeriodEnds = this._events().filter(
-      (e) => e.status !== 'deleted' && e.type === 'PERIOD_END'
-    );
+    const activeEvents = this._events().filter((e) => e.status !== 'deleted');
+    const activePeriodEnds = activeEvents.filter((e) => e.type === 'PERIOD_END');
     this._currentPeriod.set(activePeriodEnds.length + 1);
+
+    const overtimeEvents = activeEvents.filter(
+      (e) => e.type === 'OVERTIME_START' || e['overtimeMinutes'] !== undefined
+    );
+    if (overtimeEvents.length > 0) {
+      const lengths: Record<number, number> = {};
+      overtimeEvents.forEach((e) => {
+        const p = e['period'] ?? e['payload']?.period;
+        const mins = e['overtimeMinutes'] ?? e['payload']?.overtimeMinutes;
+        if (p && mins) {
+          lengths[p] = Number(mins);
+        }
+      });
+      if (Object.keys(lengths).length > 0) {
+        this._periodLengths.update((prev) => ({ ...prev, ...lengths }));
+      }
+    }
   }
 
   public pushEvent(event: GameEvent): void {

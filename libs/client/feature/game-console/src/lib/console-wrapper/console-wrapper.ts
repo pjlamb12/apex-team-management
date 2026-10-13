@@ -21,6 +21,7 @@ import {
   IonSelectOption,
   IonSpinner,
   AlertController,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -40,6 +41,7 @@ import {
   chevronDownOutline,
   chevronUpOutline,
   timeOutline,
+  addCircleOutline,
 } from 'ionicons/icons';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { LiveClockService } from '../live-clock.service';
@@ -115,6 +117,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   protected playtimeService = inject(PlaytimeService);
   private socketService = inject(SocketService);
   private alertCtrl = inject(AlertController);
+  private toastCtrl = inject(ToastController);
 
   private get apiUrl(): string {
     return this.config.getConfigObjectKey('apiBaseUrl') as string;
@@ -213,6 +216,7 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
                 pointCap: event?.league?.pointCap,
                 decidingSetScoreGoal: event?.league?.decidingSetScoreGoal,
                 decidingSetPointCap: event?.league?.decidingSetPointCap,
+                periodCount: event?.periodCount || event?.league?.periodCount || (team?.sport?.name === 'Basketball' ? 4 : (team?.sport?.name === 'Volleyball' ? 3 : 2)),
                 periodLengthMinutes: event?.periodLengthMinutes || event?.league?.periodLengthMinutes || (team?.sport?.name === 'Basketball' ? 8 : 45),
               },
               event?.opponent || undefined
@@ -295,6 +299,43 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     return this.stateService.activePlayers().find(p => p.id === selId) || null;
   });
 
+  protected isBasketball = computed(() => this.stateService.sportName() === 'Basketball');
+
+  protected isRegulationEnd = computed(() => {
+    if (!this.isBasketball()) return false;
+    return this.stateService.currentPeriod() === this.stateService.regulationPeriodCount();
+  });
+
+  protected isOvertime = computed(() => {
+    if (!this.isBasketball()) return false;
+    return this.stateService.currentPeriod() > this.stateService.regulationPeriodCount();
+  });
+
+  protected isGameTied = computed(() => {
+    const score = this.stateService.score();
+    return score.team === score.opponent;
+  });
+
+  protected canAddBasketballOvertime = computed(() => {
+    return (this.isRegulationEnd() || this.isOvertime()) && this.isGameTied();
+  });
+
+  protected basketballPeriodActionLabel = computed(() => {
+    const currentPeriod = this.stateService.currentPeriod();
+    const regCount = this.stateService.regulationPeriodCount();
+    const isTied = this.isGameTied();
+
+    if (currentPeriod < regCount) {
+      return regCount === 2 ? 'Next Half' : 'Next Quarter';
+    }
+    if (currentPeriod === regCount) {
+      return isTied ? 'Add Overtime' : 'End Game';
+    }
+    // Overtime
+    const otNum = currentPeriod - regCount;
+    return isTied ? `Add OT ${otNum + 1}` : 'End Game';
+  });
+
   constructor() {
     addIcons({
       chevronBackOutline,
@@ -313,6 +354,18 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
       chevronDownOutline,
       chevronUpOutline,
       timeOutline,
+      addCircleOutline,
+    });
+
+    // Auto-stop countdown clock when period length is reached in Basketball
+    effect(() => {
+      if (!this.isBasketball() || !this.isRunning()) return;
+      const elapsedMs = this.clockService.elapsedMs();
+      const periodLengthMs = (this.stateService.periodLengthMinutes() || 8) * 60 * 1000;
+      if (periodLengthMs > 0 && elapsedMs >= periodLengthMs) {
+        void this.clockService.stop();
+        void Haptics.notification({ type: NotificationType.Warning }).catch(() => {});
+      }
     });
 
     effect(() => {
@@ -634,7 +687,143 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
     await alert.present();
   }
 
+  protected async promptAddOvertime(): Promise<void> {
+    const currentPeriod = this.stateService.currentPeriod();
+    const regCount = this.stateService.regulationPeriodCount();
+    const nextOtNum = Math.max(1, currentPeriod - regCount + 1);
+    const score = this.stateService.score();
+    const defaultMinutes = this.stateService.overtimePeriodLengthMinutes() || 4;
+
+    const alert = await this.alertCtrl.create({
+      header: nextOtNum > 1 ? `Start Overtime ${nextOtNum}` : 'Start Overtime',
+      subHeader: `Score is tied (${score.team} - ${score.opponent})`,
+      message: `Set the duration in minutes for Overtime ${nextOtNum}:`,
+      inputs: [
+        {
+          name: 'overtimeMinutes',
+          type: 'number',
+          min: 1,
+          max: 30,
+          value: defaultMinutes,
+          placeholder: 'Minutes (e.g. 4)',
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Start Overtime',
+          role: 'confirm',
+          handler: (data) => {
+            const minutes = parseInt(data.overtimeMinutes, 10);
+            const validMinutes = isNaN(minutes) || minutes <= 0 ? defaultMinutes : minutes;
+            void this.executeStartOvertime(validMinutes);
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  protected async executeStartOvertime(minutes: number): Promise<void> {
+    if (this.isTransitioningPeriod()) return;
+    this.isTransitioningPeriod.set(true);
+
+    try {
+      const currentPeriod = this.stateService.currentPeriod();
+      const nextPeriod = currentPeriod + 1;
+      const gameTimeMs = this.clockService.elapsedMs();
+
+      // 1. End current period
+      this.stateService.pushEvent({
+        type: 'PERIOD_END',
+        timestamp: Date.now(),
+        minuteOccurred: this.clockService.currentMinute(),
+        gameTimeMs,
+      });
+
+      // 2. Set overtime length for next period
+      this.stateService.setOvertimeLength(minutes, nextPeriod);
+
+      // 3. Log OVERTIME_START event
+      this.stateService.pushEvent({
+        type: 'OVERTIME_START',
+        timestamp: Date.now() + 1,
+        minuteOccurred: 1,
+        gameTimeMs: 0,
+        period: nextPeriod,
+        overtimeMinutes: minutes,
+      });
+
+      // 4. Reset clock for fresh countdown
+      await this.clockService.stop();
+      await this.clockService.reset();
+      this.stateService.setLastIntervalTriggered(0);
+
+      // 5. Sync to backend
+      const teamId = this.teamId();
+      const eventId = this.eventId();
+      if (teamId && eventId) {
+        await firstValueFrom(
+          this.eventsService.updateEvent(teamId, eventId, {
+            currentPeriod: this.stateService.currentPeriod(),
+            clockStartTime: null,
+            clockAccumulatedMs: 0,
+          })
+        );
+      }
+
+      const toast = await this.toastCtrl.create({
+        message: `Overtime ${nextPeriod - this.stateService.regulationPeriodCount()} started (${minutes} min)`,
+        duration: 2500,
+        color: 'warning',
+        position: 'top',
+      });
+      await toast.present();
+    } finally {
+      this.isTransitioningPeriod.set(false);
+    }
+  }
+
   protected async nextPeriod(): Promise<void> {
+    if (this.isBasketball()) {
+      if (this.canAddBasketballOvertime()) {
+        await this.promptAddOvertime();
+        return;
+      }
+      if (this.isRegulationEnd() || this.isOvertime()) {
+        // One team is winning!
+        const score = this.stateService.score();
+        const winningTeam =
+          score.team > score.opponent
+            ? (this.team()?.name ?? 'Our Team')
+            : (this.event()?.opponent ?? 'Opponent');
+        const alert = await this.alertCtrl.create({
+          header: this.isOvertime() ? 'Overtime Finished' : 'End of Regulation',
+          message: `${winningTeam} is winning (${score.team} - ${score.opponent}). Would you like to complete the game as Final?`,
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+            },
+            {
+              text: 'Complete Game',
+              role: 'confirm',
+              handler: () => {
+                void this.performEndGame('completed');
+              },
+            },
+          ],
+        });
+        await alert.present();
+        return;
+      }
+      await this.executeNextPeriod();
+      return;
+    }
+
     const isVolleyball = this.stateService.sportName() === 'Volleyball';
     const setResult = this.stateService.currentSetResult();
     const score = this.stateService.score();
@@ -722,6 +911,41 @@ export class ConsoleWrapper implements OnInit, OnDestroy {
   }
 
   protected async endGame(): Promise<void> {
+    if (this.canAddBasketballOvertime()) {
+      const score = this.stateService.score();
+      const alert = await this.alertCtrl.create({
+        header: 'Game Tied',
+        message: `The game is currently tied (${score.team} - ${score.opponent}). Basketball games typically decide a winner with Overtime. Would you like to add Overtime or conclude the match?`,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+          },
+          {
+            text: 'Add Overtime',
+            handler: () => {
+              void this.promptAddOvertime();
+            },
+          },
+          {
+            text: 'Call Game (Weather Stoppage)',
+            handler: () => {
+              void this.performEndGame('abandoned_weather');
+            },
+          },
+          {
+            text: 'Complete Game (Final as Tie)',
+            role: 'confirm',
+            handler: () => {
+              void this.performEndGame('completed');
+            },
+          },
+        ],
+      });
+      await alert.present();
+      return;
+    }
+
     const alert = await this.alertCtrl.create({
       header: 'End Game',
       message: 'Choose how you would like to end this match:',

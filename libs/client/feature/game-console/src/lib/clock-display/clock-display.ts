@@ -28,14 +28,18 @@ export class ClockDisplayComponent {
     if (!this.isCountdown()) return false;
     const ms = this.clockService.elapsedMs();
     const periodLen = this.periodLengthMs();
-    return ms > 0 && ms % periodLen === 0;
+    return periodLen > 0 && ms >= periodLen;
   });
 
   protected readonly periodLabel = computed(() => {
     const period = this.currentPeriod();
     const sport = this.stateService.sportName();
     if (sport === 'Basketball') {
-      return `Q${period}`;
+      const reg = this.stateService.regulationPeriodCount() || 4;
+      if (period > reg) {
+        return `OT${period - reg}`;
+      }
+      return reg === 2 ? `H${period}` : `Q${period}`;
     }
     return `P${period}`;
   });
@@ -47,11 +51,10 @@ export class ClockDisplayComponent {
       if (ms === 0) {
         return this.formatDuration(periodLen);
       }
-      const elapsedInPeriod = ms % periodLen;
-      if (elapsedInPeriod === 0) {
+      if (ms >= periodLen) {
         return '00:00';
       }
-      const remainingMs = Math.max(0, periodLen - elapsedInPeriod);
+      const remainingMs = Math.max(0, periodLen - ms);
       return this.formatDuration(remainingMs);
     }
     return this.formatDuration(ms);

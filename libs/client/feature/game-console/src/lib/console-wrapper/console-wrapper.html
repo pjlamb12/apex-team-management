@@ -167,6 +167,46 @@
       </div>
     }
 
+    <!-- Basketball Overtime / Tie Banner -->
+    @if (canAddBasketballOvertime()) {
+      <div class="m-4 p-4 bg-amber-500/10 border-2 border-amber-500/80 rounded-xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div class="flex items-center gap-3 text-amber-500">
+          <ion-icon name="time-outline" class="text-3xl shrink-0"></ion-icon>
+          <div>
+            <div class="text-base font-black uppercase tracking-wider text-amber-500">
+              {{ isOvertime() ? 'Overtime Tied' : 'Regulation Tied' }} ({{ stateService.score().team }} - {{ stateService.score().opponent }})
+            </div>
+            <p class="text-xs text-ap-text font-medium m-0">
+              The score is tied. Add an overtime period to decide the winner.
+            </p>
+          </div>
+        </div>
+        <ion-button color="warning" fill="solid" (click)="promptAddOvertime()" [disabled]="isTransitioningPeriod()">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          {{ basketballPeriodActionLabel() }}
+        </ion-button>
+      </div>
+    } @else if (isOvertime() && !isGameTied()) {
+      <!-- Basketball Overtime Completed Banner -->
+      <div class="m-4 p-4 bg-emerald-500/10 border-2 border-emerald-500/80 rounded-xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div class="flex items-center gap-3 text-emerald-500">
+          <ion-icon name="trophy-outline" class="text-3xl shrink-0"></ion-icon>
+          <div>
+            <div class="text-base font-black uppercase tracking-wider text-emerald-500">
+              Overtime Period Complete!
+            </div>
+            <p class="text-xs text-ap-text font-medium m-0">
+              <strong>{{ stateService.score().team > stateService.score().opponent ? (team()?.name ?? 'Our Team') : (event()?.opponent ?? 'Opponent') }}</strong> leads ({{ stateService.score().team }} - {{ stateService.score().opponent }}).
+            </p>
+          </div>
+        </div>
+        <ion-button color="success" fill="solid" (click)="endGame()">
+          <ion-icon name="flag-outline" slot="start"></ion-icon>
+          Complete Game
+        </ion-button>
+      </div>
+    }
+
     <!-- Top Bar: Clock and Quick Actions (Two Rows) -->
     <div class="flex flex-col gap-3 p-4 bg-ap-surface-raised border-b border-ap-border shrink-0">
       <!-- Row 1: Clock & Control Buttons -->
@@ -223,15 +263,32 @@
                 </ion-button>
               }
 
-              <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
-                <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
-                Next Quarter
-              </ion-button>
+              @if (canAddBasketballOvertime()) {
+                <ion-button color="warning" fill="solid" (click)="promptAddOvertime()" [disabled]="isTransitioningPeriod()">
+                  <ion-icon name="time-outline" slot="start"></ion-icon>
+                  {{ basketballPeriodActionLabel() }}
+                </ion-button>
 
-              <ion-button color="danger" fill="solid" (click)="endGame()">
-                <ion-icon name="flag-outline" slot="start"></ion-icon>
-                End Game
-              </ion-button>
+                <ion-button color="danger" fill="outline" (click)="endGame()">
+                  <ion-icon name="flag-outline" slot="start"></ion-icon>
+                  End Game
+                </ion-button>
+              } @else if ((isRegulationEnd() || isOvertime()) && !isGameTied()) {
+                <ion-button color="success" fill="solid" (click)="endGame()">
+                  <ion-icon name="trophy-outline" slot="start"></ion-icon>
+                  Complete Game
+                </ion-button>
+              } @else {
+                <ion-button color="tertiary" fill="solid" (click)="nextPeriod()" [disabled]="isTransitioningPeriod()">
+                  <ion-icon name="arrow-forward-outline" slot="start"></ion-icon>
+                  {{ basketballPeriodActionLabel() }}
+                </ion-button>
+
+                <ion-button color="danger" fill="solid" (click)="endGame()">
+                  <ion-icon name="flag-outline" slot="start"></ion-icon>
+                  End Game
+                </ion-button>
+              }
             }
             @case ('Soccer') {
               @if (isRunning()) {

@@ -18,6 +18,7 @@ describe('ClockDisplayComponent', () => {
       currentPeriod: signal(1),
       sportName: signal('Soccer'),
       periodLengthMinutes: signal(45),
+      regulationPeriodCount: signal(4),
     };
 
     await TestBed.configureTestingModule({
@@ -85,6 +86,45 @@ describe('ClockDisplayComponent', () => {
     // 8 mins elapsed -> 00:00
     clockServiceMock.elapsedMs.set(480000);
     fixture.detectChanges();
+    expect(compiled.textContent).toContain('00:00');
+  });
+
+  it('should countdown from overtime length and display OT1 / OT2 labels', () => {
+    stateServiceMock.sportName.set('Basketball');
+    stateServiceMock.regulationPeriodCount.set(4);
+    stateServiceMock.currentPeriod.set(5);
+    stateServiceMock.periodLengthMinutes.set(4);
+    clockServiceMock.elapsedMs.set(0);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('04:00');
+    expect(compiled.textContent).toContain('OT1');
+
+    // 1 minute elapsed -> 3 minutes remaining
+    clockServiceMock.elapsedMs.set(60000);
+    fixture.detectChanges();
+    expect(compiled.textContent).toContain('03:00');
+
+    // OT2 (period 6)
+    stateServiceMock.currentPeriod.set(6);
+    stateServiceMock.periodLengthMinutes.set(4);
+    clockServiceMock.elapsedMs.set(0);
+    fixture.detectChanges();
+    expect(compiled.textContent).toContain('04:00');
+    expect(compiled.textContent).toContain('OT2');
+  });
+
+  it('should clamp countdown to 00:00 when elapsed time exceeds period length', () => {
+    stateServiceMock.sportName.set('Basketball');
+    stateServiceMock.regulationPeriodCount.set(4);
+    stateServiceMock.currentPeriod.set(1);
+    stateServiceMock.periodLengthMinutes.set(8);
+    // 8 mins 5 secs elapsed
+    clockServiceMock.elapsedMs.set(485000);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('00:00');
   });
 });
