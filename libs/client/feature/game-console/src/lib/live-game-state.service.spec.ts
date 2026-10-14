@@ -1101,6 +1101,79 @@ describe('LiveGameStateService', () => {
       });
     });
   });
+
+  describe('Volleyball Score & Stats Tracking', () => {
+    const vballLineup: LineupEntry[] = [
+      { playerId: 'p1', player: { id: 'p1', firstName: 'John', lastName: 'Server', jerseyNumber: 1 }, status: 'starting', slotIndex: 0 },
+      { playerId: 'p2', player: { id: 'p2', firstName: 'Jane', lastName: 'Hitter', jerseyNumber: 2 }, status: 'starting', slotIndex: 1 },
+      { playerId: 'p3', player: { id: 'p3', firstName: 'Bob', lastName: 'Middle', jerseyNumber: 3, preferredPosition: 'Middle Blocker' }, status: 'starting', slotIndex: 4 },
+      { playerId: 'p4', player: { id: 'p4', firstName: 'Lucy', lastName: 'Libero', jerseyNumber: 99, preferredPosition: 'Libero' }, status: 'bench' },
+    ];
+
+    it('should compute volleyball set scores with KILL, ACE, BLOCK, and errors', () => {
+      service.initialize(eventId, vballLineup, teamId, 6, undefined, 'Volleyball');
+
+      service.pushEvents([
+        { type: 'KILL', playerId: 'p2', period: 1, timestamp: 1 },
+        { type: 'ACE', playerId: 'p1', period: 1, timestamp: 2 },
+        { type: 'BLOCK', playerId: 'p3', period: 1, timestamp: 3 },
+        { type: 'POINT_WON', period: 1, timestamp: 4 },
+        { type: 'SERVICE_ERROR', playerId: 'p1', period: 1, timestamp: 5 },
+        { type: 'HITTING_ERROR', playerId: 'p2', period: 1, timestamp: 6 },
+        { type: 'SET_ERROR', playerId: 'p1', period: 1, timestamp: 7 },
+        { type: 'SERVE_RECEIVE', playerId: 'p2', period: 1, timestamp: 8, payload: { score: 0 } },
+        { type: 'SERVE_RECEIVE', playerId: 'p2', period: 1, timestamp: 8.5, payload: { score: 0, isOverpass: true, quality: 'OVERPASS' } },
+        { type: 'POINT_LOST', period: 1, timestamp: 9 },
+      ]);
+
+      // Team points: KILL (1) + ACE (1) + BLOCK (1) + POINT_WON (1) = 4
+      // Opponent points: SERVICE_ERROR (1) + HITTING_ERROR (1) + SET_ERROR (1) + SERVE_RECEIVE 0 (1) [not overpass] + POINT_LOST (1) = 5
+      expect(service.score()).toEqual({ team: 4, opponent: 5 });
+      expect(service.playerStats()['p2'].passCount).toBe(2);
+      expect(service.playerStats()['p2'].overpasses).toBe(1);
+    });
+
+    it('should undo atomic batch of POSITION_SWAP events in single undoLastEvent', () => {
+      service.initialize(eventId, vballLineup, teamId, 6, undefined, 'Volleyball');
+
+      const initialP1Slot = service.activePlayers().find(p => p.id === 'p1')?.slotIndex;
+      expect(initialP1Slot).toBe(0);
+
+      // Push 3 consecutive swaps simulating rotation
+      service.pushEvents([
+        { type: 'POSITION_SWAP', slotIndexA: 0, slotIndexB: 1, playerIdA: 'p1', playerIdB: 'p2', timestamp: 10 } as any,
+        { type: 'POSITION_SWAP', slotIndexA: 1, slotIndexB: 2, playerIdA: 'p1', playerIdB: 'p3', timestamp: 11 } as any,
+      ]);
+
+      expect(service.canUndo()).toBe(true);
+      const undone = service.undoLastEvent();
+      expect(undone?.type).toBe('POSITION_SWAP');
+
+      // P1 should be restored back to slot 0
+      const restoredP1Slot = service.activePlayers().find(p => p.id === 'p1')?.slotIndex;
+      expect(restoredP1Slot).toBe(0);
+    });
+
+    it('should execute quickLiberoSwap to swap Libero into back row and back out', () => {
+      service.initialize(eventId, vballLineup, teamId, 6, undefined, 'Volleyball');
+      service.setLiberoId('p4');
+
+      // Libero currently on bench
+      expect(service.activePlayers().some(p => p.id === 'p4')).toBe(false);
+
+      // Quick swap in: should replace p3 (Middle Blocker in back row slotIndex 4)
+      const swappedIn = service.quickLiberoSwap();
+      expect(swappedIn).toBe(true);
+      expect(service.activePlayers().some(p => p.id === 'p4')).toBe(true);
+      expect(service.activePlayers().some(p => p.id === 'p3')).toBe(false);
+
+      // Quick swap out: should swap p4 out and restore p3
+      const swappedOut = service.quickLiberoSwap();
+      expect(swappedOut).toBe(true);
+      expect(service.activePlayers().some(p => p.id === 'p4')).toBe(false);
+      expect(service.activePlayers().some(p => p.id === 'p3')).toBe(true);
+    });
+  });
 });
 
 

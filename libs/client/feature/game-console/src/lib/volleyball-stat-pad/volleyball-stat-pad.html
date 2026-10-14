@@ -1,0 +1,362 @@
+<div class="volleyball-keypad-container flex flex-col gap-2.5 p-3 bg-ap-surface/90 border border-ap-border/60 rounded-xl select-none shadow-xl">
+  <!-- Keypad Header / State Banner -->
+  <div
+    class="keypad-header flex items-center justify-between h-11 px-3 py-1.5 rounded-lg border transition-colors shrink-0"
+    [class.bg-slate-100]="!selectedPlayer() && !armedStat()"
+    [class.dark:bg-slate-900\/60]="!selectedPlayer() && !armedStat()"
+    [class.border-slate-200]="!selectedPlayer() && !armedStat()"
+    [class.dark:border-white\/10]="!selectedPlayer() && !armedStat()"
+    [class.bg-amber-500\/15]="armedStat()"
+    [class.border-amber-500\/50]="armedStat()"
+    [class.bg-slate-900]="selectedPlayer() && !armedStat()"
+    [class.border-slate-700]="selectedPlayer() && !armedStat()"
+    [class.shadow-sm]="selectedPlayer() && !armedStat()"
+  >
+    @if (armedStat()) {
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-1.5 animate-pulse text-amber-500 dark:text-amber-400">
+          <ion-icon name="flash-outline" class="text-base"></ion-icon>
+          <span class="text-xs font-black uppercase tracking-wider">Armed: {{ armedStat()!.label }}</span>
+          <span class="text-[10px] text-ap-muted font-normal">(Tap player)</span>
+        </div>
+        <button
+          type="button"
+          (click)="clearArmedStat()"
+          class="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-black dark:hover:text-white px-2 py-0.5 rounded bg-black/10 dark:bg-white/10 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    } @else if (selectedPlayer()) {
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-2 truncate">
+          <span class="min-w-[28px] h-7 px-1.5 rounded-md bg-amber-400 text-slate-950 font-black flex items-center justify-center text-xs shadow-sm shrink-0">
+            #{{ selectedPlayer()!.jerseyNumber }}
+          </span>
+          <div class="flex items-center gap-1.5 truncate">
+            <span class="truncate text-white font-black text-xs sm:text-sm">{{ selectedPlayer()!.firstName }} {{ selectedPlayer()!.lastName }}</span>
+            <span class="text-[11px] text-amber-300 font-bold uppercase tracking-wider shrink-0">({{ selectedPlayer()!.preferredPosition || 'Player' }})</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="handleDeselect()"
+          class="text-slate-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors shrink-0 ml-1"
+          title="Deselect player"
+        >
+          <ion-icon name="close-outline" class="text-base"></ion-icon>
+        </button>
+      </div>
+    } @else {
+      <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        Select player or tap stat key
+      </span>
+    }
+  </div>
+
+  <!-- Quick Match Controls: Rotate, Point Us, Point Opp, Libero Swap, Undo -->
+  <div class="keypad-section mb-2">
+    <div class="grid grid-cols-5 gap-1.5">
+      <button
+        type="button"
+        (click)="handleRotate()"
+        class="keypad-btn bg-amber-500 hover:bg-amber-400 text-slate-950"
+        title="Rotate players clockwise"
+      >
+        <div class="flex flex-col items-center">
+          <ion-icon name="refresh-outline" class="text-sm mb-0.5"></ion-icon>
+          <span class="text-[10px] font-black uppercase tracking-tight">Rotate</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleAddPointUs()"
+        class="keypad-btn bg-emerald-600 hover:bg-emerald-500 text-white"
+        title="Add point to our team"
+      >
+        <div class="flex flex-col items-center">
+          <ion-icon name="add-circle-outline" class="text-sm mb-0.5"></ion-icon>
+          <span class="text-[10px] font-black uppercase tracking-tight">+ Pt Us</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleAddPointOpp()"
+        class="keypad-btn bg-rose-600 hover:bg-rose-500 text-white"
+        title="Add point to opponent"
+      >
+        <div class="flex flex-col items-center">
+          <ion-icon name="remove-circle-outline" class="text-sm mb-0.5"></ion-icon>
+          <span class="text-[10px] font-black uppercase tracking-tight">+ Pt Opp</span>
+        </div>
+      </button>
+
+      @if (hasLibero()) {
+        <button
+          type="button"
+          (click)="handleQuickLiberoSwap()"
+          class="keypad-btn bg-purple-600 hover:bg-purple-500 text-white"
+          title="Toggle Libero swap with back row"
+        >
+          <div class="flex flex-col items-center">
+            <ion-icon name="swap-horizontal-outline" class="text-sm mb-0.5"></ion-icon>
+            <span class="text-[10px] font-black uppercase tracking-tight">{{ isLiberoOnCourt() ? 'Lib Out' : 'Lib In' }}</span>
+          </div>
+        </button>
+      } @else {
+        <div class="keypad-btn bg-slate-800/40 text-slate-500 text-[10px] font-bold text-center flex flex-col items-center justify-center">
+          <span>No Lib</span>
+        </div>
+      }
+
+      <button
+        type="button"
+        (click)="handleUndo()"
+        [disabled]="!canUndo()"
+        class="keypad-btn text-white"
+        [class.bg-slate-700]="canUndo()"
+        [class.hover:bg-slate-600]="canUndo()"
+        [class.bg-slate-800\/40]="!canUndo()"
+        [class.text-slate-600]="!canUndo()"
+        [class.opacity-40]="!canUndo()"
+        [class.pointer-events-none]="!canUndo()"
+        title="Undo last logged action"
+      >
+        <div class="flex flex-col items-center">
+          <ion-icon name="arrow-undo-outline" class="text-sm mb-0.5"></ion-icon>
+          <span class="text-[10px] font-black uppercase tracking-tight">Undo</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 1: Attacking (Hitting) -->
+  <div class="keypad-section">
+    <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mb-1 px-1">
+      Attacking / Hitting
+    </div>
+    <div class="grid grid-cols-3 gap-1.5">
+      <button
+        type="button"
+        (click)="handleKeypadPress('KILL', 'KILL (+Pt)')"
+        class="keypad-btn bg-emerald-600 hover:bg-emerald-500 text-white"
+        [class.armed-active]="isStatArmed('KILL')"
+      >
+        <span class="text-xs font-black">KILL</span>
+        <span class="text-[9px] font-black text-emerald-200 ml-1 bg-emerald-800/60 px-1 py-0.5 rounded">+Pt</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('HIT', 'Hit Attempt')"
+        class="keypad-btn bg-slate-700/80 hover:bg-slate-700 text-white"
+        [class.armed-active]="isStatArmed('HIT')"
+      >
+        <span class="text-xs font-bold">Attempt</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('HITTING_ERROR', 'Hit Error (Opp Pt)')"
+        class="keypad-btn bg-rose-700/90 hover:bg-rose-700 text-white"
+        [class.armed-active]="isStatArmed('HITTING_ERROR')"
+      >
+        <span class="text-xs font-bold">Error</span>
+        <span class="text-[9px] font-black text-rose-200 ml-1 bg-rose-900/60 px-1 py-0.5 rounded">Opp Pt</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 2: Serving -->
+  <div class="keypad-section">
+    <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mb-1 px-1">
+      Serving
+    </div>
+    <div class="grid grid-cols-3 gap-1.5">
+      <button
+        type="button"
+        (click)="handleKeypadPress('ACE', 'ACE (+Pt)')"
+        class="keypad-btn bg-emerald-600 hover:bg-emerald-500 text-white"
+        [class.armed-active]="isStatArmed('ACE')"
+      >
+        <span class="text-xs font-black">ACE</span>
+        <span class="text-[9px] font-black text-emerald-200 ml-1 bg-emerald-800/60 px-1 py-0.5 rounded">+Pt</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SERVE_ATTEMPT', 'Serve Attempt')"
+        class="keypad-btn bg-slate-700/80 hover:bg-slate-700 text-white"
+        [class.armed-active]="isStatArmed('SERVE_ATTEMPT')"
+      >
+        <span class="text-xs font-bold">Attempt</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SERVICE_ERROR', 'Service Error (Opp Pt)')"
+        class="keypad-btn bg-rose-700/90 hover:bg-rose-700 text-white"
+        [class.armed-active]="isStatArmed('SERVICE_ERROR')"
+      >
+        <span class="text-xs font-bold">Error</span>
+        <span class="text-[9px] font-black text-rose-200 ml-1 bg-rose-900/60 px-1 py-0.5 rounded">Opp Pt</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 3: Passing (Serve Receive) -->
+  <div class="keypad-section">
+    <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mb-1 px-1">
+      Passing (Serve Receive)
+    </div>
+    <div class="grid grid-cols-5 gap-1.5">
+      <button
+        type="button"
+        (click)="handleKeypadPress('SERVE_RECEIVE', 'Pass 3 (Perfect)', { score: 3 })"
+        class="keypad-btn bg-emerald-700 hover:bg-emerald-600 text-white"
+        [class.armed-active]="isStatArmed('SERVE_RECEIVE', { score: 3 })"
+      >
+        <div class="flex flex-col items-center">
+          <span class="text-xs font-black">3</span>
+          <span class="text-[8px] font-semibold text-emerald-200">Perfect</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SERVE_RECEIVE', 'Pass 2 (Playable)', { score: 2 })"
+        class="keypad-btn bg-blue-700 hover:bg-blue-600 text-white"
+        [class.armed-active]="isStatArmed('SERVE_RECEIVE', { score: 2 })"
+      >
+        <div class="flex flex-col items-center">
+          <span class="text-xs font-black">2</span>
+          <span class="text-[8px] font-semibold text-blue-200">Playable</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SERVE_RECEIVE', 'Pass 1 (Out of System)', { score: 1 })"
+        class="keypad-btn bg-amber-700 hover:bg-amber-600 text-white"
+        [class.armed-active]="isStatArmed('SERVE_RECEIVE', { score: 1 })"
+      >
+        <div class="flex flex-col items-center">
+          <span class="text-xs font-black">1</span>
+          <span class="text-[8px] font-semibold text-amber-200">Out Sys</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SERVE_RECEIVE', 'Overpass', { score: 0, isOverpass: true, quality: 'OVERPASS' })"
+        class="keypad-btn bg-purple-700 hover:bg-purple-600 text-white"
+        [class.armed-active]="isStatArmed('SERVE_RECEIVE', { isOverpass: true })"
+      >
+        <div class="flex flex-col items-center">
+          <span class="text-xs font-black">OP</span>
+          <span class="text-[8px] font-semibold text-purple-200">Overpass</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SERVE_RECEIVE', 'Pass 0 (Ace Against)', { score: 0 })"
+        class="keypad-btn bg-rose-800 hover:bg-rose-700 text-white"
+        [class.armed-active]="isStatArmed('SERVE_RECEIVE', { score: 0 })"
+      >
+        <div class="flex flex-col items-center">
+          <span class="text-xs font-black">0</span>
+          <span class="text-[8px] font-semibold text-rose-200">Ace Agst</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 4: Setting -->
+  <div class="keypad-section">
+    <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mb-1 px-1">
+      Setting
+    </div>
+    <div class="grid grid-cols-3 gap-1.5">
+      <button
+        type="button"
+        (click)="handleKeypadPress('SET_ASSIST', 'Set Assist')"
+        class="keypad-btn bg-emerald-600 hover:bg-emerald-500 text-white"
+        [class.armed-active]="isStatArmed('SET_ASSIST')"
+      >
+        <span class="text-xs font-black">Assist</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SET_ATTEMPT', 'Set Attempt')"
+        class="keypad-btn bg-slate-700/80 hover:bg-slate-700 text-white"
+        [class.armed-active]="isStatArmed('SET_ATTEMPT')"
+      >
+        <span class="text-xs font-bold">Attempt</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('SET_ERROR', 'Set Error (Opp Pt)')"
+        class="keypad-btn bg-rose-700/90 hover:bg-rose-700 text-white"
+        [class.armed-active]="isStatArmed('SET_ERROR')"
+      >
+        <span class="text-xs font-bold">Error</span>
+        <span class="text-[9px] font-black text-rose-200 ml-1 bg-rose-900/60 px-1 py-0.5 rounded">Opp Pt</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 5: Defense & Blocking -->
+  <div class="keypad-section">
+    <div class="text-[10px] font-black uppercase tracking-wider text-ap-muted mb-1 px-1">
+      Defense
+    </div>
+    <div class="grid grid-cols-3 gap-1.5">
+      <button
+        type="button"
+        (click)="handleKeypadPress('BLOCK', 'BLOCK (+Pt)')"
+        class="keypad-btn bg-emerald-600 hover:bg-emerald-500 text-white"
+        [class.armed-active]="isStatArmed('BLOCK')"
+      >
+        <span class="text-xs font-black">BLOCK</span>
+        <span class="text-[9px] font-black text-emerald-200 ml-1 bg-emerald-800/60 px-1 py-0.5 rounded">+Pt</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('BLOCK_TOUCH', 'Block Touch')"
+        class="keypad-btn bg-slate-700/80 hover:bg-slate-700 text-white"
+        [class.armed-active]="isStatArmed('BLOCK_TOUCH')"
+      >
+        <span class="text-xs font-bold">Touch</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="handleKeypadPress('DIG', 'DIG')"
+        class="keypad-btn bg-blue-600 hover:bg-blue-500 text-white"
+        [class.armed-active]="isStatArmed('DIG')"
+      >
+        <span class="text-xs font-black">DIG</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sub Off Button if a player is selected -->
+  @if (selectedPlayer()) {
+    <div class="border-t border-white/10 pt-2">
+      <button
+        type="button"
+        (click)="handleKeypadPress('SUB_OFF', 'Sub Off to Bench')"
+        class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-black uppercase tracking-wider transition-colors"
+      >
+        <ion-icon name="arrow-down-circle-outline" class="text-base"></ion-icon>
+        <span>Sub Off to Bench</span>
+      </button>
+    </div>
+  }
+</div>

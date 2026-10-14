@@ -96,7 +96,11 @@
               </p>
             } @else if (event.type === 'SERVE_RECEIVE') {
               <p>
-                Passed by: {{ getPlayerName(event.playerId) }} (Rating: {{ event.payload?.score ?? event['score'] ?? 0 }}/3)
+                @if (event.payload?.isOverpass || event['isOverpass'] || event.payload?.quality === 'OVERPASS') {
+                  Passed by: {{ getPlayerName(event.playerId) }} (Overpass)
+                } @else {
+                  Passed by: {{ getPlayerName(event.playerId) }} (Rating: {{ event.payload?.score ?? event['score'] ?? 0 }}/3)
+                }
               </p>
             } @else if (event.type === 'HIT') {
               <p>

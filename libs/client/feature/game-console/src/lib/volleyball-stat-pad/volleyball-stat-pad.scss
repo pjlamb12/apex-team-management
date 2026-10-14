@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.keypad-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 0.5rem;
+  touch-action: manipulation;
+  transition: all 0.12s ease-in-out;
+  user-select: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.armed-active {
+    outline: 2px solid #f59e0b;
+    outline-offset: 2px;
+    animation: pulseGlow 1.2s infinite alternate;
+  }
+}
+
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 4px rgba(245, 158, 11, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.9);
+  }
+}

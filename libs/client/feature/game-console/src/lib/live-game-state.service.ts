@@ -415,13 +415,18 @@ export class LiveGameStateService {
     for (let p = 1; p <= currentPeriod; p++) {
       const setEvents = events.filter((e) => e['period'] === p);
       const teamPoints = setEvents.filter(
-        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'POINT_WON'
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
       ).length;
       const opponentPoints = setEvents.filter(
         (e) =>
           e.type === 'SERVICE_ERROR' ||
           e.type === 'HITTING_ERROR' ||
           e.type === 'SET_ERROR' ||
+          (e.type === 'SERVE_RECEIVE' &&
+            (e['payload']?.score === 0 || e['score'] === 0) &&
+            !e['payload']?.isOverpass &&
+            !e['isOverpass'] &&
+            e['payload']?.quality !== 'OVERPASS') ||
           e.type === 'POINT_LOST' ||
           e.type === 'OPPONENT_GOAL'
       ).length;
@@ -697,7 +702,7 @@ export class LiveGameStateService {
       const setEvents = events.filter((e) => e['period'] === currentPeriod);
       
       const team = setEvents.filter(
-        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'POINT_WON'
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
       ).length;
 
       const opponent = setEvents.filter(
@@ -705,6 +710,11 @@ export class LiveGameStateService {
           e.type === 'SERVICE_ERROR' ||
           e.type === 'HITTING_ERROR' ||
           e.type === 'SET_ERROR' ||
+          (e.type === 'SERVE_RECEIVE' &&
+            (e['payload']?.score === 0 || e['score'] === 0) &&
+            !e['payload']?.isOverpass &&
+            !e['isOverpass'] &&
+            e['payload']?.quality !== 'OVERPASS') ||
           e.type === 'POINT_LOST' ||
           e.type === 'OPPONENT_GOAL'
       ).length;
@@ -744,13 +754,18 @@ export class LiveGameStateService {
     for (let p = 1; p < this._currentPeriod(); p++) {
       const setEvents = events.filter((e) => e['period'] === p);
       const teamPoints = setEvents.filter(
-        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'POINT_WON'
+        (e) => e.type === 'KILL' || e.type === 'ACE' || e.type === 'BLOCK' || e.type === 'POINT_WON'
       ).length;
       const opponentPoints = setEvents.filter(
         (e) =>
           e.type === 'SERVICE_ERROR' ||
           e.type === 'HITTING_ERROR' ||
           e.type === 'SET_ERROR' ||
+          (e.type === 'SERVE_RECEIVE' &&
+            (e['payload']?.score === 0 || e['score'] === 0) &&
+            !e['payload']?.isOverpass &&
+            !e['isOverpass'] &&
+            e['payload']?.quality !== 'OVERPASS') ||
           e.type === 'POINT_LOST' ||
           e.type === 'OPPONENT_GOAL'
       ).length;
@@ -842,6 +857,7 @@ export class LiveGameStateService {
       setErrors: 0,
       passCount: 0,
       passScoreSum: 0,
+      overpasses: 0,
       blockTouches: 0,
       serveAttempts: 0,
       points: 0,
@@ -907,6 +923,9 @@ export class LiveGameStateService {
         stats[pid].passCount++;
         const score = e['payload']?.score ?? e['score'] ?? 0;
         stats[pid].passScoreSum += score;
+        if (e['payload']?.isOverpass || e['isOverpass'] || e['payload']?.quality === 'OVERPASS') {
+          stats[pid].overpasses++;
+        }
       } else if (e.type === 'BLOCK_TOUCH') {
         stats[pid].blockTouches++;
       } else if (e.type === 'SERVE_ATTEMPT') {
@@ -1012,6 +1031,73 @@ export class LiveGameStateService {
 
   private getLiberoStorageKey(): string {
     return `${this._eventId()}_libero_id`;
+  }
+
+  public quickLiberoSwap(preferredPlayerId?: string): boolean {
+    const liberoId = this._liberoId();
+    if (!liberoId) return false;
+
+    const active = this.activePlayers();
+    const isLiberoOnCourt = active.some((p) => p.id === liberoId);
+
+    if (isLiberoOnCourt) {
+      const liberoEntry = active.find((p) => p.id === liberoId);
+      const replacedId = this.liberoDesignation()?.replacedId;
+      if (!liberoEntry || liberoEntry.slotIndex === undefined) return false;
+
+      // Find the replaced player or fallback to bench player
+      const lineup = this._initialLineup();
+      const inPlayer =
+        lineup.find((e) => e.playerId === replacedId)?.player ||
+        this.benchPlayers().find((p) => p.id !== liberoId);
+
+      if (!inPlayer) return false;
+
+      this.pushEvent({
+        type: 'SUB',
+        playerIdIn: inPlayer.id,
+        playerIdOut: liberoId,
+        slotIndex: liberoEntry.slotIndex,
+        timestamp: Date.now(),
+        minuteOccurred: 0,
+      });
+      return true;
+    } else {
+      // Libero is on bench -> swap into court
+      let targetPlayer: (Player & { slotIndex?: number }) | undefined;
+
+      if (preferredPlayerId) {
+        targetPlayer = active.find((p) => p.id === preferredPlayerId);
+      }
+
+      if (!targetPlayer) {
+        // Look for Middle Blocker in back row (slotIndex 4, 5, 0)
+        const lineup = this._initialLineup();
+        targetPlayer = active.find((p) => {
+          if (p.slotIndex !== 0 && p.slotIndex !== 4 && p.slotIndex !== 5) return false;
+          const entry = lineup.find((e) => e.playerId === p.id);
+          const pos = (entry?.positionName || entry?.player?.preferredPosition || p.preferredPosition || '').toLowerCase();
+          return pos.includes('middle') || pos.includes('mb');
+        });
+      }
+
+      if (!targetPlayer) {
+        // Fallback to back-row non-server (slot 4 or 5), then slot 0
+        targetPlayer = active.find((p) => p.slotIndex === 4 || p.slotIndex === 5 || p.slotIndex === 0);
+      }
+
+      if (!targetPlayer || targetPlayer.slotIndex === undefined) return false;
+
+      this.pushEvent({
+        type: 'SUB',
+        playerIdIn: liberoId,
+        playerIdOut: targetPlayer.id,
+        slotIndex: targetPlayer.slotIndex,
+        timestamp: Date.now(),
+        minuteOccurred: 0,
+      });
+      return true;
+    }
   }
 
   public initialize(
@@ -1525,6 +1611,10 @@ export class LiveGameStateService {
     for (let i = events.length - 1; i >= 0; i--) {
       if (events[i].status !== 'deleted') {
         const target = events[i];
+        if (target.type === 'POSITION_SWAP') {
+          this.undo();
+          return target;
+        }
         if (target.id) {
           this.deleteEvent(target.id);
         } else {
