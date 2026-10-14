@@ -143,8 +143,9 @@ describe('BasketballCourtViewComponent', () => {
     expect(component['filteredShots']().length).toBe(2);
   });
 
-  it('should render period pills for each period and all', () => {
+  it('should render period pills for each period and all when showPeriodToggle is true', () => {
     fixture.componentRef.setInput('currentPeriod', 2);
+    fixture.componentRef.setInput('showPeriodToggle', true);
     fixture.detectChanges();
 
     const pills = fixture.nativeElement.querySelectorAll('.period-pill');
@@ -153,6 +154,30 @@ describe('BasketballCourtViewComponent', () => {
     expect(pills[0].textContent.trim()).toBe('Q1');
     expect(pills[1].textContent.trim()).toBe('Q2*');
     expect(pills[2].textContent.trim()).toBe('All');
+  });
+
+  it('should not render period pills when showPeriodToggle is false (default)', () => {
+    fixture.componentRef.setInput('currentPeriod', 2);
+    fixture.detectChanges();
+
+    const pills = fixture.nativeElement.querySelectorAll('.period-pill');
+    expect(pills.length).toBe(0);
+  });
+
+  it('should not render court toggle button when showCourtToggle is false (default)', () => {
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[];
+    const courtToggle = buttons.find((b) => b.textContent?.includes('Court'));
+    expect(courtToggle).toBeUndefined();
+  });
+
+  it('should render court toggle button when showCourtToggle is true', () => {
+    fixture.componentRef.setInput('showCourtToggle', true);
+    fixture.detectChanges();
+
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[];
+    const courtToggle = buttons.find((b) => b.textContent?.includes('Court'));
+    expect(courtToggle).toBeDefined();
+    expect(courtToggle?.textContent?.trim()).toBe('Half Court');
   });
 
   it('should open HUD with calculated 2PT for a touch inside the arc', () => {

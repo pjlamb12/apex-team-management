@@ -1417,7 +1417,7 @@
           @if (activeSegment() === 'shot-chart' && sportName() === 'Basketball') {
             <ion-card class="m-0 overflow-hidden border border-ap-border shadow-none">
               <ion-card-header class="px-4 sm:px-6 pt-5 pb-3 bg-ap-surface border-b border-ap-border/60">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex flex-col gap-2.5">
                   <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
                     <ion-icon name="basketball-outline" class="text-amber-500 text-base"></ion-icon>
                     Interactive Shot Chart
@@ -1428,7 +1428,7 @@
                     [value]="shotChartPeriodFilter()"
                     (ionChange)="setShotChartPeriod($event.detail.value)"
                     mode="ios"
-                    class="period-filter-segment max-w-full sm:max-w-md h-8"
+                    class="period-filter-segment w-full sm:w-auto self-start h-8"
                   >
                     <ion-segment-button value="all" class="text-xs">
                       <ion-label [class.font-black]="shotChartPeriodFilter() === 'all'">All Game</ion-label>
@@ -1443,30 +1443,30 @@
 
                 <!-- Shooting Totals and Percentage Badges -->
                 @let stats = periodShootingStats();
-                <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-ap-border/40 text-xs">
-                  <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
-                    <span class="text-ap-muted font-bold uppercase text-[10px]">FG:</span>
-                    <span class="font-black font-mono text-emerald-400">{{ stats.fgMade }}/{{ stats.fgAtt }}</span>
-                    <span class="text-ap-muted font-mono">({{ stats.fgPct | number:'1.1-1' }}%)</span>
-                  </div>
-                  <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
-                    <span class="text-ap-muted font-bold uppercase text-[10px]">3PT:</span>
-                    <span class="font-black font-mono text-blue-400">{{ stats.fg3Made }}/{{ stats.fg3Att }}</span>
-                    <span class="text-ap-muted font-mono">({{ stats.fg3Pct | number:'1.1-1' }}%)</span>
-                  </div>
-                  <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
-                    <span class="text-ap-muted font-bold uppercase text-[10px]">2PT:</span>
-                    <span class="font-black font-mono text-amber-400">{{ stats.fg2Made }}/{{ stats.fg2Att }}</span>
-                    <span class="text-ap-muted font-mono">({{ stats.fg2Pct | number:'1.1-1' }}%)</span>
-                  </div>
-                  @if (stats.ftAtt > 0) {
+                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-ap-border/40 text-xs">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
+                      <span class="text-ap-muted font-bold uppercase text-[10px]">FG:</span>
+                      <span class="font-black font-mono text-emerald-400">{{ stats.fgMade }}/{{ stats.fgAtt }}</span>
+                      <span class="text-ap-muted font-mono">({{ stats.fgPct | number:'1.1-1' }}%)</span>
+                    </div>
+                    <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
+                      <span class="text-ap-muted font-bold uppercase text-[10px]">3PT:</span>
+                      <span class="font-black font-mono text-blue-400">{{ stats.fg3Made }}/{{ stats.fg3Att }}</span>
+                      <span class="text-ap-muted font-mono">({{ stats.fg3Pct | number:'1.1-1' }}%)</span>
+                    </div>
+                    <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
+                      <span class="text-ap-muted font-bold uppercase text-[10px]">2PT:</span>
+                      <span class="font-black font-mono text-amber-400">{{ stats.fg2Made }}/{{ stats.fg2Att }}</span>
+                      <span class="text-ap-muted font-mono">({{ stats.fg2Pct | number:'1.1-1' }}%)</span>
+                    </div>
                     <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
                       <span class="text-ap-muted font-bold uppercase text-[10px]">FT:</span>
                       <span class="font-black font-mono text-purple-400">{{ stats.ftMade }}/{{ stats.ftAtt }}</span>
                       <span class="text-ap-muted font-mono">({{ stats.ftPct | number:'1.1-1' }}%)</span>
                     </div>
-                  }
-                  <div class="px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/40 font-bold text-amber-400 ml-auto">
+                  </div>
+                  <div class="px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/40 font-bold text-amber-400 shrink-0">
                     {{ stats.totalPts }} PTS
                   </div>
                 </div>

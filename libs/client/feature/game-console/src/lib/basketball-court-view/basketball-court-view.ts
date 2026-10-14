@@ -87,6 +87,8 @@ export class BasketballCourtViewComponent {
   playersOnField = input<number>(5);
   formation = input<string | null>(null);
   currentPeriod = input<number | null | undefined>(undefined);
+  showPeriodToggle = input<boolean>(false);
+  showCourtToggle = input<boolean>(false);
 
   // Period Filter Model (can be controlled externally or internally)
   periodFilter = model<number | 'all' | null>(null);
