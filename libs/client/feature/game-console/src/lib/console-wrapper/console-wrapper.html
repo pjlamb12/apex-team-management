@@ -522,6 +522,8 @@
                     [activePlayers]="stateService.activePlayers()"
                     [selectedPlayerId]="selectedPlayerId()"
                     [shots]="stateService.basketballShots()"
+                    [currentPeriod]="stateService.currentPeriod()"
+                    [showPeriodToggle]="true"
                     (shotLogged)="handleBasketballShot($event)"
                     (playerSelected)="handlePlayerSelection($event)"
                     (backgroundClicked)="selectedPlayerId.set(null); actionPlayer.set(null)"

@@ -33,8 +33,10 @@ import {
   ToastController,
   ModalController,
   IonToggle,
+  IonAccordion,
+  IonAccordionGroup,
 } from '@ionic/angular/standalone';
-import { LiveGameStateService, ShootoutScorecardComponent, EventSyncService, BasketballCourtViewComponent, ShotEventRecord } from '@apex-team/client/feature/game-console';
+import { LiveGameStateService, ShootoutScorecardComponent, EventSyncService, BasketballCourtViewComponent, ShotEventRecord, calculateShotType } from '@apex-team/client/feature/game-console';
 import { addIcons } from 'ionicons';
 import { 
   trophyOutline, 
@@ -63,6 +65,9 @@ import {
   shieldOutline,
   chatboxEllipsesOutline,
   basketballOutline,
+  flameOutline,
+  trendingUpOutline,
+  flashOutline,
 } from 'ionicons/icons';
 import { AttendanceList, CoachingNotes } from '@apex-team/client/ui/attendance';
 import { EventsService, EventEntity, AttendanceService, TeamService, PlayingTimeValidationReport, OpponentsService, AwardsService } from '@apex-team/client/data-access/team';
@@ -109,6 +114,8 @@ import { AwardBadgeModalComponent } from './award-badge-modal/award-badge-modal'
     CoachingNotes,
     IonToggle,
     BasketballCourtViewComponent,
+    IonAccordion,
+    IonAccordionGroup,
   ],
   templateUrl: './game-summary.html',
   styleUrl: './game-summary.scss',
@@ -861,6 +868,683 @@ export class GameSummary implements OnDestroy {
       });
   });
 
+  // Post-Game Shot Chart Period Filter
+  protected shotChartPeriodFilter = signal<number | 'all'>('all');
+
+  protected setShotChartPeriod(val: any): void {
+    if (val === 'all') {
+      this.shotChartPeriodFilter.set('all');
+    } else if (val !== null && val !== undefined) {
+      const num = Number(val);
+      if (!isNaN(num)) {
+        this.shotChartPeriodFilter.set(num);
+      }
+    }
+  }
+
+  protected shotChartPeriods = computed(() => {
+    const periodCount = this.game()?.periodCount || 4;
+    let maxPeriod = periodCount;
+    this.gameEvents().forEach((e) => {
+      const p = e.period ?? e.payload?.period;
+      if (typeof p === 'number' && p > maxPeriod) {
+        maxPeriod = p;
+      }
+    });
+    const periods: { period: number; label: string }[] = [];
+    for (let p = 1; p <= maxPeriod; p++) {
+      periods.push({
+        period: p,
+        label: p <= 4 ? `Q${p}` : `OT${p - 4}`,
+      });
+    }
+    return periods;
+  });
+
+  protected filteredBasketballShots = computed(() => {
+    const shots = this.basketballShots();
+    const filter = this.shotChartPeriodFilter();
+    if (filter === 'all') return shots;
+    return shots.filter((s) => (s.period ?? 1) === filter);
+  });
+
+  protected periodShootingStats = computed(() => {
+    const shots = this.filteredBasketballShots();
+    const fgShots = shots.filter(
+      (s) =>
+        s.type.startsWith('MADE_2PT') ||
+        s.type.startsWith('MISSED_2PT') ||
+        s.type.startsWith('MADE_3PT') ||
+        s.type.startsWith('MISSED_3PT')
+    );
+    const fgMade = fgShots.filter((s) => s.type.startsWith('MADE')).length;
+    const fgAtt = fgShots.length;
+    const fgPct = fgAtt > 0 ? (fgMade / fgAtt) * 100 : 0;
+
+    const fg3Shots = shots.filter((s) => s.type.startsWith('MADE_3PT') || s.type.startsWith('MISSED_3PT'));
+    const fg3Made = fg3Shots.filter((s) => s.type === 'MADE_3PT').length;
+    const fg3Att = fg3Shots.length;
+    const fg3Pct = fg3Att > 0 ? (fg3Made / fg3Att) * 100 : 0;
+
+    const fg2Shots = shots.filter((s) => s.type.startsWith('MADE_2PT') || s.type.startsWith('MISSED_2PT'));
+    const fg2Made = fg2Shots.filter((s) => s.type === 'MADE_2PT').length;
+    const fg2Att = fg2Shots.length;
+    const fg2Pct = fg2Att > 0 ? (fg2Made / fg2Att) * 100 : 0;
+
+    const ftShots = shots.filter((s) => s.type.startsWith('MADE_1PT') || s.type.startsWith('MISSED_1PT'));
+    const ftMade = ftShots.filter((s) => s.type === 'MADE_1PT').length;
+    const ftAtt = ftShots.length;
+    const ftPct = ftAtt > 0 ? (ftMade / ftAtt) * 100 : 0;
+
+    const totalPts = fg2Made * 2 + fg3Made * 3 + ftMade * 1;
+
+    return {
+      fgMade,
+      fgAtt,
+      fgPct,
+      fg3Made,
+      fg3Att,
+      fg3Pct,
+      fg2Made,
+      fg2Att,
+      fg2Pct,
+      ftMade,
+      ftAtt,
+      ftPct,
+      totalPts,
+    };
+  });
+
+  protected basketballGameIntelligence = computed(() => {
+    const events = this.sortedGameEvents();
+    const lineup = this.lineup();
+    const teamName = this.game()?.season?.team?.name || 'Apex';
+    const oppName = this.game()?.opponent || 'Opponent';
+    const periodCount = this.game()?.periodCount || 4;
+
+    let maxPeriod = periodCount;
+    events.forEach((e) => {
+      const p = e.period ?? e.payload?.period;
+      if (typeof p === 'number' && p > maxPeriod) {
+        maxPeriod = p;
+      }
+    });
+
+    const scoringTypes = new Set(['MADE_1PT', 'MADE_2PT', 'MADE_3PT', 'OPPONENT_SCORE']);
+    const scoringEvents = events.filter((e) => scoringTypes.has(e.eventType || e.type));
+
+    // 1. Momentum & Lead Progression
+    let runningTeam = 0;
+    let runningOpp = 0;
+    let maxLeadTeam = 0;
+    let maxLeadTeamMoment = '—';
+    let maxLeadTeamPoint: { x: number; y: number } | null = null;
+    let maxLeadOpp = 0;
+    let maxLeadOppMoment = '—';
+    let maxLeadOppPoint: { x: number; y: number } | null = null;
+    let leadChanges = 0;
+    let timesTied = 0;
+    let lastLeader: 'team' | 'opp' | null = null;
+
+    interface Step {
+      period: number;
+      minute: number;
+      team: number;
+      opp: number;
+      diff: number;
+      isTeam: boolean;
+      points: number;
+      scorerId?: string;
+      scorerName?: string;
+      scorerJersey?: string | number;
+      assistorId?: string;
+      assistorName?: string;
+      assistorJersey?: string | number;
+      type: string;
+      rawEvent: any;
+      xPos?: number;
+      yPos?: number;
+    }
+
+    const steps: Step[] = [];
+
+    scoringEvents.forEach((e) => {
+      const type = e.eventType || e.type;
+      const payload = e.payload || {};
+      const isTeam = type !== 'OPPONENT_SCORE';
+      let pts = 2;
+      if (type === 'MADE_1PT') pts = 1;
+      else if (type === 'MADE_2PT') pts = 2;
+      else if (type === 'MADE_3PT') pts = 3;
+      else if (type === 'OPPONENT_SCORE') pts = Number(payload.points ?? e.points ?? 2);
+
+      if (isTeam) {
+        runningTeam += pts;
+      } else {
+        runningOpp += pts;
+      }
+
+      const diff = runningTeam - runningOpp;
+      const period = e.period ?? payload.period ?? 1;
+      const minute = e.minuteOccurred ?? 0;
+      const pLabel = period <= 4 ? `Q${period}` : `OT${period - 4}`;
+      const timeStr = `${pLabel} ${minute}'`;
+
+      if (diff > 0) {
+        if (lastLeader === 'opp') {
+          leadChanges++;
+        }
+        lastLeader = 'team';
+      } else if (diff < 0) {
+        if (lastLeader === 'team') {
+          leadChanges++;
+        }
+        lastLeader = 'opp';
+      } else {
+        if (runningTeam > 0 || runningOpp > 0) {
+          timesTied++;
+        }
+      }
+
+      if (diff > maxLeadTeam) {
+        maxLeadTeam = diff;
+        maxLeadTeamMoment = `+${diff} (${timeStr})`;
+      }
+      if (-diff > maxLeadOpp) {
+        maxLeadOpp = -diff;
+        maxLeadOppMoment = `+${-diff} (${timeStr})`;
+      }
+
+      const scorerId = (e.playerId || payload.playerId || payload.scorerId) as string;
+      const scorerEntry = lineup.find((l) => l.playerId === scorerId);
+      const assistorId = payload.assistorId || e.assistorId;
+      const assistorEntry = assistorId ? lineup.find((l) => l.playerId === assistorId) : null;
+
+      steps.push({
+        period,
+        minute,
+        team: runningTeam,
+        opp: runningOpp,
+        diff,
+        isTeam,
+        points: pts,
+        scorerId,
+        scorerName: scorerEntry ? `${scorerEntry.player.firstName} ${scorerEntry.player.lastName}` : undefined,
+        scorerJersey: scorerEntry?.player?.jerseyNumber ?? undefined,
+        assistorId,
+        assistorName: assistorEntry ? `${assistorEntry.player.firstName} ${assistorEntry.player.lastName}` : undefined,
+        assistorJersey: assistorEntry?.player?.jerseyNumber ?? undefined,
+        type,
+        rawEvent: e,
+      });
+    });
+
+    // 2. Biggest Runs
+    let currTeamRun = 0;
+    let maxTeamRun = 0;
+    let currOppRun = 0;
+    let maxOppRun = 0;
+
+    steps.forEach((s) => {
+      if (s.isTeam) {
+        currTeamRun += s.points;
+        currOppRun = 0;
+        if (currTeamRun > maxTeamRun) maxTeamRun = currTeamRun;
+      } else {
+        currOppRun += s.points;
+        currTeamRun = 0;
+        if (currOppRun > maxOppRun) maxOppRun = currOppRun;
+      }
+    });
+
+    let biggestRunLabel = '—';
+    if (maxTeamRun >= maxOppRun && maxTeamRun > 0) {
+      biggestRunLabel = `${maxTeamRun}–0 ${teamName}`;
+    } else if (maxOppRun > 0) {
+      biggestRunLabel = `${maxOppRun}–0 ${oppName}`;
+    }
+
+    // 3. SVG Lead Curve Coordinates
+    const svgWidth = 600;
+    const svgHeight = 120;
+    const yCenter = svgHeight / 2;
+    const maxAbsDiff = Math.max(6, maxLeadTeam, maxLeadOpp);
+    const yScale = 44 / maxAbsDiff;
+
+    // Period Dividers
+    const periodDividers: { x: number; label: string }[] = [];
+    for (let p = 1; p < maxPeriod; p++) {
+      periodDividers.push({
+        x: Math.round((p / maxPeriod) * svgWidth * 10) / 10,
+        label: p <= 4 ? `Q${p}` : `OT${p - 4}`,
+      });
+    }
+
+    let curvePath = `M 0 ${yCenter}`;
+    let prevY = yCenter;
+
+    steps.forEach((step) => {
+      const p = step.period;
+      const playsInPeriod = steps.filter((s) => s.period === p);
+      const idxInPeriod = playsInPeriod.indexOf(step);
+      const frac = (idxInPeriod + 1) / (playsInPeriod.length + 1);
+      const x = Math.round((((p - 1 + frac) / maxPeriod) * svgWidth) * 10) / 10;
+      const y = Math.round((yCenter - step.diff * yScale) * 10) / 10;
+
+      // Step line: horizontal to x, then vertical to y
+      curvePath += ` L ${x} ${prevY} L ${x} ${y}`;
+      prevY = y;
+      step.xPos = x;
+      step.yPos = y;
+
+      if (step.diff === maxLeadTeam && maxLeadTeam > 0 && !maxLeadTeamPoint) {
+        maxLeadTeamPoint = { x, y };
+      }
+      if (-step.diff === maxLeadOpp && maxLeadOpp > 0 && !maxLeadOppPoint) {
+        maxLeadOppPoint = { x, y };
+      }
+    });
+
+    // Close to end of SVG
+    curvePath += ` L ${svgWidth} ${prevY}`;
+
+    // Area path closed along yCenter = 60
+    const areaPath = `${curvePath} L ${svgWidth} ${yCenter} L 0 ${yCenter} Z`;
+
+    // 4. Pivotal Moments (Runs & Droughts)
+    const pivotalMoments: {
+      type: 'run_team' | 'run_opp' | 'drought';
+      icon: string;
+      title: string;
+      subtitle: string;
+      periodLabel: string;
+      timeRange: string;
+      isTeam: boolean;
+    }[] = [];
+
+    // Detect distinct runs >= 6 points
+    let runPts = 0;
+    let runTeamSide: boolean | null = null;
+    let runStartMin = 0;
+    let runEndMin = 0;
+    let runPeriod = 1;
+    const runScorers = new Map<string, number>();
+
+    const flushRun = () => {
+      if (runPts >= 6 && runTeamSide !== null) {
+        const pLabel = runPeriod <= 4 ? `Q${runPeriod}` : `OT${runPeriod - 4}`;
+        const topScorerInfo = [...runScorers.entries()].sort((a, b) => b[1] - a[1])[0];
+        let sub = '';
+        if (runTeamSide) {
+          sub = topScorerInfo ? `Ignited by ${topScorerInfo[0]} (${topScorerInfo[1]} PTS)` : 'High-energy scoring surge';
+        } else {
+          sub = 'Opponent answering run';
+        }
+        pivotalMoments.push({
+          type: runTeamSide ? 'run_team' : 'run_opp',
+          icon: 'flame-outline',
+          title: `${runTeamSide ? teamName : oppName} ${runPts}–0 Run`,
+          subtitle: sub,
+          periodLabel: pLabel,
+          timeRange: `${runStartMin}' – ${runEndMin}'`,
+          isTeam: runTeamSide,
+        });
+      }
+      runPts = 0;
+      runTeamSide = null;
+      runScorers.clear();
+    };
+
+    steps.forEach((s) => {
+      if (runTeamSide === null) {
+        runTeamSide = s.isTeam;
+        runPts = s.points;
+        runStartMin = s.minute;
+        runEndMin = s.minute;
+        runPeriod = s.period;
+        if (s.isTeam && s.scorerName) {
+          runScorers.set(s.scorerName, (runScorers.get(s.scorerName) || 0) + s.points);
+        }
+      } else if (runTeamSide === s.isTeam && runPeriod === s.period) {
+        runPts += s.points;
+        runEndMin = s.minute;
+        if (s.isTeam && s.scorerName) {
+          runScorers.set(s.scorerName, (runScorers.get(s.scorerName) || 0) + s.points);
+        }
+      } else {
+        flushRun();
+        runTeamSide = s.isTeam;
+        runPts = s.points;
+        runStartMin = s.minute;
+        runEndMin = s.minute;
+        runPeriod = s.period;
+        if (s.isTeam && s.scorerName) {
+          runScorers.set(s.scorerName, (runScorers.get(s.scorerName) || 0) + s.points);
+        }
+      }
+    });
+    flushRun();
+
+    // Detect droughts for team (gap of >= 3 minutes between team scores in same period with misses/turnovers)
+    const teamSteps = steps.filter((s) => s.isTeam);
+    for (let i = 0; i < teamSteps.length - 1; i++) {
+      const s1 = teamSteps[i];
+      const s2 = teamSteps[i + 1];
+      if (s1.period === s2.period && s2.minute - s1.minute >= 3) {
+        const gapMin = s2.minute - s1.minute;
+        const pLabel = s1.period <= 4 ? `Q${s1.period}` : `OT${s1.period - 4}`;
+        pivotalMoments.push({
+          type: 'drought',
+          icon: 'alert-circle-outline',
+          title: `${gapMin}:00 Scoring Drought`,
+          subtitle: `Held scoreless for ${gapMin} minutes`,
+          periodLabel: pLabel,
+          timeRange: `${s1.minute}' – ${s2.minute}'`,
+          isTeam: false,
+        });
+      }
+    }
+
+    // Limit pivotal moments to top 4
+    const topPivotalMoments = pivotalMoments.slice(0, 4);
+
+    // 5. Scoring Distribution & Offensive Profile
+    let paintMakes = 0;
+    let midRangeMakes = 0;
+    let threeMakes = 0;
+    let ftMakes = 0;
+    let assistedFGs = 0;
+    let pointsOffTurnovers = 0;
+
+    const allTeamShots = events.filter((e) => {
+      const type = e.eventType || e.type;
+      return type.startsWith('MADE_');
+    });
+
+    allTeamShots.forEach((e) => {
+      const type = e.eventType || e.type;
+      const payload = e.payload || {};
+      const x = payload.x ?? payload.coordinates?.x ?? e.x;
+      const y = payload.y ?? payload.coordinates?.y ?? e.y;
+      const dist = payload.distanceFeet ?? e.distanceFeet;
+
+      if (type === 'MADE_1PT') {
+        ftMakes++;
+      } else if (type === 'MADE_3PT') {
+        threeMakes++;
+        if (payload.assistorId || e.assistorId) {
+          assistedFGs++;
+        }
+      } else if (type === 'MADE_2PT') {
+        if (payload.assistorId || e.assistorId) {
+          assistedFGs++;
+        }
+        if (x !== undefined && y !== undefined) {
+          const geo = calculateShotType(x, y);
+          if (geo.zone === 'paint') {
+            paintMakes++;
+          } else {
+            midRangeMakes++;
+          }
+        } else if (dist !== undefined && dist <= 8) {
+          paintMakes++;
+        } else {
+          // If neither is present, count as paint (layup/dunk)
+          paintMakes++;
+        }
+      }
+    });
+
+    const paintPts = paintMakes * 2;
+    const midRangePts = midRangeMakes * 2;
+    const threePts = threeMakes * 3;
+    const ftPts = ftMakes * 1;
+    const totalTeamPts = paintPts + midRangePts + threePts + ftPts || runningTeam || 1;
+    const totalFGs = paintMakes + midRangeMakes + threeMakes;
+
+    // Detect points off turnovers
+    events.forEach((e, idx) => {
+      const type = e.eventType || e.type;
+      if (type.startsWith('MADE_')) {
+        const p = e.period ?? e.payload?.period ?? 1;
+        const m = e.minuteOccurred ?? 0;
+        // Look back for opponent turnover in same period within 2 minutes
+        const prevEvents = events.slice(Math.max(0, idx - 5), idx);
+        const hasOppTurnover = prevEvents.some((pe) => {
+          const pt = pe.eventType || pe.type;
+          const pp = pe.period ?? pe.payload?.period ?? 1;
+          const pm = pe.minuteOccurred ?? 0;
+          return pt === 'TURNOVER' && pe.payload?.team === 'opponent' && pp === p && m - pm <= 2;
+        });
+        if (hasOppTurnover) {
+          const pts = type === 'MADE_1PT' ? 1 : type === 'MADE_3PT' ? 3 : 2;
+          pointsOffTurnovers += pts;
+        }
+      }
+    });
+
+    const scoringDistribution = {
+      paintPts,
+      paintPct: totalTeamPts > 0 ? Math.round((paintPts / totalTeamPts) * 100) : 0,
+      threePts,
+      threePct: totalTeamPts > 0 ? Math.round((threePts / totalTeamPts) * 100) : 0,
+      midRangePts,
+      midRangePct: totalTeamPts > 0 ? Math.round((midRangePts / totalTeamPts) * 100) : 0,
+      ftPts,
+      ftPct: totalTeamPts > 0 ? Math.round((ftPts / totalTeamPts) * 100) : 0,
+      totalPts: totalTeamPts,
+      assistedFGs,
+      totalFGs,
+      assistedPct: totalFGs > 0 ? Math.round((assistedFGs / totalFGs) * 100) : 0,
+      pointsOffTurnovers,
+    };
+
+    // 6. Quarter-by-Quarter Period Recap Cards
+    const periodRecaps = [];
+    for (let p = 1; p <= maxPeriod; p++) {
+      const periodEvents = events.filter((e) => (e.period ?? e.payload?.period ?? 1) === p);
+      let pTeamPts = 0;
+      let pOppPts = 0;
+      const playerPtsMap = new Map<string, { pts: number; fg3M: number; fg3A: number; ftM: number; ftA: number }>();
+
+      let pFgMade = 0;
+      let pFgAtt = 0;
+      let pFg3Made = 0;
+      let pFg3Att = 0;
+
+      periodEvents.forEach((e) => {
+        const type = e.eventType || e.type;
+        const payload = e.payload || {};
+        const pid = (e.playerId || payload.playerId || payload.scorerId) as string;
+
+        if (type === 'MADE_1PT' || type === 'MADE_2PT' || type === 'MADE_3PT') {
+          const pts = type === 'MADE_1PT' ? 1 : type === 'MADE_2PT' ? 2 : 3;
+          pTeamPts += pts;
+
+          if (pid) {
+            const cur = playerPtsMap.get(pid) || { pts: 0, fg3M: 0, fg3A: 0, ftM: 0, ftA: 0 };
+            cur.pts += pts;
+            if (type === 'MADE_3PT') {
+              cur.fg3M++;
+              cur.fg3A++;
+            }
+            if (type === 'MADE_1PT') {
+              cur.ftM++;
+              cur.ftA++;
+            }
+            playerPtsMap.set(pid, cur);
+          }
+
+          if (type !== 'MADE_1PT') {
+            pFgMade++;
+            pFgAtt++;
+            if (type === 'MADE_3PT') {
+              pFg3Made++;
+              pFg3Att++;
+            }
+          }
+        } else if (type === 'MISSED_1PT' || type === 'MISSED_2PT' || type === 'MISSED_3PT') {
+          if (type !== 'MISSED_1PT') {
+            pFgAtt++;
+            if (type === 'MISSED_3PT') {
+              pFg3Att++;
+            }
+          }
+          if (pid) {
+            const cur = playerPtsMap.get(pid) || { pts: 0, fg3M: 0, fg3A: 0, ftM: 0, ftA: 0 };
+            if (type === 'MISSED_3PT') cur.fg3A++;
+            if (type === 'MISSED_1PT') cur.ftA++;
+            playerPtsMap.set(pid, cur);
+          }
+        } else if (type === 'OPPONENT_SCORE') {
+          const pts = Number(payload.points ?? e.points ?? 2);
+          pOppPts += pts;
+        }
+      });
+
+      const margin = pTeamPts - pOppPts;
+      const marginFormatted = margin > 0 ? `+${margin}` : margin < 0 ? `${margin}` : 'EVEN';
+
+      // Find top scorer
+      let topScorerName = '—';
+      let topScorerJersey: string | number = '';
+      let topScorerPts = 0;
+      let topScorerStatLine = '—';
+
+      if (playerPtsMap.size > 0) {
+        const sortedScorers = [...playerPtsMap.entries()].sort((a, b) => b[1].pts - a[1].pts);
+        const top = sortedScorers[0];
+        const playerEntry = lineup.find((l) => l.playerId === top[0]);
+        if (playerEntry) {
+          topScorerName = `${playerEntry.player.firstName} ${playerEntry.player.lastName}`;
+          topScorerJersey = playerEntry.player.jerseyNumber ?? '';
+          topScorerPts = top[1].pts;
+          const statParts = [`${top[1].pts} PTS`];
+          if (top[1].fg3A > 0) statParts.push(`${top[1].fg3M}/${top[1].fg3A} 3PT`);
+          if (top[1].ftA > 0) statParts.push(`${top[1].ftM}/${top[1].ftA} FT`);
+          topScorerStatLine = statParts.join(', ');
+        }
+      }
+
+      let takeaway = 'Tied quarter';
+      if (margin > 0) {
+        takeaway = `Outscored opponent by +${margin}`;
+      } else if (margin < 0) {
+        takeaway = `Opponent +${-margin} advantage`;
+      }
+
+      periodRecaps.push({
+        period: p,
+        label: p <= 4 ? `Q${p}` : `OT${p - 4}`,
+        teamScore: pTeamPts,
+        opponentScore: pOppPts,
+        margin,
+        marginFormatted,
+        topScorerName,
+        topScorerJersey,
+        topScorerPts,
+        topScorerStatLine,
+        fgMade: pFgMade,
+        fgAtt: pFgAtt,
+        fgPct: pFgAtt > 0 ? Math.round((pFgMade / pFgAtt) * 100) : 0,
+        fg3Made: pFg3Made,
+        fg3Att: pFg3Att,
+        fg3Pct: pFg3Att > 0 ? Math.round((pFg3Made / pFg3Att) * 100) : 0,
+        takeaway,
+      });
+    }
+
+    // 7. Key Plays
+    const keyPlays: {
+      id: string;
+      period: number;
+      periodLabel: string;
+      minuteOccurred: number;
+      isTeam: boolean;
+      points: number;
+      type: string;
+      description: string;
+      secondaryText?: string;
+      badgeLabel: string;
+      badgeColor: string;
+    }[] = [];
+
+    steps.forEach((s, idx) => {
+      const pLabel = s.period <= 4 ? `Q${s.period}` : `OT${s.period - 4}`;
+      const isLeadChange = idx > 0 && Math.sign(s.diff) !== Math.sign(steps[idx - 1].diff) && s.diff !== 0;
+      const isClutch = s.period >= 4 && s.minute >= 5 && Math.abs(s.diff) <= 5;
+      const is3Pt = s.type === 'MADE_3PT';
+
+      if (isLeadChange || isClutch || is3Pt) {
+        let badgeLabel = 'Scoring Play';
+        let badgeColor = 'primary';
+        if (isLeadChange) {
+          badgeLabel = 'LEAD CHANGE';
+          badgeColor = 'warning';
+        } else if (isClutch) {
+          badgeLabel = 'CLUTCH PLAY';
+          badgeColor = 'danger';
+        } else if (is3Pt) {
+          badgeLabel = '3-POINTER';
+          badgeColor = 'secondary';
+        }
+
+        let desc = '';
+        if (s.isTeam) {
+          const jersey = s.scorerJersey !== undefined ? `#${s.scorerJersey} ` : '';
+          desc = `${s.type === 'MADE_3PT' ? '3PT Field Goal' : 'Field Goal'} by ${jersey}${s.scorerName || 'Team'}`;
+        } else {
+          desc = `Opponent Score (+${s.points} PTS)`;
+        }
+
+        let sec = '';
+        if (s.assistorName) {
+          const aJersey = s.assistorJersey !== undefined ? `#${s.assistorJersey} ` : '';
+          sec = `Assisted by ${aJersey}${s.assistorName}`;
+        }
+
+        keyPlays.push({
+          id: s.rawEvent.id || `kp-${idx}`,
+          period: s.period,
+          periodLabel: pLabel,
+          minuteOccurred: s.minute,
+          isTeam: s.isTeam,
+          points: s.points,
+          type: s.type,
+          description: desc,
+          secondaryText: sec || undefined,
+          badgeLabel,
+          badgeColor,
+        });
+      }
+    });
+
+    return {
+      momentum: {
+        largestLeadTeam: maxLeadTeam,
+        largestLeadTeamMoment: maxLeadTeamMoment,
+        largestLeadOpponent: maxLeadOpp,
+        largestLeadOpponentMoment: maxLeadOppMoment,
+        leadChanges,
+        timesTied,
+        biggestRunTeam: maxTeamRun,
+        biggestRunOpponent: maxOppRun,
+        biggestRunLabel,
+        svgCurvePath: curvePath,
+        svgAreaPath: areaPath,
+        periodDividers,
+        maxLeadTeamPoint: maxLeadTeamPoint as { x: number; y: number } | null,
+        maxLeadOppPoint: maxLeadOppPoint as { x: number; y: number } | null,
+        maxAbsDiff,
+      },
+      pivotalMoments: topPivotalMoments,
+      scoringDistribution,
+      periodRecaps,
+      keyPlays: keyPlays.slice(0, 10),
+      fullPlaysCount: steps.length,
+    };
+  });
+
   protected getPlayerName(playerId: string | undefined): string {
     if (!playerId) return '';
     const entry = this.lineup().find(l => l.playerId === playerId);
@@ -1086,6 +1770,9 @@ export class GameSummary implements OnDestroy {
       shieldOutline,
       chatboxEllipsesOutline,
       basketballOutline,
+      flameOutline,
+      trendingUpOutline,
+      flashOutline,
     });
 
     effect(() => {

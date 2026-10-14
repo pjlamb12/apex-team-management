@@ -662,9 +662,11 @@
                 </ion-card-content>
               </ion-card>
             } @else if (sportName() === 'Basketball') {
+              @let intel = basketballGameIntelligence();
+
               <!-- Quarter Line Score Card -->
               <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
-                <ion-card-header class="px-6 pt-6 pb-2">
+                <ion-card-header class="px-4 sm:px-6 pt-5 pb-2">
                   <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
                     <ion-icon name="basketball-outline" class="text-amber-500"></ion-icon>
                     Quarter Line Score
@@ -703,62 +705,425 @@
                 </ion-card-content>
               </ion-card>
 
-              <!-- Basketball Scoring Plays Timeline -->
-              <ion-card class="m-0">
-                <ion-card-header class="px-6 pt-6 pb-2">
-                  <ion-card-title class="text-xs font-bold uppercase tracking-widest text-ap-muted flex items-center gap-2">
-                    <ion-icon name="basketball-outline"></ion-icon>
-                    Scoring Plays Timeline
+              <!-- 1. Momentum & Lead Differential Chart -->
+              <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
+                <ion-card-header class="px-4 sm:px-6 pt-5 pb-3 bg-ap-surface border-b border-ap-border/60">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                      <ion-icon name="trending-up-outline" class="text-emerald-500"></ion-icon>
+                      Game Flow & Momentum Lead Differential
+                    </ion-card-title>
+                    <div class="flex items-center gap-2 text-xs">
+                      <span class="inline-flex items-center gap-1 text-emerald-400 font-bold">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                        {{ game()?.season?.team?.name || 'Apex' }} Lead
+                      </span>
+                      <span class="text-ap-muted">/</span>
+                      <span class="inline-flex items-center gap-1 text-rose-400 font-bold">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>
+                        {{ game()?.opponent || 'Opponent' }} Lead
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Momentum Pill Summary Bar -->
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-ap-border/40">
+                    <div class="bg-ap-bg/70 p-2 rounded-lg border border-ap-border/50">
+                      <div class="text-[10px] uppercase font-bold text-ap-muted tracking-tight">Largest Lead</div>
+                      <div class="text-sm font-black text-emerald-400 font-mono">{{ intel.momentum.largestLeadTeamMoment }}</div>
+                    </div>
+                    <div class="bg-ap-bg/70 p-2 rounded-lg border border-ap-border/50">
+                      <div class="text-[10px] uppercase font-bold text-ap-muted tracking-tight">Lead Changes</div>
+                      <div class="text-sm font-black text-amber-400 font-mono">{{ intel.momentum.leadChanges }}</div>
+                    </div>
+                    <div class="bg-ap-bg/70 p-2 rounded-lg border border-ap-border/50">
+                      <div class="text-[10px] uppercase font-bold text-ap-muted tracking-tight">Times Tied</div>
+                      <div class="text-sm font-black text-blue-400 font-mono">{{ intel.momentum.timesTied }}</div>
+                    </div>
+                    <div class="bg-ap-bg/70 p-2 rounded-lg border border-ap-border/50">
+                      <div class="text-[10px] uppercase font-bold text-ap-muted tracking-tight">Biggest Run</div>
+                      <div class="text-sm font-black text-purple-400 font-mono">{{ intel.momentum.biggestRunLabel }}</div>
+                    </div>
+                  </div>
+                </ion-card-header>
+
+                <ion-card-content class="p-4 bg-ap-bg/30">
+                  <!-- SVG Visual Lead Curve -->
+                  <div class="relative w-full h-[140px] bg-ap-bg/80 rounded-xl border border-ap-border/60 p-2 overflow-hidden">
+                    <svg viewBox="0 0 600 120" preserveAspectRatio="none" class="w-full h-full block">
+                      <defs>
+                        <linearGradient id="leadAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="#10b981" stop-opacity="0.3" />
+                          <stop offset="50%" stop-color="#10b981" stop-opacity="0.05" />
+                          <stop offset="50%" stop-color="#f43f5e" stop-opacity="0.05" />
+                          <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.3" />
+                        </linearGradient>
+                      </defs>
+
+                      <!-- Period vertical dashed lines -->
+                      @for (div of intel.momentum.periodDividers; track div.x) {
+                        <line [attr.x1]="div.x" y1="0" [attr.x2]="div.x" y2="120" stroke="currentColor" stroke-dasharray="3,3" opacity="0.15" />
+                        <text [attr.x]="div.x + 4" y="14" font-size="9" font-weight="900" fill="currentColor" opacity="0.4">{{ div.label }}</text>
+                      }
+
+                      <!-- Midline y = 60 (Tied) -->
+                      <line x1="0" y1="60" x2="600" y2="60" stroke="currentColor" stroke-dasharray="4,4" opacity="0.3" stroke-width="1.5" />
+                      <text x="6" y="56" font-size="8" font-weight="bold" fill="currentColor" opacity="0.5">TIED</text>
+                      <text x="6" y="16" font-size="8" font-weight="bold" fill="#10b981">+{{ intel.momentum.maxAbsDiff }}</text>
+                      <text x="6" y="112" font-size="8" font-weight="bold" fill="#f43f5e">-{{ intel.momentum.maxAbsDiff }}</text>
+
+                      <!-- Area fill -->
+                      <path [attr.d]="intel.momentum.svgAreaPath" fill="url(#leadAreaGrad)" />
+
+                      <!-- Step stroke curve -->
+                      <path [attr.d]="intel.momentum.svgCurvePath" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+                      <!-- Apex Peak Lead Dot -->
+                      @if (intel.momentum.maxLeadTeamPoint; as pt) {
+                        <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
+                      }
+                      <!-- Opponent Peak Lead Dot -->
+                      @if (intel.momentum.maxLeadOppPoint; as pt) {
+                        <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4.5" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5" />
+                      }
+                    </svg>
+                  </div>
+
+                  <!-- Pivotal Moments: Scoring Runs & Droughts -->
+                  @if (intel.pivotalMoments.length > 0) {
+                    <div class="mt-4">
+                      <div class="text-[11px] font-black uppercase tracking-wider text-ap-muted mb-2 flex items-center gap-1.5">
+                        <ion-icon name="flame-outline" class="text-amber-500"></ion-icon>
+                        Key Momentum Shifts & Game Runs
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        @for (moment of intel.pivotalMoments; track moment.title + moment.timeRange) {
+                          <div class="flex items-start gap-3 p-3 rounded-lg border bg-ap-surface"
+                            [class.border-emerald-500/40]="moment.isTeam"
+                            [class.border-rose-500/40]="moment.type === 'run_opp'"
+                            [class.border-amber-500/40]="moment.type === 'drought'">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                              [class.bg-emerald-500/20]="moment.isTeam"
+                              [class.text-emerald-400]="moment.isTeam"
+                              [class.bg-rose-500/20]="moment.type === 'run_opp'"
+                              [class.text-rose-400]="moment.type === 'run_opp'"
+                              [class.bg-amber-500/20]="moment.type === 'drought'"
+                              [class.text-amber-400]="moment.type === 'drought'">
+                              <ion-icon [name]="moment.icon" class="text-lg"></ion-icon>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                              <div class="flex items-center justify-between gap-2">
+                                <span class="font-black text-xs text-ap-text truncate">{{ moment.title }}</span>
+                                <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-ap-bg border border-ap-border/60 text-ap-muted whitespace-nowrap">
+                                  {{ moment.periodLabel }} ({{ moment.timeRange }})
+                                </span>
+                              </div>
+                              <p class="text-xs text-ap-muted mt-0.5 leading-snug">{{ moment.subtitle }}</p>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </ion-card-content>
+              </ion-card>
+
+              <!-- 2. Scoring Distribution & Offensive Profile -->
+              <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
+                <ion-card-header class="px-4 sm:px-6 pt-5 pb-3 bg-ap-surface border-b border-ap-border/60">
+                  <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                    <ion-icon name="stats-chart-outline" class="text-blue-500"></ion-icon>
+                    Scoring Distribution & Offensive Profile
+                  </ion-card-title>
+                </ion-card-header>
+                <ion-card-content class="p-4 space-y-4">
+                  <!-- Stacked Horizontal Bar -->
+                  <div class="w-full">
+                    <div class="flex items-center justify-between text-xs text-ap-muted font-bold mb-1.5">
+                      <span>Points by Zone</span>
+                      <span class="font-mono text-ap-text font-black">{{ intel.scoringDistribution.totalPts }} PTS</span>
+                    </div>
+                    <div class="w-full h-4 rounded-full overflow-hidden flex bg-ap-bg border border-ap-border/60">
+                      @if (intel.scoringDistribution.paintPct > 0) {
+                        <div class="bg-emerald-500 transition-all" [style.width.%]="intel.scoringDistribution.paintPct" [title]="'Paint: ' + intel.scoringDistribution.paintPts + ' PTS'"></div>
+                      }
+                      @if (intel.scoringDistribution.threePct > 0) {
+                        <div class="bg-blue-500 transition-all" [style.width.%]="intel.scoringDistribution.threePct" [title]="'3PT: ' + intel.scoringDistribution.threePts + ' PTS'"></div>
+                      }
+                      @if (intel.scoringDistribution.midRangePct > 0) {
+                        <div class="bg-amber-500 transition-all" [style.width.%]="intel.scoringDistribution.midRangePct" [title]="'Mid-Range: ' + intel.scoringDistribution.midRangePts + ' PTS'"></div>
+                      }
+                      @if (intel.scoringDistribution.ftPct > 0) {
+                        <div class="bg-purple-500 transition-all" [style.width.%]="intel.scoringDistribution.ftPct" [title]="'Free Throws: ' + intel.scoringDistribution.ftPts + ' PTS'"></div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Zone Breakdown Cards -->
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div class="bg-ap-surface p-3 rounded-xl border border-ap-border/60 flex flex-col">
+                      <div class="flex items-center gap-1.5 text-xs text-ap-muted font-bold">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block shrink-0"></span>
+                        <span class="truncate">Paint (PITP)</span>
+                      </div>
+                      <div class="text-lg font-black text-ap-text font-mono mt-1">
+                        {{ intel.scoringDistribution.paintPts }} <span class="text-xs font-normal text-ap-muted">PTS</span>
+                      </div>
+                      <div class="text-xs text-emerald-400 font-bold font-mono">
+                        {{ intel.scoringDistribution.paintPct }}% of total
+                      </div>
+                    </div>
+
+                    <div class="bg-ap-surface p-3 rounded-xl border border-ap-border/60 flex flex-col">
+                      <div class="flex items-center gap-1.5 text-xs text-ap-muted font-bold">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block shrink-0"></span>
+                        <span class="truncate">3-Point</span>
+                      </div>
+                      <div class="text-lg font-black text-ap-text font-mono mt-1">
+                        {{ intel.scoringDistribution.threePts }} <span class="text-xs font-normal text-ap-muted">PTS</span>
+                      </div>
+                      <div class="text-xs text-blue-400 font-bold font-mono">
+                        {{ intel.scoringDistribution.threePct }}% of total
+                      </div>
+                    </div>
+
+                    <div class="bg-ap-surface p-3 rounded-xl border border-ap-border/60 flex flex-col">
+                      <div class="flex items-center gap-1.5 text-xs text-ap-muted font-bold">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block shrink-0"></span>
+                        <span class="truncate">Mid-Range</span>
+                      </div>
+                      <div class="text-lg font-black text-ap-text font-mono mt-1">
+                        {{ intel.scoringDistribution.midRangePts }} <span class="text-xs font-normal text-ap-muted">PTS</span>
+                      </div>
+                      <div class="text-xs text-amber-400 font-bold font-mono">
+                        {{ intel.scoringDistribution.midRangePct }}% of total
+                      </div>
+                    </div>
+
+                    <div class="bg-ap-surface p-3 rounded-xl border border-ap-border/60 flex flex-col">
+                      <div class="flex items-center gap-1.5 text-xs text-ap-muted font-bold">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block shrink-0"></span>
+                        <span class="truncate">Free Throws</span>
+                      </div>
+                      <div class="text-lg font-black text-ap-text font-mono mt-1">
+                        {{ intel.scoringDistribution.ftPts }} <span class="text-xs font-normal text-ap-muted">PTS</span>
+                      </div>
+                      <div class="text-xs text-purple-400 font-bold font-mono">
+                        {{ intel.scoringDistribution.ftPct }}% of total
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tactical Indicators: Assisted % and Points off Turnovers -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-ap-bg border border-ap-border/60">
+                      <div>
+                        <div class="text-xs font-bold uppercase text-ap-muted tracking-tight">Assisted Field Goals</div>
+                        <div class="text-[11px] text-ap-muted mt-0.5">Team ball movement indicator</div>
+                      </div>
+                      <div class="text-right">
+                        <span class="text-base font-black font-mono text-emerald-400">
+                          {{ intel.scoringDistribution.assistedFGs }}/{{ intel.scoringDistribution.totalFGs }}
+                        </span>
+                        <span class="text-xs font-bold text-ap-muted block font-mono">
+                          ({{ intel.scoringDistribution.assistedPct }}%)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-ap-bg border border-ap-border/60">
+                      <div>
+                        <div class="text-xs font-bold uppercase text-ap-muted tracking-tight">Points off Turnovers</div>
+                        <div class="text-[11px] text-ap-muted mt-0.5">Fastbreak and transition conversion</div>
+                      </div>
+                      <div class="text-right">
+                        <span class="text-base font-black font-mono text-amber-400">
+                          {{ intel.scoringDistribution.pointsOffTurnovers }} PTS
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+
+              <!-- 3. Quarter-by-Quarter Period Recap Cards -->
+              <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
+                <ion-card-header class="px-4 sm:px-6 pt-5 pb-3 bg-ap-surface border-b border-ap-border/60">
+                  <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                    <ion-icon name="time-outline" class="text-amber-500"></ion-icon>
+                    Quarter-by-Quarter Period Recaps
+                  </ion-card-title>
+                </ion-card-header>
+                <ion-card-content class="p-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    @for (recap of intel.periodRecaps; track recap.period) {
+                      <div class="bg-ap-surface rounded-xl border border-ap-border/60 p-3.5 flex flex-col justify-between space-y-3">
+                        <!-- Header: Period & Margin -->
+                        <div class="flex items-center justify-between">
+                          <span class="text-sm font-black text-ap-text uppercase tracking-wider">{{ recap.label }}</span>
+                          <span class="px-2 py-0.5 rounded text-xs font-black font-mono"
+                            [class.bg-emerald-500/20]="recap.margin > 0"
+                            [class.text-emerald-400]="recap.margin > 0"
+                            [class.bg-rose-500/20]="recap.margin < 0"
+                            [class.text-rose-400]="recap.margin < 0"
+                            [class.bg-slate-500/20]="recap.margin === 0"
+                            [class.text-ap-muted]="recap.margin === 0">
+                            {{ recap.marginFormatted }}
+                          </span>
+                        </div>
+
+                        <!-- Quarter Score -->
+                        <div>
+                          <div class="text-xl font-black font-mono text-ap-text">
+                            {{ recap.teamScore }} – {{ recap.opponentScore }}
+                          </div>
+                          <div class="text-[11px] text-ap-muted font-semibold mt-0.5">
+                            {{ recap.takeaway }}
+                          </div>
+                        </div>
+
+                        <!-- Top Scorer & Shooting Efficiency -->
+                        <div class="pt-2 border-t border-ap-border/40 space-y-1.5 text-xs">
+                          <div>
+                            <span class="text-[10px] font-bold text-ap-muted uppercase block">Top Scorer:</span>
+                            <span class="font-bold text-ap-text">
+                              @if (recap.topScorerJersey !== '') { #{{ recap.topScorerJersey }} }
+                              {{ recap.topScorerName }}
+                            </span>
+                            @if (recap.topScorerPts > 0) {
+                              <span class="text-[11px] font-mono text-amber-400 block font-semibold">
+                                {{ recap.topScorerStatLine }}
+                              </span>
+                            }
+                          </div>
+                          <div>
+                            <span class="text-[10px] font-bold text-ap-muted uppercase block">Shooting:</span>
+                            <span class="font-mono text-ap-text font-semibold text-[11px]">
+                              FG: {{ recap.fgMade }}/{{ recap.fgAtt }} ({{ recap.fgPct }}%) | 3PT: {{ recap.fg3Made }}/{{ recap.fg3Att }} ({{ recap.fg3Pct }}%)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </ion-card-content>
+              </ion-card>
+
+              <!-- 4. Key & Clutch Plays with Collapsible Full Play-by-Play Accordion -->
+              <ion-card class="m-0 border border-ap-border shadow-none overflow-hidden">
+                <ion-card-header class="px-4 sm:px-6 pt-5 pb-3 bg-ap-surface border-b border-ap-border/60">
+                  <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                    <ion-icon name="flash-outline" class="text-amber-500"></ion-icon>
+                    Key & High-Leverage Plays
                   </ion-card-title>
                 </ion-card-header>
                 <ion-card-content class="p-0">
-                  <ion-list lines="full">
-                    @for (play of basketballScoringPlays(); track play.id) {
-                      <ion-item class="goal-item">
-                        <div slot="start" class="w-14 text-center font-mono font-bold text-blue-400 border-r border-ap-border h-full flex flex-col items-center justify-center py-1">
-                          <span class="text-sm leading-none">{{ play.minuteOccurred }}'</span>
-                          <span class="text-[9px] text-ap-muted font-bold tracking-tight mt-0.5 uppercase">{{ getPeriodShortLabel(play.period ?? play.payload?.period ?? 1) }}</span>
-                        </div>
-                        <ion-label class="pl-4">
-                          <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                              <ion-icon
-                                [name]="play.isTeam ? 'arrow-up-circle' : 'arrow-down-circle'"
-                                [color]="play.isTeam ? 'success' : 'danger'"
-                                class="text-xl"
-                              ></ion-icon>
-                              <div>
-                                <div class="font-bold text-ap-text leading-tight">
-                                  @if (play.isTeam) {
-                                    <span class="font-black text-amber-400">+{{ play.points }} PTS</span>
-                                    @if (play.player; as p) {
-                                      <span class="text-ap-text font-normal block text-xs mt-0.5">
-                                        {{ play.eventType === 'MADE_3PT' ? '3PT Field Goal' : (play.eventType === 'MADE_2PT' ? '2PT Field Goal' : 'Free Throw') }} by #{{ p.jerseyNumber }} {{ p.firstName }} {{ p.lastName }}
-                                      </span>
-                                    }
-                                    @if (play.assistorPlayer; as ap) {
-                                      <span class="text-emerald-400 font-normal block text-[11px] mt-0.5">Assisted by #{{ ap.jerseyNumber }} {{ ap.firstName }} {{ ap.lastName }}</span>
-                                    }
-                                  } @else {
-                                    <span class="font-black text-rose-400">Opponent Score (+{{ play.points }} PTS)</span>
+                  @if (intel.keyPlays.length > 0) {
+                    <ion-list lines="full">
+                      @for (play of intel.keyPlays; track play.id) {
+                        <ion-item class="goal-item">
+                          <div slot="start" class="w-14 text-center font-mono font-bold text-blue-400 border-r border-ap-border h-full flex flex-col items-center justify-center py-1">
+                            <span class="text-sm leading-none">{{ play.minuteOccurred }}'</span>
+                            <span class="text-[9px] text-ap-muted font-bold tracking-tight mt-0.5 uppercase">{{ play.periodLabel }}</span>
+                          </div>
+                          <ion-label class="pl-4">
+                            <div class="flex items-center justify-between">
+                              <div class="flex items-center gap-3">
+                                <ion-icon
+                                  [name]="play.isTeam ? 'arrow-up-circle' : 'arrow-down-circle'"
+                                  [color]="play.isTeam ? 'success' : 'danger'"
+                                  class="text-xl"
+                                ></ion-icon>
+                                <div>
+                                  <div class="font-bold text-ap-text leading-tight">
+                                    <span class="font-black text-amber-400 mr-1.5">+{{ play.points }} PTS</span>
+                                    <span>{{ play.description }}</span>
+                                  </div>
+                                  @if (play.secondaryText) {
+                                    <div class="text-emerald-400 font-semibold text-[11px] mt-0.5">
+                                      {{ play.secondaryText }}
+                                    </div>
                                   }
                                 </div>
                               </div>
+                              <div class="text-right shrink-0">
+                                <ion-badge [color]="play.badgeColor" class="text-[10px] font-black uppercase tracking-wider">
+                                  {{ play.badgeLabel }}
+                                </ion-badge>
+                              </div>
                             </div>
-                            <div class="text-right">
-                              <ion-badge [color]="play.isTeam ? 'primary' : 'medium'" class="text-[10px] uppercase font-bold">
-                                {{ play.eventType === 'MADE_3PT' ? '3-Pointer' : (play.eventType === 'MADE_2PT' ? '2-Pointer' : (play.eventType === 'MADE_1PT' ? 'Free Throw' : 'Score')) }}
-                              </ion-badge>
-                            </div>
-                          </div>
-                        </ion-label>
-                      </ion-item>
-                    } @empty {
-                      <div class="py-12 text-center text-ap-muted italic">
-                        No scoring plays logged for this match.
-                      </div>
-                    }
-                  </ion-list>
+                          </ion-label>
+                        </ion-item>
+                      }
+                    </ion-list>
+                  } @else {
+                    <div class="py-8 text-center text-ap-muted italic">
+                      No key plays recorded yet.
+                    </div>
+                  }
+
+                  <!-- Collapsible Full Play-by-Play Accordion -->
+                  <div class="p-4 border-t border-ap-border/60 bg-ap-bg/40">
+                    <ion-accordion-group>
+                      <ion-accordion value="full-pbp" class="rounded-xl border border-ap-border/60 overflow-hidden bg-ap-surface">
+                        <ion-item slot="header" color="light" class="cursor-pointer">
+                          <ion-icon name="list-outline" slot="start" class="text-ap-primary text-base mr-2"></ion-icon>
+                          <ion-label class="text-xs font-black uppercase tracking-wider text-ap-text">
+                            Full Play-by-Play Log ({{ intel.fullPlaysCount }} plays)
+                          </ion-label>
+                        </ion-item>
+                        <div slot="content" class="p-0 border-t border-ap-border/40">
+                          <ion-list lines="full">
+                            @for (play of basketballScoringPlays(); track play.id) {
+                              <ion-item class="goal-item">
+                                <div slot="start" class="w-14 text-center font-mono font-bold text-blue-400 border-r border-ap-border h-full flex flex-col items-center justify-center py-1">
+                                  <span class="text-sm leading-none">{{ play.minuteOccurred }}'</span>
+                                  <span class="text-[9px] text-ap-muted font-bold tracking-tight mt-0.5 uppercase">{{ getPeriodShortLabel(play.period ?? play.payload?.period ?? 1) }}</span>
+                                </div>
+                                <ion-label class="pl-4">
+                                  <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                      <ion-icon
+                                        [name]="play.isTeam ? 'arrow-up-circle' : 'arrow-down-circle'"
+                                        [color]="play.isTeam ? 'success' : 'danger'"
+                                        class="text-xl"
+                                      ></ion-icon>
+                                      <div>
+                                        <div class="font-bold text-ap-text leading-tight">
+                                          @if (play.isTeam) {
+                                            <span class="font-black text-amber-400">+{{ play.points }} PTS</span>
+                                            @if (play.player; as p) {
+                                              <span class="text-ap-text font-normal block text-xs mt-0.5">
+                                                {{ play.eventType === 'MADE_3PT' ? '3PT Field Goal' : (play.eventType === 'MADE_2PT' ? '2PT Field Goal' : 'Free Throw') }} by #{{ p.jerseyNumber }} {{ p.firstName }} {{ p.lastName }}
+                                              </span>
+                                            }
+                                            @if (play.assistorPlayer; as ap) {
+                                              <span class="text-emerald-400 font-normal block text-[11px] mt-0.5">Assisted by #{{ ap.jerseyNumber }} {{ ap.firstName }} {{ ap.lastName }}</span>
+                                            }
+                                          } @else {
+                                            <span class="font-black text-rose-400">Opponent Score (+{{ play.points }} PTS)</span>
+                                          }
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="text-right">
+                                      <ion-badge [color]="play.isTeam ? 'primary' : 'medium'" class="text-[10px] uppercase font-bold">
+                                        {{ play.eventType === 'MADE_3PT' ? '3-Pointer' : (play.eventType === 'MADE_2PT' ? '2-Pointer' : (play.eventType === 'MADE_1PT' ? 'Free Throw' : 'Score')) }}
+                                      </ion-badge>
+                                    </div>
+                                  </div>
+                                </ion-label>
+                              </ion-item>
+                            } @empty {
+                              <div class="py-8 text-center text-ap-muted italic">
+                                No scoring plays logged for this match.
+                              </div>
+                            }
+                          </ion-list>
+                        </div>
+                      </ion-accordion>
+                    </ion-accordion-group>
+                  </div>
                 </ion-card-content>
               </ion-card>
             } @else {
@@ -1051,16 +1416,65 @@
 
           @if (activeSegment() === 'shot-chart' && sportName() === 'Basketball') {
             <ion-card class="m-0 overflow-hidden border border-ap-border shadow-none">
-              <ion-card-header class="px-6 pt-6 pb-2">
-                <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
-                  <ion-icon name="basketball-outline" class="text-amber-500"></ion-icon>
-                  Interactive Shot Chart
-                </ion-card-title>
+              <ion-card-header class="px-4 sm:px-6 pt-5 pb-3 bg-ap-surface border-b border-ap-border/60">
+                <div class="flex flex-col gap-2.5">
+                  <ion-card-title class="text-xs font-black uppercase tracking-widest text-ap-muted flex items-center gap-2">
+                    <ion-icon name="basketball-outline" class="text-amber-500 text-base"></ion-icon>
+                    Interactive Shot Chart
+                  </ion-card-title>
+
+                  <!-- Period Filter Segment -->
+                  <ion-segment
+                    [value]="shotChartPeriodFilter()"
+                    (ionChange)="setShotChartPeriod($event.detail.value)"
+                    mode="ios"
+                    class="period-filter-segment w-full sm:w-auto self-start h-8"
+                  >
+                    <ion-segment-button value="all" class="text-xs">
+                      <ion-label [class.font-black]="shotChartPeriodFilter() === 'all'">All Game</ion-label>
+                    </ion-segment-button>
+                    @for (p of shotChartPeriods(); track p.period) {
+                      <ion-segment-button [value]="p.period" class="text-xs">
+                        <ion-label [class.font-black]="shotChartPeriodFilter() === p.period">{{ p.label }}</ion-label>
+                      </ion-segment-button>
+                    }
+                  </ion-segment>
+                </div>
+
+                <!-- Shooting Totals and Percentage Badges -->
+                @let stats = periodShootingStats();
+                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-ap-border/40 text-xs">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
+                      <span class="text-ap-muted font-bold uppercase text-[10px]">FG:</span>
+                      <span class="font-black font-mono text-emerald-400">{{ stats.fgMade }}/{{ stats.fgAtt }}</span>
+                      <span class="text-ap-muted font-mono">({{ stats.fgPct | number:'1.1-1' }}%)</span>
+                    </div>
+                    <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
+                      <span class="text-ap-muted font-bold uppercase text-[10px]">3PT:</span>
+                      <span class="font-black font-mono text-blue-400">{{ stats.fg3Made }}/{{ stats.fg3Att }}</span>
+                      <span class="text-ap-muted font-mono">({{ stats.fg3Pct | number:'1.1-1' }}%)</span>
+                    </div>
+                    <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
+                      <span class="text-ap-muted font-bold uppercase text-[10px]">2PT:</span>
+                      <span class="font-black font-mono text-amber-400">{{ stats.fg2Made }}/{{ stats.fg2Att }}</span>
+                      <span class="text-ap-muted font-mono">({{ stats.fg2Pct | number:'1.1-1' }}%)</span>
+                    </div>
+                    <div class="px-2.5 py-1 rounded bg-ap-bg border border-ap-border/60 font-semibold text-ap-text flex items-center gap-1.5">
+                      <span class="text-ap-muted font-bold uppercase text-[10px]">FT:</span>
+                      <span class="font-black font-mono text-purple-400">{{ stats.ftMade }}/{{ stats.ftAtt }}</span>
+                      <span class="text-ap-muted font-mono">({{ stats.ftPct | number:'1.1-1' }}%)</span>
+                    </div>
+                  </div>
+                  <div class="px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/40 font-bold text-amber-400 shrink-0">
+                    {{ stats.totalPts }} PTS
+                  </div>
+                </div>
               </ion-card-header>
               <ion-card-content class="p-0">
-                <div class="h-[520px] w-full flex flex-col">
+                <div class="h-[540px] w-full flex flex-col">
                   <app-basketball-court-view
-                    [shots]="basketballShots()"
+                    [shots]="filteredBasketballShots()"
                     [players]="summaryPlayers()"
                     [activePlayers]="summaryActivePlayers()"
                     [isLineupMode]="false"

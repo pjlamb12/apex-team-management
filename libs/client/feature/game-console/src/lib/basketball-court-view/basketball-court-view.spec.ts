@@ -16,10 +16,10 @@ describe('BasketballCourtViewComponent', () => {
   ];
 
   const mockShots: ShotEventRecord[] = [
-    { id: 's1', type: 'MADE_3PT', playerId: 'p1', playerJersey: 30, x: 50, y: 65, distanceFeet: 23 },
-    { id: 's2', type: 'MISSED_3PT', playerId: 'p2', playerJersey: 11, x: 95, y: 15, distanceFeet: 22 },
-    { id: 's3', type: 'MADE_2PT', playerId: 'p5', playerJersey: 13, x: 50, y: 20, distanceFeet: 4 },
-    { id: 's4', type: 'MISSED_2PT', playerId: 'p4', playerJersey: 23, x: 30, y: 35, distanceFeet: 14 },
+    { id: 's1', type: 'MADE_3PT', playerId: 'p1', playerJersey: 30, x: 50, y: 65, distanceFeet: 23, period: 1 },
+    { id: 's2', type: 'MISSED_3PT', playerId: 'p2', playerJersey: 11, x: 95, y: 15, distanceFeet: 22, period: 1 },
+    { id: 's3', type: 'MADE_2PT', playerId: 'p5', playerJersey: 13, x: 50, y: 20, distanceFeet: 4, period: 2 },
+    { id: 's4', type: 'MISSED_2PT', playerId: 'p4', playerJersey: 23, x: 30, y: 35, distanceFeet: 14, period: 2 },
   ];
 
   beforeEach(async () => {
@@ -83,6 +83,101 @@ describe('BasketballCourtViewComponent', () => {
     component['togglePlayerFilter']('p1'); // toggle off
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelectorAll('.shot-marker').length).toBe(4);
+  });
+
+  it('should default to active period when currentPeriod is set and clear on period advance', () => {
+    // Set active period to Q1
+    fixture.componentRef.setInput('currentPeriod', 1);
+    fixture.detectChanges();
+
+    expect(component.activePeriod()).toBe(1);
+    let markers = fixture.nativeElement.querySelectorAll('.shot-marker');
+    // Only s1 and s2 belong to Q1
+    expect(markers.length).toBe(2);
+    expect(component['allCount']()).toBe(2);
+
+    // Advance period to Q2
+    fixture.componentRef.setInput('currentPeriod', 2);
+    fixture.detectChanges();
+
+    expect(component.activePeriod()).toBe(2);
+    markers = fixture.nativeElement.querySelectorAll('.shot-marker');
+    // s3 and s4 belong to Q2
+    expect(markers.length).toBe(2);
+    expect(component['allCount']()).toBe(2);
+
+    // Advance period to Q3 (no shots logged yet) -> court clears cleanly!
+    fixture.componentRef.setInput('currentPeriod', 3);
+    fixture.detectChanges();
+
+    expect(component.activePeriod()).toBe(3);
+    markers = fixture.nativeElement.querySelectorAll('.shot-marker');
+    expect(markers.length).toBe(0);
+    expect(component['allCount']()).toBe(0);
+  });
+
+  it('should allow toggling between periods courtside using setPeriod', () => {
+    fixture.componentRef.setInput('currentPeriod', 2);
+    fixture.detectChanges();
+
+    // In Q2: shows 2 shots
+    expect(component['filteredShots']().length).toBe(2);
+
+    // Switch courtside to view Q1
+    component.setPeriod(1);
+    fixture.detectChanges();
+    expect(component.activePeriod()).toBe(1);
+    expect(component['filteredShots']().length).toBe(2);
+    expect(component['filteredShots']()[0].id).toBe('s1');
+
+    // Switch courtside to view All
+    component.setPeriod('all');
+    fixture.detectChanges();
+    expect(component.activePeriod()).toBe('all');
+    expect(component['filteredShots']().length).toBe(4);
+
+    // Switch back to current period Q2
+    component.setPeriod(2);
+    fixture.detectChanges();
+    expect(component.activePeriod()).toBe(2);
+    expect(component['filteredShots']().length).toBe(2);
+  });
+
+  it('should render period pills for each period and all when showPeriodToggle is true', () => {
+    fixture.componentRef.setInput('currentPeriod', 2);
+    fixture.componentRef.setInput('showPeriodToggle', true);
+    fixture.detectChanges();
+
+    const pills = fixture.nativeElement.querySelectorAll('.period-pill');
+    // Q1, Q2*, All -> 3 pills
+    expect(pills.length).toBe(3);
+    expect(pills[0].textContent.trim()).toBe('Q1');
+    expect(pills[1].textContent.trim()).toBe('Q2*');
+    expect(pills[2].textContent.trim()).toBe('All');
+  });
+
+  it('should not render period pills when showPeriodToggle is false (default)', () => {
+    fixture.componentRef.setInput('currentPeriod', 2);
+    fixture.detectChanges();
+
+    const pills = fixture.nativeElement.querySelectorAll('.period-pill');
+    expect(pills.length).toBe(0);
+  });
+
+  it('should not render court toggle button when showCourtToggle is false (default)', () => {
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[];
+    const courtToggle = buttons.find((b) => b.textContent?.includes('Court'));
+    expect(courtToggle).toBeUndefined();
+  });
+
+  it('should render court toggle button when showCourtToggle is true', () => {
+    fixture.componentRef.setInput('showCourtToggle', true);
+    fixture.detectChanges();
+
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[];
+    const courtToggle = buttons.find((b) => b.textContent?.includes('Court'));
+    expect(courtToggle).toBeDefined();
+    expect(courtToggle?.textContent?.trim()).toBe('Half Court');
   });
 
   it('should open HUD with calculated 2PT for a touch inside the arc', () => {

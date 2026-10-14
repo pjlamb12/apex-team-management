@@ -474,5 +474,190 @@ describe('GameSummary Event Sorting', () => {
         y: 75,
       }));
     });
+
+    it('should filter post-game shot chart by period and calculate dynamic periodShootingStats', () => {
+      (component as any).gameEvents.set([
+        // Q1: 1 MADE_2PT, 1 MADE_3PT, 1 MISSED_2PT -> 2/3 FG (66.7%), 1/1 3PT (100%), 5 PTS
+        { id: 's1', eventType: 'MADE_2PT', minuteOccurred: 2, payload: { period: 1, playerId: 'p1', x: 50, y: 20 } },
+        { id: 's2', eventType: 'MADE_3PT', minuteOccurred: 4, payload: { period: 1, playerId: 'p2', x: 80, y: 70 } },
+        { id: 's3', eventType: 'MISSED_2PT', minuteOccurred: 6, payload: { period: 1, playerId: 'p1', x: 45, y: 25 } },
+        // Q2: 1 MADE_2PT, 1 MISSED_3PT -> 1/2 FG (50%), 0/1 3PT (0%), 2 PTS
+        { id: 's4', eventType: 'MADE_2PT', minuteOccurred: 10, payload: { period: 2, playerId: 'p2', x: 50, y: 22 } },
+        { id: 's5', eventType: 'MISSED_3PT', minuteOccurred: 12, payload: { period: 2, playerId: 'p1', x: 20, y: 75 } },
+      ]);
+
+      // Default: 'all'
+      expect((component as any).shotChartPeriodFilter()).toBe('all');
+      expect((component as any).filteredBasketballShots().length).toBe(5);
+      let stats = (component as any).periodShootingStats();
+      expect(stats.fgMade).toBe(3);
+      expect(stats.fgAtt).toBe(5);
+      expect(stats.fgPct).toBe(60);
+      expect(stats.totalPts).toBe(7);
+
+      // Filter to Q1
+      (component as any).setShotChartPeriod(1);
+      expect((component as any).shotChartPeriodFilter()).toBe(1);
+      expect((component as any).filteredBasketballShots().length).toBe(3);
+      stats = (component as any).periodShootingStats();
+      expect(stats.fgMade).toBe(2);
+      expect(stats.fgAtt).toBe(3);
+      expect(stats.fgPct).toBeCloseTo(66.67, 1);
+      expect(stats.fg3Made).toBe(1);
+      expect(stats.fg3Att).toBe(1);
+      expect(stats.fg3Pct).toBe(100);
+      expect(stats.totalPts).toBe(5);
+
+      // Filter to Q2
+      (component as any).setShotChartPeriod(2);
+      expect((component as any).shotChartPeriodFilter()).toBe(2);
+      expect((component as any).filteredBasketballShots().length).toBe(2);
+      stats = (component as any).periodShootingStats();
+      expect(stats.fgMade).toBe(1);
+      expect(stats.fgAtt).toBe(2);
+      expect(stats.fgPct).toBe(50);
+      expect(stats.fg3Made).toBe(0);
+      expect(stats.fg3Att).toBe(1);
+      expect(stats.fg3Pct).toBe(0);
+      expect(stats.totalPts).toBe(2);
+
+      // Switch back to all
+      (component as any).setShotChartPeriod('all');
+      expect((component as any).shotChartPeriodFilter()).toBe('all');
+      expect((component as any).filteredBasketballShots().length).toBe(5);
+    });
+
+    it('should compute basketballGameIntelligence momentum, lead changes, times tied, and biggest runs', () => {
+      (component as any).game.set({
+        status: 'completed',
+        periodCount: 4,
+        season: { team: { name: 'Apex' } },
+        opponent: 'Eagles',
+      });
+
+      (component as any).gameEvents.set([
+        // Q1: Apex +2 (2-0, Apex lead)
+        { id: 'e1', eventType: 'MADE_2PT', minuteOccurred: 1, payload: { period: 1, playerId: 'p1' } },
+        // Q1: Opponent +2 (2-2, Tied 1)
+        { id: 'e2', eventType: 'OPPONENT_SCORE', minuteOccurred: 2, payload: { period: 1, points: 2 } },
+        // Q1: Opponent +3 (2-5, Eagles lead +3, Lead Change 1)
+        { id: 'e3', eventType: 'OPPONENT_SCORE', minuteOccurred: 3, payload: { period: 1, points: 3 } },
+        // Q1: Apex +3 (5-5, Tied 2)
+        { id: 'e4', eventType: 'MADE_3PT', minuteOccurred: 4, payload: { period: 1, playerId: 'p2' } },
+        // Q1: Apex +2 (7-5, Apex lead +2, Lead Change 2)
+        { id: 'e5', eventType: 'MADE_2PT', minuteOccurred: 5, payload: { period: 1, playerId: 'p1' } },
+        // Q2: Apex +3 (10-5, Apex 8-0 unanswered run)
+        { id: 'e6', eventType: 'MADE_3PT', minuteOccurred: 9, payload: { period: 2, playerId: 'p1' } },
+        // Q2: Opponent +2 (10-7)
+        { id: 'e7', eventType: 'OPPONENT_SCORE', minuteOccurred: 11, payload: { period: 2, points: 2 } },
+      ]);
+
+      const intel = (component as any).basketballGameIntelligence();
+      expect(intel).toBeDefined();
+
+      // Lead Changes: 2
+      expect(intel.momentum.leadChanges).toBe(2);
+      // Times Tied: 2 (at 2-2 and 5-5)
+      expect(intel.momentum.timesTied).toBe(2);
+      // Largest Lead Apex: +5 (at 10-5)
+      expect(intel.momentum.largestLeadTeam).toBe(5);
+      expect(intel.momentum.largestLeadTeamMoment).toContain('+5');
+      // Largest Lead Opponent: +3 (at 2-5)
+      expect(intel.momentum.largestLeadOpponent).toBe(3);
+      expect(intel.momentum.largestLeadOpponentMoment).toContain('+3');
+      // Biggest Run: 8-0 Apex (5-5 to 10-5 -> 3PT + 2PT + 3PT = 8 pts)
+      expect(intel.momentum.biggestRunLabel).toContain('8–0 Apex');
+      // SVG paths generated
+      expect(intel.momentum.svgCurvePath).toContain('M 0 60');
+      expect(intel.momentum.svgAreaPath).toContain('Z');
+      expect(intel.fullPlaysCount).toBe(7);
+    });
+
+    it('should compute basketball scoring distribution across paint, 3pt, mid-range, and assist rate', () => {
+      (component as any).gameEvents.set([
+        // Paint shot (x: 50, y: 25 -> inside key paint zone) with assist
+        { id: 'e1', eventType: 'MADE_2PT', minuteOccurred: 2, payload: { period: 1, playerId: 'p1', x: 50, y: 25, assistorId: 'p2' } },
+        // Mid-range shot (x: 20, y: 55 -> outside key, inside 3pt arc)
+        { id: 'e2', eventType: 'MADE_2PT', minuteOccurred: 4, payload: { period: 1, playerId: 'p2', x: 20, y: 55 } },
+        // 3PT shot (x: 85, y: 70 -> outside 3pt arc) with assist
+        { id: 'e3', eventType: 'MADE_3PT', minuteOccurred: 6, payload: { period: 1, playerId: 'p1', x: 85, y: 70, assistorId: 'p2' } },
+        // Free throw
+        { id: 'e4', eventType: 'MADE_1PT', minuteOccurred: 7, payload: { period: 1, playerId: 'p1' } },
+      ]);
+
+      const intel = (component as any).basketballGameIntelligence();
+      const dist = intel.scoringDistribution;
+
+      expect(dist.paintPts).toBe(2);
+      expect(dist.midRangePts).toBe(2);
+      expect(dist.threePts).toBe(3);
+      expect(dist.ftPts).toBe(1);
+      expect(dist.totalPts).toBe(8); // 2 + 2 + 3 + 1
+      expect(dist.assistedFGs).toBe(2); // e1 and e3
+      expect(dist.totalFGs).toBe(3);
+      expect(dist.assistedPct).toBe(67); // 2/3 = 67%
+    });
+
+    it('should compute quarter-by-quarter period recaps with top scorers and efficiency', () => {
+      (component as any).lineup.set([
+        {
+          id: 'l1',
+          playerId: 'p1',
+          status: 'starting',
+          positionName: 'PG',
+          player: { id: 'p1', firstName: 'Stephen', lastName: 'Curry', jerseyNumber: 30 },
+        },
+        {
+          id: 'l2',
+          playerId: 'p2',
+          status: 'starting',
+          positionName: 'SG',
+          player: { id: 'p2', firstName: 'Klay', lastName: 'Thompson', jerseyNumber: 11 },
+        },
+      ]);
+
+      (component as any).gameEvents.set([
+        { id: 'e1', eventType: 'MADE_2PT', minuteOccurred: 1, payload: { period: 1, playerId: 'p1' } },
+        { id: 'e2', eventType: 'MADE_3PT', minuteOccurred: 3, payload: { period: 1, playerId: 'p1' } },
+        { id: 'e3', eventType: 'OPPONENT_SCORE', minuteOccurred: 4, payload: { period: 1, points: 2 } },
+        { id: 'e4', eventType: 'MADE_2PT', minuteOccurred: 9, payload: { period: 2, playerId: 'p2' } },
+        { id: 'e5', eventType: 'OPPONENT_SCORE', minuteOccurred: 11, payload: { period: 2, points: 3 } },
+      ]);
+
+      const intel = (component as any).basketballGameIntelligence();
+      expect(intel.periodRecaps.length).toBe(4);
+
+      // Q1: Team 5 (2+3), Opp 2 -> margin +3
+      const q1 = intel.periodRecaps[0];
+      expect(q1.label).toBe('Q1');
+      expect(q1.teamScore).toBe(5);
+      expect(q1.opponentScore).toBe(2);
+      expect(q1.margin).toBe(3);
+      expect(q1.marginFormatted).toBe('+3');
+      expect(q1.topScorerName).toBe('Stephen Curry');
+      expect(q1.topScorerPts).toBe(5);
+
+      // Q2: Team 2, Opp 3 -> margin -1
+      const q2 = intel.periodRecaps[1];
+      expect(q2.label).toBe('Q2');
+      expect(q2.teamScore).toBe(2);
+      expect(q2.opponentScore).toBe(3);
+      expect(q2.margin).toBe(-1);
+      expect(q2.marginFormatted).toBe('-1');
+      expect(q2.topScorerName).toBe('Klay Thompson');
+    });
+
+    it('should filter key plays containing lead changes and 3-pointers', () => {
+      (component as any).gameEvents.set([
+        { id: 'e1', eventType: 'MADE_2PT', minuteOccurred: 1, payload: { period: 1, playerId: 'p1' } },
+        { id: 'e2', eventType: 'OPPONENT_SCORE', minuteOccurred: 2, payload: { period: 1, points: 3 } }, // Lead change
+        { id: 'e3', eventType: 'MADE_3PT', minuteOccurred: 4, payload: { period: 1, playerId: 'p2' } }, // 3-pointer + Lead change
+      ]);
+
+      const intel = (component as any).basketballGameIntelligence();
+      expect(intel.keyPlays.length).toBeGreaterThan(0);
+      const hasLeadChange = intel.keyPlays.some((kp: any) => kp.badgeLabel === 'LEAD CHANGE');
+      expect(hasLeadChange).toBe(true);
+    });
   });
 });

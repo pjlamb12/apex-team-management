@@ -2,8 +2,42 @@
   <!-- Top Filter & Controls Header (Hidden in lineup mode) -->
   @if (!isLineupMode()) {
     <div class="court-controls-bar flex flex-wrap items-center justify-between gap-2 p-2 bg-ap-surface border-b border-ap-border/60 shrink-0">
-      <!-- Shot Filter Segment -->
-      <div class="flex items-center gap-1.5">
+      <!-- Shot Filter Segment & Period Selector -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Period Selector Pills (Hidden by default unless showPeriodToggle is true) -->
+        @if (showPeriodToggle()) {
+          <div class="period-toggle-pills flex items-center gap-1 bg-ap-bg/80 p-0.5 rounded-lg border border-ap-border/60">
+            @for (p of availablePeriods(); track p) {
+              <button
+                type="button"
+                (click)="setPeriod(p)"
+                class="period-pill px-2 py-0.5 rounded text-xs font-black transition-all cursor-pointer"
+                [class.bg-amber-500]="activePeriod() === p"
+                [class.text-black]="activePeriod() === p"
+                [class.shadow-sm]="activePeriod() === p"
+                [class.text-ap-muted]="activePeriod() !== p"
+                [class.hover:text-ap-text]="activePeriod() !== p"
+                [title]="'Filter to ' + getPeriodLabel(p)"
+              >
+                {{ getPeriodLabel(p) }}{{ p === currentPeriod() ? '*' : '' }}
+              </button>
+            }
+            <button
+              type="button"
+              (click)="setPeriod('all')"
+              class="period-pill px-2 py-0.5 rounded text-xs font-black transition-all cursor-pointer"
+              [class.bg-amber-500]="activePeriod() === 'all'"
+              [class.text-black]="activePeriod() === 'all'"
+              [class.shadow-sm]="activePeriod() === 'all'"
+              [class.text-ap-muted]="activePeriod() !== 'all'"
+              [class.hover:text-ap-text]="activePeriod() !== 'all'"
+              title="Show all periods"
+            >
+              All
+            </button>
+          </div>
+        }
+
         <ion-segment
           [value]="shotFilter()"
           (ionChange)="setFilter($event.detail.value)"
@@ -60,12 +94,14 @@
         }
       </div>
 
-      <!-- Court Mode Toggle (Half Court / Full Court) -->
-      <div class="flex items-center gap-1">
-        <ion-button size="small" fill="outline" color="medium" (click)="toggleHalfCourt()" class="text-xs font-semibold h-7 m-0">
-          {{ isHalfCourt() ? 'Half Court' : 'Full Court' }}
-        </ion-button>
-      </div>
+      <!-- Court Mode Toggle (Half Court / Full Court) - hidden by default for shot charts unless enabled -->
+      @if (showCourtToggle()) {
+        <div class="flex items-center gap-1">
+          <ion-button size="small" fill="outline" color="medium" (click)="toggleHalfCourt()" class="text-xs font-semibold h-7 m-0">
+            {{ isHalfCourt() ? 'Half Court' : 'Full Court' }}
+          </ion-button>
+        </div>
+      }
     </div>
   }
 

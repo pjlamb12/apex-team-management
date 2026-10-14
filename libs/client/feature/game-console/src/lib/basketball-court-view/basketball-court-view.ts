@@ -1,9 +1,11 @@
 import {
   Component,
   input,
+  model,
   output,
   signal,
   computed,
+  effect,
   ElementRef,
   viewChild,
 } from '@angular/core';
@@ -84,6 +86,12 @@ export class BasketballCourtViewComponent {
   selectedSlotIndex = input<number | null>(null);
   playersOnField = input<number>(5);
   formation = input<string | null>(null);
+  currentPeriod = input<number | null | undefined>(undefined);
+  showPeriodToggle = input<boolean>(false);
+  showCourtToggle = input<boolean>(false);
+
+  // Period Filter Model (can be controlled externally or internally)
+  periodFilter = model<number | 'all' | null>(null);
 
   // Outputs
   shotLogged = output<ShotLoggedPayload>();
@@ -96,11 +104,48 @@ export class BasketballCourtViewComponent {
   filterPlayerId = signal<string | null>(null);
   isHalfCourt = signal<boolean>(true);
 
+  // Active period: explicit filter takes precedence, then active game period, then 'all'
+  activePeriod = computed<number | 'all'>(() => {
+    const filter = this.periodFilter();
+    if (filter !== null && filter !== undefined) {
+      return filter;
+    }
+    const cp = this.currentPeriod();
+    return cp !== null && cp !== undefined ? cp : 'all';
+  });
+
+  // Available periods for courtside quick-toggle pills
+  availablePeriods = computed<number[]>(() => {
+    const cp = this.currentPeriod();
+    const shotPeriods = this.shots()
+      .map((s) => s.period)
+      .filter((p): p is number => typeof p === 'number' && p > 0);
+    const maxP = Math.max(cp ?? 1, ...shotPeriods, 1);
+    const periods: number[] = [];
+    for (let i = 1; i <= maxP; i++) {
+      periods.push(i);
+    }
+    return periods;
+  });
+
   // Counts for shot filter buttons
   protected baseShots = computed(() => {
     const list = this.shots().filter((s) => s.x !== undefined && s.y !== undefined);
     const pid = this.filterPlayerId();
-    return pid ? list.filter((s) => s.playerId === pid) : list;
+    const activeP = this.activePeriod();
+
+    return list.filter((shot) => {
+      // Filter by period
+      if (activeP !== 'all') {
+        const shotPeriod = shot.period ?? 1;
+        if (shotPeriod !== activeP) return false;
+      }
+
+      // Filter by player
+      if (pid && shot.playerId !== pid) return false;
+
+      return true;
+    });
   });
 
   protected allCount = computed(() => this.baseShots().length);
@@ -179,8 +224,15 @@ export class BasketballCourtViewComponent {
     const list = this.shots().filter((s) => s.x !== undefined && s.y !== undefined);
     const filter = this.shotFilter();
     const pid = this.filterPlayerId();
+    const activeP = this.activePeriod();
 
     return list.filter((shot) => {
+      // Filter by period
+      if (activeP !== 'all') {
+        const shotPeriod = shot.period ?? 1;
+        if (shotPeriod !== activeP) return false;
+      }
+
       // Filter by make / miss
       if (filter === 'makes' && !shot.type.startsWith('MADE')) return false;
       if (filter === 'misses' && !shot.type.startsWith('MISSED')) return false;
@@ -224,6 +276,8 @@ export class BasketballCourtViewComponent {
     });
   });
 
+  private previousPeriod: number | null | undefined = undefined;
+
   constructor() {
     addIcons({
       checkmarkCircle,
@@ -234,6 +288,30 @@ export class BasketballCourtViewComponent {
       addOutline,
       trashOutline,
     });
+
+    // Auto-clear manual period override when advancing periods live courtside
+    effect(() => {
+      const cp = this.currentPeriod();
+      if (this.previousPeriod !== undefined && cp !== this.previousPeriod && cp !== null && cp !== undefined) {
+        this.periodFilter.set(null);
+      }
+      this.previousPeriod = cp;
+    });
+  }
+
+  public getPeriodLabel(period: number): string {
+    return period <= 4 ? `Q${period}` : `OT${period - 4}`;
+  }
+
+  public setPeriod(period: number | 'all'): void {
+    if (period === 'all') {
+      this.periodFilter.set('all');
+    } else if (period === this.currentPeriod()) {
+      this.periodFilter.set(null);
+    } else {
+      this.periodFilter.set(period);
+    }
+    void this.triggerHaptic(ImpactStyle.Light);
   }
 
   // Handle background click on letterbox area
